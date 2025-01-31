@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4 Quadrants with Sidebar</title>
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #333;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: width 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 50px;
+        }
+        .content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 5px 1fr;
+            grid-template-rows: 1fr 5px 1fr;
+            gap: 0;
+            padding: 10px;
+        }
+        .quadrant {
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+        }
+        .toggle-btn {
+            background-color: #444;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .resizer {
+            background-color: white;
+            cursor: col-resize;
+        }
+        .resizer.horizontal {
+            cursor: row-resize;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">Toggle</button>
+    </div>
+    <div class="content">
+        <div class="quadrant" id="q1">Quadrant 1</div>
+        <div class="resizer" id="resizer-col"></div>
+        <div class="quadrant" id="q2">Quadrant 2</div>
+
+        <div class="resizer horizontal" id="resizer-row1"></div>
+        <span>  </span>
+        <div class="resizer" id="resizer-row2"></div>
+        
+        <div class="quadrant" id="q3">Quadrant 3</div>
+        <div class="resizer" id="resizer-col2"></div>
+        <div class="quadrant" id="q4">Quadrant 4</div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        const resizerCol = document.getElementById('resizer-col');
+        const resizerCol2 = document.getElementById('resizer-col2');
+        const resizerRow1 = document.getElementById('resizer-row1');
+        const resizerRow2 = document.getElementById('resizer-row2');
+        const content = document.querySelector('.content');
+
+        let startX, startY, startWidth, startHeight;
+
+        resizerCol.addEventListener('mousedown', initDragCol);
+        resizerCol2.addEventListener('mousedown', initDragCol);
+        resizerRow1.addEventListener('mousedown', initDragRow);
+        resizerRow2.addEventListener('mousedown', initDragRow);
+
+        function initDragCol(e) {
+            startX = e.clientX;
+            startWidth = parseInt(document.defaultView.getComputedStyle(content).getPropertyValue('grid-template-columns').split(' ')[0]);
+            document.documentElement.addEventListener('mousemove', doDragCol, false);
+            document.documentElement.addEventListener('mouseup', stopDrag, false);
+        }
+
+        function doDragCol(e) {
+            const newWidth = startWidth + (e.clientX - startX);
+            content.style.gridTemplateColumns = `${newWidth}px 5px 1fr`;
+        }
+
+        function initDragRow(e) {
+            startY = e.clientY;
+            startHeight = parseInt(document.defaultView.getComputedStyle(content).getPropertyValue('grid-template-rows').split(' ')[0]);
+            document.documentElement.addEventListener('mousemove', doDragRow, false);
+            document.documentElement.addEventListener('mouseup', stopDrag, false);
+        }
+
+        function doDragRow(e) {
+            const newHeight = startHeight + (e.clientY - startY);
+            content.style.gridTemplateRows = `${newHeight}px 5px 1fr`;
+        }
+
+        function stopDrag() {
+            document.documentElement.removeEventListener('mousemove', doDragCol, false);
+            document.documentElement.removeEventListener('mousemove', doDragRow, false);
+            document.documentElement.removeEventListener('mouseup', stopDrag, false);
+        }
+    </script>
+</body>
+</html>
