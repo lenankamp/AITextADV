@@ -1,0 +1,23 @@
+[
+    {
+        "default_prompt": "score_9, score_8_up, score_7_up, best quality, masterpiece, 4k, uncensored, very aesthetic, anime BREAK <lora:LineArt Mono Style LoRA_Pony XL v6:1>, source_anime,",
+        "default_negative_prompt": "(worst quality, low quality:1.4),deformed hands,bad hands,extra fingers,heels,strabismus,",
+        "sd_width": 768,
+        "sd_height": 1024,
+        "steps": 15,
+        "seed_variation": 3,
+        "max_context_length": 2048,
+        "max_length": 100,
+        "prompt": "You are a ...",
+        "quiet": false,
+        "rep_pen": 1.1,
+        "rep_pen_range": 256,
+        "rep_pen_slope": 1,
+        "temperature": 0.5,
+        "tfs": 1,
+        "top_a": 0,
+        "top_k": 100,
+        "top_p": 0.9,
+        "typical": 1
+    }
+]

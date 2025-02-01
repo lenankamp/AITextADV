@@ -37,6 +37,8 @@
             align-items: center;
             justify-content: center;
             border: 1px solid #ccc;
+            position: relative;
+            overflow: hidden;
         }
         .toggle-btn {
             background-color: #444;
@@ -53,24 +55,67 @@
         .resizer.horizontal {
             cursor: row-resize;
         }
+        .output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            height: calc(100% - 50px);
+            max-height: calc(100% - 50px);
+            top:0;
+            box-sizing: border-box;
+            overflow: auto; 
+            position: absolute;
+            top: 0;
+            width: 100%; 
+        }
+        .input-container {
+            display: flex;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50px; /* Set a fixed height for the input container */
+        }
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        .input-container button {
+            padding: 10px;
+            background-color: #444;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">Toggle</button>
+        <button class="toggle-btn" onclick="saveGame()">Save</button>
+        <button class="toggle-btn" onclick="loadGame()">Load</button>
+        <input type="file" id="fileInput" style="display:none" onchange="loadFromFile(event)">
     </div>
     <div class="content">
         <div class="quadrant" id="q1">Quadrant 1</div>
-        <div class="resizer" id="resizer-col"></div>
-        <div class="quadrant" id="q2">Quadrant 2</div>
+        <div class="resizer" id="resizer-col1"></div>
+        <div class="quadrant" id="q2"><img id="sceneart" style="height:100%"></div>
 
         <div class="resizer horizontal" id="resizer-row1"></div>
-        <span>  </span>
+        <div class="resizer" id="resizer-all"></div>
         <div class="resizer" id="resizer-row2"></div>
         
         <div class="quadrant" id="q3">Quadrant 3</div>
         <div class="resizer" id="resizer-col2"></div>
-        <div class="quadrant" id="q4">Quadrant 4</div>
+        <div class="quadrant" id="q4">
+            <div class="output" id="output"></div>
+            <div class="input-container">
+                <input type="text" id="input" placeholder="Type your message here..." onkeydown="handleKeyDown(event)">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -79,18 +124,20 @@
             sidebar.classList.toggle('collapsed');
         }
 
-        const resizerCol = document.getElementById('resizer-col');
+        const resizerCol1 = document.getElementById('resizer-col1');
         const resizerCol2 = document.getElementById('resizer-col2');
         const resizerRow1 = document.getElementById('resizer-row1');
         const resizerRow2 = document.getElementById('resizer-row2');
+        const resizerAll = document.getElementById('resizer-all');
         const content = document.querySelector('.content');
 
         let startX, startY, startWidth, startHeight;
 
-        resizerCol.addEventListener('mousedown', initDragCol);
+        resizerCol1.addEventListener('mousedown', initDragCol);
         resizerCol2.addEventListener('mousedown', initDragCol);
         resizerRow1.addEventListener('mousedown', initDragRow);
         resizerRow2.addEventListener('mousedown', initDragRow);
+        resizerAll.addEventListener('mousedown', initDragAll);
 
         function initDragCol(e) {
             startX = e.clientX;
@@ -120,6 +167,191 @@
             document.documentElement.removeEventListener('mousemove', doDragCol, false);
             document.documentElement.removeEventListener('mousemove', doDragRow, false);
             document.documentElement.removeEventListener('mouseup', stopDrag, false);
+        }
+
+        function initDragAll(e) {
+            initDragRow(e);
+            initDragCol(e);
+        }
+
+        // IndexedDB setup
+        let db;
+        const request = indexedDB.open('gameData', 1);
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            const objectStore = db.createObjectStore('data', { keyPath: 'id' });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+        };
+
+        request.onerror = function(event) {
+            console.error('Database error:', event.target.errorCode);
+        };
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('settings.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const settings = await response.json();
+                console.log(settings);
+                // Use the settings as needed
+            } catch (error) {
+                console.error('Failed to load settings:', error);
+            }
+        }
+
+        // Call the function to load settings
+        loadSettings();
+
+        async function generateArt(prompt, negprompt='', seed=-1) {
+            let sum = 0;
+            if (typeof seed == "string") {
+                for (let i=0; i < seed.length; i++)
+                    sum*= seed.charCodeAt(i);
+            }
+            else
+                sum = seed;
+
+            const response = await fetch('http://localhost:7860/sdapi/v1/txt2img', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "prompt": "score_9, score_8_up, score_7_up, best quality, masterpiece, 4k, uncensored, very aesthetic, anime BREAK <lora:LineArt Mono Style LoRA_Pony XL v6:1>, source_anime,"+prompt,
+                        "negative_prompt": "(worst quality, low quality:1.4)," + negprompt + ",deformed hands,bad hands,extra fingers,heels,strabismus,",
+                        "width": 768,
+                        "height": 1024,
+                        "steps": 15,
+                        "seed": sum+Math.floor(Math.random() * 3)
+                    })
+                });
+
+                const data = await response.json();
+                // Assuming the image data is in data.images[0] as a base64 string
+                const imageBase64 = data.images[0];
+                const binaryString = window.atob(imageBase64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // Create a Blob from the array buffer
+                const blob = new Blob([bytes], { type: 'image/png' });
+                return blob;
+        }
+
+        function saveGame() {
+            const transaction = db.transaction(['data'], 'readwrite');
+            const objectStore = transaction.objectStore('data');
+            const data = {
+                id: 'gameState',
+                state: {
+                    // Add game state data here
+                }
+            };
+            objectStore.put(data);
+            saveToFile(data);
+        }
+
+        function loadGame() {
+            const transaction = db.transaction(['data']);
+            const objectStore = transaction.objectStore('data');
+            const request = objectStore.get('gameState');
+
+            request.onsuccess = function(event) {
+                const data = event.target.result;
+                if (data) {
+                    // Load game state data here
+                } else {
+                    alert('No saved game found');
+                }
+            };
+        }
+
+        function saveToFile(data) {
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'gameState.json';
+            a.click();
+        }
+
+        function loadFromFile(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = JSON.parse(e.target.result);
+                const transaction = db.transaction(['data'], 'readwrite');
+                const objectStore = transaction.objectStore('data');
+                objectStore.put(data);
+                // Load game state data here
+            };
+            reader.readAsText(file);
+        }
+
+        document.querySelector('.toggle-btn[onclick="loadGame()"]').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        async function sendMessage() {
+            const input = document.getElementById('input');
+            const output = document.getElementById('output');
+            const message = input.value;
+            const messageElement = document.createElement('div');
+            if (message.trim()) {
+                messageElement.innerHTML = '[' + message + ']';
+                output.appendChild(messageElement);
+                input.value = '';
+                output.scrollTop = output.scrollHeight;
+
+                // Send message to API
+                const response = await fetch('http://localhost:5001/api/v1/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        max_context_length: 2048,
+                        max_length: 100,
+                        prompt: output.textContent + message,
+                        quiet: false,
+                        rep_pen: 1.1,
+                        rep_pen_range: 256,
+                        rep_pen_slope: 1,
+                        temperature: 0.5,
+                        tfs: 1,
+                        top_a: 0,
+                        top_k: 100,
+                        top_p: 0.9,
+                        typical: 1
+                    })
+                });
+
+                const data = await response.json();
+                const responseElement = document.createElement('div');
+                responseElement.innerHTML = data.results[0].text;
+                output.appendChild(responseElement);
+                output.scrollTop = output.scrollHeight;
+
+                // Await the result of generateArt
+                const blob = await generateArt(output.textContent);
+                document.getElementById('sceneart').src = URL.createObjectURL(blob);
+                document.getElementById('sceneart').alt = output.textContent;
+            }
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
         }
     </script>
 </body>
