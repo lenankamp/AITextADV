@@ -89,6 +89,44 @@
             border: none;
             cursor: pointer;
         }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .settings-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        .settings-container label {
+            display: block;
+            margin-top: 10px;
+        }
+        .settings-container input,
+        .settings-container textarea {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        .settings-container button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #444;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -96,6 +134,7 @@
         <button class="toggle-btn" onclick="toggleSidebar()">Toggle</button>
         <button class="toggle-btn" onclick="saveGame()">Save</button>
         <button class="toggle-btn" onclick="loadGame()">Load</button>
+        <button class="toggle-btn" onclick="openSettings()">Settings</button>
         <input type="file" id="fileInput" style="display:none" onchange="loadFromFile(event)">
     </div>
     <div class="content">
@@ -113,8 +152,17 @@
             <div class="output" id="output"></div>
             <div class="input-container">
                 <input type="text" id="input" placeholder="Type your message here..." onkeydown="handleKeyDown(event)">
-                <button onclick="sendMessage()">Send</button>
+                <button onclick="sendMessage(input.value)">Send</button>
             </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="settingsOverlay">
+        <div class="settings-container">
+            <h2>Settings</h2>
+            <form id="settingsForm"></form>
+            <button type="button" onclick="saveSettings()">Save</button>
+            <button type="button" onclick="closeSettings()">Cancel</button>
         </div>
     </div>
 
@@ -191,23 +239,100 @@
             console.error('Database error:', event.target.errorCode);
         };
 
+        let settings;
+
         async function loadSettings() {
+            const defaultSettings = {
+                starting_area: "Home",
+                starting_area_description: "A cozy and warm cabin, your bed sits in the corner. A fire crackles in the fireplace, casting flickering shadows on the walls. The smell of pine and woodsmoke fills the air.",
+                sdAPI: "http://localhost:7860/sdapi/v1/txt2img",
+                default_prompt: "score_9, score_8_up, score_7_up, best quality, masterpiece, 4k, very aesthetic, anime BREAK <lora:LineArt Mono Style LoRA_Pony XL v6:1>,",
+                default_negative_prompt: "(worst quality, low quality:1.4),deformed hands,bad hands,extra fingers,heels,strabismus,",
+                sd_width: 768,
+                sd_height: 1024,
+                steps: 15,
+                cfg_scale: 7,
+                save_images: false,
+                sampler_name: "Euler_a",
+                seed_variation: 3,
+                textAPI: "http://localhost:5001/api/v1/generate",
+                max_context_length: 4096,
+                max_length: 400,
+                text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
+                stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
+                story_param: {
+                    system_prompt: "Continue the story according to the bracketed instructions. Create a lifelike atmosphere with vivid, immersive details that draw the reader into the story. Use 2nd-person perspective, present tense, referring to the player as \"you\". Avoid vague statements, flowery metaphors, summaries, or send-off messages (do not end the scene). Focus on the moment, including visual and sensory detail, with quoted dialogue if appropriate. Be creative and don't always make events predictable. Characters should behave realistically and not always pander to the player. Write in the style of: Terry Pratchett.",
+                    quiet: false,
+                    rep_pen: 1.1,
+                    rep_pen_range: 256,
+                    rep_pen_slope: 1,
+                    temperature: 1.0,
+                    tfs: 1,
+                    top_a: 0,
+                    top_k: 100,
+                    top_p: 0.9,
+                    typical: 1
+                },
+                question_param: {
+                    system_prompt: "Simply and clearly answer the question. Be as concise as possible.",
+                    quiet: false,
+                    rep_pen: 1.0,
+                    rep_pen_range: 0,
+                    rep_pen_slope: 1,
+                    temperature: 0.01,
+                    tfs: 1,
+                    top_a: 0,
+                    top_k: 100,
+                    top_p: 0.9,
+                    typical: 1
+                }
+            };
+
             try {
                 const response = await fetch('settings.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const settings = await response.json();
-                console.log(settings);
-                // Use the settings as needed
+                const loadedSettings = await response.json();
+                settings = { ...defaultSettings, ...loadedSettings[0] }; // Merge default and loaded settings
             } catch (error) {
                 console.error('Failed to load settings:', error);
+                settings = defaultSettings;
             }
         }
 
-        // Call the function to load settings
-        loadSettings();
+        async function generateText(params, input, post='') {
+                // Send message to API
+                const response = await fetch(settings.textAPI, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        max_context_length: settings.max_context_length,
+                        max_length: settings.max_length,
+                        prompt: settings.text_prompt
+                                .replace('$system_prompt', params.system_prompt)
+                                .replace('$input_string', input)
+                                .replace('$response_string', post),
+                        quiet: params.quiet,
+                        rep_pen: params.rep_pen,
+                        rep_pen_range: params.rep_pen_range,
+                        rep_pen_slope: params.rep_pen_slope,
+                        temperature: params.temperature,
+                        tfs: params.tfs,
+                        top_a: params.top_a,
+                        top_k: params.top_k,
+                        top_p: params.top_p,
+                        typical: params.typical,
+                        stop_sequence: settings.stop_sequence
+                    })
+                });
 
+                const data = await response.json();
+                return data.results[0].text;
+        }
+        
         async function generateArt(prompt, negprompt='', seed=-1) {
             let sum = 0;
             if (typeof seed == "string") {
@@ -217,18 +342,23 @@
             else
                 sum = seed;
 
-            const response = await fetch('http://localhost:7860/sdapi/v1/txt2img', {
+            const response = await fetch(settings.sdAPI, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        "prompt": "score_9, score_8_up, score_7_up, best quality, masterpiece, 4k, uncensored, very aesthetic, anime BREAK <lora:LineArt Mono Style LoRA_Pony XL v6:1>, source_anime,"+prompt,
-                        "negative_prompt": "(worst quality, low quality:1.4)," + negprompt + ",deformed hands,bad hands,extra fingers,heels,strabismus,",
-                        "width": 768,
-                        "height": 1024,
-                        "steps": 15,
-                        "seed": sum+Math.floor(Math.random() * 3)
+                        "prompt": settings.default_prompt+prompt,
+                        "negative_prompt": settings.default_negative_prompt+negprompt,
+                        "width": settings.sd_width,
+                        "height": settings.sd_height,
+                        "steps": settings.steps,
+                        "seed": sum+Math.floor(Math.random() * settings.seed_variation),
+                        "cfg_scale": settings.cfg_scale,
+                        "send_images": true,
+                        "save_images": settings.save_images,
+                        "sampler_name": settings.sampler_name
+
                     })
                 });
 
@@ -301,58 +431,142 @@
             document.getElementById('fileInput').click();
         });
 
-        async function sendMessage() {
+        async function sendMessage(message = input.value) {
             const input = document.getElementById('input');
             const output = document.getElementById('output');
-            const message = input.value;
             const messageElement = document.createElement('div');
             if (message.trim()) {
-                messageElement.innerHTML = '[' + message + ']';
-                output.appendChild(messageElement);
-                input.value = '';
-                output.scrollTop = output.scrollHeight;
-
-                // Send message to API
-                const response = await fetch('http://localhost:5001/api/v1/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        max_context_length: 2048,
-                        max_length: 100,
-                        prompt: output.textContent + message,
-                        quiet: false,
-                        rep_pen: 1.1,
-                        rep_pen_range: 256,
-                        rep_pen_slope: 1,
-                        temperature: 0.5,
-                        tfs: 1,
-                        top_a: 0,
-                        top_k: 100,
-                        top_p: 0.9,
-                        typical: 1
-                    })
-                });
-
-                const data = await response.json();
-                const responseElement = document.createElement('div');
-                responseElement.innerHTML = data.results[0].text;
-                output.appendChild(responseElement);
-                output.scrollTop = output.scrollHeight;
-
-                // Await the result of generateArt
-                const blob = await generateArt(output.textContent);
-                document.getElementById('sceneart').src = URL.createObjectURL(blob);
-                document.getElementById('sceneart').alt = output.textContent;
+                messageElement.innerHTML = '\n[Generate the next two paragraphs as player attempts to ' + message + ']';
+            } else {
+                messageElement.innerHTML = '\n[Continue the story for another two paragraphs.]';
             }
+            output.appendChild(messageElement);
+            input.value = '';
+            output.scrollTop = output.scrollHeight;
+
+            const text = await generateText(settings.story_param, output.textContent);
+            messageElement.innerHTML = "<br>" + text.replace(/\n/g, '<br>');
+            output.scrollTop = output.scrollHeight;
+
+            // Await the result of generateArt
+            const artPrompt = await generateText(settings.question_param, messageElement.innerHTML + '\n[How would you describe the visual details of the previous scene in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
+            const blob = await generateArt(artPrompt);
+            document.getElementById('sceneart').src = URL.createObjectURL(blob);
+            document.getElementById('sceneart').alt = artPrompt;
         }
 
         function handleKeyDown(event) {
             if (event.key === 'Enter') {
-                sendMessage();
+                sendMessage(input.value);
             }
         }
+
+        function openSettings() {
+            const overlay = document.getElementById('settingsOverlay');
+            const form = document.getElementById('settingsForm');
+            form.innerHTML = ''; // Clear the form
+
+            // Dynamically populate the form with current settings
+            for (const key in settings) {
+                if (settings.hasOwnProperty(key)) {
+                    const value = settings[key];
+                    const label = document.createElement('label');
+                    label.textContent = key;
+                    form.appendChild(label);
+
+                    if (typeof value === 'object') {
+                        const textarea = document.createElement('textarea');
+                        textarea.id = key;
+                        textarea.name = key;
+                        textarea.value = JSON.stringify(value, null, 2);
+                        form.appendChild(textarea);
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = typeof value === 'boolean' ? 'checkbox' : 'text';
+                        input.id = key;
+                        input.name = key;
+                        if (typeof value === 'boolean') {
+                            input.checked = value;
+                        } else {
+                            input.value = value;
+                        }
+                        form.appendChild(input);
+                    }
+                }
+            }
+
+            overlay.style.display = 'flex';
+        }
+
+        function closeSettings() {
+            const overlay = document.getElementById('settingsOverlay');
+            overlay.style.display = 'none';
+        }
+
+        function saveSettings() {
+            const form = document.getElementById('settingsForm');
+            console.log('Settings before save:', settings);
+            // Update settings with form values
+            for (const key in settings) {
+                if (settings.hasOwnProperty(key)) {
+                    const input = form.elements[key];
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            settings[key] = input.checked;
+                        } else if (input.tagName === 'TEXTAREA') {
+                            settings[key] = JSON.parse(input.value);
+                        } else {
+                            if (!isNaN(input.value) && input.value.trim() !== '') {
+                                settings[key] = parseInt(input.value);
+                            } else {
+                                settings[key] = input.value;
+                            }
+                        }
+                    }
+                }
+            }
+
+            closeSettings();
+        }
+
+        async function generateArea(name, prompt='') {
+            areas[name].name = name;
+            areas[name].seed = Math.floor(Math.random() * 4294967295) + 1;
+            let response;
+            if(prompt == '')
+            {
+                response = await generateText(settings.question_param, "[Generate a description of the area named " + name + ".]");
+                areas[name].description = response;
+            }
+            else
+            {
+                areas[name].description = prompt;
+            }
+            response = await generateText(settings.question_param, "[Generate a list of people and intersting things that might be found in the area named " + name + " with the following details: " + areas[name].description + " If no people might be reasonably found in the area, reply with None. Answer in a formatted list as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]");
+            const artPrompt = await generateText(settings.question_param, areas[settings.starting_area].description + '\n[How would you describe the visual details of the previous scene in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
+            areas[name].image = await generateArt(artPrompt, "people", areas[name].seed);
+        }
+        async function setupStart() {
+            areas[settings.starting_area] = {};
+                await generateArea(settings.starting_area, settings.starting_area_description);
+                document.getElementById('sceneart').src = URL.createObjectURL(areas[settings.starting_area].image);
+                document.getElementById('sceneart').alt = areas[settings.starting_area].description;
+                const responseElement = document.createElement('div');
+                const text = await generateText(settings.story_param, "[Generate the beginning of the story as the player stands in an an area described as " + areas[settings.starting_area].description + " Response should be less then 300 words.]");
+                responseElement.innerHTML = text.replace(/\n/g, '<br>');
+                output.appendChild(responseElement);
+                output.scrollTop = output.scrollHeight;                
+        }
+
+        // Things are people, monsters, and interactables.
+        // Should have name, seed, type, visual, description, level, affinity,
+        // health, attack, defense, speed, magic, magic defense, skills, items, location, status effects
+
+        let areas = {};
+        loadSettings().then(() => {
+                setupStart();
+        });
+
     </script>
 </body>
 </html>
