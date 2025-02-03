@@ -27,9 +27,13 @@
             flex: 1;
             display: grid;
             grid-template-columns: 1fr 5px 1fr;
-            grid-template-rows: 1fr 5px 1fr;
             gap: 0;
             padding: 10px;
+        }
+        .side {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         .quadrant {
             background-color: #f0f0f0;
@@ -51,9 +55,12 @@
         .resizer {
             background-color: white;
             cursor: col-resize;
+            width: 5px;
         }
         .resizer.horizontal {
             cursor: row-resize;
+            height: 5px;
+            width: 100%;
         }
         .output {
             flex: 1;
@@ -138,23 +145,23 @@
         <input type="file" id="fileInput" style="display:none" onchange="loadFromFile(event)">
     </div>
     <div class="content">
-        <div class="quadrant" id="q1">Quadrant 1</div>
-        <div class="resizer" id="resizer-col1"></div>
-        <div class="quadrant" id="q2"><img id="sceneart" style="height:100%"></div>
-
-        <div class="resizer horizontal" id="resizer-row1"></div>
-        <div class="resizer" id="resizer-all"></div>
-        <div class="resizer" id="resizer-row2"></div>
-        
-        <div class="quadrant" id="q3">Quadrant 3</div>
-        <div class="resizer" id="resizer-col2"></div>
-        <div class="quadrant" id="q4">
-            <div class="output" id="output"></div>
-            <div class="input-container">
-                <input type="text" id="input" placeholder="Type your message here..." onkeydown="handleKeyDown(event)">
-                <button onclick="sendMessage(input.value)">Send</button>
-            </div>
+        <div class="side" id="left">
+            <div class="quadrant" id="q1" style="height: 640px;">Quadrant 1</div>
+            <div class="resizer horizontal" id="resizer-row1"></div>
+            <div class="quadrant" id="q3"  style="flex: 1;">Quadrant 3</div>
         </div>
+        <div class="resizer" id="resizer-col"></div>
+        <div class="side" id="right">
+            <div class="quadrant" id="q2" style="height: 640px;"><img id="sceneart" style="height:100%"></div>
+            <div class="resizer horizontal" id="resizer-row2"></div>
+            <div class="quadrant" id="q4" style="flex: 1;">
+                <div class="output" id="output"></div>
+                <div class="input-container">
+                    <input type="text" id="input" placeholder="Type your message here..." onkeydown="handleKeyDown(event)">
+                    <button onclick="sendMessage(input.value)">Send</button>
+                </div>
+            </div>
+        </div>    
     </div>
 
     <div class="overlay" id="settingsOverlay">
@@ -172,26 +179,28 @@
             sidebar.classList.toggle('collapsed');
         }
 
-        const resizerCol1 = document.getElementById('resizer-col1');
-        const resizerCol2 = document.getElementById('resizer-col2');
+        const resizerCol = document.getElementById('resizer-col');
         const resizerRow1 = document.getElementById('resizer-row1');
         const resizerRow2 = document.getElementById('resizer-row2');
-        const resizerAll = document.getElementById('resizer-all');
         const content = document.querySelector('.content');
+        const leftSide = document.getElementById('left');
+        const rightSide = document.getElementById('right');
+        const quadrant1 = document.getElementById('q1');
+        const quadrant2 = document.getElementById('q2');
+        const quadrant3 = document.getElementById('q3');
+        const quadrant4 = document.getElementById('q4');
 
         let startX, startY, startWidth, startHeight;
 
-        resizerCol1.addEventListener('mousedown', initDragCol);
-        resizerCol2.addEventListener('mousedown', initDragCol);
+        resizerCol.addEventListener('mousedown', initDragCol);
         resizerRow1.addEventListener('mousedown', initDragRow);
         resizerRow2.addEventListener('mousedown', initDragRow);
-        resizerAll.addEventListener('mousedown', initDragAll);
 
         function initDragCol(e) {
             startX = e.clientX;
             startWidth = parseInt(document.defaultView.getComputedStyle(content).getPropertyValue('grid-template-columns').split(' ')[0]);
-            document.documentElement.addEventListener('mousemove', doDragCol, false);
-            document.documentElement.addEventListener('mouseup', stopDrag, false);
+            document.addEventListener('mousemove', doDragCol, false);
+            document.addEventListener('mouseup', stopDragCol, false);
         }
 
         function doDragCol(e) {
@@ -199,27 +208,30 @@
             content.style.gridTemplateColumns = `${newWidth}px 5px 1fr`;
         }
 
+        function stopDragCol() {
+            document.removeEventListener('mousemove', doDragCol, false);
+            document.removeEventListener('mouseup', stopDragCol, false);
+        }
+
         function initDragRow(e) {
             startY = e.clientY;
-            startHeight = parseInt(document.defaultView.getComputedStyle(content).getPropertyValue('grid-template-rows').split(' ')[0]);
-            document.documentElement.addEventListener('mousemove', doDragRow, false);
-            document.documentElement.addEventListener('mouseup', stopDrag, false);
+            const quadrant = e.target.previousElementSibling;
+            startHeight = parseInt(document.defaultView.getComputedStyle(quadrant).getPropertyValue('height'));
+            document.addEventListener('mousemove', doDragRow, false);
+            document.addEventListener('mouseup', stopDragRow, false);
+            document.quadrant = quadrant; // Store the quadrant in the document object
         }
 
         function doDragRow(e) {
+            const quadrant = document.quadrant; // Retrieve the quadrant from the document object
             const newHeight = startHeight + (e.clientY - startY);
-            content.style.gridTemplateRows = `${newHeight}px 5px 1fr`;
+            quadrant.style.height = `${newHeight}px`;
         }
 
-        function stopDrag() {
-            document.documentElement.removeEventListener('mousemove', doDragCol, false);
-            document.documentElement.removeEventListener('mousemove', doDragRow, false);
-            document.documentElement.removeEventListener('mouseup', stopDrag, false);
-        }
-
-        function initDragAll(e) {
-            initDragRow(e);
-            initDragCol(e);
+        function stopDragRow() {
+            document.removeEventListener('mousemove', doDragRow, false);
+            document.removeEventListener('mouseup', stopDragRow, false);
+            document.quadrant = null; // Clear the stored quadrant
         }
 
         // IndexedDB setup
