@@ -190,6 +190,11 @@
             width: 120px;
             height: 120px;
             animation: spin 2s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
         }
 
         @keyframes spin {
@@ -205,7 +210,7 @@
         <button class="toggle-btn" onclick="document.getElementById('fileInput').click()">Load</button>
         <button class="toggle-btn" onclick="openSettings()">Settings</button>
         <button class="toggle-btn" onclick="restartGame()">Restart</button>
-        <input type="file" id="fileInput" style="display:none" onchange="loadFromFile(event)">
+        <input type="file" id="fileInput" style="display:none">
     </div>
     <div class="content">
         <div class="tooltip" id="tooltip"></div>
@@ -248,6 +253,8 @@
             <button type="button" onclick="closeSettings()">Cancel</button>
         </div>
     </div>
+
+    <div class="loader" id="loader" style="display: none;"></div>
 
     <script>
         function toggleSidebar() {
@@ -415,6 +422,9 @@
         }
 
         async function generateText(params, input, post='') {
+                // Show loader
+                document.getElementById('loader').style.display = 'block';
+
                 // Send message to API
                 const response = await fetch(settings.textAPI, {
                     method: 'POST',
@@ -443,10 +453,17 @@
                 });
 
                 const data = await response.json();
+
+                // Hide loader
+                document.getElementById('loader').style.display = 'none';
+
                 return data.results[0].text;
         }
         
         async function generateArt(prompt, negprompt='', seed=-1) {
+            // Show loader
+            document.getElementById('loader').style.display = 'block';
+
             let sum = 0;
             if (typeof seed == "string") {
                 for (let i=0; i < seed.length; i++)
@@ -523,6 +540,10 @@
                         .6   // quality 0-1, 1 being best quality
                     );
                 });
+
+                // Hide loader
+                document.getElementById('loader').style.display = 'none';
+
                 return webpBlob;
         }
 
@@ -574,6 +595,18 @@
             });
 
             await Promise.all(imagePromises);
+
+            const playerImageBlob = await fetch(document.getElementById('playerart').src).then(res => res.blob());
+            const playerImageReader = new FileReader();
+            const playerImagePromise = new Promise(resolve => {
+                playerImageReader.onloadend = () => {
+                    images['player'] = playerImageReader.result;
+                    resolve();
+                };
+                playerImageReader.readAsDataURL(playerImageBlob);
+            });
+
+            await playerImagePromise;
 
             const blob = new Blob([JSON.stringify({ data, images })], { type: 'application/json' });
             const a = document.createElement('a');
@@ -644,6 +677,11 @@
                     updateImageGrid(currentArea);
                     document.getElementById('sceneart').src = URL.createObjectURL(areas[currentArea].image);
                     document.getElementById('sceneart').alt = areas[currentArea].description;
+
+                    if (images['player']) {
+                        const playerImageBlob = await fetchImage(images['player']);
+                        document.getElementById('playerart').src = URL.createObjectURL(playerImageBlob);
+                    }
                 };
                 reader.readAsText(file);
             }
@@ -680,8 +718,9 @@
             return blob;
         }
 
-        document.getElementById('fileInput').addEventListener('change', loadFromFile);
-
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById('fileInput').addEventListener('change', loadFromFile);
+        });
         async function sendMessage(message = input.value) {
             const input = document.getElementById('input');
             const output = document.getElementById('output');
@@ -797,26 +836,25 @@
         }
 
         async function generateArea(areaName, prompt='') {
-            areas[areaName].name = name;
+            areas[areaName].name = areaName;
             areas[areaName].seed = Math.floor(Math.random() * 4294967295) + 1;
             areas[areaName]['people'] = [];
             areas[areaName]['things'] = [];
             areas[areaName]['hostiles'] = [];
 
             let response;
-            if(prompt == '')
-            {
+            if (prompt == '') {
                 response = await generateText(settings.question_param, settings.world_description + "\n[Generate a description of the area named " + areaName + ".]");
                 areas[areaName].description = response;
-            }
-            else
-            {
+            } else {
                 areas[areaName].description = prompt;
             }
-            response = await generateText(settings.question_param, settings.world_description + "\n[Be creative and generate a list of people and interesting things that could reasonaly be found in the area named " + areaName + " with the following details: " + areas[areaName].description + " \nIf no people or hostiles might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 1-2 sentences. Answer in a formatted list as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]");
+            response = await generateText(settings.question_param, settings.world_description + "\n[Be creative and generate a list of people and interesting things that could reasonably be found in the area named " + areaName + " with the following details: " + areas[areaName].description + " \nIf no people or hostiles might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 1-2 sentences. Answer in a formatted list as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]");
+
             // Process response to get people, things, and hostiles into the area object as a subset for each type.
             const lines = response.split('\n');
             let currentSection = null;
+            const artPromises = [];
             for (const line of lines) {
                 if (line.startsWith('People')) {
                     currentSection = 'people';
@@ -831,26 +869,27 @@
                     let visual = await generateText(settings.question_param, settings.world_description + "\n[How would you describe '" + name.replace('-', '') + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
                     const seed = Math.floor(Math.random() * 4294967295) + 1;
                     let negprompt = "";
-                    if(currentSection == "people")
-                    {
+                    if (currentSection == "people") {
                         negprompt = "";
-                    }
-                    else if(currentSection == "hostiles")
-                    {
+                    } else if (currentSection == "hostiles") {
                         negprompt = "friendly";
-                    }
-                    else if(currentSection == "things")
-                    {
+                    } else if (currentSection == "things") {
                         negprompt = "((people, human, person))";
-                        visual = "(("+ name.replace('-', '') + ")),(nopeople)" + visual;
+                        visual = "((" + name.replace('-', '') + ")),(nopeople)" + visual;
                     }
-                    const image = await generateArt(visual, negprompt, seed);
-                    areas[areaName][currentSection].push({ name: name.replace('-', ''), description, visual, seed, image});
+                    const section = currentSection; // Capture the current section
+                    artPromises.push(generateArt(visual, negprompt, seed).then(image => {
+                        areas[areaName][section].push({ name: name.replace('-', ''), description, visual, seed, image });
+                    }));
                 }
             }
-            
             areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[settings.starting_area].description + '\n[How would you describe the visual details of the area described in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
-            areas[areaName].image = await generateArt(areas[areaName].visual, "people", areas[areaName].seed);
+
+            artPromises.push(generateArt(areas[areaName].visual, "people", areas[areaName].seed).then(image => {
+                areas[areaName].image = image;
+            }));
+
+            await Promise.all(artPromises);
         }
 
         function updateImageGrid(areaName) {
