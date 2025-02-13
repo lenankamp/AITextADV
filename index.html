@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4 Quadrants with Sidebar</title>
+    <title>AITextADV</title>
     <style>
         body {
             display: flex;
@@ -11,7 +11,7 @@
             margin: 0;
         }
         .sidebar {
-            width: 200px;
+            width: 250px;
             background-color: #333;
             color: white;
             display: flex;
@@ -19,21 +19,32 @@
             align-items: center;
             justify-content: center;
             transition: width 0.3s;
+            position: relative;
+        }
+        .sidebar.collapsed .toggle-btn:not(:first-child) {
+            display: none; /* Hide all buttons besides the first (menu) button when collapsed */
         }
         .sidebar.collapsed {
             width: 50px;
+        }
+        .toggle-btn:first-child {
+            position: absolute;
+            bottom: 20px; /* Fixed vertical position relative to the bottom */
         }
         .content {
             flex: 1;
             display: grid;
             grid-template-columns: 1fr 5px 1fr;
             gap: 0;
-            padding: 10px;
+            padding: 0px;
+            max-height: 100vh;
         }
         .side {
             display: flex;
             flex-direction: column;
             height: 100%;
+            max-height: 100vh;
+            min-height: 100vh;
         }
         .quadrant {
             background-color: #f0f0f0;
@@ -160,14 +171,40 @@
             display: none;
             z-index: 10;
         }
+        #playerart {
+            height: 100%;
+            display: flex;
+            object-fit: cover;
+            flex-grow: 1;
+        }
+
+        .progress {
+            background-color: grey;
+            width: 100%;
+        }
+
+        .loader {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-    <div class="sidebar" id="sidebar">
-        <button class="toggle-btn" onclick="toggleSidebar()">Toggle</button>
+    <div class="sidebar collapsed" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">Menu</button>
         <button class="toggle-btn" onclick="saveGame()">Save</button>
         <button class="toggle-btn" onclick="document.getElementById('fileInput').click()">Load</button>
         <button class="toggle-btn" onclick="openSettings()">Settings</button>
+        <button class="toggle-btn" onclick="restartGame()">Restart</button>
         <input type="file" id="fileInput" style="display:none" onchange="loadFromFile(event)">
     </div>
     <div class="content">
@@ -177,7 +214,16 @@
                 <div class="image-grid" id="imageGrid"></div>
             </div>
             <div class="resizer horizontal" id="resizer-row1"></div>
-            <div class="quadrant" id="q3"  style="flex: 1;">Quadrant 3</div>
+            <div class="quadrant" id="q3" style="display: flex; flex-flow: row; justify-content: flex-start;">
+            <img id="playerart">
+            <div style="display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: flex-start; flex-grow: 1;">
+                <progress id="health" value="100" max="100" style="accent-color: red;"></progress>
+                <progress id="mana" value="100" max="100" style="accent-color: blue;"></progress>
+                <progress id="exp" value="100" max="100" style="accent-color: green;"></progress>
+                <progress id="level" value="100" max="100" style="accent-color: yellow;"></progress>
+                <progress id="gold" value="100" max="100"></progress>
+            </div>
+            </div>
         </div>
         <div class="resizer" id="resizer-col"></div>
         <div class="side" id="right">
@@ -186,6 +232,7 @@
             <div class="quadrant" id="q4" style="flex: 1;">
                 <div class="output" id="output"></div>
                 <div class="input-container">
+                    <button onclick="undoLastAction()">Undo</button>
                     <input type="text" id="input" placeholder="Type your message here..." onkeydown="handleKeyDown(event)">
                     <button onclick="sendMessage(input.value)">Send</button>
                 </div>
@@ -210,7 +257,7 @@
 
         const resizerCol = document.getElementById('resizer-col');
         const resizerRow1 = document.getElementById('resizer-row1');
-        const resizerRow2 = document.getElementById('resizer-row2');
+        const resizerRow2 = document.getElementById('resizer-row2');   
         const content = document.querySelector('.content');
         const leftSide = document.getElementById('left');
         const rightSide = document.getElementById('right');
@@ -255,6 +302,12 @@
             const quadrant = document.quadrant; // Retrieve the quadrant from the document object
             const newHeight = startHeight + (e.clientY - startY);
             quadrant.style.height = `${newHeight}px`;
+
+            // Adjust the height of the quadrant below
+            const nextQuadrant = quadrant.nextElementSibling.nextElementSibling;
+            if (nextQuadrant && nextQuadrant.classList.contains('quadrant')) {
+            nextQuadrant.style.height = `calc(100vh - ${newHeight}px - 5px)`; // 5px for the resizer
+            }
         }
 
         function stopDragRow() {
@@ -284,8 +337,16 @@
 
         async function loadSettings() {
             const defaultSettings = {
+                world_description: "A vast and mysterious world filled with magic and wonder.",
+                player_name: "Adventurer",
+                player_description: "A brave and adventurous soul, ready to explore the unknown.",
+                player_visual: "A young adult with a determined expression, wearing a simple tunic and trousers.",
+                player_seed: 1,
                 starting_area: "Home",
                 starting_area_description: "A cozy and warm room within a wooden cabin, your bed sits in the corner. A fire crackles in the fireplace, casting flickering shadows on the walls. The smell of pine and woodsmoke fills the air.",
+                q1_height: "640px",
+                q2_height: "640px",
+                column_width: "640px",
                 sdAPI: "http://localhost:7860/sdapi/v1/txt2img",
                 default_prompt: "__default__,",
                 default_negative_prompt: "__defaultneg__,",
@@ -301,6 +362,7 @@
                 max_length: 400,
                 text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
                 stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
+                full_context: "$world $player $locale $fullstory",
                 story_param: {
                     system_prompt: "Continue the story according to the bracketed instructions. Create a lifelike atmosphere with vivid, immersive details that draw the reader into the story. Use 2nd-person perspective, present tense, referring to the player as \"you\". Avoid vague statements, flowery metaphors, summaries, or send-off messages (do not end the scene). Focus on the moment, including visual and sensory detail, with quoted dialogue if appropriate. Be creative and don't always make events predictable. Characters should behave realistically and not always pander to the player. Write in the style of: Terry Pratchett.",
                     quiet: false,
@@ -343,6 +405,13 @@
             }
             line below is the temporary workaround*/
             settings = defaultSettings;
+
+            // Apply settings to elements
+            document.getElementById('q3').style.height = `calc(100vh - ${settings.q1_height} - 5px)`;
+            document.getElementById('q4').style.height = `calc(100vh - ${settings.q2_height} - 5px)`;
+            document.getElementById('q1').style.height = settings.q1_height;
+            document.getElementById('q2').style.height = settings.q2_height;
+            content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
         }
 
         async function generateText(params, input, post='') {
@@ -417,9 +486,44 @@
                     bytes[i] = binaryString.charCodeAt(i);
                 }
 
-                // Create a Blob from the array buffer
-                const blob = new Blob([bytes], { type: 'image/png' });
-                return blob;
+                const pngBlob = new Blob([bytes], { type: 'image/png' });
+
+                // Converting PNG to WebP for file size reduction, shoud make quality or even this feature options
+
+                const img = new Image();
+
+                // Create a canvas element to draw the image
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                if (!ctx) {
+                    throw new Error("Unable to obtain 2D rendering context.");
+                }
+
+                img.src = URL.createObjectURL(pngBlob);
+                await new Promise((resolve) => {
+                    img.onload = () => resolve();
+                });
+
+                canvas.width = img.width;
+                canvas.height = img.height;
+
+                ctx.drawImage(img, 0, 0);
+
+                const webpBlob = await new Promise((resolve) => {
+                    canvas.toBlob(
+                        (blob) => {
+                            if (blob) {
+                                resolve(blob);
+                            } else {
+                                throw new Error("Failed to convert to WebP format.");
+                            }
+                        },
+                        "image/webp",
+                        .6   // quality 0-1, 1 being best quality
+                    );
+                });
+                return webpBlob;
         }
 
         async function saveGame() {
@@ -533,6 +637,10 @@
 
                     await Promise.all(imagePromises);
 
+                    document.getElementById('q1').style.height = settings.q1_height;
+                    document.getElementById('q2').style.height = settings.q2_height;
+                    content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
+
                     updateImageGrid(currentArea);
                     document.getElementById('sceneart').src = URL.createObjectURL(areas[currentArea].image);
                     document.getElementById('sceneart').alt = areas[currentArea].description;
@@ -558,6 +666,14 @@
             }
         }
 
+        function fullContext() {
+            return settings.full_context
+                .replace('$world', settings.world_description)
+                .replace('$player', "\nPlayer Name: " + settings.player_name + "\n" + settings.player_description)
+                .replace('$locale', areaContext(currentArea))
+                .replace('$fullstory', document.getElementById('output').innerHTML);
+        }
+
         async function fetchImage(imageData) {
             const response = await fetch(imageData);
             const blob = await response.blob();
@@ -579,7 +695,7 @@
             input.value = '';
             output.scrollTop = output.scrollHeight;
 
-            const text = await generateText(settings.story_param, output.textContent);
+            const text = await generateText(settings.story_param, fullContext() + messageElement.innerHTML);
             messageElement.innerHTML = "<br>" + text.replace(/\n/g, '<br>');
             output.scrollTop = output.scrollHeight;
 
@@ -595,6 +711,15 @@
         function handleKeyDown(event) {
             if (event.key === 'Enter') {
                 sendMessage(input.value);
+            } else if (event.ctrlKey && event.key === 'z') {
+                undoLastAction();
+            }
+        }
+
+        function undoLastAction() {
+            const output = document.getElementById('output');
+            if (output.lastChild) {
+                output.removeChild(output.lastChild);
             }
         }
 
@@ -625,7 +750,11 @@
                         if (typeof value === 'boolean') {
                             input.checked = value;
                         } else {
-                            input.value = value;
+                            if (typeof value === 'string') {
+                                input.value = value.replace(/\n/g, '\\n');
+                            } else {
+                                input.value = value;
+                            }
                         }
                         form.appendChild(input);
                     }
@@ -642,7 +771,6 @@
 
         function saveSettings() {
             const form = document.getElementById('settingsForm');
-            console.log('Settings before save:', settings);
             // Update settings with form values
             for (const key in settings) {
                 if (settings.hasOwnProperty(key)) {
@@ -656,48 +784,51 @@
                             if (!isNaN(input.value) && input.value.trim() !== '') {
                                 settings[key] = parseInt(input.value);
                             } else {
-                                settings[key] = input.value;
+                                settings[key] = input.value.replace(/\\n/g, '\n');
                             }
                         }
                     }
                 }
             }
-
+            document.getElementById('q1').style.height = settings.q1_height;
+            document.getElementById('q2').style.height = settings.q2_height;
+            content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
             closeSettings();
         }
 
         async function generateArea(areaName, prompt='') {
             areas[areaName].name = name;
             areas[areaName].seed = Math.floor(Math.random() * 4294967295) + 1;
+            areas[areaName]['people'] = [];
+            areas[areaName]['things'] = [];
+            areas[areaName]['hostiles'] = [];
+
             let response;
             if(prompt == '')
             {
-                response = await generateText(settings.question_param, "[Generate a description of the area named " + areaName + ".]");
+                response = await generateText(settings.question_param, settings.world_description + "\n[Generate a description of the area named " + areaName + ".]");
                 areas[areaName].description = response;
             }
             else
             {
                 areas[areaName].description = prompt;
             }
-            response = await generateText(settings.question_param, "[Be creative and generate a list of people and interesting things that could reasonaly be found in the area named " + areaName + " with the following details: " + areas[areaName].description + " \nIf no people or hostiles might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. Things must be solid physical interactable pieces of interest within the area. Descriptions should be 1-2 sentences. Answer in a formatted list as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]");
+            response = await generateText(settings.question_param, settings.world_description + "\n[Be creative and generate a list of people and interesting things that could reasonaly be found in the area named " + areaName + " with the following details: " + areas[areaName].description + " \nIf no people or hostiles might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 1-2 sentences. Answer in a formatted list as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]");
             // Process response to get people, things, and hostiles into the area object as a subset for each type.
             const lines = response.split('\n');
             let currentSection = null;
             for (const line of lines) {
                 if (line.startsWith('People')) {
                     currentSection = 'people';
-                    areas[areaName][currentSection] = [];
                 } else if (line.startsWith('Things')) {
                     currentSection = 'things';
-                    areas[areaName][currentSection] = [];
                 } else if (line.startsWith('Hostiles')) {
                     currentSection = 'hostiles';
-                    areas[areaName][currentSection] = [];
                 } else if (currentSection && line.trim() && !line.includes('None')) {
                     const [namePart, ...descriptionParts] = line.split(': ');
                     const name = namePart.replace(/[^a-zA-Z\s]/g, '').trim();
                     const description = descriptionParts.join(': ').trim();
-                    let visual = await generateText(settings.question_param, "[How would you describe '" + name.replace('-', '') + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+                    let visual = await generateText(settings.question_param, settings.world_description + "\n[How would you describe '" + name.replace('-', '') + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
                     const seed = Math.floor(Math.random() * 4294967295) + 1;
                     let negprompt = "";
                     if(currentSection == "people")
@@ -718,7 +849,7 @@
                 }
             }
             
-            areas[areaName].visual = await generateText(settings.question_param, areas[settings.starting_area].description + '\n[How would you describe the visual details of the previous scene in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
+            areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[settings.starting_area].description + '\n[How would you describe the visual details of the area described in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
             areas[areaName].image = await generateArt(areas[areaName].visual, "people", areas[areaName].seed);
         }
 
@@ -759,15 +890,15 @@
         }
 
         async function outputCheck(text, context="") {
-            const response = await generateText(settings.question_param, areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A' and no explaination. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene or someone in the scene has become hostile, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now?" + "]");
+            const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A' and no explaination. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene or someone in the scene has become hostile, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now?" + "]");
             const lines = response.split('\n');
             for (const line of lines) {
                 if (line.startsWith('1.') && !line.includes('N/A')) {
                     const names = line.replace("1. ", '').trim().split(',').map(name => name.trim());
                     for (const name of names) {
                         if (!areas[currentArea]['people'].some(person => person.name === name)) {
-                            const description = await generateText(settings.question_param, areaContext(currentArea) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
-                            const visual = await generateText(settings.question_param, "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+                            const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
+                            const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
                             const seed = Math.floor(Math.random() * 4294967295) + 1;
                             const image = await generateArt(visual, "", seed);
                             areas[currentArea]['people'].push({ name, description, visual, seed, image });
@@ -777,8 +908,8 @@
                     const names = line.replace("2. ", '').trim().split(',').map(name => name.trim());
                     for (const name of names) {
                         if (!areas[currentArea]['people'].some(person => person.name === name)) {
-                            const description = await generateText(settings.question_param, areaContext(currentArea) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
-                            const visual = await generateText(settings.question_param, "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+                            const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
+                            const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
                             const seed = Math.floor(Math.random() * 4294967295) + 1;
                             const image = await generateArt(visual, "", seed);
                             areas[currentArea]['people'].push({ name, description, visual, seed, image });
@@ -791,15 +922,18 @@
                         areas[currentArea] = {};
                         await generateArea(currentArea);
                     }
-                    const peopleNames = areas[prevArea].people.map(person => person.name).join(', ');
-                    const movingPeople = await generateText(settings.question_param, areaContext(prevArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in a list format separate by '\n' in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who moved with the player?" + "]");
-                    const movers = movingPeople.split('\n');
-                    for (const mover of movers) {
-                        if (line.trim() != "") {
-                            const personIndex = areas[prevArea]['people'].findIndex(person => person.name === mover);
-                            if (personIndex !== -1) {
-                                const person = areas[prevArea]['people'].splice(personIndex, 1)[0];
-                                areas[currentArea]['people'].push(person);
+                    if(areas[prevArea].people.length > 0)
+                    {
+                        const peopleNames = areas[prevArea].people.map(person => person.name).join(', ');
+                        const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(prevArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in a list format separate by '\n' in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who moved with the player?" + "]");
+                        const movers = movingPeople.split('\n');
+                        for (const mover of movers) {
+                            if (line.trim() != "") {
+                                const personIndex = areas[prevArea]['people'].findIndex(person => person.name === mover);
+                                if (personIndex !== -1) {
+                                    const person = areas[prevArea]['people'].splice(personIndex, 1)[0];
+                                    areas[currentArea]['people'].push(person);
+                                }
                             }
                         }
                     }
@@ -810,8 +944,8 @@
         }
 
         function areaContext(area) {
-            let context = areas[area].name + " : " + areas[area].description + "\n\n";
-            if(areas[area].people)
+            let context = " \n" + areas[area].name + " : " + areas[area].description + "\n\n";
+            if(areas[area].people.length > 0)
             {
                 context += "People nearby\n";
                 for(let i = 0; i < areas[area].people.length; i++)
@@ -820,7 +954,7 @@
                 }
                 context += "\n";
             }
-            if(areas[area].things)
+            if(areas[area].things.length > 0)
             {
                 context += "Things in area\n";
                 for(let i = 0; i < areas[area].things.length; i++)
@@ -829,7 +963,7 @@
                 }
                 context += "\n";
             }
-            if(areas[area].hostiles)
+            if(areas[area].hostiles.length > 0)
             {
                 context += "Hostiles nearby\n";
                 for(let i = 0; i < areas[area].hostiles.length; i++)
@@ -846,7 +980,7 @@
             document.getElementById('sceneart').src = URL.createObjectURL(areas[settings.starting_area].image);
             document.getElementById('sceneart').alt = areas[settings.starting_area].description;
             const responseElement = document.createElement('div');
-            let text = await generateText(settings.story_param, "[Generate the beginning of the story as the player stands in an area described as " + areas[settings.starting_area].description + " Response should be less than 300 words.]");
+            let text = await generateText(settings.story_param, settings.world_description + "\n" + "[Generate the beginning of the story as the player arrives at " + areas[settings.starting_area] + ", an area described as " + areas[settings.starting_area].description + ". Response should be less than 300 words.]");
 
             // Trim incomplete sentences from the end of the text
             const sentences = text.match(/[^.!?]+[.!?]+["']?/g);
@@ -860,6 +994,9 @@
             output.scrollTop = output.scrollHeight;                
             await outputCheck(text);
             updateImageGrid(settings.starting_area);
+            await generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
+                document.getElementById('playerart').src = URL.createObjectURL(blob);
+            });
         }
 
         // Things are people, monsters, and interactables.
@@ -875,6 +1012,14 @@
 //            setupStart();
         });
 
+        function restartGame() {
+            areas = {};
+            areas[settings.starting_area] = {};
+            currentArea = settings.starting_area;
+            document.getElementById('output').innerHTML = '';
+            document.getElementById('imageGrid').innerHTML = '';
+            setupStart();
+        }
     </script>
 </body>
 </html>
