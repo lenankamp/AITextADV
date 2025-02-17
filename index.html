@@ -67,6 +67,7 @@
             background-color: white;
             cursor: col-resize;
             width: 5px;
+            height: 100%;
         }
         .resizer.horizontal {
             cursor: row-resize;
@@ -201,6 +202,43 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .map-container {
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .map {
+            width: 2000px; /* Arbitrary large size for the map */
+            height: 2000px;
+            position: absolute;
+            cursor: grab;
+        }
+
+        .map img {
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Disable default click and drag behavior */
+        }
+
+        .location {
+            position: absolute;
+            background-color: red;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .submenu {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            display: none;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
@@ -232,8 +270,18 @@
         </div>
         <div class="resizer" id="resizer-col"></div>
         <div class="side" id="right">
-            <div class="quadrant" id="q2" style="height: 640px;"><img id="sceneart" style="height:100%"></div>
-                        <div class="resizer horizontal" id="resizer-row2"></div>
+            <div class="quadrant" id="q2" style="height: 640px; display: flex; overflow:hidden;">
+                <div class="map-container" style="width: 40%;">
+                    <div class="map" id="map">
+                        <img src="map.jpg" alt="Map">
+                    </div>
+                </div>
+                <div class="resizer" id="resizer-map"></div>
+                <div class="sceneart-container" style="width: 60%; height: 100%;">
+                    <img id="sceneart" style="height:100%; width: 100%; object-fit: cover;">
+                </div>
+            </div>
+            <div class="resizer horizontal" id="resizer-row2"></div>
             <div class="quadrant" id="q4" style="flex: 1;">
                 <div class="output" id="output"></div>
                 <div class="input-container">
@@ -265,6 +313,7 @@
         const resizerCol = document.getElementById('resizer-col');
         const resizerRow1 = document.getElementById('resizer-row1');
         const resizerRow2 = document.getElementById('resizer-row2');   
+        const resizerMap = document.getElementById('resizer-map');
         const content = document.querySelector('.content');
         const leftSide = document.getElementById('left');
         const rightSide = document.getElementById('right');
@@ -272,12 +321,19 @@
         const quadrant2 = document.getElementById('q2');
         const quadrant3 = document.getElementById('q3');
         const quadrant4 = document.getElementById('q4');
+        const map = document.getElementById('map');
+        const mapContainer = document.querySelector('.map-container');
+        const sceneartContainer = document.querySelector('.sceneart-container');
+        const submenu = document.createElement('div');
+        submenu.classList.add('submenu');
+        document.body.appendChild(submenu);
 
         let startX, startY, startWidth, startHeight;
 
         resizerCol.addEventListener('mousedown', initDragCol);
         resizerRow1.addEventListener('mousedown', initDragRow);
         resizerRow2.addEventListener('mousedown', initDragRow);
+        resizerMap.addEventListener('mousedown', initDragMap);
 
         function initDragCol(e) {
             startX = e.clientX;
@@ -323,6 +379,24 @@
             document.quadrant = null; // Clear the stored quadrant
         }
 
+        function initDragMap(e) {
+            startX = e.clientX;
+            startWidth = parseInt(document.defaultView.getComputedStyle(mapContainer).getPropertyValue('width'));
+            document.addEventListener('mousemove', doDragMap, false);
+            document.addEventListener('mouseup', stopDragMap, false);
+        }
+
+        function doDragMap(e) {
+            const newWidth = startWidth + (e.clientX - startX);
+            mapContainer.style.width = `${newWidth}px`;
+            sceneartContainer.style.width = `calc(100% - ${newWidth}px - 5px)`; // 5px for the resizer
+        }
+
+        function stopDragMap() {
+            document.removeEventListener('mousemove', doDragMap, false);
+            document.removeEventListener('mouseup', stopDragMap, false);
+        }
+
         // IndexedDB setup
         let db;
         const request = indexedDB.open('gameData', 1);
@@ -351,7 +425,7 @@
                 player_seed: 1,
                 starting_area: "Home",
                 starting_area_description: "A cozy and warm room within a wooden cabin, your bed sits in the corner. A fire crackles in the fireplace, casting flickering shadows on the walls. The smell of pine and woodsmoke fills the air.",
-                q1_height: "640px",
+                q1_height: "600px",
                 q2_height: "640px",
                 column_width: "640px",
                 sdAPI: "http://localhost:7860/sdapi/v1/txt2img",
@@ -364,13 +438,15 @@
                 save_images: false,
                 sampler_name: "Euler_a",
                 seed_variation: 3,
-                textAPI: "http://localhost:5001/api/v1/generate",
-                max_context_length: 4096,
-                max_length: 400,
-                text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
-                stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
                 full_context: "$world $player $locale $fullstory",
                 story_param: {
+                    textAPI: "http://localhost:5001/v1/",
+                    textAPItype: "openai",       // currently supporting koboldcpp and openai for lm studio
+                    model: "mistral-small-24b-instruct-2501-abliterated-i1",
+                    max_context_length: 4096,
+                    max_length: 400,
+                    text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
+                    stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
                     system_prompt: "Continue the story according to the bracketed instructions. Create a lifelike atmosphere with vivid, immersive details that draw the reader into the story. Use 2nd-person perspective, present tense, referring to the player as \"you\". Avoid vague statements, flowery metaphors, summaries, or send-off messages (do not end the scene). Focus on the moment, including visual and sensory detail, with quoted dialogue if appropriate. Be creative and don't always make events predictable. Characters should behave realistically and not always pander to the player. Write in the style of: Terry Pratchett.",
                     quiet: false,
                     rep_pen: 1.1,
@@ -384,6 +460,13 @@
                     typical: 1
                 },
                 question_param: {
+                    textAPI: "http://localhost:5001/v1/",
+                    textAPItype: "openai",
+                    model: "mistral-small-24b-instruct-2501-abliterated-i1",
+                    max_context_length: 4096,
+                    max_length: 400,
+                    text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
+                    stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
                     system_prompt: "Simply and clearly answer the question. Be as concise as possible.",
                     quiet: false,
                     rep_pen: 1.0,
@@ -425,39 +508,74 @@
                 // Show loader
                 document.getElementById('loader').style.display = 'block';
 
+                let response;
                 // Send message to API
-                const response = await fetch(settings.textAPI, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        max_context_length: settings.max_context_length,
-                        max_length: settings.max_length,
-                        prompt: settings.text_prompt
-                                .replace('$system_prompt', params.system_prompt)
-                                .replace('$input_string', input)
-                                .replace('$response_string', post),
-                        quiet: params.quiet,
-                        rep_pen: params.rep_pen,
-                        rep_pen_range: params.rep_pen_range,
-                        rep_pen_slope: params.rep_pen_slope,
-                        temperature: params.temperature,
-                        tfs: params.tfs,
-                        top_a: params.top_a,
-                        top_k: params.top_k,
-                        top_p: params.top_p,
-                        typical: params.typical,
-                        stop_sequence: settings.stop_sequence
-                    })
-                });
+                if(params.textAPItype == 'openai') {
+                    response = await fetch(params.textAPI + 'chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            //'Authorization': 'Bearer ' + params.openai_key
+                        },
+                        body: JSON.stringify({
+                            model: params.model,
+                            messages: [
+                            {
+                                "role": "system",
+                                "content": params.system_prompt
+                            },
+                            {
+                                "role": "user",
+                                "content": input
+                            }
+                            ],
+                            max_completion_tokens: params.max_length,
+                            temperature: params.temperature,
+                            top_p: params.top_p,
+                            n: 1,
+                            stream: false,
+                            stop: params.stop_sequence
+                        })
+                    });
+                } else { // default to koboldcpp
+                    response = await fetch(params.textAPI + 'generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            max_context_length: params.max_context_length,
+                            max_length: params.max_length,
+                            prompt: params.text_prompt
+                                    .replace('$system_prompt', params.system_prompt)
+                                    .replace('$input_string', input)
+                                    .replace('$response_string', post),
+                            quiet: params.quiet,
+                            rep_pen: params.rep_pen,
+                            rep_pen_range: params.rep_pen_range,
+                            rep_pen_slope: params.rep_pen_slope,
+                            temperature: params.temperature,
+                            tfs: params.tfs,
+                            top_a: params.top_a,
+                            top_k: params.top_k,
+                            top_p: params.top_p,
+                            typical: params.typical,
+                            stop_sequence: params.stop_sequence
+                        })
+                    });
+                }
+                
 
                 const data = await response.json();
 
                 // Hide loader
                 document.getElementById('loader').style.display = 'none';
 
-                return data.results[0].text;
+                if(params.textAPItype == 'openai') {
+                    return data.choices[0].message.content;
+                } else {
+                    return data.results[0].text;
+                }
         }
         
         async function generateArt(prompt, negprompt='', seed=-1) {
@@ -1033,9 +1151,95 @@
             output.scrollTop = output.scrollHeight;                
             await outputCheck(text);
             updateImageGrid(settings.starting_area);
+            areas[settings.starting_area].x = 100;
+            areas[settings.starting_area].y = 100;
+
+            addLocation(settings.starting_area);
             await generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
                 document.getElementById('playerart').src = URL.createObjectURL(blob);
             });
+        }
+
+        // Map dragging functionality
+        let isDragging = false;
+        let dragStartX, dragStartY;
+
+        map.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            dragStartX = e.clientX - map.offsetLeft;
+            dragStartY = e.clientY - map.offsetTop;
+            map.style.cursor = 'grabbing';
+        });
+
+        map.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const x = e.clientX - dragStartX;
+                const y = e.clientY - dragStartY;
+                map.style.left = `${x}px`;
+                map.style.top = `${y}px`;
+            }
+        });
+
+        map.addEventListener('mouseup', () => {
+            isDragging = false;
+            map.style.cursor = 'grab';
+        });
+
+        map.addEventListener('mouseleave', () => {
+            isDragging = false;
+            map.style.cursor = 'grab';
+        });
+
+        // Add locations to the map
+        function addLocation(name) {
+            const tooltip = document.getElementById('tooltip');
+            const location = document.createElement('div');
+            location.classList.add('location');
+            location.style.left = `${areas[name].x}px`;
+            location.style.top = `${areas[name].y}px`;
+            location.style.width = '50px'; // Set the width of the square
+            location.style.height = '50px'; // Set the height of the square
+            location.style.backgroundImage = `url(${URL.createObjectURL(areas[name].image)})`; // Set the background image
+            location.style.backgroundSize = 'cover'; // Ensure the image covers the square
+            location.style.border = '1px solid #ccc'; // Optional: Add a border to the square
+            location.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openSubmenu(name, e.clientX, e.clientY);
+            });
+            location.addEventListener('mouseover', () => {
+                tooltip.style.display = 'block';
+                tooltip.innerHTML = `<strong>${name}</strong><br>${areas[name].description}<br><img src="${URL.createObjectURL(areas[name].image)}" alt="${name}" style="width: 100px; height: auto;">`;
+            });
+            location.addEventListener('mousemove', (e) => {
+                tooltip.style.left = e.pageX + 10 + 'px';
+                tooltip.style.top = e.pageY + 10 + 'px';
+            });
+            location.addEventListener('mouseout', () => {
+                tooltip.style.display = 'none';
+            });
+            map.appendChild(location);
+        }
+
+        // Open submenu for a location
+        function openSubmenu(name, x, y) {
+            submenu.innerHTML = `<strong>${name}</strong><br><button onclick="goToLocation('${name}')">Go</button>`;
+            submenu.style.left = `${x}px`;
+            submenu.style.top = `${y}px`;
+            submenu.style.display = 'block';
+        }
+
+        // Close submenu when clicking outside
+        document.addEventListener('click', () => {
+            submenu.style.display = 'none';
+        });
+
+        // Go to a location
+        function goToLocation(name) {
+            currentArea = name;
+            updateImageGrid(name);
+            document.getElementById('sceneart').src = URL.createObjectURL(areas[name].image);
+            document.getElementById('sceneart').alt = areas[name].description;
+            submenu.style.display = 'none';
         }
 
         // Things are people, monsters, and interactables.
@@ -1059,6 +1263,7 @@
             document.getElementById('imageGrid').innerHTML = '';
             setupStart();
         }
+
     </script>
 </body>
 </html>
