@@ -1,3 +1,19 @@
+let db;
+const request = indexedDB.open('gameData', 1);
+
+request.onupgradeneeded = function(event) {
+    db = event.target.result;
+    const objectStore = db.createObjectStore('data', { keyPath: 'id' });
+};
+
+request.onsuccess = function(event) {
+    db = event.target.result;
+};
+
+request.onerror = function(event) {
+    console.error('Database error:', event.target.errorCode);
+};
+
 async function saveGame() {
     const transaction = db.transaction(['data'], 'readwrite');
     const objectStore = transaction.objectStore('data');
