@@ -1,0 +1,227 @@
+body {
+    display: flex;
+    height: 100vh;
+    margin: 0;
+}
+.sidebar {
+    width: 250px;
+    background-color: #333;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.3s;
+    position: relative;
+}
+.sidebar.collapsed .toggle-btn:not(:first-child) {
+    display: none; /* Hide all buttons besides the first (menu) button when collapsed */
+}
+.sidebar.collapsed {
+    width: 50px;
+}
+.toggle-btn:first-child {
+    position: absolute;
+    bottom: 20px; /* Fixed vertical position relative to the bottom */
+}
+.content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 5px 1fr;
+    gap: 0;
+    padding: 0px;
+    max-height: 100vh;
+}
+.side {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 100vh;
+    min-height: 100vh;
+}
+.quadrant {
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    position: relative;
+    overflow: auto;
+}
+.toggle-btn {
+    background-color: #444;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+.resizer {
+    background-color: white;
+    cursor: col-resize;
+    width: 5px;
+    height: 100%;
+}
+.resizer.horizontal {
+    cursor: row-resize;
+    height: 5px;
+    width: 100%;
+}
+.output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    height: calc(100% - 50px);
+    max-height: calc(100% - 50px);
+    top:0;
+    box-sizing: border-box;
+    overflow: auto;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+.input-container {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 50px; /* Set a fixed height for the input container */
+}
+.input-container input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+.input-container button {
+    padding: 10px;
+    background-color: #444;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+.settings-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80%;
+    overflow-y: auto;
+}
+.settings-container label {
+    display: block;
+    margin-top: 10px;
+}
+.settings-container input,
+.settings-container textarea {
+    width: 100%;
+    padding: 5px;
+    margin-top: 5px;
+}
+.settings-container button {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #444;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+.image-grid {
+    display: grid;
+    gap: 10px;
+    padding: 10px;
+    height: 100%;
+}
+.image-grid img {
+    width: 30%;
+    object-fit: cover;
+    border: 1px solid #ccc;
+}
+.image-row {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 10px; /* Optional: Add some space between the images */
+}
+.tooltip {
+    position: absolute;
+    width: 400px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    display: none;
+    z-index: 10;
+}
+#playerart {
+    height: 100%;
+    display: flex;
+    object-fit: cover;
+    flex-grow: 1;
+    max-width: 35%;
+}
+.progress {
+    background-color: grey;
+    width: 100%;
+}
+.loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.map-container {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+.map {
+    width: 2000px; /* Arbitrary large size for the map */
+    height: 2000px;
+    position: absolute;
+    cursor: grab;
+}
+.map img {
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Disable default click and drag behavior */
+}
+.location {
+    position: absolute;
+    background-color: red;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+.submenu {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    display: none;
+    z-index: 100;
+}
