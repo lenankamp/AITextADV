@@ -17,17 +17,17 @@ async function saveGame() {
 async function saveToFile(data) {
     const images = {};
     for (const area in areas) {
-        if (areas[area].image) {
+        if (areas[area].image instanceof Blob) {
             images[area] = areas[area].image;
             areas[area].image = null;
-        }
+        } else console.log('Invalid image Blob:', area, areas[area].image);
         for (const category of ['people', 'things', 'hostiles']) {
             if (areas[area][category]) {
                 areas[area][category].forEach(item => {
                     if (item.image instanceof Blob) {
                         images[item.name] = item.image;
                         item.image = null;
-                    }
+                    } else console.log('Invalid image Blob:', area, category, item.name, item.image);
                 });
             }
         }

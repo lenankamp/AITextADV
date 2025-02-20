@@ -10,19 +10,19 @@ document.body.appendChild(submenu);
 map.addEventListener('mousedown', (e) => {
     startX = e.clientX;
     startY = e.clientY;
-    document.addEventListener('mousemove', doDragMap, false);
-    document.addEventListener('mouseup', stopDragMap, false);
+    document.addEventListener('mousemove', doScrollMap, false);
+    document.addEventListener('mouseup', stopScrollMap, false);
 });
 
-function doDragMap(e) {
+function doScrollMap(e) {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
     map.style.transform = `translate(${dx}px, ${dy}px)`;
 }
 
-function stopDragMap() {
-    document.removeEventListener('mousemove', doDragMap, false);
-    document.removeEventListener('mouseup', stopDragMap, false);
+function stopScrollMap() {
+    document.removeEventListener('mousemove', doScrollMap, false);
+    document.removeEventListener('mouseup', stopScrollMap, false);
 }
 
 map.addEventListener('mousedown', (e) => {
@@ -56,6 +56,7 @@ function addLocation(name) {
     const tooltip = document.getElementById('tooltip');
     const location = document.createElement('div');
     location.classList.add('location');
+    location.id = `location-${name}`;
     location.style.left = `${areas[name].x}px`;
     location.style.top = `${areas[name].y}px`;
     location.style.width = '50px'; // Set the width of the square

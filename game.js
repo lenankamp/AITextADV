@@ -14,21 +14,22 @@ request.onerror = function(event) {
     console.error('Database error:', event.target.errorCode);
 };
 
-async function generateArea(areaName, prompt='') {
+async function generateArea(areaName, description='') {
+    areas[areaName] = {};
     areas[areaName].name = areaName;
     areas[areaName].seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[areaName]['people'] = [];
     areas[areaName]['things'] = [];
     areas[areaName]['hostiles'] = [];
-
+                                        // should not be using full_context, just some testing
     let response;
-    if (prompt == '') {
-        response = await generateText(settings.question_param, settings.world_description + "\n[Generate a description of the area named " + areaName + ".]");
+    if (description == '') {
+        response = await generateText(settings.question_param, fullContext() + "\n[Generate a description of the area named " + areaName + ".]");
         areas[areaName].description = response;
     } else {
-        areas[areaName].description = prompt;
+        areas[areaName].description = description;
     }
-    response = await generateText(settings.question_param, settings.world_description + "\n[Be creative and generate a list of people and interesting things that could reasonably be found in the area named " + areaName + " with the following details: " + areas[areaName].description + " \nIf no people or hostiles might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 1-2 sentences. Answer in a formatted list as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]");
+    response = await generateText(settings.question_param, fullContext() + "\n[Be creative and generate a list of people and interesting things that could reasonably be found in the area named " + areaName + " with the following details: " + areas[areaName].description + " \nIf no people or hostiles might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 1-2 sentences. Answer in a formatted list as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]");
 
     // Process response to get people, things, and hostiles into the area object as a subset for each type.
     const lines = response.split('\n');
@@ -60,61 +61,124 @@ async function generateArea(areaName, prompt='') {
             areas[areaName][section].push({ name: name.replace('-', ''), description, visual, seed, image: 'placeholder' });
         }
     }
-    areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[settings.starting_area].description + '\n[How would you describe the visual details of the area described in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
+    areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[areaName].description + '\n[How would you describe the visual details of the area described in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
     areas[areaName].image = 'placeholder';
 }
 
-async function outputCheck(text, context="") {
-    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A' and no explaination. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene or someone in the scene has become hostile, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now?" + "]");
-    const lines = response.split('\n');
-    for (const line of lines) {
-        if (line.startsWith('1.') && !line.includes('N/A')) {
-            const names = line.replace("1. ", '').trim().split(',').map(name => name.trim());
-            for (const name of names) {
-                if (!areas[currentArea]['people'].some(person => person.name === name)) {
-                    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
-                    const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
-                    const seed = Math.floor(Math.random() * 4294967295) + 1;
-                    areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
+async function addPerson(name, area=currentArea, context="", text="") {
+    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
+    const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+    const seed = Math.floor(Math.random() * 4294967295) + 1;
+    areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
+    updateImageGrid(currentArea);
+}
+
+async function addThing(name, area=currentArea, context="", text="") {
+    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description. If there is not enough information in the context, be creative.]");
+    const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+    const seed = Math.floor(Math.random() * 4294967295) + 1;
+    areas[currentArea]['things'].push({ name, description, visual, seed, image: 'placeholder' });
+    updateImageGrid(currentArea);
+}
+
+async function addHostile(name, area=currentArea, context="", text="") {
+    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description with consideration for why they might be hostile to the player. If there is not enough information in the context, be creative.]");
+    const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+    const seed = Math.floor(Math.random() * 4294967295) + 1;
+    areas[currentArea]['hostiles'].push({ name, description, visual, seed, image: 'placeholder' });
+    updateImageGrid(currentArea);
+}
+
+async function moveToArea(area, prevArea, text="", context="") {
+    if (areas[area] == undefined) {
+        await generateArea(area);
+        setTimeout(async () => {
+            const artBlob = await generateArt(areas[area].visual, "", areas[area].seed);
+            if (artBlob instanceof Blob) {
+                areas[area].image = artBlob;
+                document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
+                const locationElement = document.getElementById(`location-${area}`);
+                if (locationElement) {
+                    locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
                 }
             }
-        } else if (line.startsWith('2.') && !line.includes('N/A')) {
-            const names = line.replace("2. ", '').trim().split(',').map(name => name.trim());
-            for (const name of names) {
-                if (!areas[currentArea]['people'].some(person => person.name === name)) {
-                    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
-                    const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
-                    const seed = Math.floor(Math.random() * 4294967295) + 1;
-                    areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
-                }
-            }
-        }else if (line.startsWith('3.') && !line.includes('N/A')) {
-            const prevArea = currentArea;
-            currentArea = line.replace("3. ", '').trim();
-            if(!(currentArea in areas)){
-                areas[currentArea] = {};
-                await generateArea(currentArea);
-            }
-            if(areas[prevArea].people.length > 0)
-            {
-                const peopleNames = areas[prevArea].people.map(person => person.name).join(', ');
-                const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(prevArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in a list format separate by '\n' in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who moved with the player?" + "]");
-                const movers = movingPeople.split('\n');
-                for (const mover of movers) {
-                    if (line.trim() != "") {
-                        const personIndex = areas[prevArea]['people'].findIndex(person => person.name === mover);
-                        if (personIndex !== -1) {
-                            const person = areas[prevArea]['people'].splice(personIndex, 1)[0];
-                            areas[currentArea]['people'].push(person);
-                        }
-                    }
+        }, 0);
+    }
+    currentArea = area;
+    if(areas[prevArea].people.length > 0) {
+        const peopleNames = areas[prevArea].people.map(person => person.name).join(', ');
+        const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(prevArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in a list format separate by '\n' in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who moved with the player?" + "]");
+        const movers = movingPeople.split('\n');
+        for (const mover of movers) {
+            if (mover.trim() != "") {
+                const personIndex = areas[prevArea]['people'].findIndex(person => person.name === mover);
+                if (personIndex !== -1) {
+                    const person = areas[prevArea]['people'].splice(personIndex, 1)[0];
+                    areas[currentArea]['people'].push(person);
                 }
             }
         }
     }
-
     updateImageGrid(currentArea);
 }
+
+function addConfirmButton(label, defaultValue, callback) {
+    const output = document.getElementById('output');
+    let buttonRow = document.getElementById('outputCheckConfirm');
+
+    if (!buttonRow) {
+        buttonRow = document.createElement('div');
+        buttonRow.id = 'outputCheckConfirm';
+        buttonRow.style.display = 'flex';
+        buttonRow.style.gap = '10px';
+        buttonRow.style.marginTop = '10px';
+        output.appendChild(buttonRow);
+    }
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = defaultValue;
+
+    const button = document.createElement('button');
+    button.textContent = label;
+    button.onclick = () => {
+        callback(input.value);
+        input.remove();
+        button.remove();
+    };
+
+    buttonRow.appendChild(input);
+    buttonRow.appendChild(button);
+    output.scrollTop = output.scrollHeight;
+}
+
+async function outputCheck(text, context="") {
+    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene or someone in the scene has become hostile, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now?]");
+    const lines = response.split('\n');
+
+    for (const line of lines) {
+        if (line.startsWith('1.') && !line.includes('N/A')) {
+            const names = line.replace("1. ", '').trim().split(',').map(name => name.replace(/[^a-zA-Z\s.]/g, '').replace(/\.$/, '').trim());
+            for (const name of names) {
+                if (!areas[currentArea]['people'].some(person => person.name === name)) {
+                    addConfirmButton('New Person', name, (inputValue) => addPerson(inputValue || name, currentArea, text, context));
+                }
+            }
+        } else if (line.startsWith('2.') && !line.includes('N/A')) {
+            const names = line.replace("2. ", '').trim().split(',').map(name => name.replace(/[^a-zA-Z\s.]/g, '').replace(/\.$/, '').trim());
+            for (const name of names) {
+                if (!areas[currentArea]['hostiles'].some(hostile => hostile.name === name)) {
+                    addConfirmButton('New Hostile', name, (inputValue) => addHostile(inputValue || name, currentArea, text, context));
+                }
+            }
+        } else if (line.startsWith('3.') && !line.includes('N/A')) {
+            const prevArea = currentArea;
+            const newArea = line.replace("3. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+                addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, prevArea, text, context));
+        }
+    }
+}
+
 
 function areaContext(area) {
     let context = " \n" + areas[area].name + " : " + areas[area].description + "\n\n";
@@ -160,16 +224,28 @@ async function sendMessage(message = input.value) {
     const input = document.getElementById('input');
     const output = document.getElementById('output');
     const messageElement = document.createElement('div');
+    messageElement.classList.add('new-message'); // Add distinct style to new message element
+
     if (message.trim()) {
         messageElement.innerHTML = '\n[Generate the next two paragraphs as player attempts to ' + message + ']';
     } else {
         messageElement.innerHTML = '\n[Continue the story for another two paragraphs.]';
     }
+    const confirmElement = document.getElementById('outputCheckConfirm');
+    if (confirmElement) {
+        confirmElement.remove();
+    }
+    // Remove distinct style from the prior message element
+    const priorMessageElement = output.querySelector('.new-message');
+    if (priorMessageElement) {
+        priorMessageElement.classList.remove('new-message');
+    }
+
     output.appendChild(messageElement);
     input.value = '';
     output.scrollTop = output.scrollHeight;
 
-    const text = await generateText(settings.story_param, fullContext() + messageElement.innerHTML);
+    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext() + messageElement.innerHTML));
     messageElement.innerHTML = "<br>" + text.replace(/\n/g, '<br>');
     output.scrollTop = output.scrollHeight;
 
@@ -183,36 +259,56 @@ async function sendMessage(message = input.value) {
     document.getElementById('sceneart').alt = artPrompt;
 }
 
+function undoLastAction() {
+    const output = document.getElementById('output');
+    const confirmElement = document.getElementById('outputCheckConfirm');
+    if (confirmElement) {
+        confirmElement.remove();
+    }
+    if (output.lastChild) {
+        output.removeChild(output.lastChild);
+    }
+}
+
+function trimIncompleteSentences(text) {
+    const sentences = text.match(/[^.!?]+[.!?]+["']?/g);
+    if (sentences && sentences.length > 1) {
+        sentences.pop(); // Remove the last incomplete sentence
+        return sentences.join(' '); // Rejoin the sentences
+    }
+    return text; // Return the original text if no sentences were found
+}
+
 async function setupStart() {
-    await generateArea(settings.starting_area, settings.starting_area_description);
     document.getElementById('sceneart').src = 'placeholder.png';
+    await generateArea(settings.starting_area, settings.starting_area_description);
+    document.getElementById('sceneart').alt = areas[settings.starting_area].description;
+    const responseElement = document.createElement('div');
+    responseElement.classList.add('new-message'); // Add distinct style to new message element
+    const text = trimIncompleteSentences(await generateText(settings.story_param, settings.world_description + "\n" + "[Generate the beginning of the story as the player arrives at " + areas[settings.starting_area] + ", an area described as " + areas[settings.starting_area].description + ". Response should be less than 300 words.]"));
+
+    areas[settings.starting_area].x = 100;
+    areas[settings.starting_area].y = 100;
+
+    addLocation(settings.starting_area);
+
     setTimeout(async () => {
         const artBlob = await generateArt(areas[settings.starting_area].visual, "", areas[settings.starting_area].seed);
         if (artBlob instanceof Blob) {
             areas[settings.starting_area].image = artBlob;
             document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
+            const locationElement = document.getElementById(`location-${settings.starting_area}`);
+            if (locationElement) {
+                locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
+            }
         }
     }, 0);
-    document.getElementById('sceneart').alt = areas[settings.starting_area].description;
-    const responseElement = document.createElement('div');
-    let text = await generateText(settings.story_param, settings.world_description + "\n" + "[Generate the beginning of the story as the player arrives at " + areas[settings.starting_area] + ", an area described as " + areas[settings.starting_area].description + ". Response should be less than 300 words.]");
-
-    // Trim incomplete sentences from the end of the text
-    const sentences = text.match(/[^.!?]+[.!?]+["']?/g);
-    if (sentences && sentences.length > 1) {
-        sentences.pop(); // Remove the last incomplete sentence
-        text = sentences.join(' '); // Rejoin the sentences
-    }
-
     responseElement.innerHTML = text.replace(/\n/g, '<br>');
     output.appendChild(responseElement);
     output.scrollTop = output.scrollHeight;
     await outputCheck(text);
     updateImageGrid(settings.starting_area);
-    areas[settings.starting_area].x = 100;
-    areas[settings.starting_area].y = 100;
 
-    addLocation(settings.starting_area);
     document.getElementById('playerart').src = 'placeholder.png';
     generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
         if (blob instanceof Blob)
@@ -220,22 +316,16 @@ async function setupStart() {
     });
 }
 
-// Things are people, monsters, and interactables.
-// Should have name, seed, type, visual, description, level, affinity,
-// health, attack, defense, speed, magic, magic defense, skills, items, location, status effects
-
 let areas = {};
 let currentArea;
+
 loadSettings().then(() => {
     areas[settings.starting_area] = {};
     currentArea = settings.starting_area;
-// setup disabled for quicker testing, re-enable for normal use.
-//            setupStart();
 });
 
 function restartGame() {
     areas = {};
-    areas[settings.starting_area] = {};
     currentArea = settings.starting_area;
     document.getElementById('output').innerHTML = '';
     document.getElementById('imageGrid').innerHTML = '';

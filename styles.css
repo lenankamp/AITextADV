@@ -225,3 +225,8 @@ body {
     display: none;
     z-index: 100;
 }
+.new-message {
+    background-color: #e0f7fa; /* Light cyan background */
+    border-left: 5px solid #00796b; /* Teal border */
+    padding-left: 10px; /* Padding to separate text from border */
+}
