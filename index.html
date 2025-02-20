@@ -974,16 +974,18 @@
             let currentSection = null;
             const artPromises = [];
             for (const line of lines) {
-                if (line.startsWith('People')) {
+                const cleanedLine = line.replace(/[^a-zA-Z]/g, '');
+                if (cleanedLine.startsWith('People')) {
                     currentSection = 'people';
-                } else if (line.startsWith('Things')) {
+                } else if (cleanedLine.startsWith('Things')) {
                     currentSection = 'things';
-                } else if (line.startsWith('Hostiles')) {
+                } else if (cleanedLine.startsWith('Hostiles')) {
                     currentSection = 'hostiles';
                 } else if (currentSection && line.trim() && !line.includes('None')) {
                     const [namePart, ...descriptionParts] = line.split(': ');
                     const name = namePart.replace(/[^a-zA-Z\s]/g, '').trim();
                     const description = descriptionParts.join(': ').trim();
+                    console.log('Adding:', name, description);
                     let visual = await generateText(settings.question_param, settings.world_description + "\n[How would you describe '" + name.replace('-', '') + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
                     const seed = Math.floor(Math.random() * 4294967295) + 1;
                     let negprompt = "";
