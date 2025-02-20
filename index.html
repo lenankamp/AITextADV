@@ -84,10 +84,10 @@
             max-height: calc(100% - 50px);
             top:0;
             box-sizing: border-box;
-            overflow: auto; 
+            overflow: auto;
             position: absolute;
             top: 0;
-            width: 100%; 
+            width: 100%;
         }
         .input-container {
             display: flex;
@@ -177,6 +177,7 @@
             display: flex;
             object-fit: cover;
             flex-grow: 1;
+            max-width: 35%;
         }
 
         .progress {
@@ -290,7 +291,7 @@
                     <button onclick="sendMessage(input.value)">Send</button>
                 </div>
             </div>
-        </div>    
+        </div>
     </div>
 
     <div class="overlay" id="settingsOverlay">
@@ -312,7 +313,7 @@
 
         const resizerCol = document.getElementById('resizer-col');
         const resizerRow1 = document.getElementById('resizer-row1');
-        const resizerRow2 = document.getElementById('resizer-row2');   
+        const resizerRow2 = document.getElementById('resizer-row2');
         const resizerMap = document.getElementById('resizer-map');
         const content = document.querySelector('.content');
         const leftSide = document.getElementById('left');
@@ -564,7 +565,7 @@
                         })
                     });
                 }
-                
+
 
                 const data = await response.json();
 
@@ -577,94 +578,99 @@
                     return data.results[0].text;
                 }
         }
-        
-        async function generateArt(prompt, negprompt='', seed=-1) {
-            // Show loader
-            document.getElementById('loader').style.display = 'block';
 
-            let sum = 0;
-            if (typeof seed == "string") {
-                for (let i=0; i < seed.length; i++)
-                    sum*= seed.charCodeAt(i);
-            }
-            else
-                sum = seed;
+async function generateArt(prompt, negprompt='', seed=-1) {
+    // Show loader
+    document.getElementById('loader').style.display = 'block';
 
-            const response = await fetch(settings.sdAPI, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "prompt": settings.default_prompt+prompt,
-                        "negative_prompt": settings.default_negative_prompt+negprompt,
-                        "width": settings.sd_width,
-                        "height": settings.sd_height,
-                        "steps": settings.steps,
-                        "seed": sum+Math.floor(Math.random() * settings.seed_variation),
-                        "cfg_scale": settings.cfg_scale,
-                        "send_images": true,
-                        "save_images": settings.save_images,
-                        "sampler_name": settings.sampler_name
+    let sum = 0;
+    if (typeof seed == "string") {
+        for (let i = 0; i < seed.length; i++)
+            sum *= seed.charCodeAt(i);
+    } else {
+        sum = seed;
+    }
 
-                    })
-                });
+    try {
+        const response = await fetch(settings.sdAPI, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "prompt": settings.default_prompt + prompt,
+                "negative_prompt": settings.default_negative_prompt + negprompt,
+                "width": settings.sd_width,
+                "height": settings.sd_height,
+                "steps": settings.steps,
+                "seed": sum + Math.floor(Math.random() * settings.seed_variation),
+                "cfg_scale": settings.cfg_scale,
+                "send_images": true,
+                "save_images": settings.save_images,
+                "sampler_name": settings.sampler_name
+            })
+        });
 
-                const data = await response.json();
-                // Assuming the image data is in data.images[0] as a base64 string
-                const imageBase64 = data.images[0];
-                const binaryString = window.atob(imageBase64);
-                const len = binaryString.length;
-                const bytes = new Uint8Array(len);
+        const data = await response.json();
+        // Assuming the image data is in data.images[0] as a base64 string
+        const imageBase64 = data.images[0];
+        const binaryString = window.atob(imageBase64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
 
-                for (let i = 0; i < len; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-
-                const pngBlob = new Blob([bytes], { type: 'image/png' });
-
-                // Converting PNG to WebP for file size reduction, shoud make quality or even this feature options
-
-                const img = new Image();
-
-                // Create a canvas element to draw the image
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-
-                if (!ctx) {
-                    throw new Error("Unable to obtain 2D rendering context.");
-                }
-
-                img.src = URL.createObjectURL(pngBlob);
-                await new Promise((resolve) => {
-                    img.onload = () => resolve();
-                });
-
-                canvas.width = img.width;
-                canvas.height = img.height;
-
-                ctx.drawImage(img, 0, 0);
-
-                const webpBlob = await new Promise((resolve) => {
-                    canvas.toBlob(
-                        (blob) => {
-                            if (blob) {
-                                resolve(blob);
-                            } else {
-                                throw new Error("Failed to convert to WebP format.");
-                            }
-                        },
-                        "image/webp",
-                        .6   // quality 0-1, 1 being best quality
-                    );
-                });
-
-                // Hide loader
-                document.getElementById('loader').style.display = 'none';
-
-                return webpBlob;
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
         }
 
+        const pngBlob = new Blob([bytes], { type: 'image/png' });
+
+        // Converting PNG to WebP for file size reduction, should make quality or even this feature options
+
+        const img = new Image();
+
+        // Create a canvas element to draw the image
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+            throw new Error("Unable to obtain 2D rendering context.");
+        }
+
+        img.src = URL.createObjectURL(pngBlob);
+        await new Promise((resolve) => {
+            img.onload = () => resolve();
+        });
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        ctx.drawImage(img, 0, 0);
+
+        const webpBlob = await new Promise((resolve) => {
+            canvas.toBlob(
+                (blob) => {
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        throw new Error("Failed to convert to WebP format.");
+                    }
+                },
+                "image/webp",
+                0.6 // quality 0-1, 1 being best quality
+            );
+        });
+
+        // Hide loader
+        document.getElementById('loader').style.display = 'none';
+
+        return webpBlob;
+    } catch (error) {
+        // Hide loader
+        document.getElementById('loader').style.display = 'none';
+        // Return placeholder image
+        return 'placeholder';
+    }
+}
         async function saveGame() {
             const transaction = db.transaction(['data'], 'readwrite');
             const objectStore = transaction.objectStore('data');
@@ -839,6 +845,7 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             document.getElementById('fileInput').addEventListener('change', loadFromFile);
         });
+        
         async function sendMessage(message = input.value) {
             const input = document.getElementById('input');
             const output = document.getElementById('output');
@@ -858,10 +865,11 @@
 
             await outputCheck(text, output.textContent);
 
-            // Await the result of generateArt
             const artPrompt = await generateText(settings.question_param, messageElement.innerHTML + '\n[How would you describe the visual details of the previous scene in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
-            const blob = await generateArt(artPrompt);
-            document.getElementById('sceneart').src = URL.createObjectURL(blob);
+            generateArt(artPrompt).then(blob => {
+                if (blob instanceof Blob)
+                    document.getElementById('sceneart').src = URL.createObjectURL(blob);
+            });
             document.getElementById('sceneart').alt = artPrompt;
         }
 
@@ -972,7 +980,6 @@
             // Process response to get people, things, and hostiles into the area object as a subset for each type.
             const lines = response.split('\n');
             let currentSection = null;
-            const artPromises = [];
             for (const line of lines) {
                 const cleanedLine = line.replace(/[^a-zA-Z]/g, '');
                 if (cleanedLine.startsWith('People')) {
@@ -985,7 +992,6 @@
                     const [namePart, ...descriptionParts] = line.split(': ');
                     const name = namePart.replace(/[^a-zA-Z\s]/g, '').trim();
                     const description = descriptionParts.join(': ').trim();
-                    console.log('Adding:', name, description);
                     let visual = await generateText(settings.question_param, settings.world_description + "\n[How would you describe '" + name.replace('-', '') + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
                     const seed = Math.floor(Math.random() * 4294967295) + 1;
                     let negprompt = "";
@@ -998,18 +1004,11 @@
                         visual = "((" + name.replace('-', '') + ")),(nopeople)" + visual;
                     }
                     const section = currentSection; // Capture the current section
-                    artPromises.push(generateArt(visual, negprompt, seed).then(image => {
-                        areas[areaName][section].push({ name: name.replace('-', ''), description, visual, seed, image });
-                    }));
+                    areas[areaName][section].push({ name: name.replace('-', ''), description, visual, seed, image: 'placeholder' });
                 }
             }
             areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[settings.starting_area].description + '\n[How would you describe the visual details of the area described in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
-
-            artPromises.push(generateArt(areas[areaName].visual, "people", areas[areaName].seed).then(image => {
-                areas[areaName].image = image;
-            }));
-
-            await Promise.all(artPromises);
+            areas[areaName].image = 'placeholder';
         }
 
         function updateImageGrid(areaName) {
@@ -1026,6 +1025,15 @@
                         const img = document.createElement('img');
                         if (item.image instanceof Blob) {
                             img.src = URL.createObjectURL(item.image);
+                        } else if(item.image == 'placeholder') {
+                            img.src = 'placeholder.png';
+                            setTimeout(async () => {
+                                const artBlob = await generateArt(item.visual, "", item.seed);
+                                if (artBlob instanceof Blob) {
+                                    item.image = artBlob;
+                                    img.src = URL.createObjectURL(artBlob);
+                                }
+                            }, 0);
                         } else {
                             console.error('Invalid image Blob:', areaName, category, item.name, item.image);
                         }
@@ -1059,8 +1067,7 @@
                             const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
                             const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
                             const seed = Math.floor(Math.random() * 4294967295) + 1;
-                            const image = await generateArt(visual, "", seed);
-                            areas[currentArea]['people'].push({ name, description, visual, seed, image });
+                            areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
                         }
                     }
                 } else if (line.startsWith('2.') && !line.includes('N/A')) {
@@ -1070,8 +1077,7 @@
                             const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
                             const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
                             const seed = Math.floor(Math.random() * 4294967295) + 1;
-                            const image = await generateArt(visual, "", seed);
-                            areas[currentArea]['people'].push({ name, description, visual, seed, image });
+                            areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
                         }
                     }
                 }else if (line.startsWith('3.') && !line.includes('N/A')) {
@@ -1098,7 +1104,7 @@
                     }
                 }
             }
-            
+
             updateImageGrid(currentArea);
         }
 
@@ -1136,7 +1142,14 @@
 
         async function setupStart() {
             await generateArea(settings.starting_area, settings.starting_area_description);
-            document.getElementById('sceneart').src = URL.createObjectURL(areas[settings.starting_area].image);
+            document.getElementById('sceneart').src = 'placeholder.png';
+            setTimeout(async () => {
+                const artBlob = await generateArt(areas[settings.starting_area].visual, "", areas[settings.starting_area].seed);
+                if (artBlob instanceof Blob) {
+                    areas[settings.starting_area].image = artBlob;
+                    document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
+                }
+            }, 0);
             document.getElementById('sceneart').alt = areas[settings.starting_area].description;
             const responseElement = document.createElement('div');
             let text = await generateText(settings.story_param, settings.world_description + "\n" + "[Generate the beginning of the story as the player arrives at " + areas[settings.starting_area] + ", an area described as " + areas[settings.starting_area].description + ". Response should be less than 300 words.]");
@@ -1150,15 +1163,17 @@
 
             responseElement.innerHTML = text.replace(/\n/g, '<br>');
             output.appendChild(responseElement);
-            output.scrollTop = output.scrollHeight;                
+            output.scrollTop = output.scrollHeight;
             await outputCheck(text);
             updateImageGrid(settings.starting_area);
             areas[settings.starting_area].x = 100;
             areas[settings.starting_area].y = 100;
 
             addLocation(settings.starting_area);
-            await generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
-                document.getElementById('playerart').src = URL.createObjectURL(blob);
+            document.getElementById('playerart').src = 'placeholder.png';
+            generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
+                if (blob instanceof Blob)
+                    document.getElementById('playerart').src = URL.createObjectURL(blob);
             });
         }
 
@@ -1201,7 +1216,8 @@
             location.style.top = `${areas[name].y}px`;
             location.style.width = '50px'; // Set the width of the square
             location.style.height = '50px'; // Set the height of the square
-            location.style.backgroundImage = `url(${URL.createObjectURL(areas[name].image)})`; // Set the background image
+            if (areas[name].image instanceof Blob)
+                location.style.backgroundImage = `url(${URL.createObjectURL(areas[name].image)}`; // Set the background image
             location.style.backgroundSize = 'cover'; // Ensure the image covers the square
             location.style.border = '1px solid #ccc'; // Optional: Add a border to the square
             location.addEventListener('click', (e) => {
