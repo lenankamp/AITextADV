@@ -114,8 +114,8 @@ function addConfirmButton(label, defaultValue, callback) {
         buttonRow = document.createElement('div');
         buttonRow.id = 'outputCheckConfirm';
         buttonRow.style.display = 'flex';
-        buttonRow.style.gap = '10px';
-        buttonRow.style.marginTop = '10px';
+        buttonRow.style.gap = '0px';
+        buttonRow.style.marginTop = '5px';
         output.appendChild(buttonRow);
     }
 
@@ -125,6 +125,7 @@ function addConfirmButton(label, defaultValue, callback) {
 
     const button = document.createElement('button');
     button.textContent = label;
+    button.style.marginRight = '5px';
     button.onclick = () => {
         callback(input.value);
         input.remove();
@@ -136,29 +137,74 @@ function addConfirmButton(label, defaultValue, callback) {
     output.scrollTop = output.scrollHeight;
 }
 
+function renamePerson(name, prevName) {
+    const personIndex = areas[currentArea]['people'].findIndex(person => person.name === prevName);
+    if (personIndex !== -1) {
+        const person = areas[currentArea]['people'][personIndex];
+        person.name = name;
+    }
+    updateImageGrid(currentArea);
+}
+
+function befriendHostile(name) {
+    const hostileIndex = areas[currentArea]['hostiles'].findIndex(hostile => hostile.name === name);
+    if (hostileIndex !== -1) {
+        const hostile = areas[currentArea]['hostiles'].splice(hostileIndex, 1)[0];
+        areas[currentArea]['people'].push(hostile);
+    }
+    updateImageGrid(currentArea);
+}
+
+function provokeAlly(name) {
+    const personIndex = areas[currentArea]['people'].findIndex(person => person.name === name);
+    if (personIndex !== -1) {
+        const person = areas[currentArea]['people'].splice(personIndex, 1)[0];
+        areas[currentArea]['hostiles'].push(person);
+    }
+    updateImageGrid(currentArea);
+}
+
 async function outputCheck(text, context="") {
-    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene or someone in the scene has become hostile, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now?]");
+    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. If hostile has become an ally, what is their name? 7. If someone not hostile has become hostile, what is their name?]");
     const lines = response.split('\n');
 
     for (const line of lines) {
-        if (line.startsWith('1.') && !line.includes('N/A')) {
+        if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
             const names = line.replace("1. ", '').trim().split(',').map(name => name.replace(/[^a-zA-Z\s.]/g, '').replace(/\.$/, '').trim());
             for (const name of names) {
                 if (!areas[currentArea]['people'].some(person => person.name === name)) {
                     addConfirmButton('New Person', name, (inputValue) => addPerson(inputValue || name, currentArea, text, context));
                 }
             }
-        } else if (line.startsWith('2.') && !line.includes('N/A')) {
+        } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
             const names = line.replace("2. ", '').trim().split(',').map(name => name.replace(/[^a-zA-Z\s.]/g, '').replace(/\.$/, '').trim());
             for (const name of names) {
                 if (!areas[currentArea]['hostiles'].some(hostile => hostile.name === name)) {
                     addConfirmButton('New Hostile', name, (inputValue) => addHostile(inputValue || name, currentArea, text, context));
                 }
             }
-        } else if (line.startsWith('3.') && !line.includes('N/A')) {
-            const prevArea = currentArea;
+        } else if (line.startsWith('3.') && !line.includes('N/A') && line.trim() !== '3.') {
             const newArea = line.replace("3. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
-                addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, prevArea, text, context));
+            addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, prevArea, text, context));
+        } else if (line.startsWith('4.') && !line.includes('N/A') && line.trim() !== '4.') {
+            const newName = line.replace("4. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+            if (!areas[currentArea].people.some(person => person.name === newName) && newName != settings.player_name) {
+                const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');  // should probably add hostiles to this list
+                const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]");
+                if (prevName.trim() != "N/A") {
+                    addConfirmButton('Rename ' + prevName, newName, (inputValue) => renamePerson(inputValue || newName, prevName));
+                } else addConfirmButton('New Person', newName, (inputValue) => addPerson(inputValue || newName, currentArea, text, context));
+            }
+        } else if (line.startsWith('5.') && !line.includes('N/A') && line.trim() !== '5.') {
+            const prevArea = currentArea;
+            const newArea = line.replace("5. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+// nowhere to go yet            addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, prevArea, text, context));
+        } else if (line.startsWith('6.') && !line.includes('N/A') && line.trim() !== '6.') {
+            const name = line.replace("6. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+            addConfirmButton('Befriend', name, (inputValue) => befriendHostile(inputValue || name));
+        } else if (line.startsWith('7.') && !line.includes('N/A') && line.trim() !== '7.') {
+            const name = line.replace("7. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+            addConfirmButton('Provoke', name, (inputValue) => provokeAlly(inputValue || name));
         }
     }
 }
@@ -303,10 +349,12 @@ async function setupStart() {
 let areas = {};
 let currentArea;
 
-loadSettings().then(() => {
+    loadSettings();
+    console.log(settings);
+    overrideSettings();
+    console.log(settings);
     areas[settings.starting_area] = {};
     currentArea = settings.starting_area;
-});
 
 function restartGame() {
     areas = {};

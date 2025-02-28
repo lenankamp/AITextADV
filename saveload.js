@@ -106,11 +106,13 @@ async function loadFromFile(event) {
         const reader = new FileReader();
         reader.onload = async function(e) {
             const { data, images } = JSON.parse(e.target.result);
+            const output = document.getElementById('output');
             areas = data.state.areas;
             currentArea = data.state.currentArea;
-            document.getElementById('output').innerHTML = data.state.outputLog;
+            output.innerHTML = data.state.outputLog;
             settings = data.state.settings;
-
+            output.scrollTop = output.scrollHeight;
+        
             await loadImages(images);
             document.getElementById('q1').style.height = settings.q1_height;
             document.getElementById('q2').style.height = settings.q2_height;

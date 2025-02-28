@@ -1,6 +1,6 @@
 let settings;
 
-async function loadSettings() {
+function loadSettings() {
     const defaultSettings = {
         world_description: "A vast and mysterious world filled with magic and wonder.",
         player_name: "Adventurer",
@@ -36,7 +36,7 @@ async function loadSettings() {
             rep_pen: 1.1,
             rep_pen_range: 256,
             rep_pen_slope: 1,
-            temperature: 1.0,
+            temperature: 0.9,
             tfs: 1,
             top_a: 0,
             top_k: 100,
@@ -74,3 +74,5 @@ async function loadSettings() {
     document.getElementById('q2').style.height = settings.q2_height;
     content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
 }
+
+function overrideSettings() {};
