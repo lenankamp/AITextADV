@@ -31,16 +31,9 @@ async function generateArea(areaName, description='') {
             const name = namePart.replace(/[^a-zA-Z\s]/g, '').trim();
             const description = descriptionParts.join(': ').trim();
             let visual = await generateText(settings.question_param, settings.world_description + "\n[How would you describe '" + name.replace('-', '') + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+            if(currentSection === 'things')
+                visual = "(" + name + "), " + visual;
             const seed = Math.floor(Math.random() * 4294967295) + 1;
-            let negprompt = "";
-            if (currentSection == "people") {
-                negprompt = "";
-            } else if (currentSection == "hostiles") {
-                negprompt = "friendly";
-            } else if (currentSection == "things") {
-                negprompt = "((people, human, person))";
-                visual = "((" + name.replace('-', '') + ")),(nopeople)" + visual;
-            }
             const section = currentSection; // Capture the current section
             areas[areaName][section].push({ name: name.replace('-', ''), description, visual, seed, image: 'placeholder' });
         }

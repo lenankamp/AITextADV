@@ -182,7 +182,19 @@ function updateImageGrid(areaName) {
                 } else if(item.image == 'placeholder') {
                     img.src = 'placeholder.png';
                     setTimeout(async () => {
-                        const artBlob = await generateArt(item.visual, "", item.seed);
+                        let negprompt = "";
+                        let posprompt = "";
+                        if (category == "people") {
+                            posprompt = settings.person_prompt;
+                            negprompt = settings.person_negprompt;
+                        } else if (category == "hostiles") {
+                            posprompt = settings.person_prompt;
+                            negprompt = settings.hostile_negprompt;
+                        } else if (category == "things") {
+                            posprompt = settings.person_prompt;
+                            negprompt = settings.thing_negprompt;
+                        }
+                        const artBlob = await generateArt(posprompt + item.visual, negprompt, item.seed);
                         if (artBlob instanceof Blob) {
                             item.image = artBlob;
                             img.src = URL.createObjectURL(artBlob);
