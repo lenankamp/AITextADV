@@ -269,9 +269,27 @@ async function sendMessage(message = input.value) {
     const output = document.getElementById('output');
     const messageElement = document.createElement('div');
     messageElement.classList.add('new-message'); // Add distinct style to new message element
+    input.value = '';
 
     if (message.trim()) {
-        messageElement.innerHTML = '\n[Generate the next two paragraphs as player attempts to ' + message + ']';
+        if (message.startsWith('/')) {
+            const parts = message.split(' ');
+            const command = parts[0];
+            const name = parts.slice(1).join(' ');
+
+            if (command === '/char') {
+                await addPerson(name);
+            } else if (command === '/thing') {
+                await addThing(name);
+            } else if (command === '/hostile') {
+                await addHostile(name);
+            } else {
+                console.log('[Unknown command: ' + message + ']');
+            }
+            return;
+        } else {
+            messageElement.innerHTML = '\n[Generate the next two paragraphs as player attempts to ' + message + ']';
+        }
     } else {
         messageElement.innerHTML = '\n[Continue the story for another two paragraphs.]';
     }
@@ -286,7 +304,6 @@ async function sendMessage(message = input.value) {
     }
 
     output.appendChild(messageElement);
-    input.value = '';
     output.scrollTop = output.scrollHeight;
 
     const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext() + messageElement.innerHTML));
