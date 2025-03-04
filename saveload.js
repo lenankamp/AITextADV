@@ -126,6 +126,13 @@ async function loadFromFile(event) {
                 const playerImageBlob = await fetchImage(images['player']);
                 document.getElementById('playerart').src = URL.createObjectURL(playerImageBlob);
             }
+            // clear locations from the map and then add all locations
+            document.querySelectorAll('.location').forEach(location => {
+                location.remove();
+            });
+            for (const area in areas) {
+                addLocation(area);
+            }
         };
         reader.readAsText(file);
     }

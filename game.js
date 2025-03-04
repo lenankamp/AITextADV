@@ -1,7 +1,9 @@
-async function generateArea(areaName, description='') {
+async function generateArea(x, y, areaName, description='') {
     areas[areaName] = {};
     areas[areaName].name = areaName;
     areas[areaName].seed = Math.floor(Math.random() * 4294967295) + 1;
+    areas[areaName].x = x;
+    areas[areaName].y = y;
     areas[areaName]['people'] = [];
     areas[areaName]['things'] = [];
     areas[areaName]['hostiles'] = [];
@@ -40,6 +42,7 @@ async function generateArea(areaName, description='') {
     }
     areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[areaName].description + '\n[How would you describe the visual details of the area described in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
     areas[areaName].image = 'placeholder';
+    addLocation(areaName);
 }
 
 async function addPerson(name, area=currentArea, context="", text="") {
@@ -68,7 +71,23 @@ async function addHostile(name, area=currentArea, context="", text="") {
 
 async function moveToArea(area, prevArea, text="", context="") {
     if (areas[area] == undefined) {
-        await generateArea(area);
+        // generate coordianates for new area, must not be same as another area, near prevArea, and within map bounds
+        let newX, newY;
+        const maxAttempts = 100;
+        let attempts = 0;
+        const distance = 30; // Distance from the previous area
+
+        do {
+            newX = areas[prevArea].x + Math.floor(Math.random() * distance * 2) - distance;
+            newY = areas[prevArea].y + Math.floor(Math.random() * distance * 2) - distance;
+            attempts++;
+        } while (attempts < maxAttempts && Object.values(areas).some(area => area.x === newX && area.y === newY));
+
+        if (attempts >= maxAttempts) {
+            throw new Error("Unable to find a suitable location for the new area.");
+        }
+
+        await generateArea(newX, newY, area);
         setTimeout(async () => {
             const artBlob = await generateArt(areas[area].visual, "", areas[area].seed);
             if (artBlob instanceof Blob) {
@@ -178,15 +197,17 @@ async function outputCheck(text, context="") {
             }
         } else if (line.startsWith('3.') && !line.includes('N/A') && line.trim() !== '3.') {
             const newArea = line.replace("3. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
-            addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, prevArea, text, context));
+            addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, currentArea, text, context));
         } else if (line.startsWith('4.') && !line.includes('N/A') && line.trim() !== '4.') {
             const newName = line.replace("4. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
             if (!areas[currentArea].people.some(person => person.name === newName) && newName != settings.player_name) {
                 const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');  // should probably add hostiles to this list
                 const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]");
-                if (prevName.trim() != "N/A") {
+                if (prevName.trim() != "N/A" && areas[currentArea].people.some(person => person.name === prevName)) {
                     addConfirmButton('Rename ' + prevName, newName, (inputValue) => renamePerson(inputValue || newName, prevName));
-                } else addConfirmButton('New Person', newName, (inputValue) => addPerson(inputValue || newName, currentArea, text, context));
+                } else {
+                    addConfirmButton('New Person', newName, (inputValue) => addPerson(inputValue || newName, currentArea, text, context));
+                }
             }
         } else if (line.startsWith('5.') && !line.includes('N/A') && line.trim() !== '5.') {
             const prevArea = currentArea;
@@ -304,16 +325,11 @@ function trimIncompleteSentences(text) {
 
 async function setupStart() {
     document.getElementById('sceneart').src = 'placeholder.png';
-    await generateArea(settings.starting_area, settings.starting_area_description);
+    await generateArea(100, 100, settings.starting_area, settings.starting_area_description);
     document.getElementById('sceneart').alt = areas[settings.starting_area].description;
     const responseElement = document.createElement('div');
     responseElement.classList.add('new-message'); // Add distinct style to new message element
     const text = trimIncompleteSentences(await generateText(settings.story_param, settings.world_description + "\n" + "[Generate the beginning of the story as the player arrives at " + areas[settings.starting_area] + ", an area described as " + areas[settings.starting_area].description + ". Response should be less than 300 words.]"));
-
-    areas[settings.starting_area].x = 100;
-    areas[settings.starting_area].y = 100;
-
-    addLocation(settings.starting_area);
 
     setTimeout(async () => {
         const artBlob = await generateArt(areas[settings.starting_area].visual, "", areas[settings.starting_area].seed);
@@ -351,6 +367,9 @@ let currentArea;
 
 function restartGame() {
     areas = {};
+    document.querySelectorAll('.location').forEach(location => {
+        location.remove();
+    });
     currentArea = settings.starting_area;
     document.getElementById('output').innerHTML = '';
     document.getElementById('imageGrid').innerHTML = '';

@@ -199,8 +199,8 @@ body {
     position: relative;
 }
 .map {
-    width: 2000px; /* Arbitrary large size for the map */
-    height: 2000px;
+    width: 8000px; /* Arbitrary large size for the map */
+    height: 8000px;
     position: absolute;
     cursor: grab;
 }
@@ -212,8 +212,8 @@ body {
 .location {
     position: absolute;
     background-color: red;
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
     border-radius: 50%;
     cursor: pointer;
 }
