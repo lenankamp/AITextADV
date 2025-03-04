@@ -11,7 +11,9 @@ async function generateArea(x, y, areaName, description='') {
     let response;
     if (description == '') {
         const prompt = settings.generateAreaDescriptionPrompt.replace('{areaName}', areaName);
-        response = await generateText(settings.question_param, fullContext() + "\n" + prompt);
+        response = await generateText(settings.question_param, fullContext() + "\n" + prompt, '', {
+            areaName: areaName
+        });
         areas[areaName].description = response;
     } else {
         areas[areaName].description = description;
@@ -21,7 +23,10 @@ async function generateArea(x, y, areaName, description='') {
         .replace('{areaName}', areaName)
         .replace('{description}', areas[areaName].description);
 
-    response = await generateText(settings.question_param, fullContext() + "\n" + entitiesPrompt);
+    response = await generateText(settings.question_param, fullContext() + "\n" + entitiesPrompt, '', {
+        areaName: areaName,
+        description: areas[areaName].description
+    });
 
     // Process response to get people, things, and hostiles into the area object as a subset for each type.
     const lines = response.split('\n');
@@ -42,7 +47,11 @@ async function generateArea(x, y, areaName, description='') {
                 .replace('{name}', name.replace('-', ''))
                 .replace('{description}', description);
 
-            let visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt);
+            let visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
+                name: name.replace('-', ''),
+                description: description
+            });
+            
             if(currentSection === 'things')
                 visual = "(" + name + "), " + visual;
             const seed = Math.floor(Math.random() * 4294967295) + 1;
@@ -55,7 +64,11 @@ async function generateArea(x, y, areaName, description='') {
         .replace('{name}', areaName)
         .replace('{description}', areas[areaName].description);
 
-    areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[areaName].description + '\n' + visualPrompt);
+    areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[areaName].description + '\n' + visualPrompt, '', {
+        name: areaName,
+        description: areas[areaName].description
+    });
+    
     areas[areaName].image = 'placeholder';
     addLocation(areaName);
 }
@@ -64,12 +77,22 @@ async function addPerson(name, area=currentArea, context="", text="") {
     const descriptionPrompt = settings.addPersonDescriptionPrompt
         .replace('{name}', name);
 
-    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt);
+    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+        name: name,
+        area: area,
+        context: context,
+        text: text
+    });
+    
     let visualPrompt = settings.generateVisualPrompt
         .replace('{name}', name)
         .replace('{description}', description);
 
-    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt);
+    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
+        name: name,
+        description: description
+    });
+    
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);
@@ -77,15 +100,25 @@ async function addPerson(name, area=currentArea, context="", text="") {
 
 async function addThing(name, area=currentArea, context="", text="") {
     const descriptionPrompt = settings.addThingDescriptionPrompt
-    .replace('{name}', name);
+        .replace('{name}', name);
 
-const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt);
-let visualPrompt = settings.generateVisualPrompt
-    .replace('{name}', name)
-    .replace('{description}', description);
+    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+        name: name,
+        area: area,
+        context: context,
+        text: text
+    });
+    
+    let visualPrompt = settings.generateVisualPrompt
+        .replace('{name}', name)
+        .replace('{description}', description);
 
-const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt);
-const seed = Math.floor(Math.random() * 4294967295) + 1;
+    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
+        name: name,
+        description: description
+    });
+    
+    const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['things'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);
 }
@@ -94,12 +127,22 @@ async function addHostile(name, area=currentArea, context="", text="") {
     const descriptionPrompt = settings.addHostileDescriptionPrompt
         .replace('{name}', name);
 
-    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt);
+    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+        name: name,
+        area: area,
+        context: context,
+        text: text
+    });
+    
     let visualPrompt = settings.generateVisualPrompt
         .replace('{name}', name)
         .replace('{description}', description);
 
-    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt);
+    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
+        name: name,
+        description: description
+    });
+    
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['hostiles'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);
@@ -139,7 +182,13 @@ async function moveToArea(area, prevArea, text="", context="") {
     currentArea = area;
     if(areas[prevArea].people.length > 0) {
         const peopleNames = areas[prevArea].people.map(person => person.name).join(', ');
-        const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(prevArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in a list format separate by '\n' in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who moved with the player?" + "]");
+        const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(prevArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in a list format separate by '\n' in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who moved with the player?" + "]", '', {
+            prevArea: prevArea,
+            newArea: area,
+            context: context,
+            text: text,
+            peopleNames: peopleNames
+        });
         const movers = movingPeople.split('\n');
         for (const mover of movers) {
             if (mover.trim() != "") {
@@ -214,7 +263,11 @@ function provokeAlly(name) {
 
 async function outputCheck(text, context="") {
     const prompt = settings.outputCheckPrompt;
-    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n" + prompt);
+    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
+        currentArea: currentArea,
+        context: context,
+        text: text
+    });
     const lines = response.split('\n');
 
     for (const line of lines) {
@@ -239,7 +292,13 @@ async function outputCheck(text, context="") {
             const newName = line.replace("4. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
             if (!areas[currentArea].people.some(person => person.name === newName) && newName != settings.player_name) {
                 const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');  // should probably add hostiles to this list
-                const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]");
+                const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]", '', {
+                    peopleNames: peopleNames,
+                    newName: newName,
+                    currentArea: currentArea,
+                    context: context,
+                    text: text
+                });
                 if (prevName.trim() != "N/A" && areas[currentArea].people.some(person => person.name === prevName)) {
                     addConfirmButton('Rename ' + prevName, newName, (inputValue) => renamePerson(inputValue || newName, prevName));
                 } else {
@@ -343,13 +402,22 @@ async function sendMessage(message = input.value) {
     output.appendChild(messageElement);
     output.scrollTop = output.scrollHeight;
 
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext() + messageElement.innerHTML));
+    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext() + messageElement.innerHTML, '', {
+        message: message,
+        currentArea: currentArea,
+        playerName: settings.player_name
+    }));
+    
     messageElement.innerHTML = "<br>" + text.replace(/\n/g, '<br>');
     output.scrollTop = output.scrollHeight;
 
     await outputCheck(text, output.textContent);
 
-    const artPrompt = await generateText(settings.question_param, messageElement.innerHTML + '\n[How would you describe the visual details of the previous scene in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
+    const artPrompt = await generateText(settings.question_param, messageElement.innerHTML + '\n[How would you describe the visual details of the previous scene in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]', '', {
+        text: text,
+        currentArea: currentArea
+    });
+    
     generateArt(artPrompt).then(blob => {
         if (blob instanceof Blob)
             document.getElementById('sceneart').src = URL.createObjectURL(blob);
@@ -383,7 +451,13 @@ async function setupStart() {
     document.getElementById('sceneart').alt = areas[settings.starting_area].description;
     const responseElement = document.createElement('div');
     responseElement.classList.add('new-message'); // Add distinct style to new message element
-    const text = trimIncompleteSentences(await generateText(settings.story_param, settings.world_description + "\n" + "[Generate the beginning of the story as the player arrives at " + areas[settings.starting_area] + ", an area described as " + areas[settings.starting_area].description + ". Response should be less than 300 words.]"));
+    
+    const text = trimIncompleteSentences(await generateText(settings.story_param, settings.world_description + "\n" + "[Generate the beginning of the story as the player arrives at " + areas[settings.starting_area] + ", an area described as " + areas[settings.starting_area].description + ". Response should be less than 300 words.]", '', {
+        playerName: settings.player_name,
+        areaName: settings.starting_area,
+        areaDescription: areas[settings.starting_area].description,
+        worldDescription: settings.world_description
+    }));
 
     setTimeout(async () => {
         const artBlob = await generateArt(areas[settings.starting_area].visual, "", areas[settings.starting_area].seed);

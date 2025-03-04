@@ -1,6 +1,12 @@
-async function generateText(params, input, post='') {
+async function generateText(params, input, post='', variables={}) {
     // Show loader
     document.getElementById('loader').style.display = 'block';
+
+    // Process input string for variable replacements if it contains $variables
+    input = replaceVariables(input, variables);
+    
+    // Process system_prompt for variable replacements
+    const system_prompt = replaceVariables(params.system_prompt, variables);
 
     let response;
     // Send message to API
@@ -15,7 +21,7 @@ async function generateText(params, input, post='') {
                 messages: [
                 {
                     "role": "system",
-                    "content": params.system_prompt
+                    "content": system_prompt
                 },
                 {
                     "role": "user",
@@ -31,6 +37,14 @@ async function generateText(params, input, post='') {
             })
         });
     } else { // default to koboldcpp
+        // Process the text_prompt template with variables
+        const processedPrompt = replaceVariables(params.text_prompt, {
+            ...variables,
+            system_prompt: system_prompt,
+            input_string: input,
+            response_string: post
+        });
+
         response = await fetch(params.textAPI + 'generate', {
             method: 'POST',
             headers: {
@@ -39,10 +53,7 @@ async function generateText(params, input, post='') {
             body: JSON.stringify({
                 max_context_length: params.max_context_length,
                 max_length: params.max_length,
-                prompt: params.text_prompt
-                        .replace('$system_prompt', params.system_prompt)
-                        .replace('$input_string', input)
-                        .replace('$response_string', post),
+                prompt: processedPrompt,
                 quiet: params.quiet,
                 rep_pen: params.rep_pen,
                 rep_pen_range: params.rep_pen_range,
@@ -68,6 +79,40 @@ async function generateText(params, input, post='') {
     } else {
         return data.results[0].text;
     }
+}
+
+// Helper function to replace all variables in a string
+function replaceVariables(text, variables) {
+    if (!text || typeof text !== 'string') return text;
+    
+    let result = text;
+    
+    // First, handle specific variables with $ prefix
+    if (variables) {
+        for (const [key, value] of Object.entries(variables)) {
+            const variablePattern = new RegExp('\\$' + key, 'g');
+            result = result.replace(variablePattern, value);
+        }
+    }
+    
+    // Then handle any settings variables that might be referenced
+    const settingsVarPattern = /\$\{settings\.([^}]+)\}/g;
+    result = result.replace(settingsVarPattern, (match, settingPath) => {
+        const paths = settingPath.split('.');
+        let value = settings;
+        
+        for (const path of paths) {
+            if (value && value[path] !== undefined) {
+                value = value[path];
+            } else {
+                return match; // Keep original if path doesn't exist
+            }
+        }
+        
+        return value !== undefined ? value : match;
+    });
+    
+    return result;
 }
 
 async function generateArt(prompt, negprompt='', seed=-1) {
