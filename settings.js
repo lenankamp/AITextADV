@@ -68,7 +68,14 @@ function loadSettings() {
             top_k: 100,
             top_p: 0.9,
             typical: 1
-        }
+        },
+        generateAreaDescriptionPrompt: "[Generate a description of the area named {areaName}.]",
+        generateEntitiesPrompt: "[Be creative and generate a list of people and interesting things that could reasonably be found in the area named {areaName} with the following details: {description} \nIf no people or hostiles might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 1-2 sentences. Answer in a formatted list as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]",
+        generateVisualPrompt: "[How would you describe '{name}' described as '{description}' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]",
+        addPersonDescriptionPrompt: "[Write a description of '{name}'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]",
+        addThingDescriptionPrompt: "[Write a description of '{name}'. Write a 1-2 sentence physical description. If there is not enough information in the context, be creative.]",
+        addHostileDescriptionPrompt: "[Write a description of '{name}'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description with consideration for why they might be hostile to the player. If there is not enough information in the context, be creative.]",
+        outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. If hostile has become an ally, what is their name? 7. If someone not hostile has become hostile, what is their name?]"
     };
 
     settings = defaultSettings;

@@ -10,12 +10,18 @@ async function generateArea(x, y, areaName, description='') {
                                         // should not be using full_context, just some testing
     let response;
     if (description == '') {
-        response = await generateText(settings.question_param, fullContext() + "\n[Generate a description of the area named " + areaName + ".]");
+        const prompt = settings.generateAreaDescriptionPrompt.replace('{areaName}', areaName);
+        response = await generateText(settings.question_param, fullContext() + "\n" + prompt);
         areas[areaName].description = response;
     } else {
         areas[areaName].description = description;
     }
-    response = await generateText(settings.question_param, fullContext() + "\n[Be creative and generate a list of people and interesting things that could reasonably be found in the area named " + areaName + " with the following details: " + areas[areaName].description + " \nIf no people or hostiles might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 1-2 sentences. Answer in a formatted list as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]");
+
+    const entitiesPrompt = settings.generateEntitiesPrompt
+        .replace('{areaName}', areaName)
+        .replace('{description}', areas[areaName].description);
+
+    response = await generateText(settings.question_param, fullContext() + "\n" + entitiesPrompt);
 
     // Process response to get people, things, and hostiles into the area object as a subset for each type.
     const lines = response.split('\n');
@@ -32,7 +38,11 @@ async function generateArea(x, y, areaName, description='') {
             const [namePart, ...descriptionParts] = line.split(': ');
             const name = namePart.replace(/[^a-zA-Z\s]/g, '').trim();
             const description = descriptionParts.join(': ').trim();
-            let visual = await generateText(settings.question_param, settings.world_description + "\n[How would you describe '" + name.replace('-', '') + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+            let visualPrompt = settings.generateVisualPrompt
+                .replace('{name}', name.replace('-', ''))
+                .replace('{description}', description);
+
+            let visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt);
             if(currentSection === 'things')
                 visual = "(" + name + "), " + visual;
             const seed = Math.floor(Math.random() * 4294967295) + 1;
@@ -40,30 +50,56 @@ async function generateArea(x, y, areaName, description='') {
             areas[areaName][section].push({ name: name.replace('-', ''), description, visual, seed, image: 'placeholder' });
         }
     }
-    areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[areaName].description + '\n[How would you describe the visual details of the area described in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]');
+
+    let visualPrompt = settings.generateVisualPrompt
+        .replace('{name}', areaName)
+        .replace('{description}', areas[areaName].description);
+
+    areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[areaName].description + '\n' + visualPrompt);
     areas[areaName].image = 'placeholder';
     addLocation(areaName);
 }
 
 async function addPerson(name, area=currentArea, context="", text="") {
-    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]");
-    const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+    const descriptionPrompt = settings.addPersonDescriptionPrompt
+        .replace('{name}', name);
+
+    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt);
+    let visualPrompt = settings.generateVisualPrompt
+        .replace('{name}', name)
+        .replace('{description}', description);
+
+    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt);
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);
 }
 
 async function addThing(name, area=currentArea, context="", text="") {
-    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description. If there is not enough information in the context, be creative.]");
-    const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
-    const seed = Math.floor(Math.random() * 4294967295) + 1;
+    const descriptionPrompt = settings.addThingDescriptionPrompt
+    .replace('{name}', name);
+
+const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt);
+let visualPrompt = settings.generateVisualPrompt
+    .replace('{name}', name)
+    .replace('{description}', description);
+
+const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt);
+const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['things'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);
 }
 
 async function addHostile(name, area=currentArea, context="", text="") {
-    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n[Write a description of '" + name + "'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description with consideration for why they might be hostile to the player. If there is not enough information in the context, be creative.]");
-    const visual = await generateText(settings.question_param, settings.world_description + "\n" + "[How would you describe '" + name + "' described as '" + description + "' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]");
+    const descriptionPrompt = settings.addHostileDescriptionPrompt
+        .replace('{name}', name);
+
+    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt);
+    let visualPrompt = settings.generateVisualPrompt
+        .replace('{name}', name)
+        .replace('{description}', description);
+
+    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt);
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['hostiles'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);
@@ -177,7 +213,8 @@ function provokeAlly(name) {
 }
 
 async function outputCheck(text, context="") {
-    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. If hostile has become an ally, what is their name? 7. If someone not hostile has become hostile, what is their name?]");
+    const prompt = settings.outputCheckPrompt;
+    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n" + prompt);
     const lines = response.split('\n');
 
     for (const line of lines) {
