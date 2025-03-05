@@ -1,47 +1,79 @@
-async function generateArea(x, y, areaName, description='') {
+async function generateArea(x, y, areaName, description='', isSubLocation=false, parentArea=null) {
+    console.log('Generating area: ' + areaName);
+    let area;
     areas[areaName] = {};
-    areas[areaName].name = areaName;
-    areas[areaName].seed = Math.floor(Math.random() * 4294967295) + 1;
-    areas[areaName].x = x;
-    areas[areaName].y = y;
-    areas[areaName]['people'] = [];
-    areas[areaName]['things'] = [];
-    areas[areaName]['hostiles'] = [];
-                                        // should not be using full_context, just some testing
+    area = areas[areaName];
+
+    area.name = areaName.split('/').pop();
+    area.seed = Math.floor(Math.random() * 4294967295) + 1;
+    if (!isSubLocation) {
+        area.x = x;
+        area.y = y;
+    }
+    area['people'] = [];
+    area['things'] = [];
+    area['hostiles'] = [];
+    area['sublocations'] = {};
+
     let response;
     if (description == '') {
         const prompt = settings.generateAreaDescriptionPrompt.replace('{areaName}', areaName);
         response = await generateText(settings.question_param, fullContext() + "\n" + prompt, '', {
             areaName: areaName
         });
-        areas[areaName].description = response;
+        area.description = response;
     } else {
-        areas[areaName].description = description;
+        area.description = description;
+    }
+
+    // Generate potential sublocations
+    const sublocationsPrompt = settings.generateSublocationsPrompt
+        .replace('{areaName}', areaName)
+        .replace('{description}', area.description);
+    
+    response = await generateText(settings.question_param, fullContext() + "\n" + sublocationsPrompt, '', {
+        areaName: areaName,
+        description: area.description
+    });
+
+    const sublocations = response.split('\n');
+    for (const line of sublocations) {
+        if (line.trim() && !line.includes('None')) {
+            const [name, ...descriptionParts] = line.split(': ');
+            const sublocationName = name.trim();
+            const sublocationDesc = descriptionParts.join(': ').trim();
+            if (sublocationName && sublocationDesc) {
+                area.sublocations[sublocationName] = {
+                    name: sublocationName,
+                    description: sublocationDesc
+                };
+            }
+        }
     }
 
     const entitiesPrompt = settings.generateEntitiesPrompt
         .replace('{areaName}', areaName)
-        .replace('{description}', areas[areaName].description);
+        .replace('{description}', area.description);
 
     response = await generateText(settings.question_param, fullContext() + "\n" + entitiesPrompt, '', {
         areaName: areaName,
-        description: areas[areaName].description
+        description: area.description
     });
+    console.log(response);
 
-    // Process response to get people, things, and hostiles into the area object as a subset for each type.
     const lines = response.split('\n');
     let currentSection = null;
     for (const line of lines) {
-        const cleanedLine = line.replace(/[^a-zA-Z]/g, '');
+        const cleanedLine = line.replace(/[^a-zA-Z\s.,-:]/g, '').replace('Name:', '');
         if (cleanedLine.startsWith('People')) {
             currentSection = 'people';
         } else if (cleanedLine.startsWith('Things')) {
             currentSection = 'things';
         } else if (cleanedLine.startsWith('Hostiles')) {
             currentSection = 'hostiles';
-        } else if (currentSection && line.trim() && !line.includes('None')) {
-            const [namePart, ...descriptionParts] = line.split(': ');
-            const name = namePart.replace(/[^a-zA-Z\s]/g, '').trim();
+        } else if (currentSection && cleanedLine.trim() && !cleanedLine.includes('None') && cleanedLine.includes(':')) {
+            const [namePart, ...descriptionParts] = cleanedLine.split(': ');
+            const name = namePart.replace(/[^a-zA-Z.-\s]/g, '').trim();
             const description = descriptionParts.join(': ').trim();
             let visualPrompt = settings.generateVisualPrompt
                 .replace('{name}', name.replace('-', ''))
@@ -55,34 +87,37 @@ async function generateArea(x, y, areaName, description='') {
             if(currentSection === 'things')
                 visual = "(" + name + "), " + visual;
             const seed = Math.floor(Math.random() * 4294967295) + 1;
-            const section = currentSection; // Capture the current section
-            areas[areaName][section].push({ name: name.replace('-', ''), description, visual, seed, image: 'placeholder' });
+            const section = currentSection;
+            area[section].push({ name: name.replace('-', ''), description, visual, seed, image: 'placeholder' });
         }
     }
 
     let visualPrompt = settings.generateVisualPrompt
         .replace('{name}', areaName)
-        .replace('{description}', areas[areaName].description);
+        .replace('{description}', area.description);
 
-    areas[areaName].visual = await generateText(settings.question_param, settings.world_description + "\n" + areas[areaName].description + '\n' + visualPrompt, '', {
+    area.visual = await generateText(settings.question_param, settings.world_description + "\n" + area.description + '\n' + visualPrompt, '', {
         name: areaName,
-        description: areas[areaName].description
+        description: area.description
     });
     
-    areas[areaName].image = 'placeholder';
-    addLocation(areaName);
+    area.image = 'placeholder';
+    if (!isSubLocation) {
+        addLocation(areaName);
+    }
 
-    // Generate art in background
     setTimeout(async () => {
-        const artBlob = await generateArt(areas[areaName].visual, "", areas[areaName].seed);
+        const artBlob = await generateArt(area.visual, "", area.seed);
         if (artBlob instanceof Blob) {
-            areas[areaName].image = artBlob;
+            area.image = artBlob;
             if (areaName === currentArea) {
                 document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
             }
-            const locationElement = document.getElementById(`location-${areaName}`);
-            if (locationElement) {
-                locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
+            if (!isSubLocation) {
+                const locationElement = document.getElementById(`location-${areaName}`);
+                if (locationElement) {
+                    locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
+                }
             }
         }
     }, 0);
@@ -164,18 +199,54 @@ async function addHostile(name, area=currentArea, context="", text="") {
 }
 
 async function moveToArea(area, prevArea, text="", context="") {
-    if (areas[area] == undefined) {
-        // generate coordianates for new area, must not be same as another area, near prevArea, and within map bounds
+    let targetArea;
+    let parentArea = null;
+
+    if (area.includes('/')) {
+        const [topArea, ...subPaths] = area.split('/');
+        if (!areas[topArea]) {
+            let newX, newY;
+            const maxAttempts = 100;
+            let attempts = 0;
+            const distance = 30;
+
+            do {
+                newX = areas[prevArea.split('/')[0]].x + Math.floor(Math.random() * distance * 2) - distance;
+                newY = areas[prevArea.split('/')[0]].y + Math.floor(Math.random() * distance * 2) - distance;
+                attempts++;
+            } while (attempts < maxAttempts && Object.values(areas).some(a => a.x === newX && a.y === newY));
+
+            if (attempts >= maxAttempts) {
+                throw new Error("Unable to find a suitable location for the new area.");
+            }
+
+            await generateArea(newX, newY, topArea);
+        }
+
+        targetArea = areas[topArea];
+        let currentPath = topArea;
+        for (const subPath of subPaths) {
+            currentPath += '/' + subPath;
+            if (!targetArea.sublocations[subPath]) {
+                await generateArea(0, 0, currentPath, '', true, areas[topArea]);
+            } else if (!targetArea.sublocations[subPath].visual) {
+                // If sublocation exists but wasn't fully generated, generate it now
+                await generateArea(0, 0, currentPath, targetArea.sublocations[subPath].description, true, areas[topArea]);
+            }
+            parentArea = targetArea;
+            targetArea = targetArea.sublocations[subPath];
+        }
+    } else if (!areas[area]) {
         let newX, newY;
         const maxAttempts = 100;
         let attempts = 0;
-        const distance = 30; // Distance from the previous area
+        const distance = 30;
 
         do {
-            newX = areas[prevArea].x + Math.floor(Math.random() * distance * 2) - distance;
-            newY = areas[prevArea].y + Math.floor(Math.random() * distance * 2) - distance;
+            newX = areas[prevArea.split('/')[0]].x + Math.floor(Math.random() * distance * 2) - distance;
+            newY = areas[prevArea.split('/')[0]].y + Math.floor(Math.random() * distance * 2) - distance;
             attempts++;
-        } while (attempts < maxAttempts && Object.values(areas).some(area => area.x === newX && area.y === newY));
+        } while (attempts < maxAttempts && Object.values(areas).some(a => a.x === newX && a.y === newY));
 
         if (attempts >= maxAttempts) {
             throw new Error("Unable to find a suitable location for the new area.");
@@ -183,9 +254,19 @@ async function moveToArea(area, prevArea, text="", context="") {
 
         await generateArea(newX, newY, area);
     }
+
     currentArea = area;
-    if(areas[prevArea].people.length > 0) {
-        const peopleNames = areas[prevArea].people.map(person => person.name).join(', ');
+    if(prevArea.includes('/')) {
+        targetArea = areas[prevArea.split('/')[0]];
+        for (const subPath of prevArea.split('/').slice(1)) {
+            targetArea = targetArea.sublocations[subPath];
+        }
+    } else {
+        targetArea = areas[prevArea];
+    }
+
+    if(targetArea.people.length > 0) {
+        const peopleNames = targetArea.people.map(person => person.name).join(', ');
         const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(prevArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in a list format separate by '\n' in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who moved with the player?" + "]", '', {
             prevArea: prevArea,
             newArea: area,
@@ -196,10 +277,19 @@ async function moveToArea(area, prevArea, text="", context="") {
         const movers = movingPeople.split('\n');
         for (const mover of movers) {
             if (mover.trim() != "") {
-                const personIndex = areas[prevArea]['people'].findIndex(person => person.name === mover);
+                const personIndex = targetArea.people.findIndex(person => person.name === mover);
                 if (personIndex !== -1) {
-                    const person = areas[prevArea]['people'].splice(personIndex, 1)[0];
-                    areas[currentArea]['people'].push(person);
+                    const person = targetArea.people.splice(personIndex, 1)[0];
+                    let destArea;
+                    if (area.includes('/')) {
+                        destArea = areas[area.split('/')[0]];
+                        for (const subPath of area.split('/').slice(1)) {
+                            destArea = destArea.sublocations[subPath];
+                        }
+                    } else {
+                        destArea = areas[area];
+                    }
+                    destArea.people.push(person);
                 }
             }
         }
@@ -295,7 +385,7 @@ async function outputCheck(text, context="") {
         } else if (line.startsWith('4.') && !line.includes('N/A') && line.trim() !== '4.') {
             const newName = line.replace("4. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
             if (!areas[currentArea].people.some(person => person.name === newName) && newName != settings.player_name) {
-                const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');  // should probably add hostiles to this list
+                const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');
                 const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]", '', {
                     peopleNames: peopleNames,
                     newName: newName,
@@ -312,7 +402,6 @@ async function outputCheck(text, context="") {
         } else if (line.startsWith('5.') && !line.includes('N/A') && line.trim() !== '5.') {
             const prevArea = currentArea;
             const newArea = line.replace("5. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
-// nowhere to go yet            addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, prevArea, text, context));
         } else if (line.startsWith('6.') && !line.includes('N/A') && line.trim() !== '6.') {
             const name = line.replace("6. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
             addConfirmButton('Befriend', name, (inputValue) => befriendHostile(inputValue || name));
@@ -323,33 +412,45 @@ async function outputCheck(text, context="") {
     }
 }
 
+function areaContext(areaPath) {
+    let area;
+    if (areaPath.includes('/')) {
+        area = areas[areaPath.split('/')[0]];
+        for (const subPath of areaPath.split('/').slice(1)) {
+            area = area.sublocations[subPath];
+        }
+    } else {
+        area = areas[areaPath];
+    }
 
-function areaContext(area) {
-    let context = " \n" + areas[area].name + " : " + areas[area].description + "\n\n";
-    if(areas[area].people.length > 0)
-    {
+    let context = " \n" + area.name + " : " + area.description + "\n\n";
+    
+    if (Object.keys(area.sublocations).length > 0) {
+        context += "Sublocations:\n";
+        for (const [name, subloc] of Object.entries(area.sublocations)) {
+            context += name + ": " + subloc.description + "\n";
+        }
+        context += "\n";
+    }
+
+    if(area.people.length > 0) {
         context += "People nearby\n";
-        for(let i = 0; i < areas[area].people.length; i++)
-        {
-            context += areas[area].people[i].name + ": " + areas[area].people[i].description + "\n";
+        for(let i = 0; i < area.people.length; i++) {
+            context += area.people[i].name + ": " + area.people[i].description + "\n";
         }
         context += "\n";
     }
-    if(areas[area].things.length > 0)
-    {
+    if(area.things.length > 0) {
         context += "Things in area\n";
-        for(let i = 0; i < areas[area].things.length; i++)
-        {
-            context += areas[area].things[i].name + ": " + areas[area].things[i].description + "\n";
+        for(let i = 0; i < area.things.length; i++) {
+            context += area.things[i].name + ": " + area.things[i].description + "\n";
         }
         context += "\n";
     }
-    if(areas[area].hostiles.length > 0)
-    {
+    if(area.hostiles.length > 0) {
         context += "Hostiles nearby\n";
-        for(let i = 0; i < areas[area].hostiles.length; i++)
-        {
-            context += areas[area].hostiles[i].name + ": " + areas[area].hostiles[i].description + "\n";
+        for(let i = 0; i < area.hostiles.length; i++) {
+            context += area.hostiles[i].name + ": " + area.hostiles[i].description + "\n";
         }
         context += "\n";
     }
@@ -368,7 +469,7 @@ async function sendMessage(message = input.value) {
     const input = document.getElementById('input');
     const output = document.getElementById('output');
     const messageElement = document.createElement('div');
-    messageElement.classList.add('new-message'); // Add distinct style to new message element
+    messageElement.classList.add('new-message');
     input.value = '';
 
     if (message.trim()) {
@@ -397,7 +498,6 @@ async function sendMessage(message = input.value) {
     if (confirmElement) {
         confirmElement.remove();
     }
-    // Remove distinct style from the prior message element
     const priorMessageElement = output.querySelector('.new-message');
     if (priorMessageElement) {
         priorMessageElement.classList.remove('new-message');
@@ -443,10 +543,10 @@ function undoLastAction() {
 function trimIncompleteSentences(text) {
     const sentences = text.match(/[^.!?]+[.!?]+["']?/g);
     if (sentences && sentences.length > 1) {
-        sentences.pop(); // Remove the last incomplete sentence
-        return sentences.join(' '); // Rejoin the sentences
+        sentences.pop();
+        return sentences.join(' ');
     }
-    return text; // Return the original text if no sentences were found
+    return text;
 }
 
 async function setupStart() {
@@ -454,7 +554,7 @@ async function setupStart() {
     await generateArea(100, 100, settings.starting_area, settings.starting_area_description);
     document.getElementById('sceneart').alt = areas[settings.starting_area].description;
     const responseElement = document.createElement('div');
-    responseElement.classList.add('new-message'); // Add distinct style to new message element
+    responseElement.classList.add('new-message');
     
     const text = trimIncompleteSentences(await generateText(settings.story_param, settings.world_description + "\n" + "[Generate the beginning of the story as the player arrives at " + areas[settings.starting_area] + ", an area described as " + areas[settings.starting_area].description + ". Response should be less than 300 words.]", '', {
         playerName: settings.player_name,

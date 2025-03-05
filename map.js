@@ -93,7 +93,18 @@ function addLocation(name) {
     });
     location.addEventListener('mouseover', () => {
         tooltip.style.display = 'block';
-        tooltip.innerHTML = `<strong>${name}</strong><br>${areas[name].description}<br><img src="${URL.createObjectURL(areas[name].image)}" alt="${name}" style="width: 100px; height: auto;">`;
+        let tooltipContent = `<strong>${name}</strong><br>${areas[name].description}`;
+        if (areas[name].image instanceof Blob) {
+            tooltipContent += `<br><img src="${URL.createObjectURL(areas[name].image)}" alt="${name}" style="width: 100px; height: auto;">`;
+        }
+        // Add sublocation information to tooltip
+        if (Object.keys(areas[name].sublocations).length > 0) {
+            tooltipContent += '<br><br>Sublocations:<br>';
+            for (const [subName, subloc] of Object.entries(areas[name].sublocations)) {
+                tooltipContent += `- ${subName}: ${subloc.description}<br>`;
+            }
+        }
+        tooltip.innerHTML = tooltipContent;
     });
     location.addEventListener('mousemove', (e) => {
         tooltip.style.left = e.pageX + 10 + 'px';
@@ -107,7 +118,18 @@ function addLocation(name) {
 
 // Open submenu for a location
 function openSubmenu(name, x, y) {
-    submenu.innerHTML = `<strong>${name}</strong><br><button onclick="goToLocation('${name}')">Go</button>`;
+    let menuContent = `<strong>${name}</strong><br>`;
+    menuContent += `<button onclick="goToLocation('${name}')">Enter Area</button><br>`;
+    
+    // Add buttons for sublocations if they exist
+    if (Object.keys(areas[name].sublocations).length > 0) {
+        menuContent += '<br>Sublocations:<br>';
+        for (const subName of Object.keys(areas[name].sublocations)) {
+            menuContent += `<button onclick="goToLocation('${name}/${subName}')">Enter ${subName}</button><br>`;
+        }
+    }
+    
+    submenu.innerHTML = menuContent;
     submenu.style.left = `${x}px`;
     submenu.style.top = `${y}px`;
     submenu.style.display = 'block';
@@ -120,9 +142,5 @@ document.addEventListener('click', () => {
 
 // Go to a location
 function goToLocation(name) {
-    currentArea = name;
-    updateImageGrid(name);
-    document.getElementById('sceneart').src = URL.createObjectURL(areas[name].image);
-    document.getElementById('sceneart').alt = areas[name].description;
-    submenu.style.display = 'none';
+    moveToArea(name, currentArea);
 }

@@ -32,21 +32,32 @@ async function saveGame() {
 
 async function saveToFile(data) {
     const images = {};
-    for (const area in areas) {
-        if (areas[area].image instanceof Blob) {
-            images[area] = areas[area].image;
-            areas[area].image = null;
-        } else console.log('Invalid image Blob:', area, areas[area].image);
-        for (const category of ['people', 'things', 'hostiles']) {
-            if (areas[area][category]) {
-                areas[area][category].forEach(item => {
+
+    // Function to process images in an area or sublocation
+    const processAreaImages = (area, path) => {
+        if (area.image instanceof Blob) {
+            images[path] = area.image;
+            area.image = null;
+        }
+        ['people', 'things', 'hostiles'].forEach(category => {
+            if (area[category]) {
+                area[category].forEach(item => {
                     if (item.image instanceof Blob) {
                         images[item.name] = item.image;
                         item.image = null;
-                    } else console.log('Invalid image Blob:', area, category, item.name, item.image);
+                    }
                 });
             }
+        });
+        // Process sublocations recursively
+        for (const [subName, subloc] of Object.entries(area.sublocations)) {
+            processAreaImages(subloc, `${path}/${subName}`);
         }
+    };
+
+    // Process all areas and their sublocations
+    for (const [areaName, area] of Object.entries(areas)) {
+        processAreaImages(area, areaName);
     }
 
     const imagePromises = Object.keys(images).map(async key => {
@@ -81,13 +92,14 @@ async function saveToFile(data) {
     a.download = 'gameState.json';
     a.click();
 
-    const areaPromises = Object.keys(areas).map(async area => {
-        if (images[area]) {
-            areas[area].image = await fetchImage(images[area]);
+    // Function to restore images in an area or sublocation
+    const restoreAreaImages = async (area, path) => {
+        if (images[path]) {
+            area.image = await fetchImage(images[path]);
         }
         const categoryPromises = ['people', 'things', 'hostiles'].map(async category => {
-            if (areas[area][category]) {
-                const itemPromises = areas[area][category].map(async item => {
+            if (area[category]) {
+                const itemPromises = area[category].map(async item => {
                     if (images[item.name]) {
                         item.image = await fetchImage(images[item.name]);
                     }
@@ -96,6 +108,17 @@ async function saveToFile(data) {
             }
         });
         await Promise.all(categoryPromises);
+
+        // Restore sublocation images recursively
+        const sublocationPromises = Object.entries(area.sublocations).map(async ([subName, subloc]) => {
+            await restoreAreaImages(subloc, `${path}/${subName}`);
+        });
+        await Promise.all(sublocationPromises);
+    };
+
+    // Restore all areas and their sublocations
+    const areaPromises = Object.keys(areas).map(async area => {
+        await restoreAreaImages(areas[area], area);
     });
     await Promise.all(areaPromises);
 }
@@ -113,23 +136,54 @@ async function loadFromFile(event) {
             settings = data.state.settings;
             output.scrollTop = output.scrollHeight;
         
-            await loadImages(images);
+            // Function to load images for an area and its sublocations
+            const loadAreaImages = async (area, path) => {
+                if (images[path]) {
+                    area.image = await fetchImage(images[path]);
+                }
+                for (const category of ['people', 'things', 'hostiles']) {
+                    if (area[category]) {
+                        const itemPromises = area[category].map(async item => {
+                            if (images[item.name]) {
+                                item.image = await fetchImage(images[item.name]);
+                            }
+                        });
+                        await Promise.all(itemPromises);
+                    }
+                }
+                // Load sublocation images recursively
+                for (const [subName, subloc] of Object.entries(area.sublocations)) {
+                    await loadAreaImages(subloc, `${path}/${subName}`);
+                }
+            };
+
+            // Load images for all areas and their sublocations
+            for (const [areaName, area] of Object.entries(areas)) {
+                await loadAreaImages(area, areaName);
+            }
+
             document.getElementById('q1').style.height = settings.q1_height;
             document.getElementById('q2').style.height = settings.q2_height;
             content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
 
             updateImageGrid(currentArea);
-            document.getElementById('sceneart').src = URL.createObjectURL(areas[currentArea].image);
-            document.getElementById('sceneart').alt = areas[currentArea].description;
+
+            const currentAreaObj = areas[currentArea];
+            if (currentAreaObj && currentAreaObj.image) {
+                document.getElementById('sceneart').src = URL.createObjectURL(currentAreaObj.image);
+                document.getElementById('sceneart').alt = currentAreaObj.description;
+            }
 
             if (images['player']) {
                 const playerImageBlob = await fetchImage(images['player']);
                 document.getElementById('playerart').src = URL.createObjectURL(playerImageBlob);
             }
-            // clear locations from the map and then add all locations
+
+            // Clear and re-add locations from the map
             document.querySelectorAll('.location').forEach(location => {
                 location.remove();
             });
+            // Only add top-level areas to the map
             for (const area in areas) {
                 addLocation(area);
             }
