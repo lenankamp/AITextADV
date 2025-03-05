@@ -71,6 +71,21 @@ async function generateArea(x, y, areaName, description='') {
     
     areas[areaName].image = 'placeholder';
     addLocation(areaName);
+
+    // Generate art in background
+    setTimeout(async () => {
+        const artBlob = await generateArt(areas[areaName].visual, "", areas[areaName].seed);
+        if (artBlob instanceof Blob) {
+            areas[areaName].image = artBlob;
+            if (areaName === currentArea) {
+                document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
+            }
+            const locationElement = document.getElementById(`location-${areaName}`);
+            if (locationElement) {
+                locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
+            }
+        }
+    }, 0);
 }
 
 async function addPerson(name, area=currentArea, context="", text="") {
@@ -167,17 +182,6 @@ async function moveToArea(area, prevArea, text="", context="") {
         }
 
         await generateArea(newX, newY, area);
-        setTimeout(async () => {
-            const artBlob = await generateArt(areas[area].visual, "", areas[area].seed);
-            if (artBlob instanceof Blob) {
-                areas[area].image = artBlob;
-                document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
-                const locationElement = document.getElementById(`location-${area}`);
-                if (locationElement) {
-                    locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
-                }
-            }
-        }, 0);
     }
     currentArea = area;
     if(areas[prevArea].people.length > 0) {
@@ -459,17 +463,6 @@ async function setupStart() {
         worldDescription: settings.world_description
     }));
 
-    setTimeout(async () => {
-        const artBlob = await generateArt(areas[settings.starting_area].visual, "", areas[settings.starting_area].seed);
-        if (artBlob instanceof Blob) {
-            areas[settings.starting_area].image = artBlob;
-            document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
-            const locationElement = document.getElementById(`location-${settings.starting_area}`);
-            if (locationElement) {
-                locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
-            }
-        }
-    }, 0);
     responseElement.innerHTML = text.replace(/\n/g, '<br>');
     output.appendChild(responseElement);
     output.scrollTop = output.scrollHeight;
