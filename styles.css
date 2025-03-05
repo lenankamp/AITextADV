@@ -219,12 +219,22 @@ body {
 }
 .submenu {
     position: absolute;
-    background-color: white;
-    border: 1px solid #ccc;
-    padding: 10px;
     display: none;
     z-index: 100;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
 }
+.submenu button {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: rgb(255, 255, 255);
+    border: none;
+    border-radius: 5px;
+    padding: 5px;
+    cursor: pointer;
+}
+
 .new-message {
     background-color: #e0f7fa; /* Light cyan background */
     border-left: 5px solid #00796b; /* Teal border */

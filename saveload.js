@@ -49,10 +49,6 @@ async function saveToFile(data) {
                 });
             }
         });
-        // Process sublocations recursively
-        for (const [subName, subloc] of Object.entries(area.sublocations)) {
-            processAreaImages(subloc, `${path}/${subName}`);
-        }
     };
 
     // Process all areas and their sublocations
@@ -109,11 +105,6 @@ async function saveToFile(data) {
         });
         await Promise.all(categoryPromises);
 
-        // Restore sublocation images recursively
-        const sublocationPromises = Object.entries(area.sublocations).map(async ([subName, subloc]) => {
-            await restoreAreaImages(subloc, `${path}/${subName}`);
-        });
-        await Promise.all(sublocationPromises);
     };
 
     // Restore all areas and their sublocations
@@ -150,10 +141,6 @@ async function loadFromFile(event) {
                         });
                         await Promise.all(itemPromises);
                     }
-                }
-                // Load sublocation images recursively
-                for (const [subName, subloc] of Object.entries(area.sublocations)) {
-                    await loadAreaImages(subloc, `${path}/${subName}`);
                 }
             };
 

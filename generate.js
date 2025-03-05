@@ -75,8 +75,10 @@ async function generateText(params, input, post='', variables={}) {
     document.getElementById('loader').style.display = 'none';
 
     if(params.textAPItype == 'openai') {
+        console.log(data.choices[0].message.content);
         return data.choices[0].message.content;
     } else {
+        console.log(data.results[0].text);
         return data.results[0].text;
     }
 }
