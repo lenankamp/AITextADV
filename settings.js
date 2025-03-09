@@ -9,6 +9,7 @@ function loadSettings() {
         player_seed: 1,
         starting_area: "Home",
         starting_area_description: "A cozy and warm room within a wooden cabin, your bed sits in the corner. A fire crackles in the fireplace, casting flickering shadows on the walls. The smell of pine and woodsmoke fills the air.",
+        starting_date: "800-01-12 08:00:00",
         q1_height: "600px",
         q2_height: "640px",
         column_width: "640px",
@@ -76,7 +77,7 @@ function loadSettings() {
         addPersonDescriptionPrompt: "[Write a description of '{name}'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]",
         addThingDescriptionPrompt: "[Write a description of '{name}'. Write a 1-2 sentence physical description. If there is not enough information in the context, be creative.]",
         addHostileDescriptionPrompt: "[Write a description of '{name}'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description with consideration for why they might be hostile to the player. If there is not enough information in the context, be creative.]",
-        outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. If hostile has become an ally, what is their name? 7. If someone not hostile has become hostile, what is their name?]"
+        outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. If hostile has become an ally, what is their name? 7. If someone not hostile has become hostile, what is their name? 8. If a new thing is in the scene, what is its name? 9. If a new location nearby has been revealed, what is its name? 10. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest.]"
     };
 
     settings = defaultSettings;

@@ -73,17 +73,17 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
             currentSection = 'hostiles';
         } else if (currentSection && cleanedLine.trim() && !cleanedLine.includes('None') && cleanedLine.includes(':')) {
             const [namePart, ...descriptionParts] = cleanedLine.split(': ');
-            const name = namePart.replace(/[^a-zA-Z.-\s]/g, '').trim();
+            const name = namePart.replace(/-/g, ' ').replace(/[^a-zA-Z.-\s]/g, '').trim();
             let description = descriptionParts.join(': ').trim();
             if (!description && lines[lines.indexOf(line) + 1] && !lines[lines.indexOf(line) + 1].includes(':') && lines[lines.indexOf(line) + 1].trim() !== '') {
                 description = lines[lines.indexOf(line) + 1].trim();
             }
             let visualPrompt = settings.generateVisualPrompt
-                .replace('{name}', name.replace('-', ''))
+                .replace('{name}', name)
                 .replace('{description}', description);
 
             let visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
-                name: name.replace('-', ''),
+                name: name,
                 description: description
             });
             
@@ -91,7 +91,8 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
                 visual = "(" + name + "), " + visual;
             const seed = Math.floor(Math.random() * 4294967295) + 1;
             const section = currentSection;
-            area[section].push({ name: name.replace('-', ''), description, visual, seed, image: 'placeholder' });
+            area[section].push({ name: name, description, visual, seed, image: 'placeholder' });
+            console.log('Added ' + section + ':', name, description, visual);
         }
     }
 
@@ -198,6 +199,19 @@ async function addHostile(name, area=currentArea, context="", text="") {
     
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['hostiles'].push({ name, description, visual, seed, image: 'placeholder' });
+    updateImageGrid(currentArea);
+}
+
+async function addSublocation(name, area=currentArea, text="", context="") {
+    const descriptionPrompt = "[Describe the area named " + name + " in 1-2 sentences.]";
+    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+        name: name,
+        area: area,
+        context: context,
+        text: text
+    });
+    
+    areas[currentArea]['sublocations'][name] = { path: area+'/'+name, name: name, description: description };
     updateImageGrid(currentArea);
 }
 
@@ -315,6 +329,43 @@ async function moveToArea(area, prevArea, text="", context="") {
     updateImageGrid(currentArea);
 }
 
+async function entityLeavesArea(name, text) {
+    //ask where name went in the passage among the areas adjacent to the currentarea, then find their index among hostiles or people and move them to the area
+    const prompt = `[In the passage, to which of the adjacent areas in the context did ${name} move to? If ambiguous be creative and give the most fitting among the options.]`;
+    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
+        currentArea: currentArea,
+        name: name,
+        text: text
+    });
+    //find the area referenced in response
+    let targetArea = null;
+    if(areas[response]) {
+        targetArea = response;
+    } else if (areas[currentArea].sublocations[response]) {
+        targetArea = areas[currentArea].sublocations[response].path;
+    }
+    if(targetArea === null) {
+        return;
+    }
+    if(areas[targetArea] === undefined) {
+        await generateArea(0, 0, targetArea);
+    }
+    const personIndex = areas[currentArea].people.findIndex(person => person.name === name);
+    if (personIndex !== -1) {
+        const person = areas[currentArea].people.splice(personIndex, 1)[0];
+        areas[targetArea].people.push(person);
+    } else {
+        const hostileIndex = areas[currentArea].hostiles.findIndex(hostile => hostile.name === name);
+        if (hostileIndex !== -1) {
+            const hostile = areas[currentArea].hostiles.splice(hostileIndex, 1)[0];
+            areas[targetArea].hostiles.push(hostile);
+        }
+    }
+    updateImageGrid(currentArea);
+}
+
+        
+
 function addConfirmButton(label, defaultValue, callback) {
     const output = document.getElementById('output');
     let buttonRow = document.getElementById('outputCheckConfirm');
@@ -373,6 +424,35 @@ function provokeAlly(name) {
     updateImageGrid(currentArea);
 }
 
+function advanceTime(timePassed) {
+    const dateParts = currentTime.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
+    let [year, month, day, hours, minutes, seconds] = dateParts.slice(1).map(Number);
+
+    seconds += timePassed;
+    while (seconds >= 60) {
+        seconds -= 60;
+        minutes += 1;
+    }
+    while (minutes >= 60) {
+        minutes -= 60;
+        hours += 1;
+    }
+    while (hours >= 24) {
+        hours -= 24;
+        day += 1;
+    }
+    const daysInMonth = new Date(year, month, 0).getDate();
+    while (day > daysInMonth) {
+        day -= daysInMonth;
+        month += 1;
+    }
+    while (month > 12) {
+        month -= 12;
+        year += 1;
+    }
+    currentTime = `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
 async function outputCheck(text, context="") {
     const prompt = settings.outputCheckPrompt;
     const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
@@ -419,13 +499,41 @@ async function outputCheck(text, context="") {
             }
         } else if (line.startsWith('5.') && !line.includes('N/A') && line.trim() !== '5.') {
             const prevArea = currentArea;
-            const newArea = line.replace("5. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+            const name = line.replace("5. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+            addConfirmButton('Leaving Area', name, (inputValue) => entityLeavesArea(inputValue || name, text));
         } else if (line.startsWith('6.') && !line.includes('N/A') && line.trim() !== '6.') {
             const name = line.replace("6. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
             addConfirmButton('Befriend', name, (inputValue) => befriendHostile(inputValue || name));
         } else if (line.startsWith('7.') && !line.includes('N/A') && line.trim() !== '7.') {
             const name = line.replace("7. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
             addConfirmButton('Provoke', name, (inputValue) => provokeAlly(inputValue || name));
+        } else if (line.startsWith('8.') && !line.includes('N/A') && line.trim() !== '8.') {
+            const name = line.replace("8. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+            addConfirmButton('New Thing', name, (inputValue) => addThing(inputValue || name));
+        } else if (line.startsWith('9.') && !line.includes('N/A') && line.trim() !== '8.') {
+            const name = line.replace("9. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+            if (!areas[currentArea].sublocations[name])
+                addConfirmButton('New Path', name, (inputValue) => addSublocation(inputValue || name, currentArea, text));
+        } else if (line.startsWith('10.') && !line.includes('N/A') && line.trim() !== '10.') {
+            const timePassed = line.replace("10. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
+            const timePassedLower = timePassed.toLowerCase();
+            if (timePassedLower.includes("moments")) {
+                advanceTime(randomInt(30) + 4);
+            } else if (timePassedLower.includes("minutes")) {
+                advanceTime((randomInt(20) + 3) * 60);
+            } else if (timePassedLower.includes("hours")) {
+                advanceTime((randomInt(2) + 1) * 3600);
+            } else if (timePassedLower.includes("full rest")) {
+                const nextMorning = new Date(currentTime.replace(' ', 'T'));
+                if (nextMorning.getHours() < 8) {
+                    nextMorning.setHours(8, 0, 0, 0);
+                } else {
+                    nextMorning.setHours(8, 0, 0, 0);
+                    nextMorning.setDate(nextMorning.getDate() + 1);
+                }
+                currentTime = nextMorning.toISOString().replace('T', ' ').split('.')[0];
+            }
+            updateTime();
         }
     }
 }
@@ -468,6 +576,7 @@ function areaContext(areaPath) {
         }
         context += "\n";
     }
+    context += "Time: " + currentTime + "\n";
     return context;
 }
 
@@ -579,13 +688,28 @@ async function setupStart() {
     });
 }
 
+function randomInt(max) {
+    return Math.floor(Math.random() * max);
+}
+
+function updateTime() {
+    const timeElement = document.getElementById('currentTime');
+    const seasons = ["Winter", "Spring", "Summer", "Fall"];
+    const month = parseInt(currentTime.match(/-(\d{2})-/)[1], 10) - 1;
+    const season = seasons[Math.floor((month % 12) / 3)];
+    timeElement.innerHTML = `${season} ${currentTime}`;
+}
+
 let areas = {};
 let currentArea;
+let currentTime;
 
     loadSettings();
     overrideSettings();
     areas[settings.starting_area] = {};
     currentArea = settings.starting_area;
+    currentTime = settings.starting_date;
+    updateTime();
 
 function restartGame() {
     areas = {};
