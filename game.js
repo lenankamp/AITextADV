@@ -16,8 +16,8 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
 
     let response;
     if (description == '') {
-        const prompt = settings.generateAreaDescriptionPrompt.replace('{areaName}', areaName);
-        response = await generateText(settings.question_param, fullContext() + "\n" + prompt, '', {
+        const prompt = settings.generateAreaDescriptionPrompt.replace('$areaName', areaName);
+        response = await generateText(settings.question_param, minContext(3) + "\n" + prompt, '', {
             areaName: areaName
         });
         area.description = response;
@@ -27,10 +27,10 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
 
     // Generate potential sublocations
     const sublocationsPrompt = settings.generateSublocationsPrompt
-        .replace('{areaName}', areaName)
-        .replace('{description}', area.description);
+        .replace('$areaName', areaName)
+        .replace('$description', area.description);
     
-    response = await generateText(settings.question_param, fullContext() + "\n" + sublocationsPrompt, '', {
+    response = await generateText(settings.question_param, minContext(3) + "\n" + sublocationsPrompt, '', {
         areaName: areaName,
         description: area.description
     });
@@ -38,7 +38,7 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
     const sublocations = response.split('\n');
     for (const line of sublocations) {
         if (line.trim() && !line.includes('None')) {
-            const cleanedLine = line.replace(/\-/g, ' ').replace(/[^a-zA-Z.\s:]/g, '');
+            const cleanedLine = line.replace(/\-/g, ' ').replace(/[^a-zA-Z\s:]/g, '');
             const [name, ...descriptionParts] = cleanedLine.split(': ');
             const sublocationName = name.trim();
             const sublocationDesc = descriptionParts.join(': ').trim();
@@ -52,11 +52,13 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
         }
     }
 
+    const allPeople = Object.values(areas).flatMap(area => area.people.map(person => person.name)).join(', ');
     const entitiesPrompt = settings.generateEntitiesPrompt
-        .replace('{areaName}', areaName)
-        .replace('{description}', area.description);
+        .replace('$people', allPeople)
+        .replace('$areaName', areaName)
+        .replace('$description', area.description);
 
-    response = await generateText(settings.question_param, fullContext() + "\n" + entitiesPrompt, '', {
+    response = await generateText(settings.question_param, minContext(3) + "\n" + entitiesPrompt, '', {
         areaName: areaName,
         description: area.description
     });
@@ -79,8 +81,8 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
                 description = lines[lines.indexOf(line) + 1].trim();
             }
             let visualPrompt = settings.generateVisualPrompt
-                .replace('{name}', name)
-                .replace('{description}', description);
+                .replace('$name', name)
+                .replace('$description', description);
 
             let visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
                 name: name,
@@ -92,13 +94,12 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
             const seed = Math.floor(Math.random() * 4294967295) + 1;
             const section = currentSection;
             area[section].push({ name: name, description, visual, seed, image: 'placeholder' });
-            console.log('Added ' + section + ':', name, description, visual);
         }
     }
 
     let visualPrompt = settings.generateVisualPrompt
-        .replace('{name}', areaName)
-        .replace('{description}', area.description);
+        .replace('$name', areaName)
+        .replace('$description', area.description);
 
     area.visual = await generateText(settings.question_param, settings.world_description + "\n" + area.description + '\n' + visualPrompt, '', {
         name: areaName,
@@ -129,7 +130,7 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
 
 async function addPerson(name, area=currentArea, context="", text="") {
     const descriptionPrompt = settings.addPersonDescriptionPrompt
-        .replace('{name}', name);
+        .replace('$name', name);
 
     const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
         name: name,
@@ -139,8 +140,8 @@ async function addPerson(name, area=currentArea, context="", text="") {
     });
     
     let visualPrompt = settings.generateVisualPrompt
-        .replace('{name}', name)
-        .replace('{description}', description);
+        .replace('$name', name)
+        .replace('$description', description);
 
     const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
         name: name,
@@ -154,7 +155,7 @@ async function addPerson(name, area=currentArea, context="", text="") {
 
 async function addThing(name, area=currentArea, context="", text="") {
     const descriptionPrompt = settings.addThingDescriptionPrompt
-        .replace('{name}', name);
+        .replace('$name', name);
 
     const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
         name: name,
@@ -164,8 +165,8 @@ async function addThing(name, area=currentArea, context="", text="") {
     });
     
     let visualPrompt = settings.generateVisualPrompt
-        .replace('{name}', name)
-        .replace('{description}', description);
+        .replace('$name', name)
+        .replace('$description', description);
 
     const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
         name: name,
@@ -179,7 +180,7 @@ async function addThing(name, area=currentArea, context="", text="") {
 
 async function addHostile(name, area=currentArea, context="", text="") {
     const descriptionPrompt = settings.addHostileDescriptionPrompt
-        .replace('{name}', name);
+        .replace('$name', name);
 
     const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
         name: name,
@@ -189,8 +190,8 @@ async function addHostile(name, area=currentArea, context="", text="") {
     });
     
     let visualPrompt = settings.generateVisualPrompt
-        .replace('{name}', name)
-        .replace('{description}', description);
+        .replace('$name', name)
+        .replace('$description', description);
 
     const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
         name: name,
@@ -216,10 +217,9 @@ async function addSublocation(name, area=currentArea, text="", context="") {
 }
 
 async function moveToArea(area, prevArea, text="", context="") {
-    if(area === currentArea) {
+    if (area === currentArea || area === currentArea.split('/').pop()) {
         return;
     }
-    console.log('Moving to area:', area);
     let targetArea = null;
     //check if the area exists or is a sublocation within the current area
     if(areas[area]) {
@@ -273,8 +273,16 @@ async function moveToArea(area, prevArea, text="", context="") {
             text: text
         });
         if (response !== 'N/A') {
-            const parentArea = Object.keys(areas).find(a => a === response || Object.keys(areas[a].sublocations).includes(response));
+            const responseCleaned = response.replace(/[^a-zA-Z\s]/g, '');
+            const parentArea = Object.keys(areas).find(a => {
+                const isMatch = a === responseCleaned || Object.keys(areas[a].sublocations).includes(responseCleaned);
+                return isMatch;
+            });
+
             await generateArea(0, 0, parentArea + "/" + area, '', true, areas[parentArea]);
+            if (!areas[parentArea].sublocations) {
+                areas[parentArea].sublocations = {};
+            }
             areas[parentArea].sublocations[area] = { path: parentArea + '/' + area, name: area, description: areas[parentArea + '/' + area].description };
             targetArea = parentArea + '/' + area;
         }
@@ -479,7 +487,9 @@ async function outputCheck(text, context="") {
             }
         } else if (line.startsWith('3.') && !line.includes('N/A') && line.trim() !== '3.') {
             const newArea = line.replace("3. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
-            addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, currentArea, text, context));
+            if (newArea !== currentArea && newArea !== currentArea.split('/').pop()) {
+                addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, currentArea, text, context));
+            }
         } else if (line.startsWith('4.') && !line.includes('N/A') && line.trim() !== '4.') {
             const newName = line.replace("4. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
             if (!areas[currentArea].people.some(person => person.name === newName) && newName != settings.player_name) {
@@ -498,18 +508,21 @@ async function outputCheck(text, context="") {
                 }
             }
         } else if (line.startsWith('5.') && !line.includes('N/A') && line.trim() !== '5.') {
-            const prevArea = currentArea;
             const name = line.replace("5. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
-            addConfirmButton('Leaving Area', name, (inputValue) => entityLeavesArea(inputValue || name, text));
+            if (areas[currentArea].people.some(person => person.name === name) || areas[currentArea].hostiles.some(hostile => hostile.name === name))
+                addConfirmButton('Leaving Area', name, (inputValue) => entityLeavesArea(inputValue || name, text));
         } else if (line.startsWith('6.') && !line.includes('N/A') && line.trim() !== '6.') {
             const name = line.replace("6. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
-            addConfirmButton('Befriend', name, (inputValue) => befriendHostile(inputValue || name));
+            if (areas[currentArea].hostiles.some(hostile => hostile.name === name))
+                addConfirmButton('Befriend', name, (inputValue) => befriendHostile(inputValue || name));
         } else if (line.startsWith('7.') && !line.includes('N/A') && line.trim() !== '7.') {
             const name = line.replace("7. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
-            addConfirmButton('Provoke', name, (inputValue) => provokeAlly(inputValue || name));
+            if (areas[currentArea].people.some(person => person.name === name))
+                addConfirmButton('Provoke', name, (inputValue) => provokeAlly(inputValue || name));
         } else if (line.startsWith('8.') && !line.includes('N/A') && line.trim() !== '8.') {
             const name = line.replace("8. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
-            addConfirmButton('New Thing', name, (inputValue) => addThing(inputValue || name));
+            if (!areas[currentArea].things.some(thing => thing.name === name))
+                addConfirmButton('New Thing', name, (inputValue) => addThing(inputValue || name));
         } else if (line.startsWith('9.') && !line.includes('N/A') && line.trim() !== '8.') {
             const name = line.replace("9. ", '').replace(/[^a-zA-Z\s]/g, '').trim();
             if (!areas[currentArea].sublocations[name])
@@ -524,14 +537,15 @@ async function outputCheck(text, context="") {
             } else if (timePassedLower.includes("hours")) {
                 advanceTime((randomInt(2) + 1) * 3600);
             } else if (timePassedLower.includes("full rest")) {
-                const nextMorning = new Date(currentTime.replace(' ', 'T'));
-                if (nextMorning.getHours() < 8) {
-                    nextMorning.setHours(8, 0, 0, 0);
+                const dateParts = currentTime.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
+                let [year, month, day, hours, minutes, seconds] = dateParts.slice(1).map(Number);
+                let timeToAdvance = 0;
+                if(hours < 8) {
+                    timeToAdvance = (7 - hours) * 3600 + (60 - minutes) * 60 - seconds;
                 } else {
-                    nextMorning.setHours(8, 0, 0, 0);
-                    nextMorning.setDate(nextMorning.getDate() + 1);
+                    timeToAdvance = (31 - hours) * 3600 + (60 - minutes) * 60 - seconds;
                 }
-                currentTime = nextMorning.toISOString().replace('T', ' ').split('.')[0];
+                advanceTime(timeToAdvance);
             }
             updateTime();
         }
@@ -541,7 +555,7 @@ async function outputCheck(text, context="") {
 function areaContext(areaPath) {
     let area = areas[areaPath];
 
-    let context = " \n" + area.name + " : " + area.description + "\n\n";
+    let context = " \nCurrently in: " + area.name + " : " + area.description + "\n\n";
     
     context += "Paths or Exits may lead to:\n";
     if (Object.keys(area.sublocations).length > 0) {
@@ -556,36 +570,154 @@ function areaContext(areaPath) {
     context += "\n";
 
     if(area.people.length > 0) {
-        context += "People nearby\n";
+        context += "People within" + area.name + "\n";
         for(let i = 0; i < area.people.length; i++) {
             context += area.people[i].name + ": " + area.people[i].description + "\n";
         }
         context += "\n";
     }
     if(area.things.length > 0) {
-        context += "Things in area\n";
+        context += "Things within" + area.name + "\n";
         for(let i = 0; i < area.things.length; i++) {
             context += area.things[i].name + ": " + area.things[i].description + "\n";
         }
         context += "\n";
     }
     if(area.hostiles.length > 0) {
-        context += "Hostiles nearby\n";
+        context += "Hostiles within" + area.name + "\n";
         for(let i = 0; i < area.hostiles.length; i++) {
             context += area.hostiles[i].name + ": " + area.hostiles[i].description + "\n";
         }
         context += "\n";
     }
-    context += "Time: " + currentTime + "\n";
+    context += "Time: " + + getTimeofDay() + " in " + getSeason() + "\n";
     return context;
 }
 
-function fullContext() {
+function fullContext(limit = null) {
+    let outputContent = document.getElementById('output').innerText;
+    if (limit !== null) {
+        const output = document.getElementById('output');
+        const children = Array.from(output.children);
+        const limitedChildren = children.slice(-limit);
+        outputContent = limitedChildren.map(child => child.outerText).join('');
+    }
     return settings.full_context
         .replace('$world', settings.world_description)
-        .replace('$player', "\nPlayer Name: " + settings.player_name + "\n" + settings.player_description)
+        .replace('$player', settings.player_name)
+        .replace('$player_desc', settings.player_description)
         .replace('$locale', areaContext(currentArea))
-        .replace('$fullstory', document.getElementById('output').innerHTML);
+        .replace('$story', outputContent);
+}
+
+function minContext(limit = null) {
+    let outputContent = document.getElementById('output').innerText;
+    if (limit !== null) {
+        const output = document.getElementById('output');
+        const children = Array.from(output.children);
+        const limitedChildren = children.slice(-limit);
+        outputContent = limitedChildren.map(child => child.outerText).join('');
+    }
+    return settings.full_context
+        .replace('$world', settings.world_description)
+        .replace('$player', '')
+        .replace('$player_desc', '')
+        .replace('$locale', '')
+        .replace('$story', outputContent);
+}
+
+function faeCharSheet(charsheet) {
+    // charsheet string should begin with Stunts, a comma separated list of each stun be key name and value, then Aspects, a comma separated list of each aspect be key name and value, then Consequences, a comma separated list of each consequence be key name and value.
+    let charsheetString = "Stunts: ";
+    for (const [key, value] of Object.entries(charsheet.stunts)) {
+        charsheetString += key + ": " + value + ", ";
+    }
+
+    charsheetString += "\n" +
+        "Aspects: " + charsheet.high_concept + ", " + charsheet.aspects + "\n" +
+        "Consequences: " + charsheet.trouble;
+    if(charsheet.consequences) {
+        if (charsheet.consequences.mild && charsheet.consequences.mild.length > 0) {
+            charsheetString += ", " + charsheet.consequences.mild.join(', ');
+        }
+        if (charsheet.consequences.moderate && charsheet.consequences.moderate.length > 0) {
+            charsheetString += ", " + charsheet.consequences.moderate.join(', ');
+        }
+        if (charsheet.consequences.severe && charsheet.consequences.severe.length > 0) {
+            charsheetString += ", " + charsheet.consequences.severe.join(', ');
+        }
+    }
+    charsheetString += "\n";
+    console.log(charsheetString);
+    return charsheetString;
+}
+
+async function playerAction(action) {
+    switch (settings.rule_set) {
+        case 'Fate Accelerated':
+            const prompt = settings.ruleprompt_fae_action1.replace('$action', action);
+            const response = await generateText(settings.question_param, fullContext(2) + "\n\n" + faeCharSheet(settings.charsheet_fae) + prompt, '', {
+                action: action,
+                currentArea: currentArea
+            });
+            const lines = response.toLowerCase().split('\n');
+            let disadvantage = 2;
+            let advantage = 0;
+
+            for (const line of lines) {
+                if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
+                    // conditionals if line contains trivial, challeng, extreme, or impossible. plausible is default case
+                    if (line.includes('trivial')) {
+                        return "[Continue the story for another two paragraphs as player " + action + "]";
+                    } else if (line.includes('challeng')) {
+                        disadvantage += 2;
+                    } else if (line.includes('extreme')) {
+                        disadvantage += 4;
+                    } else if (line.includes('impossible')) {
+                        return "[Continue the story for another two paragraphs as player considers the possibility of " + action + "]";
+                    }
+                } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
+                    //conditions if line contains careful, clever, flashy, forceful, quick, or sneaky.
+                    if (line.includes('careful')) {
+                        advantage += settings.charsheet_fae.approaches['careful'];
+                    } else if (line.includes('clever')) {
+                        advantage += settings.charsheet_fae.approaches['clever'];
+                    } else if (line.includes('flashy')) {
+                        advantage += settings.charsheet_fae.approaches['flashy'];
+                    } else if (line.includes('forceful')) {
+                        advantage += settings.charsheet_fae.approaches['forceful'];
+                    } else if (line.includes('quick')) {
+                        advantage += settings.charsheet_fae.approaches['quick'];
+                    } else if (line.includes('sneaky')) {
+                        advantage += settings.charsheet_fae.approaches['sneaky'];
+                    }
+                } else if (line.startsWith('3.') && !line.includes('N/A') && line.trim() !== '3.') {
+                    // simply count the number of commas returned and add to the advantage
+                    advantage += line.split(',').length;;
+                } else if (line.startsWith('4.') && !line.includes('N/A') && line.trim() !== '4.') {
+                    // simply count the number of commas returned and add to the disadvantage
+                    disadvantage += line.split(',').length;;
+                }
+            }
+            // roll 4d4-8+advantage-disadvantage
+            let roll = randomInt(3) + randomInt(3) + randomInt(3) + randomInt(3) - 4 + advantage - disadvantage;
+            console.log('Roll 4d4-8 +',advantage,'-',disadvantage,'=', roll);
+            if(roll >= 3) {
+                return "[The player's actions are extremely successful, so much so that they will create advantages in similar actions in the future. Continue the story for another two paragraphs as player successfully " + action + "]";
+            } else if (roll >= 1) {
+                return "[Continue the story for another two paragraphs as player successfully " + action + "]";
+            } else if (roll === 0) {
+                return "[Continue the story for another two paragraphs as player attempts to " + action + "]";
+            } else if (roll >= -2) {
+                return "[Continue the story for another two paragraphs as player fails to " + action + ". While a failure, it may still achieve the desired result at a cost.]";
+            } else {
+                return "[Continue the story for another two paragraphs as player fails to " + action + ". The failure is significant having negative consequences for the player.]";
+            }
+        case 'pathfinder2e':
+            return pathfinder2eAction(action);
+        default:
+            return "[Continue the story as player " + action +"]";
+    }
 }
 
 async function sendMessage(message = input.value) {
@@ -594,6 +726,15 @@ async function sendMessage(message = input.value) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('new-message');
     input.value = '';
+
+    const confirmElement = document.getElementById('outputCheckConfirm');
+    if (confirmElement) {
+        confirmElement.remove();
+    }
+    const priorMessageElement = output.querySelector('.new-message');
+    if (priorMessageElement) {
+        priorMessageElement.classList.remove('new-message');
+    }
 
     if (message.trim()) {
         if (message.startsWith('/')) {
@@ -607,29 +748,27 @@ async function sendMessage(message = input.value) {
                 await addThing(name);
             } else if (command === '/hostile') {
                 await addHostile(name);
-            } else {
-                console.log('[Unknown command: ' + message + ']');
-            }
-            return;
+            } else if (command === '/move') {
+                await moveToArea(name, currentArea);
+            } 
+            if (message.startsWith('//')) {
+                const directInput = document.createElement('div');
+                directInput.innerHTML = message.replace('//', '');
+                output.appendChild(directInput);
+                output.scrollTop = output.scrollHeight;
+                messageElement.innerHTML = '\n[Continue the story for another two paragraphs.]';
+            } else return;
         } else {
-            messageElement.innerHTML = '\n[Generate the next two paragraphs as player attempts to ' + message + ']';
+            messageElement.innerHTML = await playerAction(message);
         }
     } else {
         messageElement.innerHTML = '\n[Continue the story for another two paragraphs.]';
-    }
-    const confirmElement = document.getElementById('outputCheckConfirm');
-    if (confirmElement) {
-        confirmElement.remove();
-    }
-    const priorMessageElement = output.querySelector('.new-message');
-    if (priorMessageElement) {
-        priorMessageElement.classList.remove('new-message');
     }
 
     output.appendChild(messageElement);
     output.scrollTop = output.scrollHeight;
 
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext() + messageElement.innerHTML, '', {
+    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(), '', {
         message: message,
         currentArea: currentArea,
         playerName: settings.player_name
@@ -692,11 +831,32 @@ function randomInt(max) {
     return Math.floor(Math.random() * max);
 }
 
-function updateTime() {
-    const timeElement = document.getElementById('currentTime');
+function getTimeofDay() {
+    const hours = parseInt(currentTime.match(/(\d{2}):/)[1], 10);
+    if (hours >= 2 && hours < 6) {
+        return "Early Morning before dawn";
+    } else if (hours >= 6 && hours < 12) {
+        return "Morning";
+    } else if (hours >= 11 && hours < 13) {
+        return "Noonish";
+    } else if (hours >= 13 && hours < 17) {
+        return "Afternoon";
+    } else if (hours >= 17 && hours < 22) {
+        return "Evening";
+    } else {
+        return "Late Night";
+    }
+}
+
+function getSeason() {
     const seasons = ["Winter", "Spring", "Summer", "Fall"];
     const month = parseInt(currentTime.match(/-(\d{2})-/)[1], 10) - 1;
-    const season = seasons[Math.floor((month % 12) / 3)];
+    return seasons[Math.floor((month % 12) / 3)];
+}
+
+function updateTime() {
+    const timeElement = document.getElementById('currentTime');
+    const season = getSeason();
     timeElement.innerHTML = `${season} ${currentTime}`;
 }
 

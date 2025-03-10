@@ -1,4 +1,4 @@
-async function generateText(params, input, post='', variables={}) {
+async function generateText(params, input, post='', variables={}, sample_messages=[]) {
     // Show loader
     document.getElementById('loader').style.display = 'block';
 
@@ -9,8 +9,27 @@ async function generateText(params, input, post='', variables={}) {
     const system_prompt = replaceVariables(params.system_prompt, variables);
 
     let response;
+
     // Send message to API
     if(params.textAPItype == 'openai') {
+        const messages = [
+            {
+                "role": "system",
+                "content": system_prompt
+            }
+        ];
+    
+        // Include sample_messages if provided
+        if (sample_messages.length > 0) {
+            sample_messages.forEach(message => {
+                messages.push(message);
+            });
+        }
+    
+        messages.push({
+            "role": "user",
+            "content": input
+        });
         response = await fetch(params.textAPI + 'chat/completions', {
             method: 'POST',
             headers: {
@@ -18,16 +37,7 @@ async function generateText(params, input, post='', variables={}) {
             },
             body: JSON.stringify({
                 model: params.model,
-                messages: [
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": input
-                }
-                ],
+                messages: messages,
                 max_completion_tokens: params.max_length,
                 temperature: params.temperature,
                 top_p: params.top_p,
