@@ -16,8 +16,10 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
 
     let response;
     if (description == '') {
-        const prompt = settings.generateAreaDescriptionPrompt.replace('$areaName', areaName);
-        response = await generateText(settings.question_param, minContext(3) + "\n" + prompt, '', {
+        const prompt = replaceVariables(settings.generateAreaDescriptionPrompt, {
+            areaName: areaName
+        });
+        response = await generateText(settings.creative_question_param, minContext(3) + "\n" + prompt, '', {
             areaName: areaName
         });
         area.description = response;
@@ -26,11 +28,12 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
     }
 
     // Generate potential sublocations
-    const sublocationsPrompt = settings.generateSublocationsPrompt
-        .replace('$areaName', areaName)
-        .replace('$description', area.description);
+    const sublocationsPrompt = replaceVariables(settings.generateSublocationsPrompt, {
+        areaName: areaName,
+        description: area.description
+    });
     
-    response = await generateText(settings.question_param, minContext(3) + "\n" + sublocationsPrompt, '', {
+    response = await generateText(settings.creative_question_param, minContext(3) + "\n" + sublocationsPrompt, '', {
         areaName: areaName,
         description: area.description
     });
@@ -53,12 +56,13 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
     }
 
     const allPeople = Object.values(areas).flatMap(area => area.people.map(person => person.name)).join(', ');
-    const entitiesPrompt = settings.generateEntitiesPrompt
-        .replace('$people', allPeople)
-        .replace('$areaName', areaName)
-        .replace('$description', area.description);
+    const entitiesPrompt = replaceVariables(settings.generateEntitiesPrompt, {
+        people: allPeople,
+        areaName: areaName,
+        description: area.description
+    });
 
-    response = await generateText(settings.question_param, minContext(3) + "\n" + entitiesPrompt, '', {
+    response = await generateText(settings.creative_question_param, minContext(3) + "\n" + entitiesPrompt, '', {
         areaName: areaName,
         description: area.description
     });
@@ -80,9 +84,10 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
             if (!description && lines[lines.indexOf(line) + 1] && !lines[lines.indexOf(line) + 1].includes(':') && lines[lines.indexOf(line) + 1].trim() !== '') {
                 description = lines[lines.indexOf(line) + 1].trim();
             }
-            let visualPrompt = settings.generateVisualPrompt
-                .replace('$name', name)
-                .replace('$description', description);
+            let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
+                name: name,
+                description: description
+            });
 
             let visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
                 name: name,
@@ -97,9 +102,10 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
         }
     }
 
-    let visualPrompt = settings.generateVisualPrompt
-        .replace('$name', areaName)
-        .replace('$description', area.description);
+    let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
+        name: areaName,
+        description: area.description
+    });
 
     area.visual = await generateText(settings.question_param, settings.world_description + "\n" + area.description + '\n' + visualPrompt, '', {
         name: areaName,
@@ -129,19 +135,21 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
 }
 
 async function addPerson(name, area=currentArea, context="", text="") {
-    const descriptionPrompt = settings.addPersonDescriptionPrompt
-        .replace('$name', name);
+    const descriptionPrompt = replaceVariables(settings.addPersonDescriptionPrompt, {
+        name: name
+    });
 
-    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
         text: text
     });
     
-    let visualPrompt = settings.generateVisualPrompt
-        .replace('$name', name)
-        .replace('$description', description);
+    let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
+        name: name,
+        description: description
+    });
 
     const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
         name: name,
@@ -154,19 +162,21 @@ async function addPerson(name, area=currentArea, context="", text="") {
 }
 
 async function addThing(name, area=currentArea, context="", text="") {
-    const descriptionPrompt = settings.addThingDescriptionPrompt
-        .replace('$name', name);
+    const descriptionPrompt = replaceVariables(settings.addThingDescriptionPrompt, {
+        name: name
+    });
 
-    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
         text: text
     });
     
-    let visualPrompt = settings.generateVisualPrompt
-        .replace('$name', name)
-        .replace('$description', description);
+    let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
+        name: name,
+        description: description
+    });
 
     const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
         name: name,
@@ -179,19 +189,21 @@ async function addThing(name, area=currentArea, context="", text="") {
 }
 
 async function addHostile(name, area=currentArea, context="", text="") {
-    const descriptionPrompt = settings.addHostileDescriptionPrompt
-        .replace('$name', name);
+    const descriptionPrompt = replaceVariables(settings.addHostileDescriptionPrompt, {
+        name: name
+    });
 
-    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
         text: text
     });
     
-    let visualPrompt = settings.generateVisualPrompt
-        .replace('$name', name)
-        .replace('$description', description);
+    let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
+        name: name,
+        description: description
+    });
 
     const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
         name: name,
@@ -204,8 +216,10 @@ async function addHostile(name, area=currentArea, context="", text="") {
 }
 
 async function addSublocation(name, area=currentArea, text="", context="") {
-    const descriptionPrompt = "[Describe the area named " + name + " in 1-2 sentences.]";
-    const description = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+    const descriptionPrompt = replaceVariables(settings.addSubLocationDescriptionPrompt, {
+        name: name
+    });
+    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
@@ -255,7 +269,6 @@ async function moveToArea(area, prevArea, text="", context="") {
             const parentPath = currentPath;
             currentPath += '/' + subPath;
             await generateArea(0, 0, currentPath, '', true, areas[parentPath]);
-            // if area is not listed as a sublocation of the parent, add it
             if (!areas[parentPath].sublocations[subPath]) {
                 areas[parentPath].sublocations[subPath] = { path: currentPath, name: subPath, description: areas[currentPath].description };
             }
@@ -263,15 +276,18 @@ async function moveToArea(area, prevArea, text="", context="") {
         targetArea = currentPath;
     } else if (!areas[area]) {
         const areaList = Object.keys(areas).join(', ') + ', ' + Object.keys(areas[currentArea].sublocations).join(', ');
-
-        const prompt = `[Depending on the distance traveled in the passage, would "${area}" be best described as proximate to one of the previously listed locations? Specify the location and only the location name from the list if such is the case, otherwise answer N/A.]`;
-        const response = await generateText(settings.question_param, settings.world_description + "\n\n\nPassage:\n" + text + "\nLocations: "+ areaList + "\n\n" + prompt, '', {
+        const proximityPrompt = replaceVariables(settings.moveToAreaProximityPrompt, {
+            newArea: area
+        });
+        
+        const response = await generateText(settings.question_param, settings.world_description + "\n\n\nPassage:\n" + text + "\nLocations: "+ areaList + "\n\n" + proximityPrompt, '', {
             areaList: areaList,
             currentArea: currentArea,
             newArea: area,
             context: context,
             text: text
         });
+        
         if (response !== 'N/A') {
             const responseCleaned = response.replace(/[^a-zA-Z\s]/g, '');
             const parentArea = Object.keys(areas).find(a => {
@@ -306,17 +322,21 @@ async function moveToArea(area, prevArea, text="", context="") {
         await generateArea(newX, newY, area);
         targetArea = area;
     }
-    
 
     if(areas[currentArea].people.length > 0) {
         const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');
-        const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in a list format separate by '\n' in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who moved with the player?" + "]", '', {
+        const peoplePrompt = replaceVariables(settings.moveToAreaPeoplePrompt, {
+            peopleNames: peopleNames
+        });
+        
+        const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n" + peoplePrompt, '', {
             currentArea: currentArea,
             newArea: area,
             context: context,
             text: text,
             peopleNames: peopleNames
         });
+        
         const movers = movingPeople.split('\n');
         for (const mover of movers) {
             if (mover.trim() != "") {
@@ -328,6 +348,7 @@ async function moveToArea(area, prevArea, text="", context="") {
             }
         }
     }
+    
     currentArea = targetArea;
     if(areas[currentArea].image instanceof Blob)
         document.getElementById('sceneart').src = URL.createObjectURL(areas[currentArea].image);
@@ -338,8 +359,9 @@ async function moveToArea(area, prevArea, text="", context="") {
 }
 
 async function entityLeavesArea(name, text) {
-    //ask where name went in the passage among the areas adjacent to the currentarea, then find their index among hostiles or people and move them to the area
-    const prompt = `[In the passage, to which of the adjacent areas in the context did ${name} move to? If ambiguous be creative and give the most fitting among the options.]`;
+    const prompt = replaceVariables(settings.entityLeavesAreaPrompt, {
+        name: name
+    });
     const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
         currentArea: currentArea,
         name: name,
@@ -402,7 +424,6 @@ function addConfirmButton(label, defaultValue, callback) {
 
     buttonRow.appendChild(input);
     buttonRow.appendChild(button);
-    output.scrollTop = output.scrollHeight;
 }
 
 function renamePerson(name, prevName) {
@@ -554,43 +575,75 @@ async function outputCheck(text, context="") {
 
 function areaContext(areaPath) {
     let area = areas[areaPath];
-
-    let context = " \nCurrently in: " + area.name + " : " + area.description + "\n\n";
+    let context = replaceVariables(settings.areaContext, { 
+        name: area.name, 
+        description: area.description 
+    });
     
-    context += "Paths or Exits may lead to:\n";
+    // Build paths context
+    let paths = '';
     if (Object.keys(area.sublocations).length > 0) {
         for (const [name, subloc] of Object.entries(area.sublocations)) {
-            context += name + ": " + subloc.description + "\n";
+            paths += replaceVariables(settings.subLocationFormat, {
+                name: name,
+                description: subloc.description
+            });
         }
     }
     if (areaPath.includes('/')) {
         const parentArea = areaPath.split('/').slice(0, -1).join('/');
-        context += parentArea.split('/').pop() + ": " + areas[parentArea].description + "\n";
+        paths += replaceVariables(settings.subLocationFormat, {
+            name: parentArea.split('/').pop(),
+            description: areas[parentArea].description
+        });
     }
-    context += "\n";
+    context += replaceVariables(settings.areaPathsContext, { paths });
 
+    // Build entity lists
     if(area.people.length > 0) {
-        context += "People within" + area.name + "\n";
-        for(let i = 0; i < area.people.length; i++) {
-            context += area.people[i].name + ": " + area.people[i].description + "\n";
-        }
-        context += "\n";
+        let peopleList = area.people.map(person => 
+            replaceVariables(settings.entityFormat, { 
+                name: person.name, 
+                description: person.description 
+            })
+        ).join('');
+        context += replaceVariables(settings.areaPeopleContext, { 
+            name: area.name, 
+            peopleList 
+        });
     }
+    
     if(area.things.length > 0) {
-        context += "Things within" + area.name + "\n";
-        for(let i = 0; i < area.things.length; i++) {
-            context += area.things[i].name + ": " + area.things[i].description + "\n";
-        }
-        context += "\n";
+        let thingsList = area.things.map(thing => 
+            replaceVariables(settings.entityFormat, { 
+                name: thing.name, 
+                description: thing.description 
+            })
+        ).join('');
+        context += replaceVariables(settings.areaThingsContext, { 
+            name: area.name, 
+            thingsList 
+        });
     }
+    
     if(area.hostiles.length > 0) {
-        context += "Hostiles within" + area.name + "\n";
-        for(let i = 0; i < area.hostiles.length; i++) {
-            context += area.hostiles[i].name + ": " + area.hostiles[i].description + "\n";
-        }
-        context += "\n";
+        let hostilesList = area.hostiles.map(hostile => 
+            replaceVariables(settings.entityFormat, { 
+                name: hostile.name, 
+                description: hostile.description 
+            })
+        ).join('');
+        context += replaceVariables(settings.areaHostilesContext, { 
+            name: area.name, 
+            hostilesList 
+        });
     }
-    context += "Time: " + + getTimeofDay() + " in " + getSeason() + "\n";
+
+    context += replaceVariables(settings.areaTimeContext, {
+        timeOfDay: getTimeofDay(),
+        season: getSeason()
+    });
+
     return context;
 }
 
@@ -603,9 +656,9 @@ function fullContext(limit = null) {
         outputContent = limitedChildren.map(child => child.outerText).join('');
     }
     return settings.full_context
-        .replace('$world', settings.world_description)
-        .replace('$player', settings.player_name)
-        .replace('$player_desc', settings.player_description)
+        .replace('$world', "World Description: " + settings.world_description + "\n")
+        .replace('$player', "Player Name: " + settings.player_name + "\n")
+        .replace('$player_desc', "Player Description: " + settings.player_description + "\n")
         .replace('$locale', areaContext(currentArea))
         .replace('$story', outputContent);
 }
@@ -619,7 +672,7 @@ function minContext(limit = null) {
         outputContent = limitedChildren.map(child => child.outerText).join('');
     }
     return settings.full_context
-        .replace('$world', settings.world_description)
+        .replace('$world', "World Description: " + settings.world_description + "\n")
         .replace('$player', '')
         .replace('$player_desc', '')
         .replace('$locale', '')
@@ -634,17 +687,16 @@ function faeCharSheet(charsheet) {
     }
 
     charsheetString += "\n" +
-        "Aspects: " + charsheet.high_concept + ", " + charsheet.aspects + "\n" +
-        "Consequences: " + charsheet.trouble;
+        "Aspects: " + charsheet.high_concept + "," + charsheet.aspects + ","+charsheet.trouble;
     if(charsheet.consequences) {
         if (charsheet.consequences.mild && charsheet.consequences.mild.length > 0) {
-            charsheetString += ", " + charsheet.consequences.mild.join(', ');
+            charsheetString += "," + charsheet.consequences.mild.join(', ');
         }
         if (charsheet.consequences.moderate && charsheet.consequences.moderate.length > 0) {
-            charsheetString += ", " + charsheet.consequences.moderate.join(', ');
+            charsheetString += "," + charsheet.consequences.moderate.join(', ');
         }
         if (charsheet.consequences.severe && charsheet.consequences.severe.length > 0) {
-            charsheetString += ", " + charsheet.consequences.severe.join(', ');
+            charsheetString += "," + charsheet.consequences.severe.join(', ');
         }
     }
     charsheetString += "\n";
@@ -661,20 +713,20 @@ async function playerAction(action) {
                 currentArea: currentArea
             });
             const lines = response.toLowerCase().split('\n');
-            let disadvantage = 2;
+            let disadvantage = 1;
             let advantage = 0;
 
             for (const line of lines) {
                 if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
                     // conditionals if line contains trivial, challeng, extreme, or impossible. plausible is default case
                     if (line.includes('trivial')) {
-                        return "[Continue the story for another two paragraphs as player " + action + "]";
+                        return "[Continue the story for another two paragraphs as player '" + action + "'. "+ settings.action_string +"]";
                     } else if (line.includes('challeng')) {
                         disadvantage += 2;
                     } else if (line.includes('extreme')) {
                         disadvantage += 4;
                     } else if (line.includes('impossible')) {
-                        return "[Continue the story for another two paragraphs as player considers the possibility of " + action + "]";
+                        return "[Continue the story for another two paragraphs as player considers the possibility of '" + action + "'. "+ settings.action_string +"]"
                     }
                 } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
                     //conditions if line contains careful, clever, flashy, forceful, quick, or sneaky.
@@ -699,24 +751,24 @@ async function playerAction(action) {
                     disadvantage += line.split(',').length;;
                 }
             }
-            // roll 4d4-8+advantage-disadvantage
+            // roll 4d3-8+advantage-disadvantage
             let roll = randomInt(3) + randomInt(3) + randomInt(3) + randomInt(3) - 4 + advantage - disadvantage;
             console.log('Roll 4d4-8 +',advantage,'-',disadvantage,'=', roll);
             if(roll >= 3) {
-                return "[The player's actions are extremely successful, so much so that they will create advantages in similar actions in the future. Continue the story for another two paragraphs as player successfully " + action + "]";
+                return "[The player's actions are extremely successful, so much so that they will create advantages in similar actions in the future. Continue the story for another two paragraphs as player successfully '" + action + "'. "+ settings.action_string + "]";
             } else if (roll >= 1) {
-                return "[Continue the story for another two paragraphs as player successfully " + action + "]";
+                return "[Continue the story for another two paragraphs as player successfully '" + action + "'. "+ settings.action_string +"]"
             } else if (roll === 0) {
-                return "[Continue the story for another two paragraphs as player attempts to " + action + "]";
+                return "[Continue the story for another two paragraphs as player attempts to '" + action + "'. "+ settings.action_string +"]"
             } else if (roll >= -2) {
-                return "[Continue the story for another two paragraphs as player fails to " + action + ". While a failure, it may still achieve the desired result at a cost.]";
+                return "[Continue the story for another two paragraphs as player fails to '" + action + "'. While a failure, it may still achieve the desired result at a cost. " + settings.action_string +"]"
             } else {
-                return "[Continue the story for another two paragraphs as player fails to " + action + ". The failure is significant having negative consequences for the player.]";
+                return "[Continue the story for another two paragraphs as player fails to '" + action + "'. The failure is significant having negative consequences for the player. " + settings.action_string +"]";
             }
         case 'pathfinder2e':
             return pathfinder2eAction(action);
         default:
-            return "[Continue the story as player " + action +"]";
+            return "[Continue the story as player '" + action + "'. "+ settings.action_string +"]"
     }
 }
 
@@ -775,7 +827,8 @@ async function sendMessage(message = input.value) {
     }));
     
     messageElement.innerHTML = "<br>" + text.replace(/\n/g, '<br>');
-    output.scrollTop = output.scrollHeight;
+
+    output.scrollTop = output.lastChild.offsetTop;
 
     await outputCheck(text, output.textContent);
 }
@@ -794,8 +847,16 @@ function undoLastAction() {
 function trimIncompleteSentences(text) {
     const sentences = text.match(/[^.!?]+[.!?]+["']?/g);
     if (sentences && sentences.length > 1) {
-        sentences.pop();
-        return sentences.join(' ');
+        const lastSentence = sentences[sentences.length - 1];
+        if (!/[.!?"]$/.test(lastSentence.trim())) {
+            sentences.pop();
+        }
+        let result = sentences.join(' ');
+        const quoteCount = (result.match(/"/g) || []).length;
+        if (quoteCount % 2 !== 0) {
+            result += '"';
+        }
+        return result;
     }
     return text;
 }
