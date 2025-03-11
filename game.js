@@ -463,7 +463,8 @@ function advanceTime(timePassed) {
         hours -= 24;
         day += 1;
     }
-    const daysInMonth = new Date(year, month, 0).getDate();
+    const fourDigitYear = year.toString().padStart(4, '0').slice(-4);
+    const daysInMonth = new Date(fourDigitYear, month, 0).getDate();
     while (day > daysInMonth) {
         day -= daysInMonth;
         month += 1;
@@ -472,7 +473,7 @@ function advanceTime(timePassed) {
         month -= 12;
         year += 1;
     }
-    currentTime = `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    currentTime = `${year.toString()}-${month.toString()}-${day.toString()} ${hours.toString()}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 async function outputCheck(text, context="") {
@@ -915,7 +916,8 @@ function trimIncompleteSentences(text) {
 
 async function setupStart() {
     document.getElementById('sceneart').src = 'placeholder.png';
-    await generateArea(100, 100, settings.starting_area, settings.starting_area_description);
+
+    await generateArea(3500, 3500, settings.starting_area, settings.starting_area_description);
     document.getElementById('sceneart').alt = areas[settings.starting_area].description;
     const responseElement = document.createElement('div');
     responseElement.classList.add('new-message');
@@ -977,6 +979,13 @@ let areas = {};
 let currentArea;
 let currentTime;
 
+    // get half width and height of map to get center
+    const mapWidth = map.offsetWidth;
+    const mapHeight = map.offsetHeight;
+    const centerX = (mapContainer.clientWidth - mapWidth) / 2;
+    const centerY = (mapContainer.clientHeight - mapHeight) / 2;
+    map.style.left = `${centerX}px`;
+    map.style.top = `${centerY}px`;
     loadSettings();
     overrideSettings();
     areas[settings.starting_area] = {};

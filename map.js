@@ -4,6 +4,9 @@ let dragStartX, dragStartY;
 let scale = 1; // Initial scale
 const minScale = 0.05; // Minimum zoom level
 const maxScale = 5; // Maximum zoom level
+let longPressTimer = null;
+let longPressX, longPressY;
+const LONG_PRESS_DURATION = 500; // milliseconds
 
 const map = document.getElementById('map');
 const submenu = document.createElement('div');
@@ -11,28 +14,52 @@ submenu.classList.add('submenu');
 document.body.appendChild(submenu);
 
 map.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    dragStartX = e.clientX - map.offsetLeft;
-    dragStartY = e.clientY - map.offsetTop;
+    isDragging = false; // Start as not dragging
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
     map.style.cursor = 'grabbing';
+    
+    // Start long press timer
+    longPressX = e.clientX - map.getBoundingClientRect().left;
+    longPressY = e.clientY - map.getBoundingClientRect().top;
+    longPressTimer = setTimeout(() => {
+        if (!isDragging) {
+            openNewLocationPrompt(longPressX / scale, longPressY / scale);
+        }
+    }, LONG_PRESS_DURATION);
 });
 
 map.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-        const x = e.clientX - dragStartX;
-        const y = e.clientY - dragStartY;
-        map.style.left = `${x}px`;
-        map.style.top = `${y}px`;
+    // Only check for drag if mouse button is down (which sets dragStartX/Y)
+    if (dragStartX !== undefined && dragStartY !== undefined) {
+        if (Math.abs(e.clientX - dragStartX) > 5 || Math.abs(e.clientY - dragStartY) > 5) {
+            isDragging = true;
+            clearTimeout(longPressTimer);
+        }
+        if (isDragging) {
+            const x = e.clientX - dragStartX + parseInt(map.style.left || '0');
+            const y = e.clientY - dragStartY + parseInt(map.style.top || '0');
+            map.style.left = `${x}px`;
+            map.style.top = `${y}px`;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+        }
     }
 });
 
 map.addEventListener('mouseup', () => {
+    clearTimeout(longPressTimer);
     isDragging = false;
+    dragStartX = undefined;
+    dragStartY = undefined;
     map.style.cursor = 'grab';
 });
 
 map.addEventListener('mouseleave', () => {
+    clearTimeout(longPressTimer);
     isDragging = false;
+    dragStartX = undefined;
+    dragStartY = undefined;
     map.style.cursor = 'grab';
 });
 
@@ -143,4 +170,56 @@ document.addEventListener('click', () => {
 // Go to a location
 function goToLocation(name) {
     moveToArea(name, currentArea);
+}
+
+function openNewLocationPrompt(x, y) {
+    // Remove any existing overlay
+    const existingOverlay = document.getElementById('newLocationOverlay');
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'newLocationOverlay';
+    overlay.classList.add('overlay');
+    overlay.style.display = 'flex';
+
+    const container = document.createElement('div');
+    container.classList.add('settings-container');
+
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Location Name:';
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.required = true;
+
+    const descLabel = document.createElement('label');
+    descLabel.textContent = 'Description (optional):';
+    const descInput = document.createElement('textarea');
+    descInput.style.height = '100px';
+
+    const createBtn = document.createElement('button');
+    createBtn.textContent = 'Create';
+    createBtn.onclick = async () => {
+        if (nameInput.value.trim()) {
+            await generateArea(x, y, nameInput.value.trim(), descInput.value.trim());
+            overlay.remove();
+        }
+    };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => overlay.remove();
+
+    container.appendChild(nameLabel);
+    container.appendChild(nameInput);
+    container.appendChild(descLabel);
+    container.appendChild(descInput);
+    container.appendChild(createBtn);
+    container.appendChild(cancelBtn);
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+
+    // Focus the name input
+    nameInput.focus();
 }
