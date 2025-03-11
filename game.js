@@ -1,3 +1,15 @@
+async function generateVisualPrompt(name, description) {
+    const visualPrompt = replaceVariables(settings.generateVisualPrompt, {
+        name: name,
+        description: description
+    });
+
+    return await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
+        name: name,
+        description: description
+    });
+}
+
 async function generateArea(x, y, areaName, description='', isSubLocation=false, parentArea=null) {
     let area;
     areas[areaName] = {};
@@ -84,15 +96,8 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
             if (!description && lines[lines.indexOf(line) + 1] && !lines[lines.indexOf(line) + 1].includes(':') && lines[lines.indexOf(line) + 1].trim() !== '') {
                 description = lines[lines.indexOf(line) + 1].trim();
             }
-            let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
-                name: name,
-                description: description
-            });
 
-            let visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
-                name: name,
-                description: description
-            });
+            let visual = await generateVisualPrompt(name, description);
             
             if(currentSection === 'things')
                 visual = "(" + name + "), " + visual;
@@ -102,15 +107,7 @@ async function generateArea(x, y, areaName, description='', isSubLocation=false,
         }
     }
 
-    let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
-        name: areaName,
-        description: area.description
-    });
-
-    area.visual = await generateText(settings.question_param, settings.world_description + "\n" + area.description + '\n' + visualPrompt, '', {
-        name: areaName,
-        description: area.description
-    });
+    area.visual = await generateVisualPrompt(area.name, area.description);
     
     area.image = 'placeholder';
     if (!isSubLocation) {
@@ -151,16 +148,7 @@ async function addPerson(name, area=currentArea, context="", text="") {
         text: text
     });
     
-    let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
-        name: name,
-        description: description
-    });
-
-    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
-        name: name,
-        description: description
-    });
-    
+    const visual = await generateVisualPrompt(name, description);
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);
@@ -178,18 +166,15 @@ async function addThing(name, area=currentArea, context="", text="") {
         text: text
     });
     
-    let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
-        name: name,
-        description: description
-    });
-
-    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
-        name: name,
-        description: description
-    });
-    
+    const visual = await generateVisualPrompt(name, description);
     const seed = Math.floor(Math.random() * 4294967295) + 1;
-    areas[currentArea]['things'].push({ name, description, visual, seed, image: 'placeholder' });
+    areas[currentArea]['things'].push({ 
+        name, 
+        description, 
+        visual: `(${name}), ${visual}`, 
+        seed, 
+        image: 'placeholder' 
+    });
     updateImageGrid(currentArea);
 }
 
@@ -205,16 +190,7 @@ async function addCreature(name, area=currentArea, context="", text="") {
         text: text
     });
     
-    let visualPrompt = replaceVariables(settings.generateVisualPrompt, {
-        name: name,
-        description: description
-    });
-
-    const visual = await generateText(settings.question_param, settings.world_description + "\n" + visualPrompt, '', {
-        name: name,
-        description: description
-    });
-    
+    const visual = await generateVisualPrompt(name, description);
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['creatures'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);

@@ -204,6 +204,14 @@ function updateImageGrid(areaName) {
                     console.error('Invalid image Blob:', areaName, category, item.name, item.image);
                 }
                 img.alt = item.name;
+
+                // Add click handler for entity submenu
+                img.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openEntitySubmenu(item, category, e.clientX, e.clientY);
+                });
+
+                // Existing hover handlers
                 img.addEventListener('mouseover', () => {
                     tooltip.style.display = 'block';
                     tooltip.innerHTML = `<strong>${item.name}</strong><br>${item.description}<br><img src="${img.src}" alt="${item.name}" style="width: 100px; height: auto;">`;
@@ -220,4 +228,195 @@ function updateImageGrid(areaName) {
             imageGrid.appendChild(row);
         }
     });
+}
+
+function openEntitySubmenu(entity, category, x, y) {
+    // Remove any existing submenu
+    let submenu = document.getElementById('entitySubmenu');
+    if (submenu) {
+        submenu.remove();
+    }
+
+    submenu = document.createElement('div');
+    submenu.id = 'entitySubmenu';
+    submenu.classList.add('submenu');
+    submenu.style.display = 'block'; // Set display to block to make it visible
+
+    const renameBtn = document.createElement('button');
+    renameBtn.textContent = 'Rename';
+    renameBtn.onclick = () => {
+        const newName = prompt('Enter new name:', entity.name);
+        if (newName && newName !== entity.name) {
+            renameEntity(newName, entity.name);
+            submenu.remove();
+        }
+    };
+
+    const editDescBtn = document.createElement('button');
+    editDescBtn.textContent = 'Edit Description';
+    editDescBtn.onclick = () => {
+        openDescriptionEditor(entity, category);
+        submenu.remove();
+    };
+
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = 'Remove';
+    removeBtn.onclick = () => {
+        if (confirm(`Are you sure you want to remove ${entity.name}?`)) {
+            const index = areas[currentArea][category].findIndex(item => item.name === entity.name);
+            if (index > -1) {
+                areas[currentArea][category].splice(index, 1);
+                updateImageGrid(currentArea);
+            }
+        }
+        submenu.remove();
+    };
+
+    const editVisualBtn = document.createElement('button');
+    editVisualBtn.textContent = 'Edit Visual';
+    editVisualBtn.onclick = () => {
+        openVisualEditor(entity, category);
+        submenu.remove();
+    };
+
+    submenu.appendChild(renameBtn);
+    submenu.appendChild(editDescBtn);
+    submenu.appendChild(editVisualBtn);
+    submenu.appendChild(removeBtn);
+
+    submenu.style.left = x + 'px';
+    submenu.style.top = y + 'px';
+    submenu.style.position = 'fixed'; // Ensure it's positioned relative to viewport
+
+    document.body.appendChild(submenu);
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function closeSubmenu(e) {
+        if (!submenu.contains(e.target)) {
+            submenu.remove();
+            document.removeEventListener('click', closeSubmenu);
+        }
+    });
+}
+
+function openDescriptionEditor(entity, category) {
+    const overlay = document.createElement('div');
+    overlay.classList.add('overlay');
+    overlay.style.display = 'flex';
+
+    const editor = document.createElement('div');
+    editor.classList.add('settings-container');
+
+    const textarea = document.createElement('textarea');
+    textarea.value = entity.description;
+    textarea.style.height = '200px';
+    textarea.style.marginBottom = '10px';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = async () => {
+        entity.description = textarea.value;
+        overlay.remove();
+        updateImageGrid(currentArea);
+    };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => {
+        overlay.remove();
+    };
+
+    editor.appendChild(textarea);
+    editor.appendChild(saveBtn);
+    editor.appendChild(cancelBtn);
+    overlay.appendChild(editor);
+    document.body.appendChild(overlay);
+}
+
+function openVisualEditor(entity, category) {
+    const overlay = document.createElement('div');
+    overlay.classList.add('overlay');
+    overlay.style.display = 'flex';
+
+    const editor = document.createElement('div');
+    editor.classList.add('settings-container');
+    editor.style.width = '80%';
+    editor.style.maxWidth = '800px';
+
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(entity.image);
+    img.style.width = '100%';
+    img.style.maxHeight = '300px';
+    img.style.objectFit = 'contain';
+    img.style.marginBottom = '10px';
+
+    const visualPrompt = document.createElement('textarea');
+    visualPrompt.value = entity.visual;
+    visualPrompt.style.height = '100px';
+    visualPrompt.style.marginBottom = '10px';
+
+    const seedInput = document.createElement('input');
+    seedInput.type = 'number';
+    seedInput.value = entity.seed;
+    seedInput.style.marginBottom = '10px';
+
+    const regenerateBtn = document.createElement('button');
+    regenerateBtn.textContent = 'Regenerate Image';
+    regenerateBtn.onclick = async () => {
+        entity.visual = visualPrompt.value;
+        entity.seed = parseInt(seedInput.value);
+        let negprompt = "";
+        let posprompt = "";
+        if (category === "people") {
+            posprompt = settings.person_prompt;
+            negprompt = settings.person_negprompt;
+        } else if (category === "creatures") {
+            posprompt = settings.creature_prompt;
+            negprompt = settings.creature_negprompt;
+        } else if (category === "things") {
+            posprompt = settings.thing_prompt;
+            negprompt = settings.thing_negprompt;
+        }
+        const artBlob = await generateArt(posprompt + entity.visual, negprompt, entity.seed);
+        if (artBlob instanceof Blob) {
+            entity.image = artBlob;
+            img.src = URL.createObjectURL(artBlob);
+        }
+    };
+
+    const regeneratePromptBtn = document.createElement('button');
+    regeneratePromptBtn.textContent = 'Regenerate Prompt';
+    regeneratePromptBtn.onclick = async () => {
+        const newPrompt = await generateVisualPrompt(entity.name, entity.description);
+        visualPrompt.value = category === 'things' ? `(${entity.name}), ${newPrompt}` : newPrompt;
+        entity.visual = visualPrompt.value;
+    };
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save & Close';
+    saveBtn.onclick = () => {
+        overlay.remove();
+        updateImageGrid(currentArea);
+    };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => {
+        overlay.remove();
+        updateImageGrid(currentArea);
+    };
+
+    editor.appendChild(img);
+    editor.appendChild(document.createElement('br'));
+    editor.appendChild(document.createTextNode('Visual Prompt:'));
+    editor.appendChild(visualPrompt);
+    editor.appendChild(document.createTextNode('Seed:'));
+    editor.appendChild(seedInput);
+    editor.appendChild(regeneratePromptBtn);
+    editor.appendChild(regenerateBtn);
+    editor.appendChild(saveBtn);
+    editor.appendChild(cancelBtn);
+
+    overlay.appendChild(editor);
+    document.body.appendChild(overlay);
 }
