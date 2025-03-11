@@ -304,6 +304,11 @@ async function moveToArea(area, prevArea, text="", context="") {
         targetArea = area;
     }
 
+    if(areas[targetArea] === undefined) {
+        await generateArea(0, 0, targetArea);
+        updateSublocationRow(targetArea);
+    }
+
     if(areas[currentArea].people.length > 0) {
         const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');
         const peoplePrompt = replaceVariables(settings.moveToAreaPeoplePrompt, {
@@ -337,6 +342,7 @@ async function moveToArea(area, prevArea, text="", context="") {
         document.getElementById('sceneart').src = 'placeholder.png';
     document.getElementById('sceneart').alt = areas[currentArea].description;
     updateImageGrid(currentArea);
+    updateSublocationRow(currentArea);
 }
 
 async function entityLeavesArea(name, text) {
@@ -934,6 +940,7 @@ async function setupStart() {
     output.scrollTop = output.scrollHeight;
     await outputCheck(text);
     updateImageGrid(settings.starting_area);
+    updateSublocationRow(settings.starting_area);
 
     document.getElementById('playerart').src = 'placeholder.png';
     generateArt(settings.player_visual, "", settings.player_seed).then(blob => {

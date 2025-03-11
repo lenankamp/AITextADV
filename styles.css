@@ -321,6 +321,7 @@ progress::-moz-progress-bar {
     height: 100%;
     overflow: hidden;
     position: relative;
+    padding-bottom: 30px; /* Make room for sublocation row */
 }
 .map {
     width: 8000px; /* Arbitrary large size for the map */
@@ -416,4 +417,31 @@ progress::-moz-progress-bar {
     background-color: #363636;
     border-radius: 4px;
     margin-bottom: 5px;
+}
+
+.sublocation-row {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(45, 45, 45, 0.8);
+    padding: 5px;
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    height: 60px;
+}
+
+.sublocation-image {
+    height: 50px;
+    width: 50px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.sublocation-image:hover {
+    border-color: #fff;
 }

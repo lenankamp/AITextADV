@@ -160,6 +160,7 @@ function openSubmenu(name, x, y) {
     submenu.style.left = `${x}px`;
     submenu.style.top = `${y}px`;
     submenu.style.display = 'block';
+    updateSublocationRow(currentArea);
 }
 
 // Close submenu when clicking outside
@@ -169,7 +170,9 @@ document.addEventListener('click', () => {
 
 // Go to a location
 function goToLocation(name) {
-    moveToArea(name, currentArea);
+    moveToArea(name, currentArea).then(() => {
+        updateSublocationRow(name);
+    });
 }
 
 function openNewLocationPrompt(x, y) {
@@ -222,4 +225,268 @@ function openNewLocationPrompt(x, y) {
 
     // Focus the name input
     nameInput.focus();
+}
+
+function updateSublocationRow(currentAreaPath) {
+    // Remove existing row if it exists
+    const existingRow = document.querySelector('.sublocation-row');
+    if (existingRow) {
+        existingRow.remove();
+    }
+
+    const row = document.createElement('div');
+    row.classList.add('sublocation-row');
+
+    // Add parent location if we're in a sublocation
+    if (currentAreaPath.includes('/')) {
+        const parentPath = currentAreaPath.split('/').slice(0, -1).join('/');
+        const parentArea = areas[parentPath];
+        addSublocationImage(row, parentArea, parentPath, true);
+    }
+
+    // Add current area and its sublocations
+    const currentArea = areas[currentAreaPath];
+    for (const [subName, subloc] of Object.entries(currentArea.sublocations)) {
+        const path = subloc.path;
+        const area = areas[path] || subloc;
+        addSublocationImage(row, area, path, false);
+    }
+
+    document.querySelector('.map-container').appendChild(row);
+}
+
+function addSublocationImage(container, area, path, isParent) {
+    const img = document.createElement('img');
+    img.classList.add('sublocation-image');
+    if (area.image instanceof Blob) {
+        img.src = URL.createObjectURL(area.image);
+    } else {
+        img.src = 'placeholder.png';
+    }
+    img.title = isParent ? `Parent: ${path}` : path.split('/').pop();
+    
+    img.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSublocationMenu(area, path, e.clientX, e.clientY);
+    });
+    
+    container.appendChild(img);
+}
+
+function openSublocationMenu(area, path, x, y) {
+    // Remove any existing submenu
+    const existingSubmenu = document.querySelector('.submenu');
+    if (existingSubmenu) {
+        existingSubmenu.remove();
+    }
+
+    const menu = document.createElement('div');
+    menu.classList.add('submenu');
+
+    // Add enter button
+    const enterBtn = document.createElement('button');
+    enterBtn.textContent = `Enter ${path.split('/').pop()}`;
+    enterBtn.onclick = () => {
+        goToLocation(path);
+        menu.remove();
+    };
+    menu.appendChild(enterBtn);
+
+    // Add edit button
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit Location';
+    editBtn.onclick = () => {
+        openLocationEditor(area, path);
+        menu.remove();
+    };
+    menu.appendChild(editBtn);
+
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+    document.body.appendChild(menu);
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function closeSubMenu(e) {
+        if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener('click', closeSubMenu);
+        }
+    });
+}
+
+function openLocationEditor(area, path) {
+    const overlay = document.createElement('div');
+    overlay.classList.add('overlay');
+    overlay.style.display = 'flex';
+
+    const editor = document.createElement('div');
+    editor.classList.add('settings-container');
+    editor.style.width = '80%';
+
+    if (areas[path]) {
+        // Full location editor for generated areas
+        const img = document.createElement('img');
+        if (area.image instanceof Blob) {
+            img.src = URL.createObjectURL(area.image);
+        } else {
+            img.src = 'placeholder.png';
+        }
+        img.style.width = '100%';
+        img.style.maxHeight = '300px';
+        img.style.objectFit = 'contain';
+        img.style.marginBottom = '10px';
+        editor.appendChild(img);
+    }
+
+    // Name input
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Location Name:';
+    const nameInput = document.createElement('input');
+    nameInput.value = path.split('/').pop();
+    editor.appendChild(nameLabel);
+    editor.appendChild(nameInput);
+
+    // Description input
+    const descLabel = document.createElement('label');
+    descLabel.textContent = 'Description:';
+    const descInput = document.createElement('textarea');
+    descInput.value = area.description;
+    descInput.style.height = '100px';
+    editor.appendChild(descLabel);
+    editor.appendChild(descInput);
+
+    let visualInput;
+    if (areas[path]) {
+        // Visual prompt input for generated areas
+        const visualLabel = document.createElement('label');
+        visualLabel.textContent = 'Visual Prompt:';
+        visualInput = document.createElement('textarea');
+        visualInput.value = area.visual || '';
+        visualInput.style.height = '100px';
+        editor.appendChild(visualLabel);
+        editor.appendChild(visualInput);
+
+        // Seed input
+        const seedLabel = document.createElement('label');
+        seedLabel.textContent = 'Seed:';
+        const seedInput = document.createElement('input');
+        seedInput.type = 'number';
+        seedInput.value = area.seed || Math.floor(Math.random() * 4294967295) + 1;
+        editor.appendChild(seedLabel);
+        editor.appendChild(seedInput);
+
+        // Create button container for all action buttons
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '10px';
+        buttonContainer.style.marginTop = '20px';
+        buttonContainer.style.justifyContent = 'center';
+        buttonContainer.style.flexWrap = 'wrap';
+
+        // Regenerate visual prompt button
+        const regenPromptBtn = document.createElement('button');
+        regenPromptBtn.textContent = 'Regenerate Visual Prompt';
+        regenPromptBtn.onclick = async () => {
+            const newVisual = await generateVisualPrompt(area.name, descInput.value);
+            area.visual = newVisual;
+            visualInput.value = newVisual;
+        };
+        buttonContainer.appendChild(regenPromptBtn);
+
+        // Regenerate image button
+        const regenBtn = document.createElement('button');
+        regenBtn.textContent = 'Regenerate Image';
+        regenBtn.onclick = async () => {
+            area.visual = visualInput.value;
+            area.seed = parseInt(seedInput.value);
+            const artBlob = await generateArt(area.visual, "", area.seed);
+            if (artBlob instanceof Blob) {
+                area.image = artBlob;
+                img.src = URL.createObjectURL(artBlob);
+                if (path === currentArea) {
+                    document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
+                }
+                const locationElement = document.getElementById(`location-${path}`);
+                if (locationElement) {
+                    locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
+                }
+                updateImageGrid(currentArea);
+            }
+        };
+        buttonContainer.appendChild(regenBtn);
+
+        // Save button
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save Changes';
+        saveBtn.onclick = () => {
+            const newName = nameInput.value.trim();
+            if (newName && newName !== path.split('/').pop()) {
+                // Update name in parent's sublocations
+                const parentPath = path.split('/').slice(0, -1).join('/');
+                const oldName = path.split('/').pop();
+                const subloc = areas[parentPath].sublocations[oldName];
+                delete areas[parentPath].sublocations[oldName];
+                areas[parentPath].sublocations[newName] = subloc;
+                subloc.name = newName;
+                subloc.path = parentPath + '/' + newName;
+                if (areas[path]) {
+                    areas[subloc.path] = areas[path];
+                    delete areas[path];
+                }
+            }
+            area.description = descInput.value;
+            if (areas[path]) {
+                area.visual = visualInput.value;
+                area.seed = parseInt(seedInput.value);
+            }
+            overlay.remove();
+            updateSublocationRow(currentArea);
+        };
+        buttonContainer.appendChild(saveBtn);
+
+        // Cancel button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.onclick = () => overlay.remove();
+        buttonContainer.appendChild(cancelBtn);
+
+        editor.appendChild(buttonContainer);
+    } else {
+        // Simple save/cancel for non-generated areas
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '10px';
+        buttonContainer.style.marginTop = '20px';
+        buttonContainer.style.justifyContent = 'center';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save Changes';
+        saveBtn.onclick = () => {
+            const newName = nameInput.value.trim();
+            if (newName && newName !== path.split('/').pop()) {
+                // Update name in parent's sublocations
+                const parentPath = path.split('/').slice(0, -1).join('/');
+                const oldName = path.split('/').pop();
+                const subloc = areas[parentPath].sublocations[oldName];
+                delete areas[parentPath].sublocations[oldName];
+                areas[parentPath].sublocations[newName] = subloc;
+                subloc.name = newName;
+                subloc.path = parentPath + '/' + newName;
+            }
+            area.description = descInput.value;
+            overlay.remove();
+            updateSublocationRow(currentArea);
+        };
+        buttonContainer.appendChild(saveBtn);
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.onclick = () => overlay.remove();
+        buttonContainer.appendChild(cancelBtn);
+
+        editor.appendChild(buttonContainer);
+    }
+
+    overlay.appendChild(editor);
+    document.body.appendChild(overlay);
 }
