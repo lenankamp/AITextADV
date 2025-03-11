@@ -320,6 +320,7 @@ progress::-moz-progress-bar {
 .map-container {
     height: 100%;
     overflow: hidden;
+    overflow-x: auto;
     position: relative;
     padding-bottom: 30px; /* Make room for sublocation row */
 }
@@ -429,6 +430,7 @@ progress::-moz-progress-bar {
     display: flex;
     gap: 5px;
     overflow-x: auto;
+    overflow-y: hidden;
     height: 60px;
 }
 

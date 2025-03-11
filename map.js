@@ -127,14 +127,7 @@ function addLocation(name) {
         tooltip.style.display = 'block';
         let tooltipContent = `<strong>${name}</strong><br>${areas[name].description}`;
         if (areas[name].image instanceof Blob) {
-            tooltipContent += `<br><img src="${URL.createObjectURL(areas[name].image)}" alt="${name}" style="width: 100px; height: auto;">`;
-        }
-        // Add sublocation information to tooltip
-        if (Object.keys(areas[name].sublocations).length > 0) {
-            tooltipContent += '<br><br>Sublocations:<br>';
-            for (const [subName, subloc] of Object.entries(areas[name].sublocations)) {
-                tooltipContent += `- ${subName}: ${subloc.description}<br>`;
-            }
+            tooltipContent += `<br><img src="${URL.createObjectURL(areas[name].image)}" alt="${name}" style="width: 60%; height: auto;">`;
         }
         tooltip.innerHTML = tooltipContent;
     });
@@ -227,7 +220,7 @@ function openNewLocationPrompt(x, y) {
     createBtn.textContent = 'Create';
     createBtn.onclick = async () => {
         if (nameInput.value.trim()) {
-            await generateArea(x, y, nameInput.value.trim(), descInput.value.trim());
+            await generateArea(nameInput.value.trim(), descInput.value.trim(), x, y);
             overlay.remove();
         }
     };

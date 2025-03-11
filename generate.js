@@ -88,7 +88,6 @@ async function generateText(params, input, post='', variables={}, sample_message
         console.log(data.choices[0].message.content);
         return data.choices[0].message.content;
     } else {
-        console.log(data.results[0].text);
         return data.results[0].text;
     }
 }

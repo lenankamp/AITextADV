@@ -124,7 +124,7 @@ function loadSettings() {
             top_p: 0.6,
             typical: 1
         },
-        generateAreaDescriptionPrompt: "[Generate a description of the area named $areaName.]",
+        generateAreaDescriptionPrompt: "[Generate a description of the area named $areaName in $season.]",
         
         // Add new string templates for area contexts
         areaContext: "\nCurrently in: $name : $description\n\n",
@@ -137,29 +137,45 @@ function loadSettings() {
         entityFormat: "$name: $description\n",
         action_string: "Describe the player taking the action and then the resulting story.",
 
-        generateSublocationsPrompt: "[Generate a list of potential sublocation areas within $areaName described as '$description'. Each sublocation should have a name and a short description of what can be found there. If no sublocations would make sense, respond with 'None'. Format each sublocation as 'Name: Description' with one per line.]",
+        generateSublocationsPrompt: "World Info: $world\nExisting Nearby Locations: $locations\n\n[Be creative and generate a list of interesting things and locations that could reasonably be found in and around $areaName described as: $description \nIf the location only has a single entrance then there are no locations, reply with None. Do not generate more than 3 things or 6 locations. Locations must not duplicate existing nearby locations. Things must be stationary physical interactable pieces of interest within a $areaName. Descriptions should be 2-3 sentences. Answer in a formatted list with name and description on one line as such: \nThings\n- Name: Description\n...\nLocations\n- Name: Description\n...]",
         sampleSublocations: [
             {
                 "role": "user",
-                "content": "[Generate a list of potential sublocation areas within Grand Manor described as 'A grand manor with towering spires and intricate stonework. The interior is lavishly decorated with antique furniture and grand chandeliers, exuding an air of opulence and history.'. Each sublocation should have a name and a short description of what can be found there. If no sublocations would make sense, respond with 'None'. Format each sublocation as 'Name: Description' with one per line.]"
+                "content": "[Generate a list of locations within a Old Cabin described as 'A cozy and warm wooden cabin. A fire crackles in the fireplace, casting flickering shadows on the walls. The smell of pine and woodsmoke fills the air.'. Each location should have a name and a short description of what can be found there. If no locations would make sense, respond with 'None'. Format each location as 'Name: Description' with one per line.]"
               },
               {
                 "role": "assistant",
-                "content": "Library: A vast room filled with towering bookshelves, each packed with ancient tomes and dusty scrolls. The air is thick with the scent of old paper and leather bindings, and the room is illuminated by the warm glow of flickering candles.\nGardens: A lush and verdant oasis of greenery, filled with colorful flowers and fragrant herbs. The air is alive with the hum of bees and the chirping of birds, and the soft rustle of leaves in the breeze provides a soothing backdrop to the peaceful scene.\nBedchambers: Luxurious rooms filled with plush furnishings and sumptuous fabrics, each decorated in a different theme and style. The beds are piled high with soft pillows and warm blankets, inviting weary travelers to rest and relax."
+                "content": "Cozy Kitchen: A small room with a wooden table and chairs, a pot of stew bubbling on the stove. The smell of spices and herbs fills the air.\nWarm Bedroom: A cozy room with a large bed covered in soft furs and blankets. A window looks out onto the snowy landscape outside.\nDank Cellar: A dark and musty room filled with shelves of preserved food and barrels of ale. The air is cool and damp, with a faint smell of earth and mold."
+              },
+              {
+                "role": "user",
+                "content": "[Generate a list of areas within a Warm Bedroom described as 'A cozy room with a large bed covered in soft furs and blankets. A window looks out onto the snowy landscape outside.'. Each location should have a name and a short description of what can be found there. If no locations would make sense, respond with 'None'. Format each location as 'Name: Description' with one per line.]"
+              },
+              {
+                "role": "assistant",
+                "content": "None"
               }
         ],
-        generateEntitiesPrompt: "Existing People:$people\n\n[Be creative and generate a list of people and interesting things that could reasonably be found in the area named $areaName with the following details: $description \nIf no people or creatures might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. People should not include people who already exist. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]",
+        generateEntitiesPrompt: "Existing People:$people\n\n[Be creative and generate a list of people and creatures that could reasonably be found in $areaName with the following details: $description \nIf no people or creatures might be reasonably found in $areaName, reply with None. Do not generate more than 4 in one category. People must not include people who already exist. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]",
         sampleEntities: [
             {
                 "role": "user",
-                "content": "[Be creative and generate a list of people and interesting things that could reasonably be found in the area named $areaName with the following details: $description \nIf no people or creatures might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. People should not include people who already exist. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]"
+                "content": "[Be creative and generate a list of people and creatures that could reasonably be found in Park with the following details: A local park.\nIf no people or creatures might be reasonably found in $areaName, reply with None. Do not generate more than 4 in one category. People must not include people who already exist. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]"
               },
               {
                 "role": "assistant",
-                "content": "People\n- blonde woman: A tall woman with long, flowing blonde hair that cascades down her back. She has piercing blue eyes that seem to look right through you, and her expression often carries a hint of sadness. Despite her striking appearance, she tends to keep to herself, preferring solitude over social interactions. Her demeanor suggests a deep inner turmoil, as if she is haunted by memories of a troubled past.\n- curious teenager: A young teenager with a unruly brown hair and a mischievous glint in her eyes. She is always eager to explore new places and try new things, often getting herself into trouble with her reckless curiosity. Despite her carefree attitude, she has a kind heart and a strong sense of justice, always willing to stand up for what she believes in.\nThings\n- ancient tome: A dusty old tome bound in cracked leather, its pages yellowed with age and covered in cryptic symbols. The book emits a faint aura of magic, hinting at the powerful spells and secrets contained within its pages. Those who dare to open it may unlock ancient knowledge long forgotten by the world.\n- enchanted amulet: An intricately carved amulet made of polished silver, adorned with shimmering gemstones that seem to glow with an otherworldly light. The amulet hums with a faint magical energy, radiating a sense of protection and guidance to those who wear it.\nCreatures\n- wild dog: A scrappy looking dog with matted fur and sharp teeth, its eyes gleaming with a feral intelligence. Despite its rough appearance, the dog seems friendly and eager for companionship, wagging its tail and nuzzling up to anyone who offers it a kind word or a scrap of food. It roams the area with a sense of purpose, as if guarding the land from unseen threats."
+                "content": "People\n- blonde woman: A tall woman with long, flowing blonde hair that cascades down her back. She has piercing blue eyes that seem to look right through you, and her expression often carries a hint of sadness. Despite her striking appearance, she tends to keep to herself, preferring solitude over social interactions. Her demeanor suggests a deep inner turmoil, as if she is haunted by memories of a troubled past.\n- curious teenager: A young teenager with a unruly brown hair and a mischievous glint in her eyes. She is always eager to explore new places and try new things, often getting herself into trouble with her reckless curiosity. Despite her carefree attitude, she has a kind heart and a strong sense of justice, always willing to stand up for what she believes in.\nCreatures\n- wild dog: A scrappy looking dog with matted fur and sharp teeth, its eyes gleaming with a feral intelligence. Despite its rough appearance, the dog seems friendly and eager for companionship, wagging its tail and nuzzling up to anyone who offers it a kind word or a scrap of food. It roams the area with a sense of purpose, as if guarding the land from unseen threats."
               }
         ],
         sampleQuestions: [
+            {
+                "role": "user",
+                "content": "[Answer the following question. What is your favorite color?]"
+              },
+              {
+                "role": "assistant",
+                "content": "Blue"
+              },
             {
                 "role": "user",
                 "content": "[Answer the following questions in a numbered list format. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. Who in the passage had signifcant changes to their character? 2. What are three common hair colors? 3. What is the most common eye color?]"
@@ -169,7 +185,7 @@ function loadSettings() {
                 "content": "1. N/A\n2. blonde\n2. brown\n2. black\n3. blue"
               }
         ],
-        generateVisualPrompt: "[How would you describe '$name' described as '$description' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]",
+        generateVisualPrompt: "[How would you describe '$name' described as '$description It is $season and $time' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]",
         addPersonDescriptionPrompt: "[Write a description of '$name'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]",
         addThingDescriptionPrompt: "[Write a description of '$name'. Write a 2-3 sentence physical description. If there is not enough information in the context, be creative.]",
         addCreatureDescriptionPrompt: "[Write a description of '$name'. Write a 1-2 sentence physical description, and a 1-2 sentence description of attidue dispositon or apparrent motivation. If there is not enough information in the context, be creative.]",
