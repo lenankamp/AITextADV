@@ -27,6 +27,11 @@ request.onsuccess = function(event) {
             document.getElementById('q2').style.height = settings.q2_height;
             content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
 
+            // Restore player image if it exists
+            if (data.state.playerImage) {
+                document.getElementById('playerart').src = data.state.playerImage;
+            }
+
             updateImageGrid(currentArea);
 
             const currentAreaObj = areas[currentArea];
@@ -62,7 +67,8 @@ async function saveGame() {
             areas: areas,
             currentArea: currentArea,
             outputLog: document.getElementById('output').innerHTML,
-            settings: settings
+            settings: settings,
+            playerImage: document.getElementById('playerart').src
         }
     };
     objectStore.put(data);
@@ -71,6 +77,20 @@ async function saveGame() {
 
 async function saveToFile(data) {
     const images = {};
+
+    // Save player image if it exists and isn't a placeholder
+    const playerArt = document.getElementById('playerart');
+    if (playerArt.src && !playerArt.src.includes('placeholder.png')) {
+        const playerImageBlob = await fetch(playerArt.src).then(res => res.blob());
+        const playerImageReader = new FileReader();
+        await new Promise(resolve => {
+            playerImageReader.onloadend = () => {
+                images['player'] = playerImageReader.result;
+                resolve();
+            };
+            playerImageReader.readAsDataURL(playerImageBlob);
+        });
+    }
 
     // Function to process images in an area or sublocation
     const processAreaImages = (area, path) => {
@@ -108,18 +128,6 @@ async function saveToFile(data) {
     });
 
     await Promise.all(imagePromises);
-
-    const playerImageBlob = await fetch(document.getElementById('playerart').src).then(res => res.blob());
-    const playerImageReader = new FileReader();
-    const playerImagePromise = new Promise(resolve => {
-        playerImageReader.onloadend = () => {
-            images['player'] = playerImageReader.result;
-            resolve();
-        };
-        playerImageReader.readAsDataURL(playerImageBlob);
-    });
-
-    await playerImagePromise;
 
     const blob = new Blob([JSON.stringify({ data, images })], { type: 'application/json' });
     const a = document.createElement('a');
