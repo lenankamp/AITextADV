@@ -323,19 +323,20 @@ function openLocationEditor(area, path) {
     editor.classList.add('settings-container');
     editor.style.width = '80%';
 
+    let previewImage;
     if (areas[path]) {
         // Full location editor for generated areas
-        const img = document.createElement('img');
+        previewImage = document.createElement('img');
         if (area.image instanceof Blob) {
-            img.src = URL.createObjectURL(area.image);
+            previewImage.src = URL.createObjectURL(area.image);
         } else {
-            img.src = 'placeholder.png';
+            previewImage.src = 'placeholder.png';
         }
-        img.style.width = '100%';
-        img.style.maxHeight = '300px';
-        img.style.objectFit = 'contain';
-        img.style.marginBottom = '10px';
-        editor.appendChild(img);
+        previewImage.style.width = '100%';
+        previewImage.style.maxHeight = '300px';
+        previewImage.style.objectFit = 'contain';
+        previewImage.style.marginBottom = '10px';
+        editor.appendChild(previewImage);
     }
 
     // Name input
@@ -402,7 +403,7 @@ function openLocationEditor(area, path) {
             const artBlob = await generateArt(area.visual, "", area.seed);
             if (artBlob instanceof Blob) {
                 area.image = artBlob;
-                img.src = URL.createObjectURL(artBlob);
+                previewImage.src = URL.createObjectURL(artBlob);
                 if (path === currentArea) {
                     document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
                 }
