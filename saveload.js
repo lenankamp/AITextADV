@@ -8,6 +8,20 @@ request.onupgradeneeded = function(event) {
 
 request.onsuccess = function(event) {
     db = event.target.result;
+    // Load last saved game state if it exists
+    const transaction = db.transaction(['data'], 'readonly');
+    const objectStore = transaction.objectStore('data');
+    const getRequest = objectStore.get('gameState');
+    getRequest.onsuccess = function(event) {
+        if (event.target.result) {
+            const data = event.target.result;
+            areas = data.state.areas;
+            currentArea = data.state.currentArea;
+            document.getElementById('output').innerHTML = data.state.outputLog;
+            updateImageGrid(currentArea);
+            updateSublocationRow(currentArea);
+        }
+    };
 };
 
 request.onerror = function(event) {
@@ -174,6 +188,9 @@ async function loadFromFile(event) {
             for (const area in areas) {
                 addLocation(area);
             }
+
+            // Update the sublocation row for the current area
+            updateSublocationRow(currentArea);
         };
         reader.readAsText(file);
     }
