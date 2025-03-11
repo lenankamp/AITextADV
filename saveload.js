@@ -17,8 +17,33 @@ request.onsuccess = function(event) {
             const data = event.target.result;
             areas = data.state.areas;
             currentArea = data.state.currentArea;
-            document.getElementById('output').innerHTML = data.state.outputLog;
+            const output = document.getElementById('output');
+            output.innerHTML = data.state.outputLog;
+            output.scrollTop = output.scrollHeight;
+            settings = data.state.settings;
+
+            // Apply settings to UI elements
+            document.getElementById('q1').style.height = settings.q1_height;
+            document.getElementById('q2').style.height = settings.q2_height;
+            content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
+
             updateImageGrid(currentArea);
+
+            const currentAreaObj = areas[currentArea];
+            if (currentAreaObj && currentAreaObj.image) {
+                document.getElementById('sceneart').src = URL.createObjectURL(currentAreaObj.image);
+                document.getElementById('sceneart').alt = currentAreaObj.description;
+            }
+
+            // Clear and re-add locations from the map
+            document.querySelectorAll('.location').forEach(location => {
+                location.remove();
+            });
+            // Add top-level areas to the map
+            for (const area in areas) {
+                addLocation(area);
+            }
+
             updateSublocationRow(currentArea);
         }
     };
