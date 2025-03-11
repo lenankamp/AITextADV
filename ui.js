@@ -170,6 +170,29 @@ function updateImageGrid(areaName) {
     const tooltip = document.getElementById('tooltip');
     imageGrid.innerHTML = '';
 
+    // Handle the scene art
+    const sceneArt = document.getElementById('sceneart');
+    const area = areas[areaName];
+    if (!area) return;
+
+    if (sceneArt.src.startsWith('blob:')) {
+        URL.revokeObjectURL(sceneArt.src);
+    }
+    if (area.image instanceof Blob) {
+        const objectUrl = URL.createObjectURL(area.image);
+        sceneArt.src = objectUrl;
+        // Clean up old object URL after image loads
+        sceneArt.onload = () => {
+            if (sceneArt.dataset.previousUrl) {
+                URL.revokeObjectURL(sceneArt.dataset.previousUrl);
+            }
+            sceneArt.dataset.previousUrl = objectUrl;
+        };
+    } else {
+        sceneArt.src = 'placeholder.png';
+    }
+
+    // Rest of the image grid update logic...
     const categories = ['people', 'things', 'creatures'];
     categories.forEach(category => {
         if (areas[areaName][category]) {

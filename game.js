@@ -163,6 +163,28 @@ String.prototype.stripNonAlpha = function(excludedChars='') {
     return this.replace(regex, '');
 };
 
+function moveHere(name, key=false, type=false) {
+    if (key && type) {
+        const entityIndex = areas[key][type].findIndex(entity => entity.name === name);
+        if (entityIndex !== -1) {
+            const entity = areas[key][type].splice(entityIndex, 1)[0];
+            areas[currentArea][type].push(entity);
+            updateImageGrid(currentArea);
+        } else {
+            return;
+        }
+    } else if (key) {
+        const entityIndex = areas[key]['creatures'].findIndex(entity => entity.name === name);
+        if (entityIndex !== -1) {
+            const entity = areas[key]['creatures'].splice(entityIndex, 1)[0];
+            areas[currentArea]['creatures'].push(entity);
+            updateImageGrid(currentArea);
+        } else {
+            return;
+        }
+    } else return;
+}
+
 async function addPerson(name, area=currentArea, context="", text="") {
     const descriptionPrompt = replaceVariables(settings.addPersonDescriptionPrompt, {
         name: name
@@ -361,12 +383,22 @@ async function moveToArea(area, prevArea, text="") {
     
     currentArea = targetArea;
     updateAreaDisplay(currentArea);
-    if(areas[currentArea].image instanceof Blob)
-        document.getElementById('sceneart').src = URL.createObjectURL(areas[currentArea].image);
-    else
-        document.getElementById('sceneart').src = 'placeholder.png';
-    document.getElementById('sceneart').alt = areas[currentArea].description;
-    updateImageGrid(currentArea);
+    
+    // Update scene art with proper URL cleanup
+    const sceneArt = document.getElementById('sceneart');
+    if (sceneArt.src.startsWith('blob:')) {
+        URL.revokeObjectURL(sceneArt.src);
+    }
+    
+    if (areas[currentArea].image instanceof Blob) {
+        const objectUrl = URL.createObjectURL(areas[currentArea].image);
+        sceneArt.src = objectUrl;
+    } else {
+        sceneArt.src = 'placeholder.png';
+    }
+    
+    // Make sure the image grid and sublocation row are updated after area change
+    await updateImageGrid(currentArea);
     updateSublocationRow(currentArea);
 }
 
@@ -537,8 +569,8 @@ async function outputCheck(text, context="") {
                 addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, currentArea, text, 3));
             }
         } else if (line.startsWith('4.') && !line.includes('N/A') && line.trim() !== '4.') {
-            const newName = line.replace("4. ", '').stripNonAlpha().trim().toLowerCase();
-            if (!areas[currentArea].people.some(person => person.name.toLowerCase() === newName) && newName != settings.player_name.toLowerCase()) {
+            const newName = line.replace("4. ", '').stripNonAlpha().trim();
+            if (!areas[currentArea].people.some(person => person.name.toLowerCase() === newName.toLowerCase()) && newName.toLowerCase() != settings.player_name.toLowerCase()) {
                 const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');
                 const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]", '', {
                     peopleNames: peopleNames,
@@ -550,7 +582,17 @@ async function outputCheck(text, context="") {
                 if (prevName.trim() != "N/A" && areas[currentArea].people.some(person => person.name.toLowerCase() === prevName.toLowerCase())) {
                     addConfirmButton('Rename ' + prevName, newName, (inputValue) => renameEntity(inputValue || newName, prevName));
                 } else {
-                    addConfirmButton('New Person', newName, (inputValue) => addPerson(inputValue || newName, currentArea, text, context));
+                    // Check if newName exists as a person in some other area, and then delete that person
+                    let match = false;
+                    for (const areaKey in areas) {
+                        if (areas[areaKey].people.some(person => person.name === newName)) {
+                            addConfirmButton('Move Here', newName, (inputValue) => moveHere(inputValue || newName, areaKey, 'people'));
+                            match = true;
+                            break;
+                        }
+                    }
+                    if(!match)
+                        addConfirmButton('New Person', newName, (inputValue) => addPerson(inputValue || newName, currentArea, text, context));
                 }
             }
         } else if (line.startsWith('5.') && !line.includes('N/A') && line.trim() !== '5.') {
@@ -992,10 +1034,10 @@ function trimIncompleteSentences(text) {
         }
         let result = sentences.join(' ');
         const quoteCount = (result.match(/"/g) || []).length;
-        if (quoteCount % 2 !== 0 && !result.endsWith('"')) {
-            result += '"';
-        } else if (quoteCount % 2 !== 0) {
-            if (result.endsWith('"')) {
+        if (quoteCount % 2 !== 0) {
+            if (!result.endsWith('"')) {
+                result += '"';
+            } else {
                 result = result.slice(0, -1);
             }
         }
@@ -1047,7 +1089,7 @@ async function setupStart() {
     updateAreaDisplay(settings.starting_area);
 
     await generateArea(settings.starting_area, settings.starting_area_description, 3500, 3500);
-    document.getElementById('sceneart').alt = areas[settings.starting_area].description;
+    
     const responseElement = document.createElement('div');
     responseElement.classList.add('new-message');
     
@@ -1077,7 +1119,7 @@ function randomInt(max) {
 }
 
 function getTimeofDay() {
-    const hours = parseInt(currentTime.match(/(\d{2}):/)[1], 10);
+    const hours = parseInt(currentTime.match(/(\d+):/)[1], 10);
     if (hours >= 2 && hours < 6) {
         return "Early Morning before dawn";
     } else if (hours >= 6 && hours < 12) {
@@ -1108,7 +1150,7 @@ function timeDiff(startTime, endTime) {
 
 function getSeason() {
     const seasons = ["Winter", "Spring", "Summer", "Fall"];
-    const month = parseInt(currentTime.match(/-(\d{2})-/)[1], 10) - 1;
+    const month = parseInt(currentTime.match(/-(\d+)-/)[1], 10) - 1;
     return seasons[Math.floor((month % 12) / 3)];
 }
 
@@ -1120,7 +1162,7 @@ function updateTime() {
     const timeSpan = timeElement.querySelector('.time');
     
     const [date] = currentTime.split(' ');
-    const [time] = currentTime.match(/\d{2}:\d{2}:\d{2}/);
+    const [time] = currentTime.match(/\d+:\d+:\d+/);
     
     dateSeasonSpan.textContent = `${season} ${date}`;
     timeSpan.textContent = time;
@@ -1148,6 +1190,13 @@ let currentTime;
 function restartGame() {
     loadSettings();     // for debugging, rest to default settings to clear settings from
     overrideSettings(); // previous game that was auto loaded
+    
+    // Clean up any existing object URLs
+    const sceneArt = document.getElementById('sceneart');
+    if (sceneArt.src.startsWith('blob:')) {
+        URL.revokeObjectURL(sceneArt.src);
+    }
+    
     areas = {};
     document.querySelectorAll('.location').forEach(location => {
         location.remove();
