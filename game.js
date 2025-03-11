@@ -747,14 +747,18 @@ function minContext(limit = null) {
 }
 
 function faeCharSheet(charsheet) {
-    // charsheet string should begin with Stunts, a comma separated list of each stun be key name and value, then Aspects, a comma separated list of each aspect be key name and value, then Consequences, a comma separated list of each consequence be key name and value.
     let charsheetString = "Stunts: ";
     for (const [key, value] of Object.entries(charsheet.stunts)) {
         charsheetString += key + ": " + value + ", ";
     }
 
+    let aspects = Array.isArray(charsheet.aspects) 
+        ? charsheet.aspects.join(',')
+        : charsheet.aspects;
+
     charsheetString += "\n" +
-        "Aspects: " + charsheet.high_concept + "," + charsheet.aspects + ","+charsheet.trouble;
+        "Aspects: " + charsheet.high_concept + "," + aspects + "," + charsheet.trouble;
+    
     if(charsheet.consequences) {
         if (charsheet.consequences.mild && charsheet.consequences.mild.length > 0) {
             charsheetString += "," + charsheet.consequences.mild.join(', ');
@@ -943,8 +947,46 @@ function trimIncompleteSentences(text) {
     return text;
 }
 
+function updateCharacterInfo() {
+    if (settings.player_name) {
+        document.getElementById('playerName').textContent = settings.player_name;
+    }
+    if (settings.charsheet_fae) {
+        // Display High Concept
+        if (settings.charsheet_fae.high_concept) {
+            document.getElementById('highConcept').textContent = settings.charsheet_fae.high_concept;
+        }
+
+        // Display remaining aspects
+        const aspectsDiv = document.getElementById('aspects');
+        aspectsDiv.innerHTML = ''; // Clear existing aspects
+        
+        if (settings.charsheet_fae.aspects) {
+            let aspectsList = Array.isArray(settings.charsheet_fae.aspects) 
+                ? settings.charsheet_fae.aspects 
+                : settings.charsheet_fae.aspects.split(',');
+            
+            aspectsDiv.innerHTML = aspectsList.map(aspect => 
+                `<div class="aspect">${aspect.trim()}</div>`
+            ).join('');
+        }
+        
+        // Display trouble
+        if (settings.charsheet_fae.trouble) {
+            const troubleDiv = document.createElement('div');
+            troubleDiv.className = 'aspect trouble';
+            troubleDiv.textContent = settings.charsheet_fae.trouble;
+            aspectsDiv.appendChild(troubleDiv);
+        }
+    }
+}
+
+// Modify setupStart function to include consequences update
 async function setupStart() {
     document.getElementById('sceneart').src = 'placeholder.png';
+    updateApproachDisplay();
+    updateCharacterInfo();
+    updateConsequences();
 
     await generateArea(settings.starting_area, settings.starting_area_description, 3500, 3500);
     document.getElementById('sceneart').alt = areas[settings.starting_area].description;
@@ -1002,7 +1044,15 @@ function getSeason() {
 function updateTime() {
     const timeElement = document.getElementById('currentTime');
     const season = getSeason();
-    timeElement.innerHTML = `${season} ${currentTime}`;
+    
+    const dateSeasonSpan = timeElement.querySelector('.date-season');
+    const timeSpan = timeElement.querySelector('.time');
+    
+    const [date] = currentTime.split(' ');
+    const [time] = currentTime.match(/\d{2}:\d{2}:\d{2}/);
+    
+    dateSeasonSpan.textContent = `${season} ${date}`;
+    timeSpan.textContent = time;
 }
 
 let areas = {};
@@ -1023,6 +1073,7 @@ let currentTime;
     currentTime = settings.starting_date;
     updateTime();
 
+// Update restartGame function
 function restartGame() {
     loadSettings();     // for debugging, rest to default settings to clear settings from
     overrideSettings(); // previous game that was auto loaded
@@ -1033,5 +1084,30 @@ function restartGame() {
     currentArea = settings.starting_area;
     document.getElementById('output').innerHTML = '';
     document.getElementById('imageGrid').innerHTML = '';
+    updateApproachDisplay();
+    updateCharacterInfo();
+    updateConsequences();
     setupStart();
 }
+
+function updateApproachDisplay() {
+    if (settings.charsheet_fae && settings.charsheet_fae.approaches) {
+        document.getElementById('careful').textContent = settings.charsheet_fae.approaches.careful || '0';
+        document.getElementById('clever').textContent = settings.charsheet_fae.approaches.clever || '0';
+        document.getElementById('flashy').textContent = settings.charsheet_fae.approaches.flashy || '0';
+        document.getElementById('forceful').textContent = settings.charsheet_fae.approaches.forceful || '0';
+        document.getElementById('quick').textContent = settings.charsheet_fae.approaches.quick || '0';
+        document.getElementById('sneaky').textContent = settings.charsheet_fae.approaches.sneaky || '0';
+    }
+}
+
+// At the end of the file, where the initial game setup is done
+loadSettings();
+overrideSettings();
+areas[settings.starting_area] = {};
+currentArea = settings.starting_area;
+currentTime = settings.starting_date;
+updateTime();
+updateApproachDisplay();
+updateCharacterInfo();
+updateConsequences();

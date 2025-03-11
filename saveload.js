@@ -22,6 +22,12 @@ request.onsuccess = function(event) {
             output.scrollTop = output.scrollHeight;
             settings = data.state.settings;
 
+            // Update character display
+            updateApproachDisplay();
+            updateCharacterInfo();
+            updateConsequences();
+            updateTime();
+
             // Apply settings to UI elements
             document.getElementById('q1').style.height = settings.q1_height;
             document.getElementById('q2').style.height = settings.q2_height;
@@ -173,6 +179,12 @@ async function loadFromFile(event) {
             output.innerHTML = data.state.outputLog;
             settings = data.state.settings;
             output.scrollTop = output.scrollHeight;
+            
+            // Update character display
+            updateApproachDisplay();
+            updateCharacterInfo();
+            updateConsequences();
+            updateTime();
         
             // Function to load images for an area and its sublocations
             const loadAreaImages = async (area, path) => {
@@ -251,6 +263,31 @@ async function fetchImage(imageData) {
     const response = await fetch(imageData);
     const blob = await response.blob();
     return blob;
+}
+
+function updateConsequences() {
+    const consequencesDiv = document.getElementById('consequences');
+    if (settings.charsheet_fae && settings.charsheet_fae.consequences) {
+        let html = [];
+        if (settings.charsheet_fae.consequences.mild) {
+            html.push(...settings.charsheet_fae.consequences.mild.map(c => 
+                `<div class="Mild">${c}</div>`
+            ));
+        }
+        if (settings.charsheet_fae.consequences.moderate) {
+            html.push(...settings.charsheet_fae.consequences.moderate.map(c => 
+                `<div class="Moderate">${c}</div>`
+            ));
+        }
+        if (settings.charsheet_fae.consequences.severe) {
+            html.push(...settings.charsheet_fae.consequences.severe.map(c => 
+                `<div class="Severe">${c}</div>`
+            ));
+        }
+        consequencesDiv.innerHTML = html.join('');
+    } else {
+        consequencesDiv.innerHTML = '';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {

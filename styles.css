@@ -62,6 +62,11 @@ body {
     position: relative;
     overflow: auto;
 }
+
+#q3 {
+    overflow: hidden;
+}
+
 .toggle-btn {
     background-color: #404040;
     color: #e0e0e0;
@@ -252,11 +257,125 @@ body {
 }
 #playerart {
     height: 100%;
-    display: flex;
+    width: 30%;
     object-fit: cover;
-    flex-grow: 1;
-    max-width: 35%;
+    flex-shrink: 0;
 }
+
+#companionArt {
+    height: 100%;
+    width: 25%;
+    object-fit: cover;
+    flex-shrink: 0;
+    margin-left: auto; /* Push to right side */
+}
+
+.approach-column {
+    width: 46px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    gap: 4px;
+    background-color: #363636;
+    border-right: 1px solid #404040;
+    height: 100%;
+}
+
+.approach-box {
+    border: 1px solid #505050;
+    border-radius: 4px;
+    padding: 3px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #2d2d2d;
+    min-height: 38px;
+}
+
+.approach-label {
+    font-size: 9px;
+    color: #e0e0e0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1px;
+}
+
+.approach-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #e0e0e0;
+    line-height: 1;
+}
+
+.approach-value::before {
+    content: '+';
+}
+
+.approach-box:hover .approach-value {
+    color: #ffffff;
+}
+
+.character-info {
+    flex: 1;
+    min-width: 180px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background-color: #363636;
+    border-right: 1px solid #404040;
+    height: 100%;
+}
+
+.char-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #e0e0e0;
+    padding: 4px;
+    background-color: #2d2d2d;
+    border-radius: 4px;
+}
+
+.high-concept {
+    font-size: 13px;
+    color: #e0e0e0;
+    font-style: italic;
+    padding: 4px;
+    background-color: #2d2d2d;
+    border-radius: 4px;
+}
+
+.consequences-list {
+    margin-top: auto;
+    color: #e0e0e0;
+    padding: 4px;
+    min-height: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.consequences-list div {
+    padding: 4px 6px;
+    background-color: #2d2d2d;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* Color-code different severity levels */
+.consequences-list div[class*="Mild"] {
+    border-left: 3px solid #ffaa44;
+}
+
+.consequences-list div[class*="Moderate"] {
+    border-left: 3px solid #ff4444;
+}
+
+.consequences-list div[class*="Severe"] {
+    border-left: 3px solid #aa1111;
+}
+
 .progress {
     background-color: #2d2d2d;
     width: 100%;
@@ -413,11 +532,10 @@ progress::-moz-progress-bar {
 
 #currentTime {
     color: #e0e0e0;
-    font-size: 14px;
-    padding: 5px;
-    background-color: #363636;
+    font-size: 12px;
+    padding: 4px;
+    background-color: #2d2d2d;
     border-radius: 4px;
-    margin-bottom: 5px;
 }
 
 .sublocation-row {
@@ -446,4 +564,43 @@ progress::-moz-progress-bar {
 
 .sublocation-image:hover {
     border-color: #fff;
+}
+
+.aspects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 4px 0;
+}
+
+.aspect {
+    font-size: 12px;
+    color: #e0e0e0;
+    padding: 4px 6px;
+    background-color: #2d2d2d;
+    border-radius: 4px;
+    border-left: 3px solid #505050;
+}
+
+.aspect.trouble {
+    border-left-color: #ff4444;
+}
+
+.time-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #e0e0e0;
+    font-size: 12px;
+    padding: 4px;
+    background-color: #2d2d2d;
+    border-radius: 4px;
+}
+
+.time-display .date-season {
+    text-align: left;
+}
+
+.time-display .time {
+    text-align: right;
 }

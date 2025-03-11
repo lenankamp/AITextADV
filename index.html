@@ -24,14 +24,43 @@
             <div class="resizer horizontal" id="resizer-row1"></div>
             <div class="quadrant" id="q3" style="display: flex; flex-flow: row; justify-content: flex-start;">
                 <img id="playerart">
-                <div style="display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: flex-start; flex-grow: 1;">
-                    <div id="currentTime"></div>
-                    <progress id="health" value="100" max="100" style="accent-color: red;"></progress>
-                    <progress id="mana" value="100" max="100" style="accent-color: blue;"></progress>
-                    <progress id="exp" value="100" max="100" style="accent-color: green;"></progress>
-                    <progress id="level" value="100" max="100" style="accent-color: yellow;"></progress>
-                    <progress id="gold" value="100" max="100"></progress>
+                <div class="approach-column">
+                    <div class="approach-box">
+                        <span class="approach-label">Careful</span>
+                        <span class="approach-value" id="careful">0</span>
+                    </div>
+                    <div class="approach-box">
+                        <span class="approach-label">Clever</span>
+                        <span class="approach-value" id="clever">0</span>
+                    </div>
+                    <div class="approach-box">
+                        <span class="approach-label">Flashy</span>
+                        <span class="approach-value" id="flashy">0</span>
+                    </div>
+                    <div class="approach-box">
+                        <span class="approach-label">Forceful</span>
+                        <span class="approach-value" id="forceful">0</span>
+                    </div>
+                    <div class="approach-box">
+                        <span class="approach-label">Quick</span>
+                        <span class="approach-value" id="quick">0</span>
+                    </div>
+                    <div class="approach-box">
+                        <span class="approach-label">Sneaky</span>
+                        <span class="approach-value" id="sneaky">0</span>
+                    </div>
                 </div>
+                <div class="character-info">
+                    <div id="currentTime" class="time-display">
+                        <span class="date-season"></span>
+                        <span class="time"></span>
+                    </div>
+                    <div id="playerName" class="char-name"></div>
+                    <div id="highConcept" class="high-concept"></div>
+                    <div id="aspects" class="aspects-list"></div>
+                    <div id="consequences" class="consequences-list"></div>
+                </div>
+                <img id="companionArt" src="placeholder.png" alt="Companion">
             </div>
         </div>
         <div class="resizer" id="resizer-col"></div>
