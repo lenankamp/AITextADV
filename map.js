@@ -115,7 +115,12 @@ function addLocation(name) {
     location.style.backgroundSize = 'cover'; // Ensure the image covers the square
     location.style.border = '1px solid #ccc'; // Optional: Add a border to the square
     location.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
+        const existingSubmenu = document.querySelector('.submenu');
+        if (existingSubmenu) {
+            existingSubmenu.remove();
+        }
         openSubmenu(name, e.clientX, e.clientY);
     });
     location.addEventListener('mouseover', () => {
@@ -145,27 +150,44 @@ function addLocation(name) {
 
 // Open submenu for a location
 function openSubmenu(name, x, y) {
-    let menuContent = `<strong>${name}</strong><br>`;
-    menuContent += `<button onclick="goToLocation('${name}')">Enter Area</button><br>`;
-    
-    // Add buttons for sublocations if they exist
-    if (Object.keys(areas[name].sublocations).length > 0) {
-        menuContent += '<br>Sublocations:<br>';
-        for (const subName of Object.keys(areas[name].sublocations)) {
-            menuContent += `<button onclick="goToLocation('${name}/${subName}')">Enter ${subName}</button><br>`;
-        }
-    }
-    
-    submenu.innerHTML = menuContent;
-    submenu.style.left = `${x}px`;
-    submenu.style.top = `${y}px`;
-    submenu.style.display = 'block';
-    updateSublocationRow(currentArea);
+    const menu = document.createElement('div');
+    menu.classList.add('submenu');
+
+    // Add enter button
+    const enterBtn = document.createElement('button');
+    enterBtn.textContent = `Enter ${name}`;
+    enterBtn.onclick = () => {
+        goToLocation(name);
+        menu.remove();
+    };
+    menu.appendChild(enterBtn);
+
+    // Add edit button
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit Location';
+    editBtn.onclick = () => {
+        openLocationEditor(areas[name], name);
+        menu.remove();
+    };
+    menu.appendChild(editBtn);
+
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+    document.body.appendChild(menu);
 }
 
-// Close submenu when clicking outside
-document.addEventListener('click', () => {
-    submenu.style.display = 'none';
+// Update the global click handler
+document.addEventListener('click', (e) => {
+    const submenu = document.querySelector('.submenu');
+    if (!submenu) return;
+
+    const clickedOnSubmenu = e.target.closest('.submenu');
+    const clickedOnLocation = e.target.closest('.location');
+    const clickedOnSublocation = e.target.closest('.sublocation-image');
+
+    if (!clickedOnSubmenu && !clickedOnLocation && !clickedOnSublocation) {
+        submenu.remove();
+    }
 });
 
 // Go to a location
@@ -266,6 +288,7 @@ function addSublocationImage(container, area, path, isParent) {
     img.title = isParent ? `Parent: ${path}` : path.split('/').pop();
     
     img.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         openSublocationMenu(area, path, e.clientX, e.clientY);
     });
@@ -282,6 +305,7 @@ function openSublocationMenu(area, path, x, y) {
 
     const menu = document.createElement('div');
     menu.classList.add('submenu');
+    menu.setAttribute('data-source', 'sublocation');
 
     // Add enter button
     const enterBtn = document.createElement('button');
