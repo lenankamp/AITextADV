@@ -39,7 +39,7 @@ async function saveToFile(data) {
             images[path] = area.image;
             area.image = null;
         }
-        ['people', 'things', 'hostiles'].forEach(category => {
+        ['people', 'things', 'creatures'].forEach(category => {
             if (area[category]) {
                 area[category].forEach(item => {
                     if (item.image instanceof Blob) {
@@ -93,7 +93,7 @@ async function saveToFile(data) {
         if (images[path]) {
             area.image = await fetchImage(images[path]);
         }
-        const categoryPromises = ['people', 'things', 'hostiles'].map(async category => {
+        const categoryPromises = ['people', 'things', 'creatures'].map(async category => {
             if (area[category]) {
                 const itemPromises = area[category].map(async item => {
                     if (images[item.name]) {
@@ -132,7 +132,7 @@ async function loadFromFile(event) {
                 if (images[path]) {
                     area.image = await fetchImage(images[path]);
                 }
-                for (const category of ['people', 'things', 'hostiles']) {
+                for (const category of ['people', 'things', 'creatures']) {
                     if (area[category]) {
                         const itemPromises = area[category].map(async item => {
                             if (images[item.name]) {
@@ -184,7 +184,7 @@ async function loadImages(images) {
         if (images[area]) {
             areas[area].image = await fetchImage(images[area]);
         }
-        for (const category of ['people', 'things', 'hostiles']) {
+        for (const category of ['people', 'things', 'creatures']) {
             if (areas[area][category]) {
                 const itemPromises = areas[area][category].map(async item => {
                     if (images[item.name]) {

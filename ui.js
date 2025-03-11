@@ -170,7 +170,7 @@ function updateImageGrid(areaName) {
     const tooltip = document.getElementById('tooltip');
     imageGrid.innerHTML = '';
 
-    const categories = ['people', 'things', 'hostiles'];
+    const categories = ['people', 'things', 'creatures'];
     categories.forEach(category => {
         if (areas[areaName][category]) {
             const row = document.createElement('div');
@@ -187,11 +187,11 @@ function updateImageGrid(areaName) {
                         if (category == "people") {
                             posprompt = settings.person_prompt;
                             negprompt = settings.person_negprompt;
-                        } else if (category == "hostiles") {
-                            posprompt = settings.person_prompt;
-                            negprompt = settings.hostile_negprompt;
+                        } else if (category == "creatures") {
+                            posprompt = settings.creature_prompt;
+                            negprompt = settings.creature_negprompt;
                         } else if (category == "things") {
-                            posprompt = settings.person_prompt;
+                            posprompt = settings.thing_prompt;
                             negprompt = settings.thing_negprompt;
                         }
                         const artBlob = await generateArt(posprompt + item.visual, negprompt, item.seed);

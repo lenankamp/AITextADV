@@ -59,8 +59,8 @@ function loadSettings() {
         default_negative_prompt: "__defaultneg__,",
         person_prompt: "",
         person_negprompt: "",
-        hostile_prompt: "",
-        hostile_negprompt: "friendly,",
+        creature_prompt: "(nopeople),",
+        creature_negprompt: "((person, human)),",
         thing_prompt: "(nopeople),",
         thing_negprompt: "((people, human, person)),",
         full_context: "Context Info:\n$world$player$player_desc$locale\n\nStory:\n$story",
@@ -117,7 +117,7 @@ function loadSettings() {
             rep_pen: 1.0,
             rep_pen_range: 0,
             rep_pen_slope: 1,
-            temperature: 0.6,
+            temperature: 0.9,
             tfs: 1,
             top_a: 0,
             top_k: 100,
@@ -128,26 +128,58 @@ function loadSettings() {
         
         // Add new string templates for area contexts
         areaContext: "\nCurrently in: $name : $description\n\n",
-        areaPathsContext: "Paths or Exits may lead to:\n$paths",
         areaPeopleContext: "People within $name\n$peopleList\n",
         areaThingsContext: "Things within $name\n$thingsList\n",
-        areaHostilesContext: "Hostiles within $name\n$hostilesList\n",
+        areaCreaturesContext: "Creatures within $name\n$creaturesList\n",
+        areaPathsContext: "Paths or Exits may lead to:\n$paths",
         areaTimeContext: "Time: $timeOfDay in $season\n",
         subLocationFormat: "$name: $description\n",
         entityFormat: "$name: $description\n",
         action_string: "Describe the player taking the action and then the resulting story.",
 
         generateSublocationsPrompt: "[Generate a list of potential sublocation areas within $areaName described as '$description'. Each sublocation should have a name and a short description of what can be found there. If no sublocations would make sense, respond with 'None'. Format each sublocation as 'Name: Description' with one per line.]",
-        generateEntitiesPrompt: "Existing People:$people\n\n[Be creative and generate a list of people and interesting things that could reasonably be found in the area named $areaName with the following details: $description \nIf no people or hostiles might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. People should not include people who already exist. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 1-2 sentences. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nHostiles\n- Name: Description\n...\n]",
+        sampleSublocations: [
+            {
+                "role": "user",
+                "content": "[Generate a list of potential sublocation areas within Grand Manor described as 'A grand manor with towering spires and intricate stonework. The interior is lavishly decorated with antique furniture and grand chandeliers, exuding an air of opulence and history.'. Each sublocation should have a name and a short description of what can be found there. If no sublocations would make sense, respond with 'None'. Format each sublocation as 'Name: Description' with one per line.]"
+              },
+              {
+                "role": "assistant",
+                "content": "Library: A vast room filled with towering bookshelves, each packed with ancient tomes and dusty scrolls. The air is thick with the scent of old paper and leather bindings, and the room is illuminated by the warm glow of flickering candles.\nGardens: A lush and verdant oasis of greenery, filled with colorful flowers and fragrant herbs. The air is alive with the hum of bees and the chirping of birds, and the soft rustle of leaves in the breeze provides a soothing backdrop to the peaceful scene.\nBedchambers: Luxurious rooms filled with plush furnishings and sumptuous fabrics, each decorated in a different theme and style. The beds are piled high with soft pillows and warm blankets, inviting weary travelers to rest and relax."
+              }
+        ],
+        generateEntitiesPrompt: "Existing People:$people\n\n[Be creative and generate a list of people and interesting things that could reasonably be found in the area named $areaName with the following details: $description \nIf no people or creatures might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. People should not include people who already exist. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]",
+        sampleEntities: [
+            {
+                "role": "user",
+                "content": "[Be creative and generate a list of people and interesting things that could reasonably be found in the area named $areaName with the following details: $description \nIf no people or creatures might be reasonably found in the area, reply with None. Do not generate more than 4 in one category. People should not include people who already exist. Things must be non-living solid physical interactable pieces of interest within the area. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nThings\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]"
+              },
+              {
+                "role": "assistant",
+                "content": "People\n- blonde woman: A tall woman with long, flowing blonde hair that cascades down her back. She has piercing blue eyes that seem to look right through you, and her expression often carries a hint of sadness. Despite her striking appearance, she tends to keep to herself, preferring solitude over social interactions. Her demeanor suggests a deep inner turmoil, as if she is haunted by memories of a troubled past.\n- curious teenager: A young teenager with a unruly brown hair and a mischievous glint in her eyes. She is always eager to explore new places and try new things, often getting herself into trouble with her reckless curiosity. Despite her carefree attitude, she has a kind heart and a strong sense of justice, always willing to stand up for what she believes in.\nThings\n- ancient tome: A dusty old tome bound in cracked leather, its pages yellowed with age and covered in cryptic symbols. The book emits a faint aura of magic, hinting at the powerful spells and secrets contained within its pages. Those who dare to open it may unlock ancient knowledge long forgotten by the world.\n- enchanted amulet: An intricately carved amulet made of polished silver, adorned with shimmering gemstones that seem to glow with an otherworldly light. The amulet hums with a faint magical energy, radiating a sense of protection and guidance to those who wear it.\nCreatures\n- wild dog: A scrappy looking dog with matted fur and sharp teeth, its eyes gleaming with a feral intelligence. Despite its rough appearance, the dog seems friendly and eager for companionship, wagging its tail and nuzzling up to anyone who offers it a kind word or a scrap of food. It roams the area with a sense of purpose, as if guarding the land from unseen threats."
+              }
+        ],
+        sampleQuestions: [
+            {
+                "role": "user",
+                "content": "[Answer the following questions in a numbered list format. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. Who in the passage had signifcant changes to their character? 2. What are three common hair colors? 3. What is the most common eye color?]"
+              },
+              {
+                "role": "assistant",
+                "content": "1. N/A\n2. blonde\n2. brown\n2. black\n3. blue"
+              }
+        ],
         generateVisualPrompt: "[How would you describe '$name' described as '$description' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]",
         addPersonDescriptionPrompt: "[Write a description of '$name'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]",
-        addThingDescriptionPrompt: "[Write a description of '$name'. Write a 1-2 sentence physical description. If there is not enough information in the context, be creative.]",
-        addHostileDescriptionPrompt: "[Write a description of '$name'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description with consideration for why they might be hostile to the player. If there is not enough information in the context, be creative.]",
+        addThingDescriptionPrompt: "[Write a description of '$name'. Write a 2-3 sentence physical description. If there is not enough information in the context, be creative.]",
+        addCreatureDescriptionPrompt: "[Write a description of '$name'. Write a 1-2 sentence physical description, and a 1-2 sentence description of attidue dispositon or apparrent motivation. If there is not enough information in the context, be creative.]",
         addSubLocationDescriptionPrompt: "[Describe the area named $name in 1-2 sentences.]",
-        outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new hostile is in the scene, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. If hostile has become an ally, what is their name? 7. If someone not hostile has become hostile, what is their name? 8. If a new thing is in the scene, what is its name? 9. If a new location nearby has been revealed, what is its name? 10. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest.]",
+        outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new creature is in the scene, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. If creature has turned into a person, what is their name? 7. If a person has turned into a creature, what is their name? 8. If a new thing is in the scene, what is its name? 9. If a new location nearby has been revealed, what is its name?]",
+        outputAutoCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number on each line separated by new lines. 1. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest. 2. If a person, creature, or thing had a signficant change to their physical or emotional state, what was their name?]",
         moveToAreaProximityPrompt: '[Depending on the distance traveled in the passage, would "$newArea" be best described as proximate to one of the previously listed locations? Specify the location and only the location name from the list if such is the case, otherwise answer N/A.]',
         moveToAreaPeoplePrompt: '[Answer the following question in a list format separate by \'\n\' in regard to the passage. If the question can not be answered just respond with \'N/A\' and no explanation. Among $peopleNames, who moved with the player?]',
         entityLeavesAreaPrompt: '[In the passage, to which of the adjacent areas in the context did $name move to? If ambiguous be creative and give the most fitting among the options.]',
+        generateNewDescription: '\nPrevious Description: $description\n\n[Generate a new description for $name reflecting any significant changes in the context. Description should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks.]',
     };
 
     settings = defaultSettings;
