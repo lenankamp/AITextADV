@@ -360,6 +360,7 @@ async function moveToArea(area, prevArea, text="") {
     }
     
     currentArea = targetArea;
+    updateAreaDisplay(currentArea);
     if(areas[currentArea].image instanceof Blob)
         document.getElementById('sceneart').src = URL.createObjectURL(areas[currentArea].image);
     else
@@ -581,12 +582,13 @@ async function outputAutoCheck(text, context="") {
     const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
         currentArea: currentArea,
         context: context,
-        text: text
+        text: text,
+        player: settings.player_name
     }, settings.sampleQuestions);
     const lines = response.split('\n');
 
     for (const line of lines) {
-        if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '10.') {
+        if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
             const timePassed = line.replace("1. ", '').stripNonAlpha().trim();
             const timePassedLower = timePassed.toLowerCase();
             if (timePassedLower.includes("moments")) {
@@ -604,12 +606,28 @@ async function outputAutoCheck(text, context="") {
                 } else {
                     timeToAdvance = (31 - hours) * 3600 + (60 - minutes) * 60 - seconds;
                 }
+                // if player has mild consequence, remove the first in the array, else if moderate, check the first time in consquenceTimee.moderate, if it's been more than 7 days, remove it and the first moderate consequnce, if no moderate consequences, but a severe, check the first time in consquenceTimee.severe, if it's been more than 30 days, remove it and the first severe consequnce
+                if (settings.charsheet_fae.consequences.mild.length > 0) {
+                    settings.charsheet_fae.consequences.mild.shift();
+                } else if (settings.charsheet_fae.consequences.moderate.length > 0) {
+                    const firstModerateTime = settings.charsheet_fae.consequenceTime.moderate[0];
+                    if (timeDiff(firstModerateTime, currentTime) > 7) {
+                        settings.charsheet_fae.consequences.moderate.shift();
+                        settings.charsheet_fae.consequenceTime.moderate.shift();
+                    }
+                } else if (settings.charsheet_fae.consequences.severe.length > 0) {
+                    const firstSevereTime = settings.charsheet_fae.consequenceTime.severe[0];
+                    if (timeDiff(firstSevereTime, currentTime) > 30) {
+                        settings.charsheet_fae.consequences.severe.shift();
+                        settings.charsheet_fae.consequenceTime.severe.shift();
+                    }
+                }
+                updateConsequences();
                 advanceTime(timeToAdvance);
             }
             updateTime();
-        }
-        if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
-            const name = line.replace("5. ", '').stripNonAlpha().trim();
+        } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
+            const name = line.replace("2. ", '').stripNonAlpha().trim();
             let section = null;
             let target = null;
             if (areas[currentArea].people.some(person => person.name === name)) {
@@ -636,6 +654,45 @@ async function outputAutoCheck(text, context="") {
                 target.description = description;
             }
 
+        } else if (line.startsWith('3.') && !line.includes('N/A') && line.trim() !== '3.') {
+            if (line.toLowerCase().includes('yes'))
+            {
+                const consequencePrompt = replaceVariables(settings.generateNewDescription, {
+                    player: settings.player_name,
+                    description: settings.player_description
+                });
+
+                const response = await generateText(settings.creative_question_param, minContext(3) + consequencePrompt, '', {
+                    player: settings.player_name,
+                    description: settings.player_description
+                });
+                let severity = 0;
+                for(const consequenceTest of response.split('\n')) {
+                    if (consequenceTest.startsWith('1.') && !consequenceTest.includes('N/A') && consequenceTest.trim() !== '1.') {
+                        const timeInjured = line.replace("1. ", '').stripNonAlpha().toLowerCase().trim();
+                        if (timeInjured.includes("hours") && severity === 0) {
+                            severity = 1;
+                        } else if (timeInjured.includes("days") && severity === 1) {
+                            severity = 2;
+                        } else if (timeInjured.includes("years") && severity === 2) {
+                            severity = 3;
+                        }
+                    } else if (severity > 0 && consequenceTest.startsWith('2.') && !consequenceTest.includes('N/A') && consequenceTest.trim() !== '2.') {
+                        const consequence = consequenceTest.replace("2. ", '').stripNonAlpha().trim();
+                        if (severity === 1) {
+                            settings.charsheet_fae.consequences.mild.push(consequence);
+                        } else if (severity === 2) {
+                            settings.charsheet_fae.consequences.moderate.push(consequence);
+                            settings.charsheet_fae.consequenceTime.moderate.push(currentTime);
+                        } else if (severity === 3) {
+                            settings.charsheet_fae.consequences.severe.push(consequence);
+                            settings.charsheet_fae.consequenceTime.severe.push(currentTime);
+                        }
+
+                    }
+                    updateConsequences();
+                }
+            }
         }
     }
 }
@@ -987,6 +1044,7 @@ async function setupStart() {
     updateApproachDisplay();
     updateCharacterInfo();
     updateConsequences();
+    updateAreaDisplay(settings.starting_area);
 
     await generateArea(settings.starting_area, settings.starting_area_description, 3500, 3500);
     document.getElementById('sceneart').alt = areas[settings.starting_area].description;
@@ -1033,6 +1091,19 @@ function getTimeofDay() {
     } else {
         return "Late Night";
     }
+}
+function timeDiff(startTime, endTime) {
+    const startParts = startTime.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/).slice(1).map(Number);
+    const endParts = endTime.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/).slice(1).map(Number);
+
+    const [startYear, startMonth, startDay, startHours, startMinutes, startSeconds] = startParts;
+    const [endYear, endMonth, endDay, endHours, endMinutes, endSeconds] = endParts;
+
+    const startTotalSeconds = startYear * 365 * 24 * 3600 + startMonth * 30 * 24 * 3600 + startDay * 24 * 3600 + startHours * 3600 + startMinutes * 60 + startSeconds;
+    const endTotalSeconds = endYear * 365 * 24 * 3600 + endMonth * 30 * 24 * 3600 + endDay * 24 * 3600 + endHours * 3600 + endMinutes * 60 + endSeconds;
+
+    const timeDifferenceInSeconds = endTotalSeconds - startTotalSeconds;
+    return timeDifferenceInSeconds / (24 * 3600); // Convert seconds to days
 }
 
 function getSeason() {
@@ -1111,3 +1182,175 @@ updateTime();
 updateApproachDisplay();
 updateCharacterInfo();
 updateConsequences();
+
+function updateAreaDisplay(areaName) {
+    const areaNameOverlay = document.getElementById('areaNameOverlay');
+    areaNameOverlay.textContent = areaName.split('/').pop();
+}
+
+// Add to setupStart function
+async function setupStart() {
+    document.getElementById('sceneart').src = 'placeholder.png';
+    updateApproachDisplay();
+    updateCharacterInfo();
+    updateConsequences();
+    updateAreaDisplay(settings.starting_area);
+
+    await generateArea(settings.starting_area, settings.starting_area_description, 3500, 3500);
+    document.getElementById('sceneart').alt = areas[settings.starting_area].description;
+    const responseElement = document.createElement('div');
+    responseElement.classList.add('new-message');
+    
+    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext() + "\n" + "[Generate the beginning of the story. Response should be less than 300 words.]", '', {
+        playerName: settings.player_name,
+        areaName: settings.starting_area,
+        areaDescription: areas[settings.starting_area].description,
+        worldDescription: settings.world_description
+    }));
+
+    responseElement.innerHTML = text.replace(/\n/g, '<br>');
+    output.appendChild(responseElement);
+    output.scrollTop = output.scrollHeight;
+    await outputCheck(text);
+    updateImageGrid(settings.starting_area);
+    updateSublocationRow(settings.starting_area);
+
+    document.getElementById('playerart').src = 'placeholder.png';
+    generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
+        if (blob instanceof Blob)
+            document.getElementById('playerart').src = URL.createObjectURL(blob);
+    });
+}
+
+// Add to moveToArea function where area changes
+async function moveToArea(area, prevArea, text="") {
+    if (area === currentArea || area === currentArea.split('/').pop()) {
+        return;
+    }
+    let targetArea = null;
+    //check if the area exists or is a sublocation within the current area
+    if(areas[area]) {
+        targetArea = area;
+    } else if (areas[currentArea].sublocations[area]) {
+        targetArea = areas[currentArea].sublocations[area].path;
+        if(!areas[targetArea]) {
+            if(text === "")
+                await generateArea(targetArea, areas[currentArea].sublocations[area].description);
+            else await generateArea(targetArea, areas[currentArea].sublocations[area].description, contextDepth=3);
+        }
+    } else if (area.includes('/')) {
+        const [topArea, ...subPaths] = area.split('/');
+        if (!areas[topArea]) {
+            let newX, newY;
+            const maxAttempts = 100;
+            let attempts = 0;
+            const distance = 30;
+
+            do {
+                newX = areas[currentArea.split('/')[0]].x + Math.floor(Math.random() * distance * 2) - distance;
+                newY = areas[currentArea.split('/')[0]].y + Math.floor(Math.random() * distance * 2) - distance;
+                attempts++;
+            } while (attempts < maxAttempts && Object.values(areas).some(a => a.x === newX && a.y === newY));
+
+            if (attempts >= maxAttempts) {
+                throw new Error("Unable to find a suitable location for the new area.");
+            }
+
+            await generateArea(newX, newY, topArea);
+        }
+
+        let currentPath = topArea;
+        for (const subPath of subPaths) {
+            const parentPath = currentPath;
+            currentPath += '/' + subPath;
+            await generateArea(currentPath);
+            if (!areas[parentPath].sublocations[subPath]) {
+                areas[parentPath].sublocations[subPath] = { path: currentPath, name: subPath, description: areas[currentPath].description };
+            }
+        }
+        targetArea = currentPath;
+    } else if (!areas[area]) {
+        const areaList = Object.keys(areas).join(', ') + ', ' + Object.keys(areas[currentArea].sublocations).join(', ');
+        const proximityPrompt = replaceVariables(settings.moveToAreaProximityPrompt, {
+            newArea: area
+        });
+        
+        const response = await generateText(settings.question_param, settings.world_description + "\n\n\nPassage:\n" + text + "\nLocations: "+ areaList + "\n\n" + proximityPrompt, '', {
+            areaList: areaList,
+            currentArea: currentArea,
+            newArea: area,
+            text: text
+        }, settings.sampleQuestions);
+        
+        if (response !== 'N/A') {
+            const responseCleaned = response.stripNonAlpha();
+            const parentArea = Object.keys(areas).find(a => {
+                const isMatch = a === responseCleaned || Object.keys(areas[a].sublocations).includes(responseCleaned);
+                return isMatch;
+            });
+            if(text === "")
+                await generateArea(parentArea + "/" + area);
+            else await generateArea(parentArea + "/" + area, contextDepth=3);
+
+            if (!areas[parentArea].sublocations) {
+                areas[parentArea].sublocations = {};
+            }
+            areas[parentArea].sublocations[area] = { path: parentArea + '/' + area, name: area, description: areas[parentArea + '/' + area].description };
+            targetArea = parentArea + '/' + area;
+        }
+    } 
+    if(targetArea === null) {
+        let newX, newY;
+        const maxAttempts = 100;
+        let attempts = 0;
+        const distance = 5;
+
+        do {
+            newX = areas[currentArea.split('/')[0]].x + 200*(Math.floor(Math.random() * distance * 2) - distance);
+            newY = areas[currentArea.split('/')[0]].y + 200*(Math.floor(Math.random() * distance * 2) - distance);
+            attempts++;
+        } while (attempts < maxAttempts && Object.values(areas).some(a => a.x === newX && a.y === newY));
+
+        if (attempts >= maxAttempts) {
+            throw new Error("Unable to find a suitable location for the new area.");
+        }
+
+        await generateArea(area, '', newX, newY, 3);
+        targetArea = area;
+    }
+
+    if(text != "" && areas[currentArea].people.length > 0) {
+        const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');
+        const peoplePrompt = replaceVariables(settings.moveToAreaPeoplePrompt, {
+            peopleNames: peopleNames
+        });
+        
+        const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + peoplePrompt, '', {
+            currentArea: currentArea,
+            newArea: area,
+            text: text,
+            peopleNames: peopleNames
+        }, settings.sampleQuestions);
+        
+        const movers = movingPeople.split('\n');
+        for (const mover of movers) {
+            if (mover.trim() != "") {
+                const personIndex = areas[currentArea].people.findIndex(person => person.name === mover);
+                if (personIndex !== -1) {
+                    const person = areas[currentArea].people.splice(personIndex, 1)[0];
+                    areas[targetArea].people.push(person);
+                }
+            }
+        }
+    }
+    
+    currentArea = targetArea;
+    updateAreaDisplay(currentArea);
+    if(areas[currentArea].image instanceof Blob)
+        document.getElementById('sceneart').src = URL.createObjectURL(areas[currentArea].image);
+    else
+        document.getElementById('sceneart').src = 'placeholder.png';
+    document.getElementById('sceneart').alt = areas[currentArea].description;
+    updateImageGrid(currentArea);
+    updateSublocationRow(currentArea);
+}

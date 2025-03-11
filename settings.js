@@ -39,6 +39,10 @@ function loadSettings() {
                 mild:[],
                 moderate:[],
                 severe:[]
+            },
+            consequenceTime: {
+                moderate:[],
+                severe:[]
             }
         },
         starting_area: "Home",
@@ -156,7 +160,7 @@ function loadSettings() {
                 "content": "None"
               }
         ],
-        generateEntitiesPrompt: "Existing People:$people\n\n[Be creative and generate a list of people and creatures that could reasonably be found in $areaName with the following details: $description \nIf no people or creatures might be reasonably found in $areaName, reply with None. Do not generate more than 4 in one category. People must not include people who already exist. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]",
+        generateEntitiesPrompt: "Existing People:Elara,Seraphina,Orion,$people\n\n[Be creative and generate a list of people and creatures that could reasonably be found in $areaName with the following details: $description \nIf no people or creatures might be reasonably found in $areaName, reply with None. Do not generate more than 4 in one category. People must not include people who already exist. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]",
         sampleEntities: [
             {
                 "role": "user",
@@ -191,7 +195,8 @@ function loadSettings() {
         addCreatureDescriptionPrompt: "[Write a description of '$name'. Write a 1-2 sentence physical description, and a 1-2 sentence description of attidue dispositon or apparrent motivation. If there is not enough information in the context, be creative.]",
         addSubLocationDescriptionPrompt: "[Describe the area named $name in 1-2 sentences.]",
         outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new creature is in the scene, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. If creature has turned into a person, what is their name? 7. If a person has turned into a creature, what is their name? 8. If a new thing is in the scene, what is its name? 9. If a new location nearby has been revealed, what is its name?]",
-        outputAutoCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number on each line separated by new lines. 1. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest. 2. If a person, creature, or thing had a signficant change to their physical or emotional state, what was their name?]",
+        outputAutoCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number on each line separated by new lines. 1. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest. 2. If a person, creature, or thing had a signficant change to their physical or emotional state, what was their name? 3. Yes or no, did the $player suffer from severe physical or lasting emotional harm?]",
+        consequencePrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. 1. If $player suffered emotional or physical harm in the passage, how long would you estimate it would take to recover? Answer in terms of rest time choosing one of the following: hours, days, or years. 2. If $player suffered emotional or physical harm, creatively describe the lingering effects in 6 words.]",
         moveToAreaProximityPrompt: '[Depending on the distance traveled in the passage, would "$newArea" be best described as proximate to one of the previously listed locations? Specify the location and only the location name from the list if such is the case, otherwise answer N/A.]',
         moveToAreaPeoplePrompt: '[Answer the following question in a list format separate by \'\n\' in regard to the passage. If the question can not be answered just respond with \'N/A\' and no explanation. Among $peopleNames, who moved with the player?]',
         entityLeavesAreaPrompt: '[In the passage, to which of the adjacent areas in the context did $name move to? If ambiguous be creative and give the most fitting among the options.]',

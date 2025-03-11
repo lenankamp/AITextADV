@@ -176,6 +176,13 @@ function updateImageGrid(areaName) {
             const row = document.createElement('div');
             row.classList.add('image-row');
             areas[areaName][category].forEach(item => {
+                const container = document.createElement('div');
+                container.classList.add('image-container');
+                
+                const nameOverlay = document.createElement('div');
+                nameOverlay.classList.add('image-name-overlay');
+                nameOverlay.textContent = item.name;
+                
                 const img = document.createElement('img');
                 if (item.image instanceof Blob) {
                     img.src = URL.createObjectURL(item.image);
@@ -206,24 +213,29 @@ function updateImageGrid(areaName) {
                 img.alt = item.name;
 
                 // Add click handler for entity submenu
-                img.addEventListener('click', (e) => {
+                container.addEventListener('click', (e) => {
                     e.stopPropagation();
                     openEntitySubmenu(item, category, e.clientX, e.clientY);
                 });
 
                 // Existing hover handlers
-                img.addEventListener('mouseover', () => {
+                container.addEventListener('mouseover', () => {
                     tooltip.style.display = 'block';
                     tooltip.innerHTML = `<strong>${item.name}</strong><br>${item.description}<br><img src="${img.src}" alt="${item.name}" style="width: 100px; height: auto;">`;
                 });
-                img.addEventListener('mousemove', (e) => {
+
+                container.addEventListener('mousemove', (e) => {
                     tooltip.style.left = e.pageX + 10 + 'px';
                     tooltip.style.top = e.pageY + 10 + 'px';
                 });
-                img.addEventListener('mouseout', () => {
+
+                container.addEventListener('mouseout', () => {
                     tooltip.style.display = 'none';
                 });
-                row.appendChild(img);
+
+                container.appendChild(img);
+                container.appendChild(nameOverlay);
+                row.appendChild(container);
             });
             imageGrid.appendChild(row);
         }
