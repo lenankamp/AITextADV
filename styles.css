@@ -174,6 +174,7 @@ body {
     display: none;
     justify-content: center;
     align-items: center;
+    z-index: 10;
 }
 .settings-container {
     background-color: #2d2d2d;

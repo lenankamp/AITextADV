@@ -672,7 +672,51 @@ async function outputAutoCheck(text, context="") {
             const name = line.replace("2. ", '').stripNonAlpha().trim();
             let section = null;
             let target = null;
-            if (areas[currentArea].people.some(person => person.name === name)) {
+            if (name.toLowerCase() === settings.player_name.toLowerCase() || name.toLowerCase() === "you") {
+                const consequencePrompt = replaceVariables(settings.consequencePrompt, {
+                    player: settings.player_name,
+                    description: settings.player_description
+                });
+
+                const response = await generateText(settings.creative_question_param, minContext(3) + consequencePrompt, '', {
+                    player: settings.player_name,
+                    description: settings.player_description
+                },settings.sampleQuestions);
+                let severity = 0;
+                for(const consequenceTest of response.split('\n')) {
+                    if (consequenceTest.startsWith('1.') && !consequenceTest.includes('N/A') && consequenceTest.trim() !== '1.') {
+                        const timeInjured = consequenceTest.replace("1. ", '').stripNonAlpha().toLowerCase().trim();
+                        if (timeInjured.includes("hours") && severity === 0) {
+                            severity = 1;
+                        } else if (timeInjured.includes("days") && severity <= 1) {
+                            severity = 2;
+                        } else if ((timeInjured.includes("years") || timeInjured.includes("longer")) && severity <= 2) {
+                            severity = 3;
+                        }
+                    } else if (severity > 0 && consequenceTest.startsWith('2.') && !consequenceTest.includes('N/A') && consequenceTest.trim() !== '2.') {
+                        const consequence = consequenceTest.replace("2. ", '').stripNonAlpha().trim();
+                        console.log("Adding consequence.",severity,consequence);
+                        if(!settings.charsheet_fae.consequences) {
+                            settings.charsheet_fae.consequences = { mild: [], moderate: [], severe: [] };
+                        }
+                        if (!settings.charsheet_fae.consequenceTime) {
+                            settings.charsheet_fae.consequenceTime = { moderate: [], severe: [] };
+                        }
+                        if (severity === 1) {
+                            settings.charsheet_fae.consequences.mild.push(consequence);
+                        } else if (severity === 2) {
+                            settings.charsheet_fae.consequences.moderate.push(consequence);
+                            settings.charsheet_fae.consequenceTime.moderate.push(currentTime);
+                        } else if (severity === 3) {
+                            settings.charsheet_fae.consequences.severe.push(consequence);
+                            settings.charsheet_fae.consequenceTime.severe.push(currentTime);
+                        }
+
+                    }
+                    updateConsequences();
+                }
+
+            } else if (areas[currentArea].people.some(person => person.name === name)) {
                 section = 'people';
                 target = areas[currentArea].people.find(person => person.name === name);
             } else if (areas[currentArea].creatures.some(creature => creature.name === name)) {
@@ -696,45 +740,6 @@ async function outputAutoCheck(text, context="") {
                 target.description = description;
             }
 
-        } else if (line.startsWith('3.') && !line.includes('N/A') && line.trim() !== '3.') {
-            if (line.toLowerCase().includes('yes'))
-            {
-                const consequencePrompt = replaceVariables(settings.generateNewDescription, {
-                    player: settings.player_name,
-                    description: settings.player_description
-                });
-
-                const response = await generateText(settings.creative_question_param, minContext(3) + consequencePrompt, '', {
-                    player: settings.player_name,
-                    description: settings.player_description
-                });
-                let severity = 0;
-                for(const consequenceTest of response.split('\n')) {
-                    if (consequenceTest.startsWith('1.') && !consequenceTest.includes('N/A') && consequenceTest.trim() !== '1.') {
-                        const timeInjured = line.replace("1. ", '').stripNonAlpha().toLowerCase().trim();
-                        if (timeInjured.includes("hours") && severity === 0) {
-                            severity = 1;
-                        } else if (timeInjured.includes("days") && severity === 1) {
-                            severity = 2;
-                        } else if (timeInjured.includes("years") && severity === 2) {
-                            severity = 3;
-                        }
-                    } else if (severity > 0 && consequenceTest.startsWith('2.') && !consequenceTest.includes('N/A') && consequenceTest.trim() !== '2.') {
-                        const consequence = consequenceTest.replace("2. ", '').stripNonAlpha().trim();
-                        if (severity === 1) {
-                            settings.charsheet_fae.consequences.mild.push(consequence);
-                        } else if (severity === 2) {
-                            settings.charsheet_fae.consequences.moderate.push(consequence);
-                            settings.charsheet_fae.consequenceTime.moderate.push(currentTime);
-                        } else if (severity === 3) {
-                            settings.charsheet_fae.consequences.severe.push(consequence);
-                            settings.charsheet_fae.consequenceTime.severe.push(currentTime);
-                        }
-
-                    }
-                    updateConsequences();
-                }
-            }
         }
     }
 }
@@ -889,13 +894,13 @@ async function playerAction(action) {
                 if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
                     // conditionals if line contains trivial, challeng, extreme, or impossible. plausible is default case
                     if (line.includes('trivial')) {
-                        return "[Continue the story for another two paragraphs as player '" + action + "'. "+ settings.action_string +"]";
+                        return "[Continue the story for another $settings.output_length$ as player '" + action + "'. "+ settings.action_string +"]";
                     } else if (line.includes('challeng')) {
                         disadvantage += 2;
                     } else if (line.includes('extreme')) {
                         disadvantage += 4;
                     } else if (line.includes('impossible')) {
-                        return "[Continue the story for another two paragraphs as player considers the impossibility of '" + action + "'. "+ settings.action_string +"]"
+                        return "[Continue the story for another $settings.output_length$ as player considers the impossibility of '" + action + "'. "+ settings.action_string +"]"
                     }
                 } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
                     //conditions if line contains careful, clever, flashy, forceful, quick, or sneaky.
@@ -924,15 +929,15 @@ async function playerAction(action) {
             let roll = randomInt(3) + randomInt(3) + randomInt(3) + randomInt(3) - 4 + advantage - disadvantage;
             console.log('Roll 4d4-8 +',advantage,'-',disadvantage,'=', roll);
             if(roll >= 3) {
-                return "[The player's actions are extremely successful, so much so that they will create advantages in similar actions in the future. Continue the story for another two paragraphs as player successfully '" + action + "'. "+ settings.action_string + "]";
+                return "[The player's actions are extremely successful, so much so that they will create advantages in similar actions in the future. Continue the story for another $settings.output_length$ as player successfully '" + action + "'. "+ settings.action_string + "]";
             } else if (roll >= 1) {
-                return "[Continue the story for another two paragraphs as player successfully '" + action + "'. "+ settings.action_string +"]"
+                return "[Continue the story for another $settings.output_length$ as player successfully '" + action + "'. "+ settings.action_string +"]"
             } else if (roll === 0) {
-                return "[Continue the story for another two paragraphs as player attempts to '" + action + "'. "+ settings.action_string +"]"
+                return "[Continue the story for another $settings.output_length$ as player attempts to '" + action + "'. "+ settings.action_string +"]"
             } else if (roll >= -2) {
-                return "[Continue the story for another two paragraphs as player fails to '" + action + "'. While a failure, it may still achieve the desired result at a cost. " + settings.action_string +"]"
+                return "[Continue the story for another $settings.output_length$ as player fails to '" + action + "'. While a failure, it may still achieve the desired result at a cost. " + settings.action_string +"]"
             } else {
-                return "[Continue the story for another two paragraphs as player fails to '" + action + "'. The failure is significant having negative consequences for the player. " + settings.action_string +"]";
+                return "[Continue the story for another $settings.output_length$ as player fails to '" + action + "'. The failure is significant having negative consequences for the player. " + settings.action_string +"]";
             }
         case 'pathfinder2e':
             return pathfinder2eAction(action);
@@ -981,13 +986,13 @@ async function sendMessage(message = input.value) {
                 directInput.innerHTML = message.replace('//', '');
                 output.appendChild(directInput);
                 output.scrollTop = output.scrollHeight;
-                messageElement.innerHTML = '\n[Continue the story for another two paragraphs.]';
+                messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$.]';
             } else return;
         } else {
             messageElement.innerHTML = await playerAction(message);
         }
     } else {
-        messageElement.innerHTML = '\n[Continue the story for another two paragraphs.]';
+        messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$.]';
     }
 
     output.appendChild(messageElement);

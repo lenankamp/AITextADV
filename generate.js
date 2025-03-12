@@ -107,7 +107,7 @@ function replaceVariables(text, variables) {
     }
     
     // Then handle any settings variables that might be referenced
-    const settingsVarPattern = /\$settings\.([^\$]+)/g;
+    const settingsVarPattern = /\$settings\.([^\$]+)\$/g;
     result = result.replace(settingsVarPattern, (match, settingPath) => {
         const paths = settingPath.split('.');
         let value = settings;

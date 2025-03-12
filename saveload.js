@@ -15,56 +15,7 @@ request.onsuccess = function(event) {
     getRequest.onsuccess = async function(event) {
         if (event.target.result) {
             const data = event.target.result;
-            areas = data.state.areas;
-            currentArea = data.state.currentArea;
-            const output = document.getElementById('output');
-            output.innerHTML = data.state.outputLog;
-            output.scrollTop = output.scrollHeight;
-            settings = data.state.settings;
-
-            // Update character display
-            updateApproachDisplay();
-            updateCharacterInfo();
-            updateConsequences();
-            updateTime();
-
-            // Apply settings to UI elements
-            document.getElementById('q1').style.height = settings.q1_height;
-            document.getElementById('q2').style.height = settings.q2_height;
-            content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
-
-            // Restore player image if it exists and it's not a blob URL
-            if (data.state.playerImage && !data.state.playerImage.startsWith('blob:')) {
-                document.getElementById('playerart').src = data.state.playerImage;
-            }
-
-            // Update image grid after ensuring images are properly loaded
-            const currentAreaObj = areas[currentArea];
-            if (currentAreaObj) {
-                if (currentAreaObj.image && typeof currentAreaObj.image === 'string' && !currentAreaObj.image.startsWith('blob:')) {
-                    try {
-                        const blob = await fetchImage(currentAreaObj.image);
-                        currentAreaObj.image = blob;
-                        document.getElementById('sceneart').src = URL.createObjectURL(blob);
-                        document.getElementById('sceneart').alt = currentAreaObj.description;
-                    } catch (error) {
-                        console.error('Error loading area image:', error);
-                    }
-                }
-            }
-
-            updateImageGrid(currentArea);
-
-            // Clear and re-add locations from the map
-            document.querySelectorAll('.location').forEach(location => {
-                location.remove();
-            });
-            // Add top-level areas to the map
-            for (const area in areas) {
-                addLocation(area);
-            }
-
-            updateSublocationRow(currentArea);
+            await restoreGameState(data);
         }
     };
 };
@@ -251,85 +202,9 @@ async function loadFromFile(event) {
         const reader = new FileReader();
         reader.onload = async function(e) {
             const { data, images } = JSON.parse(e.target.result);
-            const output = document.getElementById('output');
-            areas = data.state.areas;
-            currentArea = data.state.currentArea;
-            output.innerHTML = data.state.outputLog;
-            settings = data.state.settings;
-            output.scrollTop = output.scrollHeight;
-            
-            // Update UI elements first
-            updateApproachDisplay();
-            updateCharacterInfo();
-            updateConsequences();
-            updateTime();
-            
-            document.getElementById('q1').style.height = settings.q1_height;
-            document.getElementById('q2').style.height = settings.q2_height;
-            content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
-
-            // Load images for all areas and their sublocations
-            for (const [areaName, area] of Object.entries(areas)) {
-                if (images[areaName]) {
-                    area.image = await fetchImage(images[areaName]);
-                }
-                for (const category of ['people', 'things', 'creatures']) {
-                    if (area[category]) {
-                        const itemPromises = area[category].map(async item => {
-                            if (images[item.name]) {
-                                item.image = await fetchImage(images[item.name]);
-                            }
-                        });
-                        await Promise.all(itemPromises);
-                    }
-                }
-            }
-
-            // Update the current area's scene art and description
-            const currentAreaObj = areas[currentArea];
-            if (currentAreaObj && currentAreaObj.image instanceof Blob) {
-                const sceneArt = document.getElementById('sceneart');
-                sceneArt.src = URL.createObjectURL(currentAreaObj.image);
-                sceneArt.alt = currentAreaObj.description || '';
-            }
-
-            // Load player image if it exists
-            if (images['player']) {
-                const playerImageBlob = await fetchImage(images['player']);
-                document.getElementById('playerart').src = URL.createObjectURL(playerImageBlob);
-            }
-
-            // Update the image grid after all images are loaded
-            updateImageGrid(currentArea);
-
-            // Update map locations
-            document.querySelectorAll('.location').forEach(location => {
-                location.remove();
-            });
-            for (const area in areas) {
-                addLocation(area);
-            }
-            updateSublocationRow(currentArea);
+            await restoreGameState(data, images);
         };
         reader.readAsText(file);
-    }
-}
-
-async function loadImages(images) {
-    for (const area in areas) {
-        if (images[area]) {
-            areas[area].image = await fetchImage(images[area]);
-        }
-        for (const category of ['people', 'things', 'creatures']) {
-            if (areas[area][category]) {
-                const itemPromises = areas[area][category].map(async item => {
-                    if (images[item.name]) {
-                        item.image = await fetchImage(images[item.name]);
-                    }
-                });
-                await Promise.all(itemPromises);
-            }
-        }
     }
 }
 
@@ -343,36 +218,6 @@ async function fetchImage(imageData) {
     // Otherwise fetch from URL
     const response = await fetch(imageData);
     return response.blob();
-}
-
-async function loadAreaImages(images) {
-    for (const area in areas) {
-        if (images[area]) {
-            try {
-                // If it's a data URL, use it directly
-                if (typeof images[area] === 'string' && images[area].startsWith('data:')) {
-                    areas[area].image = await fetchImage(images[area]);
-                }
-                // If it's a blob URL, try to fetch and convert
-                else if (typeof images[area] === 'string' && images[area].startsWith('blob:')) {
-                    const response = await fetch(images[area]);
-                    const blob = await response.blob();
-                    areas[area].image = blob;
-                }
-                
-                // Update scene art if this is the current area
-                if (area === currentArea) {
-                    const sceneArt = document.getElementById('sceneart');
-                    if (sceneArt.src.startsWith('blob:')) {
-                        URL.revokeObjectURL(sceneArt.src);
-                    }
-                    sceneArt.src = URL.createObjectURL(areas[area].image);
-                }
-            } catch (error) {
-                console.error('Error loading area image:', error);
-            }
-        }
-    }
 }
 
 function updateConsequences() {
@@ -485,3 +330,95 @@ document.addEventListener('DOMContentLoaded', (event) => {
         };
     }
 });
+
+async function restoreGameState(data, images = null) {
+    const output = document.getElementById('output');
+    areas = data.state.areas;
+    currentArea = data.state.currentArea;
+    output.innerHTML = data.state.outputLog;
+    settings = data.state.settings;
+    output.scrollTop = output.scrollHeight;
+
+    // Update UI elements first
+    updateAreaDisplay(currentArea);
+    updateApproachDisplay();
+    updateCharacterInfo();
+    updateConsequences();
+    updateTime();
+
+    // Apply settings to UI elements
+    document.getElementById('q1').style.height = settings.q1_height;
+    document.getElementById('q2').style.height = settings.q2_height;
+    content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
+
+    // Clean up the map
+    document.querySelectorAll('.location').forEach(location => {
+        location.remove();
+    });
+    
+    // Add top-level areas to the map
+    for (const area in areas) {
+        addLocation(area);
+    }
+
+    // Handle player image
+    if (data.state.playerImage) {
+        if (data.state.playerImage.startsWith('data:')) {
+            document.getElementById('playerart').src = data.state.playerImage;
+        } else if (!data.state.playerImage.startsWith('blob:')) {
+            try {
+                const blob = await fetchImage(data.state.playerImage);
+                document.getElementById('playerart').src = URL.createObjectURL(blob);
+            } catch (error) {
+                console.error('Error loading player image:', error);
+            }
+        }
+    }
+
+    // Handle area images
+    if (images) {
+        // Handle images from file load
+        for (const [path, imageData] of Object.entries(images)) {
+            try {
+                if (path === 'player') {
+                    const blob = await fetchImage(imageData);
+                    document.getElementById('playerart').src = URL.createObjectURL(blob);
+                    continue;
+                }
+
+                // Find the target area/entity and update its image
+                if (areas[path]) {
+                    areas[path].image = await fetchImage(imageData);
+                } else {
+                    // Check each area for entities with this name
+                    for (const area of Object.values(areas)) {
+                        for (const category of ['people', 'things', 'creatures']) {
+                            const entity = area[category]?.find(e => e.name === path);
+                            if (entity) {
+                                entity.image = await fetchImage(imageData);
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(`Error loading image for ${path}:`, error);
+            }
+        }
+    } else {
+        // Handle images from IndexedDB (already blobs)
+        // Just need to update scene art since other images are already in place
+        const currentAreaObj = areas[currentArea];
+        if (currentAreaObj?.image instanceof Blob) {
+            const sceneArt = document.getElementById('sceneart');
+            if (sceneArt.src.startsWith('blob:')) {
+                URL.revokeObjectURL(sceneArt.src);
+            }
+            sceneArt.src = URL.createObjectURL(currentAreaObj.image);
+        }
+    }
+
+    // Refresh UI
+    updateImageGrid(currentArea);
+    updateSublocationRow(currentArea);
+}
