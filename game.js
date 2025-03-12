@@ -841,6 +841,18 @@ function areaContext(areaPath) {
             creaturesList 
         });
     }
+    if(followers.length > 0) {
+        let followersList = followers.map(follower =>
+            replaceVariables(settings.entityFormat, {
+                name: follower.name,
+                description: follower.description
+            })
+        ).join('');
+        context += replaceVariables(settings.areaFollowersContext, {
+            name: area.name,
+            followersList
+        });
+    }
 
     // Build paths context
     let paths = '';

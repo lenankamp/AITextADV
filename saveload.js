@@ -355,8 +355,8 @@ async function restoreGameState(data, images = null) {
     updateTime();
 
     // Apply settings to UI elements
-    document.getElementById('q1').style.height = settings.q1_height;
-    document.getElementById('q2').style.height = settings.q2_height;
+    document.getElementById('q1').style.height = settings.topleft_height;
+    document.getElementById('q2').style.height = settings.topright_height;
     content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
 
     // Clean up the map
