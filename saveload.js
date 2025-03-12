@@ -24,7 +24,7 @@ request.onerror = function(event) {
     console.error('Database error:', event.target.errorCode);
 };
 
-async function saveGame() {
+async function saveGame(saveFile = false) {
     // First convert any blob URLs to data URLs
     const playerArt = document.getElementById('playerart');
     let playerImageDataUrl = playerArt.src;
@@ -57,7 +57,9 @@ async function saveGame() {
         }
     };
     objectStore.put(data);
-    await saveToFile(data);
+    if (saveFile) {
+        await saveToFile(data);
+    }
 }
 
 async function saveToFile(data) {

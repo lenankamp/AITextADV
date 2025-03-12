@@ -663,7 +663,7 @@ function openUnifiedEditor(item, type, path = null) {
     refreshDescBtn.innerHTML = '🔄';
     refreshDescBtn.title = 'Regenerate Description';
     refreshDescBtn.onclick = async () => {
-        const newDesc = await generateNewDescription(nameInput.value);
+        const newDesc = await generateNewDescription(nameInput.value, type);
         descInput.value = newDesc;
         item.description = newDesc;
     };
@@ -681,6 +681,7 @@ function openUnifiedEditor(item, type, path = null) {
         visualSection.style.position = 'relative';
         
         const visualLabel = document.createElement('div');
+        visualLabel.className = 'prompt-header';
         visualLabel.style.display = 'flex';
         visualLabel.style.justifyContent = 'space-between';
         visualLabel.style.alignItems = 'center';
@@ -692,7 +693,7 @@ function openUnifiedEditor(item, type, path = null) {
         seedInput.type = 'number';
         seedInput.value = item.seed || Math.floor(Math.random() * 4294967295) + 1;
         seedInput.title = 'Seed';
-        seedInput.style.width = '120px';
+        seedInput.className = 'seed-input';
         
         visualLabel.appendChild(visualLabelText);
         visualLabel.appendChild(seedInput);
@@ -700,7 +701,7 @@ function openUnifiedEditor(item, type, path = null) {
         const visualInput = document.createElement('textarea');
         visualInput.value = item.visual || '';
         visualInput.style.width = '100%';
-        visualInput.style.height = 'calc(100% - 25px)';
+        visualInput.style.height = 'calc(100% - 35px)';
         visualInput.style.resize = 'none';
 
         const refreshVisualBtn = document.createElement('button');
@@ -729,7 +730,10 @@ function openUnifiedEditor(item, type, path = null) {
     actionButtons.style.padding = '10px';
 
     const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save Changes';
+    if (!path && type === 'location' && item.x !== undefined && item.y !== undefined)
+        saveBtn.textContent = 'Save';
+    else saveBtn.textContent = 'Close';
+
     saveBtn.className = 'btn-primary';
     saveBtn.onclick = async () => {
         const newName = nameInput.value.trim();
@@ -741,9 +745,15 @@ function openUnifiedEditor(item, type, path = null) {
             }
         }
         item.description = descInput.value;
+        
+        // Only update visual and seed if the item has visual properties and the inputs exist
         if (item.visual !== undefined) {
-            item.visual = visualInput.value;
-            item.seed = parseInt(seedInput.value);
+            const visualInput = editor.querySelector('textarea[style*="calc(100% - 35px)"]');
+            const seedInput = editor.querySelector('input[type="number"].seed-input');
+            if (visualInput && seedInput) {
+                item.visual = visualInput.value;
+                item.seed = parseInt(seedInput.value);
+            }
         }
 
         if (!path && type === 'location' && item.x !== undefined && item.y !== undefined) {
@@ -757,14 +767,14 @@ function openUnifiedEditor(item, type, path = null) {
             updateImageGrid(currentArea);
         }
     };
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.className = 'btn-secondary';
-    cancelBtn.onclick = () => overlay.remove();
-
+    if (!path && type === 'location' && item.x !== undefined && item.y !== undefined) {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.className = 'btn-secondary';
+        cancelBtn.onclick = () => overlay.remove();
+        actionButtons.appendChild(cancelBtn);
+    }
     actionButtons.appendChild(saveBtn);
-    actionButtons.appendChild(cancelBtn);
 
     editor.appendChild(content);
     editor.appendChild(actionButtons);

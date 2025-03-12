@@ -183,17 +183,49 @@ function moveHere(name, key=false, type=false) {
         }
     } else return;
 }
+function addFollower(name) {
+    const personIndex = areas[currentArea]['people'].findIndex(person => person.name === name);
+    if (personIndex !== -1) {
+        const person = areas[currentArea]['people'].splice(personIndex, 1)[0];
+        person.type = 'people';
+        followers.push(person);
+    } else {
+        const creatureIndex = areas[currentArea]['creatures'].findIndex(creature => creature.name === name);
+        if (creatureIndex !== -1) {
+            const creature = areas[currentArea]['creatures'].splice(creatureIndex, 1)[0];
+            creature.type = 'creatures';
+            followers.push(creature);
+        }
+    }
+    updateImageGrid(currentArea);
+}
+
+function dismissFollower(name) {
+    const followerIndex = followers.findIndex(follower => follower.name === name);
+    if (followerIndex !== -1) {
+        const follower = followers.splice(followerIndex, 1)[0];
+        if (follower.type === 'people') {
+            areas[currentArea]['people'].push(follower);
+        } else if (follower.type === 'creatures') {
+            areas[currentArea]['creatures'].push(follower);
+        }
+    }
+    updateImageGrid(currentArea);
+}
 
 async function addPerson(name, area=currentArea, context="", text="") {
     const descriptionPrompt = replaceVariables(settings.addPersonDescriptionPrompt, {
         name: name
     });
 
-    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
-        text: text
+        text: text,
+        world: settings.world_description,
+        areaName: area.name,
+        areaDescription: area.description
     });
     
     const visual = await generateVisualPrompt(name, description);
@@ -437,7 +469,54 @@ async function entityLeavesArea(name, text) {
     updateImageGrid(currentArea);
 }
 
-        
+async function generateNewDescription(name, type) {
+    if (type === 'people') {
+        const prompt = replaceVariables(settings.addPersonDescriptionPrompt, {
+            name: name,
+            world: settings.world_description
+        });
+        return await generateText(settings.creative_question_param, prompt, '', {
+            name: name,
+            world: settings.world_description,
+            areaName: currentArea.name,
+            areaDescription: currentArea.description
+        });
+    
+    } else if (type === 'creatures') {
+        const prompt = replaceVariables(settings.addCreatureDescriptionPrompt, {
+            name: name,
+            world: settings.world_description
+        });
+        return await generateText(settings.creative_question_param, prompt, '', {
+            name: name,
+            world: settings.world_description,
+            areaName: currentArea.name,
+            areaDescription: currentArea.description
+        });
+    } else if (type === 'things') {
+        const prompt = replaceVariables(settings.addThingDescriptionPrompt, {
+            name: name,
+            world: settings.world_description
+        });
+        return await generateText(settings.creative_question_param, prompt, '', {
+            name: name,
+            world: settings.world_description,
+            areaName: currentArea.name,
+            areaDescription: currentArea.description
+        });
+    } else {
+        const prompt = replaceVariables(settings.addSubLocationDescriptionPrompt, {
+            name: name,
+            world: settings.world_description
+        });
+        return await generateText(settings.creative_question_param, prompt, '', {
+            name: name,
+            world: settings.world_description,
+            areaName: currentArea.name,
+            areaDescription: currentArea.description
+        });
+    }
+}
 
 function addConfirmButton(label, defaultValue, callback) {
     const output = document.getElementById('output');
@@ -811,7 +890,9 @@ function areaContext(areaPath) {
 
     context += replaceVariables(settings.areaTimeContext, {
         timeOfDay: getTimeofDay(),
-        season: getSeason()
+        season: getSeason(),
+        dayOfWeek: getDayofWeek(),
+        time: getPreciseTime()
     });
 
     return context;
@@ -988,11 +1069,13 @@ async function sendMessage(message = input.value) {
                 messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$.]';
             } else return;
         } else {
+            messageElement.innerHTML = message;
             messageElement.innerHTML = await playerAction(message);
         }
     } else {
         messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$.]';
     }
+    messageElement.innerHTML = replaceVariables(messageElement.innerHTML);
 
     output.appendChild(messageElement);
     output.scrollTop = output.scrollHeight;
@@ -1009,6 +1092,7 @@ async function sendMessage(message = input.value) {
 
     await outputCheck(text, '');
     await outputAutoCheck(text, '');
+    await saveGame();
 }
 
 function undoLastAction() {
@@ -1158,6 +1242,18 @@ function getSeason() {
     return seasons[Math.floor((month % 12) / 3)];
 }
 
+function getDayOfWeek() {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dateParts = settings.current_time.match(/(\d+)-(\d+)-(\d+)/).slice(1).map(Number);
+    const [year, month, day] = dateParts;
+    const date = new Date(year, month - 1, day); 
+    return days[date.getDay()];
+}
+
+function getPreciseTime() {
+    return settings.current_time.match(/\d+:\d+:\d+/);
+}
+
 function updateTime() {
     const timeElement = document.getElementById('currentTime');
     const season = getSeason();
@@ -1166,9 +1262,9 @@ function updateTime() {
     const timeSpan = timeElement.querySelector('.time');
     
     const [date] = settings.current_time.split(' ');
-    const [time] = settings.current_time.match(/\d+:\d+:\d+/);
+    const [time] = getPreciseTime();
     
-    dateSeasonSpan.textContent = `${season} ${date}`;
+    dateSeasonSpan.textContent = `${season} ${date} ` + getDayOfWeek();
     timeSpan.textContent = time;
 }
 
@@ -1381,6 +1477,7 @@ async function moveToArea(area, prevArea, text="") {
 
 // At the end of the file, where the initial game setup is done
 let areas = {};
+let followers = [];
 let currentArea;
 
 // get half width and height of map to get center
