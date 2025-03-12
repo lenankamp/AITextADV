@@ -159,7 +159,7 @@ function openSubmenu(name, x, y) {
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit Location';
     editBtn.onclick = () => {
-        openLocationEditor(areas[name], name);
+        openUnifiedEditor(areas[name], 'location', name);
         menu.remove();
     };
     menu.appendChild(editBtn);
@@ -188,79 +188,6 @@ function goToLocation(name) {
     moveToArea(name, currentArea).then(() => {
         updateSublocationRow(name);
     });
-}
-
-function openNewLocationPrompt(x, y) {
-    // Remove any existing overlay
-    const existingOverlay = document.getElementById('newLocationOverlay');
-    if (existingOverlay) {
-        existingOverlay.remove();
-    }
-
-    const overlay = document.createElement('div');
-    overlay.id = 'newLocationOverlay';
-    overlay.classList.add('overlay');
-    overlay.style.display = 'flex';
-
-    const editor = document.createElement('div');
-    editor.classList.add('editor-container');
-
-    const content = document.createElement('div');
-    content.className = 'editor-content';
-
-    // Details section
-    const detailsSection = document.createElement('div');
-    detailsSection.className = 'editor-section';
-
-    // Name input
-    const nameLabel = document.createElement('label');
-    nameLabel.textContent = 'Location Name:';
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.required = true;
-
-    // Description input
-    const descLabel = document.createElement('label');
-    descLabel.textContent = 'Description (optional):';
-    const descInput = document.createElement('textarea');
-    descInput.style.minHeight = '100px';
-
-    detailsSection.appendChild(nameLabel);
-    detailsSection.appendChild(nameInput);
-    detailsSection.appendChild(descLabel);
-    detailsSection.appendChild(descInput);
-
-    content.appendChild(detailsSection);
-
-    // Action buttons
-    const actionButtons = document.createElement('div');
-    actionButtons.className = 'settings-actions';
-
-    const createBtn = document.createElement('button');
-    createBtn.textContent = 'Create';
-    createBtn.className = 'btn-primary';
-    createBtn.onclick = async () => {
-        if (nameInput.value.trim()) {
-            await generateArea(nameInput.value.trim(), descInput.value.trim(), x, y);
-            overlay.remove();
-        }
-    };
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.className = 'btn-secondary';
-    cancelBtn.onclick = () => overlay.remove();
-
-    actionButtons.appendChild(createBtn);
-    actionButtons.appendChild(cancelBtn);
-
-    editor.appendChild(content);
-    editor.appendChild(actionButtons);
-    overlay.appendChild(editor);
-    document.body.appendChild(overlay);
-
-    // Focus the name input
-    nameInput.focus();
 }
 
 function updateSublocationRow(currentAreaPath) {
@@ -334,7 +261,7 @@ function openSublocationMenu(area, path, x, y) {
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit Location';
     editBtn.onclick = () => {
-        openLocationEditor(area, path);
+        openUnifiedEditor(area, 'location', path);
         menu.remove();
     };
     menu.appendChild(editBtn);
@@ -350,158 +277,4 @@ function openSublocationMenu(area, path, x, y) {
             document.removeEventListener('click', closeSubMenu);
         }
     });
-}
-
-function openLocationEditor(area, path) {
-    const overlay = document.createElement('div');
-    overlay.classList.add('overlay');
-    overlay.style.display = 'flex';
-
-    const editor = document.createElement('div');
-    editor.classList.add('editor-container');
-
-    const content = document.createElement('div');
-    content.className = 'editor-content';
-
-    // Image preview section
-    const previewSection = document.createElement('div');
-    previewSection.className = 'editor-section';
-
-    if (areas[path]) {
-        // Full location editor for generated areas
-        const previewImage = document.createElement('img');
-        previewImage.className = 'editor-preview-image';
-        if (area.image instanceof Blob) {
-            previewImage.src = URL.createObjectURL(area.image);
-        } else {
-            previewImage.src = 'placeholder.png';
-        }
-        previewSection.appendChild(previewImage);
-        content.appendChild(previewSection);
-    }
-
-    // Details section
-    const detailsSection = document.createElement('div');
-    detailsSection.className = 'editor-section';
-
-    // Name input
-    const nameLabel = document.createElement('label');
-    nameLabel.textContent = 'Location Name:';
-    const nameInput = document.createElement('input');
-    nameInput.value = path.split('/').pop();
-    nameInput.type = 'text';
-    
-    // Description input
-    const descLabel = document.createElement('label');
-    descLabel.textContent = 'Description:';
-    const descInput = document.createElement('textarea');
-    descInput.value = area.description;
-    descInput.style.minHeight = '100px';
-
-    detailsSection.appendChild(nameLabel);
-    detailsSection.appendChild(nameInput);
-    detailsSection.appendChild(descLabel);
-    detailsSection.appendChild(descInput);
-
-    let visualSection;
-    if (areas[path]) {
-        // Visual section for generated areas
-        visualSection = document.createElement('div');
-        visualSection.className = 'editor-section';
-
-        // Visual prompt input
-        const visualLabel = document.createElement('label');
-        visualLabel.textContent = 'Visual Prompt:';
-        const visualInput = document.createElement('textarea');
-        visualInput.value = area.visual || '';
-        visualInput.style.minHeight = '100px';
-
-        // Seed input
-        const seedLabel = document.createElement('label');
-        seedLabel.textContent = 'Seed:';
-        const seedInput = document.createElement('input');
-        seedInput.type = 'number';
-        seedInput.value = area.seed || Math.floor(Math.random() * 4294967295) + 1;
-
-        visualSection.appendChild(visualLabel);
-        visualSection.appendChild(visualInput);
-        visualSection.appendChild(seedLabel);
-        visualSection.appendChild(seedInput);
-    }
-
-    content.appendChild(detailsSection);
-    if (visualSection) content.appendChild(visualSection);
-
-    // Action buttons
-    const actionButtons = document.createElement('div');
-    actionButtons.className = 'settings-actions';
-
-    if (areas[path]) {
-        // Regenerate visual prompt button
-        const regenPromptBtn = document.createElement('button');
-        regenPromptBtn.textContent = 'Regenerate Visual Prompt';
-        regenPromptBtn.className = 'btn-secondary';
-        regenPromptBtn.onclick = async () => {
-            const newVisual = await generateVisualPrompt(area.name, descInput.value);
-            area.visual = newVisual;
-            visualInput.value = newVisual;
-        };
-        actionButtons.appendChild(regenPromptBtn);
-
-        // Regenerate image button
-        const regenBtn = document.createElement('button');
-        regenBtn.textContent = 'Regenerate Image';
-        regenBtn.className = 'btn-secondary';
-        regenBtn.onclick = async () => {
-            area.visual = visualInput.value;
-            area.seed = parseInt(seedInput.value);
-            const artBlob = await generateArt(area.visual, "", area.seed);
-            if (artBlob instanceof Blob) {
-                area.image = artBlob;
-                const previewImage = previewSection.querySelector('.editor-preview-image');
-                previewImage.src = URL.createObjectURL(artBlob);
-                if (path === currentArea) {
-                    // ...existing code...
-                }
-                const locationElement = document.getElementById(`location-${path}`);
-                if (locationElement) {
-                    // ...existing code...
-                }
-                updateImageGrid(currentArea);
-            }
-        };
-        actionButtons.appendChild(regenBtn);
-    }
-
-    // Save button
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save Changes';
-    saveBtn.className = 'btn-primary';
-    saveBtn.onclick = () => {
-        const newName = nameInput.value.trim();
-        if (newName && newName !== path.split('/').pop()) {
-            // ...existing code...
-        }
-        area.description = descInput.value;
-        if (areas[path] && visualSection) {
-            area.visual = visualSection.querySelector('textarea').value;
-            area.seed = parseInt(visualSection.querySelector('input[type="number"]').value);
-        }
-        overlay.remove();
-        updateSublocationRow(currentArea);
-    };
-
-    // Cancel button
-    const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.className = 'btn-secondary';
-    cancelBtn.onclick = () => overlay.remove();
-
-    actionButtons.appendChild(saveBtn);
-    actionButtons.appendChild(cancelBtn);
-
-    editor.appendChild(content);
-    editor.appendChild(actionButtons);
-    overlay.appendChild(editor);
-    document.body.appendChild(overlay);
 }

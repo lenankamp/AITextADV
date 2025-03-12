@@ -263,6 +263,7 @@ function openSettings() {
     const saveButton = document.createElement('button');
     saveButton.textContent = 'Save Changes';
     saveButton.className = 'btn-primary';
+    saveButton.type = 'button'; // Explicitly set type to button
     saveButton.onclick = saveSettings;
     
     const cancelButton = document.createElement('button');
@@ -305,35 +306,62 @@ function openSettings() {
 }
 
 function closeSettings() {
-    const overlay = document.getElementById('settingsOverlay');
-    overlay.style.display = 'none';
+    document.getElementById('settingsOverlay').style.display = 'none';
 }
 
 function saveSettings() {
     const form = document.getElementById('settingsForm');
+
+    // Prevent form submission if this was triggered by a submit event
+    if (event && event.preventDefault) {
+        event.preventDefault();
+    }
+
+    const newSettings = {...settings}; // Create a copy of current settings
+
     // Update settings with form values
     for (const key in settings) {
         if (settings.hasOwnProperty(key)) {
             const input = form.elements[key];
-            if (input) {
-                if (input.type === 'checkbox') {
-                    settings[key] = input.checked;
-                } else if (input.tagName === 'TEXTAREA') {
-                    settings[key] = JSON.parse(input.value);
+            if (!input) continue;
+
+            try {
+                if (typeof settings[key] === 'boolean') {
+                    newSettings[key] = input.checked;
+                } else if (typeof settings[key] === 'object') {
+                    newSettings[key] = JSON.parse(input.value);
                 } else {
-                    if (!isNaN(input.value) && input.value.trim() !== '') {
-                        settings[key] = parseInt(input.value);
-                    } else {
-                        settings[key] = input.value.replace(/\\n/g, '\n');
-                    }
+                    newSettings[key] = input.value;
                 }
+            } catch (e) {
+                console.error(`Error parsing value for ${key}:`, e);
             }
         }
     }
-    document.getElementById('q1').style.height = settings.q1_height;
-    document.getElementById('q2').style.height = settings.q2_height;
-    content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
+
+    // Update the settings object
+    settings = newSettings;
+
+    // Save settings to storage
+    try {
+        localStorage.setItem('settings', JSON.stringify(settings));
+    } catch (e) {
+        console.error('Error saving settings to localStorage:', e);
+    }
+
+    // Apply visual settings
+    try {
+        document.getElementById('q1').style.height = settings.q1_height;
+        document.getElementById('q2').style.height = settings.q2_height;
+        document.getElementById('q3').style.height = `calc(100vh - ${settings.q1_height} - 5px)`;
+        document.getElementById('q4').style.height = `calc(100vh - ${settings.q2_height} - 5px)`;
+        document.querySelector('.content').style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
+    } catch (e) {
+        console.error('Error applying visual settings:', e);
+    }
+
     closeSettings();
+    return false; // Prevent form submission
 }
 
 function updateImageGrid(areaName) {
@@ -446,22 +474,12 @@ function openEntitySubmenu(entity, category, x, y) {
     submenu = document.createElement('div');
     submenu.id = 'entitySubmenu';
     submenu.classList.add('submenu');
-    submenu.style.display = 'block'; // Set display to block to make it visible
+    submenu.style.display = 'block';
 
-    const renameBtn = document.createElement('button');
-    renameBtn.textContent = 'Rename';
-    renameBtn.onclick = () => {
-        const newName = prompt('Enter new name:', entity.name);
-        if (newName && newName !== entity.name) {
-            renameEntity(newName, entity.name);
-            submenu.remove();
-        }
-    };
-
-    const editDescBtn = document.createElement('button');
-    editDescBtn.textContent = 'Edit Description';
-    editDescBtn.onclick = () => {
-        openDescriptionEditor(entity, category);
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = () => {
+        openUnifiedEditor(entity, category);
         submenu.remove();
     };
 
@@ -478,25 +496,15 @@ function openEntitySubmenu(entity, category, x, y) {
         submenu.remove();
     };
 
-    const editVisualBtn = document.createElement('button');
-    editVisualBtn.textContent = 'Edit Visual';
-    editVisualBtn.onclick = () => {
-        openVisualEditor(entity, category);
-        submenu.remove();
-    };
-
-    submenu.appendChild(renameBtn);
-    submenu.appendChild(editDescBtn);
-    submenu.appendChild(editVisualBtn);
+    submenu.appendChild(editBtn);
     submenu.appendChild(removeBtn);
 
     submenu.style.left = x + 'px';
     submenu.style.top = y + 'px';
-    submenu.style.position = 'fixed'; // Ensure it's positioned relative to viewport
+    submenu.style.position = 'fixed';
 
     document.body.appendChild(submenu);
 
-    // Close menu when clicking outside
     document.addEventListener('click', function closeSubmenu(e) {
         if (!submenu.contains(e.target)) {
             submenu.remove();
@@ -505,41 +513,255 @@ function openEntitySubmenu(entity, category, x, y) {
     });
 }
 
-function openDescriptionEditor(entity, category) {
+function openNewLocationPrompt(x, y) {
+    // Create a temporary location object
+    const tempLocation = {
+        name: '',
+        description: '',
+        x: x,
+        y: y,
+        visual: '',
+        seed: Math.floor(Math.random() * 4294967295) + 1,
+        image: 'placeholder.png',
+        people: [],
+        things: [],
+        creatures: [],
+        sublocations: {}
+    };
+
+    // Open the unified editor with the temporary location
+    // The path is null since this is a new location
+    openUnifiedEditor(tempLocation, 'location', null);
+}
+
+function openUnifiedEditor(item, type, path = null) {
     const overlay = document.createElement('div');
     overlay.classList.add('overlay');
     overlay.style.display = 'flex';
 
     const editor = document.createElement('div');
     editor.classList.add('editor-container');
+    editor.style.display = 'grid';
+    editor.style.gridTemplateRows = 'auto 1fr auto';
+    editor.style.gap = '10px';
+    editor.style.maxHeight = '90vh';
+    editor.style.width = '90vw';
+    editor.style.maxWidth = '800px';
 
+    // Main content area with grid layout
     const content = document.createElement('div');
     content.className = 'editor-content';
+    content.style.display = 'grid';
+    content.style.gridTemplateColumns = '1fr 1fr';
+    content.style.gap = '10px';
+    content.style.height = '100%';
+    content.style.overflow = 'hidden';
 
-    const textarea = document.createElement('textarea');
-    textarea.value = entity.description;
-    textarea.className = 'setting-item textarea';
-    textarea.style.minHeight = '300px';
-    content.appendChild(textarea);
+    // Left side - Preview and Name
+    const leftColumn = document.createElement('div');
+    leftColumn.className = 'editor-column';
+    leftColumn.style.display = 'grid';
+    leftColumn.style.gridTemplateRows = 'auto auto 1fr';
+    leftColumn.style.gap = '10px';
+    leftColumn.style.height = '100%';
 
+    // Preview section with corner refresh button
+    const previewSection = document.createElement('div');
+    previewSection.className = 'editor-section preview-section';
+    previewSection.style.position = 'relative';
+    previewSection.style.aspectRatio = '1';
+
+    if (item.image) {
+        const previewImage = document.createElement('img');
+        previewImage.className = 'editor-preview-image';
+        previewImage.style.width = '100%';
+        previewImage.style.height = '100%';
+        previewImage.style.objectFit = 'cover';
+        if (item.image instanceof Blob) {
+            previewImage.src = URL.createObjectURL(item.image);
+        } else {
+            previewImage.src = 'placeholder.png';
+        }
+        previewSection.appendChild(previewImage);
+
+        if (item.visual !== undefined) {
+            const refreshImageBtn = document.createElement('button');
+            refreshImageBtn.className = 'refresh-button top-right';
+            refreshImageBtn.innerHTML = '🔄';
+            refreshImageBtn.title = 'Regenerate Image';
+            refreshImageBtn.onclick = async () => {
+                let negprompt = "";
+                let posprompt = "";
+                if (type === "people") {
+                    posprompt = settings.person_prompt;
+                    negprompt = settings.person_negprompt;
+                } else if (type === "creatures") {
+                    posprompt = settings.creature_prompt;
+                    negprompt = settings.creature_negprompt;
+                } else if (type === "things") {
+                    posprompt = settings.thing_prompt;
+                    negprompt = settings.thing_negprompt;
+                }
+                const artBlob = await generateArt(posprompt + item.visual, negprompt, item.seed);
+                if (artBlob instanceof Blob) {
+                    item.image = artBlob;
+                    previewImage.src = URL.createObjectURL(artBlob);
+                    if (path === currentArea) {
+                        document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
+                    }
+                    if (path) {
+                        const locationElement = document.getElementById(`location-${path}`);
+                        if (locationElement) {
+                            locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
+                        }
+                    }
+                    updateImageGrid(currentArea);
+                }
+            };
+            previewSection.appendChild(refreshImageBtn);
+        }
+    }
+
+    // Name input
+    const nameSection = document.createElement('div');
+    nameSection.className = 'editor-section';
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Name:';
+    const nameInput = document.createElement('input');
+    nameInput.value = path ? path.split('/').pop() : item.name;
+    nameInput.type = 'text';
+    nameInput.style.width = '100%';
+    nameSection.appendChild(nameLabel);
+    nameSection.appendChild(nameInput);
+    
+    leftColumn.appendChild(previewSection);
+    leftColumn.appendChild(nameSection);
+
+    // Right side - Description and Visual
+    const rightColumn = document.createElement('div');
+    rightColumn.className = 'editor-column';
+    rightColumn.style.display = 'grid';
+    rightColumn.style.gridTemplateRows = item.visual !== undefined ? '1fr 1fr' : '1fr';
+    rightColumn.style.gap = '10px';
+    rightColumn.style.height = '100%';
+
+    // Description section with refresh button
+    const descSection = document.createElement('div');
+    descSection.className = 'editor-section';
+    descSection.style.position = 'relative';
+    
+    const descLabel = document.createElement('label');
+    descLabel.textContent = 'Description:';
+    const descInput = document.createElement('textarea');
+    descInput.value = item.description;
+    descInput.style.width = '100%';
+    descInput.style.height = 'calc(100% - 25px)';
+    descInput.style.resize = 'none';
+
+    const refreshDescBtn = document.createElement('button');
+    refreshDescBtn.className = 'refresh-button top-right';
+    refreshDescBtn.innerHTML = '🔄';
+    refreshDescBtn.title = 'Regenerate Description';
+    refreshDescBtn.onclick = async () => {
+        const newDesc = await generateNewDescription(nameInput.value);
+        descInput.value = newDesc;
+        item.description = newDesc;
+    };
+
+    descSection.appendChild(descLabel);
+    descSection.appendChild(descInput);
+    descSection.appendChild(refreshDescBtn);
+    
+    rightColumn.appendChild(descSection);
+
+    // Visual section with refresh button
+    if (item.visual !== undefined) {
+        const visualSection = document.createElement('div');
+        visualSection.className = 'editor-section';
+        visualSection.style.position = 'relative';
+        
+        const visualLabel = document.createElement('div');
+        visualLabel.style.display = 'flex';
+        visualLabel.style.justifyContent = 'space-between';
+        visualLabel.style.alignItems = 'center';
+        
+        const visualLabelText = document.createElement('label');
+        visualLabelText.textContent = 'Visual Prompt:';
+        
+        const seedInput = document.createElement('input');
+        seedInput.type = 'number';
+        seedInput.value = item.seed || Math.floor(Math.random() * 4294967295) + 1;
+        seedInput.title = 'Seed';
+        seedInput.style.width = '120px';
+        
+        visualLabel.appendChild(visualLabelText);
+        visualLabel.appendChild(seedInput);
+        
+        const visualInput = document.createElement('textarea');
+        visualInput.value = item.visual || '';
+        visualInput.style.width = '100%';
+        visualInput.style.height = 'calc(100% - 25px)';
+        visualInput.style.resize = 'none';
+
+        const refreshVisualBtn = document.createElement('button');
+        refreshVisualBtn.className = 'refresh-button top-right';
+        refreshVisualBtn.innerHTML = '🔄';
+        refreshVisualBtn.title = 'Regenerate Visual Prompt';
+        refreshVisualBtn.onclick = async () => {
+            const newVisual = await generateVisualPrompt(nameInput.value, descInput.value);
+            visualInput.value = type === 'things' ? `(${nameInput.value}), ${newVisual}` : newVisual;
+            item.visual = visualInput.value;
+        };
+
+        visualSection.appendChild(visualLabel);
+        visualSection.appendChild(visualInput);
+        visualSection.appendChild(refreshVisualBtn);
+        
+        rightColumn.appendChild(visualSection);
+    }
+
+    content.appendChild(leftColumn);
+    content.appendChild(rightColumn);
+
+    // Action buttons
     const actionButtons = document.createElement('div');
     actionButtons.className = 'settings-actions';
-    
+    actionButtons.style.padding = '10px';
+
     const saveBtn = document.createElement('button');
     saveBtn.textContent = 'Save Changes';
     saveBtn.className = 'btn-primary';
     saveBtn.onclick = async () => {
-        entity.description = textarea.value;
+        const newName = nameInput.value.trim();
+        if (newName && ((path && newName !== path.split('/').pop()) || (!path && newName !== item.name))) {
+            if (path) {
+                console.log('Location name changed to:', newName);
+            } else {
+                renameEntity(newName, item.name);
+            }
+        }
+        item.description = descInput.value;
+        if (item.visual !== undefined) {
+            item.visual = visualInput.value;
+            item.seed = parseInt(seedInput.value);
+        }
+
+        if (!path && type === 'location' && item.x !== undefined && item.y !== undefined) {
+            await generateArea(newName, item.description, item.x, item.y);
+        }
+
         overlay.remove();
-        updateImageGrid(currentArea);
+        if (path) {
+            updateSublocationRow(currentArea);
+        } else {
+            updateImageGrid(currentArea);
+        }
     };
 
     const cancelBtn = document.createElement('button');
     cancelBtn.textContent = 'Cancel';
     cancelBtn.className = 'btn-secondary';
-    cancelBtn.onclick = () => {
-        overlay.remove();
-    };
+    cancelBtn.onclick = () => overlay.remove();
 
     actionButtons.appendChild(saveBtn);
     actionButtons.appendChild(cancelBtn);
@@ -549,129 +771,5 @@ function openDescriptionEditor(entity, category) {
     overlay.appendChild(editor);
     document.body.appendChild(overlay);
 
-    setTimeout(() => textarea.focus(), 100);
-}
-
-function openVisualEditor(entity, category) {
-    const overlay = document.createElement('div');
-    overlay.classList.add('overlay');
-    overlay.style.display = 'flex';
-
-    const editor = document.createElement('div');
-    editor.classList.add('editor-container');
-
-    const content = document.createElement('div');
-    content.className = 'editor-content';
-
-    // Image Preview Section
-    const previewSection = document.createElement('div');
-    previewSection.className = 'editor-section';
-    
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(entity.image);
-    img.className = 'editor-preview-image';
-    previewSection.appendChild(img);
-    
-    // Prompt Section
-    const promptSection = document.createElement('div');
-    promptSection.className = 'editor-section';
-    
-    const promptContainer = document.createElement('div');
-    promptContainer.className = 'setting-item';
-    
-    const promptLabel = document.createElement('label');
-    promptLabel.textContent = 'Visual Prompt';
-    promptContainer.appendChild(promptLabel);
-    
-    const visualPrompt = document.createElement('textarea');
-    visualPrompt.value = entity.visual;
-    visualPrompt.style.minHeight = '100px';
-    promptContainer.appendChild(visualPrompt);
-    
-    promptSection.appendChild(promptContainer);
-
-    // Seed Section
-    const seedContainer = document.createElement('div');
-    seedContainer.className = 'setting-item';
-    
-    const seedLabel = document.createElement('label');
-    seedLabel.textContent = 'Seed';
-    seedContainer.appendChild(seedLabel);
-    
-    const seedInput = document.createElement('input');
-    seedInput.type = 'number';
-    seedInput.value = entity.seed;
-    seedContainer.appendChild(seedInput);
-    
-    promptSection.appendChild(seedContainer);
-
-    content.appendChild(previewSection);
-    content.appendChild(promptSection);
-
-    const actionButtons = document.createElement('div');
-    actionButtons.className = 'settings-actions';
-
-    const regeneratePromptBtn = document.createElement('button');
-    regeneratePromptBtn.textContent = 'Regenerate Prompt';
-    regeneratePromptBtn.className = 'btn-secondary';
-    regeneratePromptBtn.onclick = async () => {
-        const newPrompt = await generateVisualPrompt(entity.name, entity.description);
-        visualPrompt.value = category === 'things' ? `(${entity.name}), ${newPrompt}` : newPrompt;
-        entity.visual = visualPrompt.value;
-    };
-
-    const regenerateBtn = document.createElement('button');
-    regenerateBtn.textContent = 'Regenerate Image';
-    regenerateBtn.className = 'btn-secondary';
-    regenerateBtn.onclick = async () => {
-        entity.visual = visualPrompt.value;
-        entity.seed = parseInt(seedInput.value);
-        let negprompt = "";
-        let posprompt = "";
-        if (category === "people") {
-            posprompt = settings.person_prompt;
-            negprompt = settings.person_negprompt;
-        } else if (category === "creatures") {
-            posprompt = settings.creature_prompt;
-            negprompt = settings.creature_negprompt;
-        } else if (category === "things") {
-            posprompt = settings.thing_prompt;
-            negprompt = settings.thing_negprompt;
-        }
-        const artBlob = await generateArt(posprompt + entity.visual, negprompt, entity.seed);
-        if (artBlob instanceof Blob) {
-            entity.image = artBlob;
-            img.src = URL.createObjectURL(artBlob);
-        }
-    };
-
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save Changes';
-    saveBtn.className = 'btn-primary';
-    saveBtn.onclick = () => {
-        entity.visual = visualPrompt.value;
-        entity.seed = parseInt(seedInput.value);
-        overlay.remove();
-        updateImageGrid(currentArea);
-    };
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.className = 'btn-secondary';
-    cancelBtn.onclick = () => {
-        overlay.remove();
-        updateImageGrid(currentArea);
-    };
-
-    actionButtons.appendChild(regeneratePromptBtn);
-    actionButtons.appendChild(regenerateBtn);
-    actionButtons.appendChild(saveBtn);
-    actionButtons.appendChild(cancelBtn);
-
-    editor.appendChild(content);
-    editor.appendChild(actionButtons);
-    overlay.appendChild(editor);
-    document.body.appendChild(overlay);
-
-    setTimeout(() => visualPrompt.focus(), 100);
+    setTimeout(() => nameInput.focus(), 100);
 }

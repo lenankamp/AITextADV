@@ -17,7 +17,6 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0) 
     if (areas[areaName]) {
         return;
     }
-    console.log('Generating area:', areaName);
     let area;
     areas[areaName] = {};
     area = areas[areaName];
@@ -1173,25 +1172,9 @@ function updateTime() {
     timeSpan.textContent = time;
 }
 
-let areas = {};
-let currentArea;
-
-    // get half width and height of map to get center
-    const mapWidth = map.offsetWidth;
-    const mapHeight = map.offsetHeight;
-    const centerX = (mapContainer.clientWidth - mapWidth) / 2;
-    const centerY = (mapContainer.clientHeight - mapHeight) / 2;
-    map.style.left = `${centerX}px`;
-    map.style.top = `${centerY}px`;
-    loadSettings();
-    overrideSettings();
-    areas[settings.starting_area] = {};
-    currentArea = settings.starting_area;
-    updateTime();
-
 // Update restartGame function
 function restartGame() {
-    loadSettings();     // for debugging, rest to default settings to clear settings from
+    loadDefaultSettings();     // for debugging, rest to default settings to clear settings from
     overrideSettings(); // previous game that was auto loaded
     
     // Clean up any existing object URLs
@@ -1223,16 +1206,6 @@ function updateApproachDisplay() {
         document.getElementById('sneaky').textContent = settings.charsheet_fae.approaches.sneaky || '0';
     }
 }
-
-// At the end of the file, where the initial game setup is done
-loadSettings();
-overrideSettings();
-areas[settings.starting_area] = {};
-currentArea = settings.starting_area;
-updateTime();
-updateApproachDisplay();
-updateCharacterInfo();
-updateConsequences();
 
 function updateAreaDisplay(areaName) {
     const areaNameOverlay = document.getElementById('areaNameOverlay');
@@ -1405,3 +1378,23 @@ async function moveToArea(area, prevArea, text="") {
     updateImageGrid(currentArea);
     updateSublocationRow(currentArea);
 }
+
+// At the end of the file, where the initial game setup is done
+let areas = {};
+let currentArea;
+
+// get half width and height of map to get center
+const mapWidth = map.offsetWidth;
+const mapHeight = map.offsetHeight;
+const centerX = (mapContainer.clientWidth - mapWidth) / 2;
+const centerY = (mapContainer.clientHeight - mapHeight) / 2;
+map.style.left = `${centerX}px`;
+map.style.top = `${centerY}px`;
+loadDefaultSettings();
+overrideSettings();
+areas[settings.starting_area] = {};
+currentArea = settings.starting_area;
+updateTime();
+updateApproachDisplay();
+updateCharacterInfo();
+updateConsequences();

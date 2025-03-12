@@ -1,6 +1,6 @@
 let settings;
 
-function loadSettings() {
+function loadDefaultSettings() {
   const defaultSettings = {
     //ui settings
     q1_height: "600px",

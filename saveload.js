@@ -111,12 +111,6 @@ async function saveToFile(data) {
 
     const imagePromises = Object.keys(images).map(async key => {
         const imageBlob = images[key];
-        console.log(`Debug - Image for ${key}:`, {
-            type: typeof imageBlob,
-            isBlob: imageBlob instanceof Blob,
-            constructor: imageBlob?.constructor?.name,
-            value: imageBlob
-        });
         
         // If it's already a data URL, keep it as is
         if (typeof imageBlob === 'string' && imageBlob.startsWith('data:')) {
