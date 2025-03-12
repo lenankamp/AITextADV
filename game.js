@@ -178,14 +178,14 @@ function moveHere(name, key=false, type=false) {
     } else return;
 }
 
-function addFollower(name) {
-    const personIndex = areas[currentArea]['people'].findIndex(person => person.name === name);
+function addFollower(entity) {
+    const personIndex = areas[currentArea]['people'].findIndex(person => person === entity);
     if (personIndex !== -1) {
         const person = areas[currentArea]['people'].splice(personIndex, 1)[0];
         person.type = 'people';
         followers.push(person);
     } else {
-        const creatureIndex = areas[currentArea]['creatures'].findIndex(creature => creature.name === name);
+        const creatureIndex = areas[currentArea]['creatures'].findIndex(creature => creature === entity);
         if (creatureIndex !== -1) {
             const creature = areas[currentArea]['creatures'].splice(creatureIndex, 1)[0];
             creature.type = 'creatures';
@@ -195,8 +195,8 @@ function addFollower(name) {
     updateImageGrid(currentArea);
 }
 
-function dismissFollower(name) {
-    const followerIndex = followers.findIndex(follower => follower.name === name);
+function dismissFollower(entity) {
+    const followerIndex = followers.findIndex(follower => follower === entity);
     if (followerIndex !== -1) {
         const follower = followers.splice(followerIndex, 1)[0];
         if (follower.type === 'people') {

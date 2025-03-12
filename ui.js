@@ -504,7 +504,7 @@ function openEntitySubmenu(entity, category, x, y) {
         dismissBtn.onclick = (e) => {
             e.stopPropagation();
             console.log('Dismiss button clicked for:', entity.name);
-            dismissFollower(entity.name);
+            dismissFollower(entity);
             updateFollowerArt();
             submenu.remove();
             if (submenu.closeHandler) {
@@ -540,7 +540,7 @@ function openEntitySubmenu(entity, category, x, y) {
             followBtn.textContent = 'Add Follower';
             followBtn.onclick = (e) => {
                 e.stopPropagation();
-                addFollower(entity.name);
+                addFollower(entity);
                 updateFollowerArt();
                 submenu.remove();
                 if (submenu.closeHandler) {
@@ -882,57 +882,68 @@ function updateFollowerArt() {
         followersContainer.style.width = '30%';
         const width = `${100 / followers.length}%`;
         
-        // Handle existing followers first
-        const existingFollowers = Array.from(followersContainer.children);
-        existingFollowers.forEach((img) => {
+        // Update existing images' widths first
+        Array.from(followersContainer.children).forEach(img => {
             img.style.width = width;
         });
 
-        // Add new follower after a small delay
-        const newFollower = followers[followers.length - 1];
-        const img = document.createElement('img');
-        img.classList.add('follower-image');
-        img.style.width = width;
-        
-        if (newFollower.image instanceof Blob) {
-            img.src = URL.createObjectURL(newFollower.image);
-        } else if (newFollower.image === 'placeholder') {
-            img.src = 'placeholder.png';
-            setTimeout(async () => {
-                let negprompt = "";
-                let posprompt = "";
-                if (newFollower.type === "people") {
-                    posprompt = settings.person_prompt;
-                    negprompt = settings.person_negprompt;
-                } else if (newFollower.type === "creatures") {
-                    posprompt = settings.creature_prompt;
-                    negprompt = settings.creature_negprompt;
+        // Add/update followers
+        followers.forEach((follower) => {
+            let img = followersContainer.querySelector(`img[data-follower-name="${follower.name}"]`);
+            
+            if (!img) {
+                img = document.createElement('img');
+                img.classList.add('follower-image', 'show');
+                img.dataset.followerName = follower.name;
+                img.style.width = width;
+                
+                if (follower.image instanceof Blob) {
+                    img.src = URL.createObjectURL(follower.image);
+                } else if (follower.image === 'placeholder') {
+                    img.src = 'placeholder.png';
+                    setTimeout(async () => {
+                        let negprompt = "";
+                        let posprompt = "";
+                        if (follower.type === "people") {
+                            posprompt = settings.person_prompt;
+                            negprompt = settings.person_negprompt;
+                        } else if (follower.type === "creatures") {
+                            posprompt = settings.creature_prompt;
+                            negprompt = settings.creature_negprompt;
+                        }
+                        const artBlob = await generateArt(posprompt + follower.visual, negprompt, follower.seed);
+                        if (artBlob instanceof Blob) {
+                            follower.image = artBlob;
+                            img.src = URL.createObjectURL(artBlob);
+                        }
+                    }, 0);
                 }
-                const artBlob = await generateArt(posprompt + newFollower.visual, negprompt, newFollower.seed);
-                if (artBlob instanceof Blob) {
-                    newFollower.image = artBlob;
-                    img.src = URL.createObjectURL(artBlob);
-                }
-            }, 0);
-        }
-        
-        img.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const submenu = document.getElementById('entitySubmenu');
-            if (submenu) {
-                if (submenu.closeHandler) {
-                    document.removeEventListener('click', submenu.closeHandler);
-                }
-                submenu.remove();
+                
+                img.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const submenu = document.getElementById('entitySubmenu');
+                    if (submenu) {
+                        if (submenu.closeHandler) {
+                            document.removeEventListener('click', submenu.closeHandler);
+                        }
+                        submenu.remove();
+                    }
+                    openEntitySubmenu(follower, follower.type, e.clientX, e.clientY);
+                });
+                
+                followersContainer.appendChild(img);
             }
-            openEntitySubmenu(newFollower, newFollower.type, e.clientX, e.clientY);
         });
-        
-        followersContainer.appendChild(img);
-        
-        // Trigger the animation after a small delay
-        requestAnimationFrame(() => {
-            img.classList.add('show');
+
+        // Remove any followers that are no longer in the list
+        Array.from(followersContainer.children).forEach(img => {
+            const followerName = img.dataset.followerName;
+            if (!followers.some(f => f.name === followerName)) {
+                if (img.src && img.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(img.src);
+                }
+                followersContainer.removeChild(img);
+            }
         });
     } else {
         followersContainer.style.width = '0';
