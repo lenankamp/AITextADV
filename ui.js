@@ -95,42 +95,213 @@ function stopDragMap() {
 function openSettings() {
     const overlay = document.getElementById('settingsOverlay');
     const form = document.getElementById('settingsForm');
-    form.innerHTML = ''; // Clear the form
+    form.innerHTML = '';
 
-    // Dynamically populate the form with current settings
+    const sections = {
+        'UI': ['column_width', 'q1_height', 'q2_height'],
+        'World Generation': [
+            'world_description', 'starting_area', 'starting_area_description', 
+            'current_time'
+        ],
+        'Player Details': [
+            'player_name', 'player_description', 'player_visual', 'player_seed',
+            'rule_set'
+        ],
+        'Generation Settings': [
+            'sdAPI', 'default_prompt', 'default_negative_prompt',
+            'person_prompt', 'person_negprompt',
+            'creature_prompt', 'creature_negprompt',
+            'thing_prompt', 'thing_negprompt',
+            'sd_width', 'sd_height', 'steps', 'cfg_scale',
+            'save_images', 'sampler_name', 'seed_variation'
+        ],
+        'Text Generation': [
+            'story_param', 'question_param', 'creative_question_param',
+            'output_length', 'full_context'
+        ],
+        'Text Prompts': [
+            'generateAreaDescriptionPrompt', 'areaContext', 'areaPeopleContext',
+            'areaThingsContext', 'areaCreaturesContext', 'areaPathsContext',
+            'areaTimeContext', 'subLocationFormat', 'entityFormat',
+            'action_string', 'generateSublocationsPrompt', 'generateEntitiesPrompt',
+            'generateVisualPrompt', 'addPersonDescriptionPrompt',
+            'addThingDescriptionPrompt', 'addCreatureDescriptionPrompt',
+            'addSubLocationDescriptionPrompt', 'outputCheckPrompt',
+            'outputAutoCheckPrompt', 'consequencePrompt',
+            'moveToAreaProximityPrompt', 'moveToAreaPeoplePrompt',
+            'entityLeavesAreaPrompt', 'generateNewDescription'
+        ],
+        'Rule System': ['ruleprompt_fae_action1', 'charsheet_fae'],
+        'Sample Data': ['sampleSublocations', 'sampleEntities', 'sampleQuestions']
+    };
+
+    // Create search filter
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'settings-search';
+    
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Search settings...';
+    searchInput.className = 'settings-search-input';
+    
+    searchContainer.appendChild(searchInput);
+    form.appendChild(searchContainer);
+
+    // Create sections container
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.className = 'settings-sections';
+
+    // Helper function for tooltips
+    const createTooltip = (key) => {
+        const tooltips = {
+            'column_width': 'Width of the left side panel in pixels',
+            'q1_height': 'Height of the top quadrant in pixels',
+            'q2_height': 'Height of the middle quadrant in pixels',
+            'person_prompt': 'Base prompt used when generating character images. Will be combined with specific character details.',
+            'person_negprompt': 'Negative prompt to avoid unwanted elements in character images',
+            'creature_prompt': 'Base prompt for generating creature images. Will be combined with specific creature details.',
+            'creature_negprompt': 'Negative prompt to avoid unwanted elements in creature images',
+            'thing_prompt': 'Base prompt for generating object and item images. Will be combined with specific item details.',
+            'thing_negprompt': 'Negative prompt to avoid unwanted elements in object images'
+        };
+        return tooltips[key] || 'Configure this setting';
+    };
+
+    // Process settings and create sections
     for (const key in settings) {
         if (settings.hasOwnProperty(key)) {
             const value = settings[key];
-            const label = document.createElement('label');
-            label.textContent = key;
-            form.appendChild(label);
+            
+            // Determine section
+            let sectionName = 'Other';
+            for (const [section, keys] of Object.entries(sections)) {
+                if (keys.includes(key)) {
+                    sectionName = section;
+                    break;
+                }
+            }
 
+            // Get or create section
+            let section = sectionsContainer.querySelector(`.settings-section[data-section="${sectionName}"]`);
+            if (!section) {
+                section = document.createElement('div');
+                section.className = 'settings-section';
+                section.dataset.section = sectionName;
+                
+                const header = document.createElement('div');
+                header.className = 'settings-section-header';
+                header.innerHTML = `<span>${sectionName}</span><span class="section-toggle">▼</span>`;
+                header.onclick = (e) => {
+                    const isCollapsed = section.classList.toggle('collapsed');
+                    const toggle = header.querySelector('.section-toggle');
+                    toggle.style.transform = isCollapsed ? 'rotate(-90deg)' : '';
+                    e.stopPropagation();
+                };
+                
+                const content = document.createElement('div');
+                content.className = 'settings-section-content';
+                
+                section.appendChild(header);
+                section.appendChild(content);
+                sectionsContainer.appendChild(section);
+            }
+
+            const sectionContent = section.querySelector('.settings-section-content');
+
+            // Create setting container
+            const settingContainer = document.createElement('div');
+            settingContainer.className = 'setting-item';
+            settingContainer.dataset.settingName = key.toLowerCase();
+            settingContainer.dataset.searchTerms = `${key.toLowerCase()} ${sectionName.toLowerCase()}`;
+
+            // Create label with tooltip
+            const label = document.createElement('label');
+            label.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            label.title = createTooltip(key);
+            label.htmlFor = key;
+            settingContainer.appendChild(label);
+
+            // Create input based on value type
             if (typeof value === 'object') {
                 const textarea = document.createElement('textarea');
                 textarea.id = key;
                 textarea.name = key;
                 textarea.value = JSON.stringify(value, null, 2);
-                form.appendChild(textarea);
+                textarea.spellcheck = false;
+                settingContainer.appendChild(textarea);
             } else {
                 const input = document.createElement('input');
-                input.type = typeof value === 'boolean' ? 'checkbox' : 'text';
                 input.id = key;
                 input.name = key;
+                
                 if (typeof value === 'boolean') {
+                    input.type = 'checkbox';
                     input.checked = value;
+                    settingContainer.classList.add('setting-checkbox');
+                } else if (typeof value === 'number') {
+                    input.type = 'number';
+                    input.value = value;
+                    input.min = 0; // Prevent negative values for dimensions
                 } else {
-                    if (typeof value === 'string') {
-                        input.value = value.replace(/\n/g, '\\n');
-                    } else {
-                        input.value = value;
-                    }
+                    input.type = 'text';
+                    input.value = typeof value === 'string' ? value.replace(/\n/g, '\\n') : value;
                 }
-                form.appendChild(input);
+                
+                settingContainer.appendChild(input);
             }
+
+            sectionContent.appendChild(settingContainer);
         }
     }
 
+    form.appendChild(sectionsContainer);
+
+    // Add action buttons
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'settings-actions';
+    
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save Changes';
+    saveButton.className = 'btn-primary';
+    saveButton.onclick = saveSettings;
+    
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.className = 'btn-secondary';
+    cancelButton.onclick = closeSettings;
+    
+    actionButtons.appendChild(saveButton);
+    actionButtons.appendChild(cancelButton);
+    form.appendChild(actionButtons);
+
+    // Update search functionality for collapsible sections
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        const sections = form.querySelectorAll('.settings-section');
+        
+        sections.forEach(section => {
+            let hasVisibleItems = false;
+            const items = section.querySelectorAll('.setting-item');
+            
+            items.forEach(item => {
+                const searchTerms = item.dataset.searchTerms || '';
+                const matches = searchTerms.includes(searchTerm) || 
+                              item.textContent.toLowerCase().includes(searchTerm);
+                item.style.display = matches ? '' : 'none';
+                if (matches) hasVisibleItems = true;
+            });
+            
+            section.style.display = hasVisibleItems ? '' : 'none';
+            if (hasVisibleItems && searchTerm) {
+                section.classList.remove('collapsed');
+                const toggle = section.querySelector('.section-toggle');
+                if (toggle) toggle.style.transform = '';
+            }
+        });
+    });
+
     overlay.style.display = 'flex';
+    setTimeout(() => searchInput.focus(), 100);
 }
 
 function closeSettings() {
@@ -340,15 +511,23 @@ function openDescriptionEditor(entity, category) {
     overlay.style.display = 'flex';
 
     const editor = document.createElement('div');
-    editor.classList.add('settings-container');
+    editor.classList.add('editor-container');
+
+    const content = document.createElement('div');
+    content.className = 'editor-content';
 
     const textarea = document.createElement('textarea');
     textarea.value = entity.description;
-    textarea.style.height = '200px';
-    textarea.style.marginBottom = '10px';
+    textarea.className = 'setting-item textarea';
+    textarea.style.minHeight = '300px';
+    content.appendChild(textarea);
 
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'settings-actions';
+    
     const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save';
+    saveBtn.textContent = 'Save Changes';
+    saveBtn.className = 'btn-primary';
     saveBtn.onclick = async () => {
         entity.description = textarea.value;
         overlay.remove();
@@ -357,15 +536,20 @@ function openDescriptionEditor(entity, category) {
 
     const cancelBtn = document.createElement('button');
     cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn-secondary';
     cancelBtn.onclick = () => {
         overlay.remove();
     };
 
-    editor.appendChild(textarea);
-    editor.appendChild(saveBtn);
-    editor.appendChild(cancelBtn);
+    actionButtons.appendChild(saveBtn);
+    actionButtons.appendChild(cancelBtn);
+
+    editor.appendChild(content);
+    editor.appendChild(actionButtons);
     overlay.appendChild(editor);
     document.body.appendChild(overlay);
+
+    setTimeout(() => textarea.focus(), 100);
 }
 
 function openVisualEditor(entity, category) {
@@ -374,29 +558,71 @@ function openVisualEditor(entity, category) {
     overlay.style.display = 'flex';
 
     const editor = document.createElement('div');
-    editor.classList.add('settings-container');
-    editor.style.width = '80%';
-    editor.style.maxWidth = '800px';
+    editor.classList.add('editor-container');
 
+    const content = document.createElement('div');
+    content.className = 'editor-content';
+
+    // Image Preview Section
+    const previewSection = document.createElement('div');
+    previewSection.className = 'editor-section';
+    
     const img = document.createElement('img');
     img.src = URL.createObjectURL(entity.image);
-    img.style.width = '100%';
-    img.style.maxHeight = '300px';
-    img.style.objectFit = 'contain';
-    img.style.marginBottom = '10px';
-
+    img.className = 'editor-preview-image';
+    previewSection.appendChild(img);
+    
+    // Prompt Section
+    const promptSection = document.createElement('div');
+    promptSection.className = 'editor-section';
+    
+    const promptContainer = document.createElement('div');
+    promptContainer.className = 'setting-item';
+    
+    const promptLabel = document.createElement('label');
+    promptLabel.textContent = 'Visual Prompt';
+    promptContainer.appendChild(promptLabel);
+    
     const visualPrompt = document.createElement('textarea');
     visualPrompt.value = entity.visual;
-    visualPrompt.style.height = '100px';
-    visualPrompt.style.marginBottom = '10px';
+    visualPrompt.style.minHeight = '100px';
+    promptContainer.appendChild(visualPrompt);
+    
+    promptSection.appendChild(promptContainer);
 
+    // Seed Section
+    const seedContainer = document.createElement('div');
+    seedContainer.className = 'setting-item';
+    
+    const seedLabel = document.createElement('label');
+    seedLabel.textContent = 'Seed';
+    seedContainer.appendChild(seedLabel);
+    
     const seedInput = document.createElement('input');
     seedInput.type = 'number';
     seedInput.value = entity.seed;
-    seedInput.style.marginBottom = '10px';
+    seedContainer.appendChild(seedInput);
+    
+    promptSection.appendChild(seedContainer);
+
+    content.appendChild(previewSection);
+    content.appendChild(promptSection);
+
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'settings-actions';
+
+    const regeneratePromptBtn = document.createElement('button');
+    regeneratePromptBtn.textContent = 'Regenerate Prompt';
+    regeneratePromptBtn.className = 'btn-secondary';
+    regeneratePromptBtn.onclick = async () => {
+        const newPrompt = await generateVisualPrompt(entity.name, entity.description);
+        visualPrompt.value = category === 'things' ? `(${entity.name}), ${newPrompt}` : newPrompt;
+        entity.visual = visualPrompt.value;
+    };
 
     const regenerateBtn = document.createElement('button');
     regenerateBtn.textContent = 'Regenerate Image';
+    regenerateBtn.className = 'btn-secondary';
     regenerateBtn.onclick = async () => {
         entity.visual = visualPrompt.value;
         entity.seed = parseInt(seedInput.value);
@@ -419,39 +645,33 @@ function openVisualEditor(entity, category) {
         }
     };
 
-    const regeneratePromptBtn = document.createElement('button');
-    regeneratePromptBtn.textContent = 'Regenerate Prompt';
-    regeneratePromptBtn.onclick = async () => {
-        const newPrompt = await generateVisualPrompt(entity.name, entity.description);
-        visualPrompt.value = category === 'things' ? `(${entity.name}), ${newPrompt}` : newPrompt;
-        entity.visual = visualPrompt.value;
-    };
-
     const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save & Close';
+    saveBtn.textContent = 'Save Changes';
+    saveBtn.className = 'btn-primary';
     saveBtn.onclick = () => {
+        entity.visual = visualPrompt.value;
+        entity.seed = parseInt(seedInput.value);
         overlay.remove();
         updateImageGrid(currentArea);
     };
 
     const cancelBtn = document.createElement('button');
     cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn-secondary';
     cancelBtn.onclick = () => {
         overlay.remove();
         updateImageGrid(currentArea);
     };
 
-    editor.appendChild(img);
-    editor.appendChild(document.createElement('br'));
-    editor.appendChild(document.createTextNode('Visual Prompt:'));
-    editor.appendChild(visualPrompt);
-    editor.appendChild(document.createTextNode('Seed:'));
-    editor.appendChild(seedInput);
-    editor.appendChild(regeneratePromptBtn);
-    editor.appendChild(regenerateBtn);
-    editor.appendChild(saveBtn);
-    editor.appendChild(cancelBtn);
+    actionButtons.appendChild(regeneratePromptBtn);
+    actionButtons.appendChild(regenerateBtn);
+    actionButtons.appendChild(saveBtn);
+    actionButtons.appendChild(cancelBtn);
 
+    editor.appendChild(content);
+    editor.appendChild(actionButtons);
     overlay.appendChild(editor);
     document.body.appendChild(overlay);
+
+    setTimeout(() => visualPrompt.focus(), 100);
 }

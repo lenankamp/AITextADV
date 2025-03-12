@@ -202,22 +202,43 @@ function openNewLocationPrompt(x, y) {
     overlay.classList.add('overlay');
     overlay.style.display = 'flex';
 
-    const container = document.createElement('div');
-    container.classList.add('settings-container');
+    const editor = document.createElement('div');
+    editor.classList.add('editor-container');
 
+    const content = document.createElement('div');
+    content.className = 'editor-content';
+
+    // Details section
+    const detailsSection = document.createElement('div');
+    detailsSection.className = 'editor-section';
+
+    // Name input
     const nameLabel = document.createElement('label');
     nameLabel.textContent = 'Location Name:';
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.required = true;
 
+    // Description input
     const descLabel = document.createElement('label');
     descLabel.textContent = 'Description (optional):';
     const descInput = document.createElement('textarea');
-    descInput.style.height = '100px';
+    descInput.style.minHeight = '100px';
+
+    detailsSection.appendChild(nameLabel);
+    detailsSection.appendChild(nameInput);
+    detailsSection.appendChild(descLabel);
+    detailsSection.appendChild(descInput);
+
+    content.appendChild(detailsSection);
+
+    // Action buttons
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'settings-actions';
 
     const createBtn = document.createElement('button');
     createBtn.textContent = 'Create';
+    createBtn.className = 'btn-primary';
     createBtn.onclick = async () => {
         if (nameInput.value.trim()) {
             await generateArea(nameInput.value.trim(), descInput.value.trim(), x, y);
@@ -227,15 +248,15 @@ function openNewLocationPrompt(x, y) {
 
     const cancelBtn = document.createElement('button');
     cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn-secondary';
     cancelBtn.onclick = () => overlay.remove();
 
-    container.appendChild(nameLabel);
-    container.appendChild(nameInput);
-    container.appendChild(descLabel);
-    container.appendChild(descInput);
-    container.appendChild(createBtn);
-    container.appendChild(cancelBtn);
-    overlay.appendChild(container);
+    actionButtons.appendChild(createBtn);
+    actionButtons.appendChild(cancelBtn);
+
+    editor.appendChild(content);
+    editor.appendChild(actionButtons);
+    overlay.appendChild(editor);
     document.body.appendChild(overlay);
 
     // Focus the name input
@@ -337,52 +358,63 @@ function openLocationEditor(area, path) {
     overlay.style.display = 'flex';
 
     const editor = document.createElement('div');
-    editor.classList.add('settings-container');
-    editor.style.width = '80%';
+    editor.classList.add('editor-container');
 
-    let previewImage;
+    const content = document.createElement('div');
+    content.className = 'editor-content';
+
+    // Image preview section
+    const previewSection = document.createElement('div');
+    previewSection.className = 'editor-section';
+
     if (areas[path]) {
         // Full location editor for generated areas
-        previewImage = document.createElement('img');
+        const previewImage = document.createElement('img');
+        previewImage.className = 'editor-preview-image';
         if (area.image instanceof Blob) {
             previewImage.src = URL.createObjectURL(area.image);
         } else {
             previewImage.src = 'placeholder.png';
         }
-        previewImage.style.width = '100%';
-        previewImage.style.maxHeight = '300px';
-        previewImage.style.objectFit = 'contain';
-        previewImage.style.marginBottom = '10px';
-        editor.appendChild(previewImage);
+        previewSection.appendChild(previewImage);
+        content.appendChild(previewSection);
     }
+
+    // Details section
+    const detailsSection = document.createElement('div');
+    detailsSection.className = 'editor-section';
 
     // Name input
     const nameLabel = document.createElement('label');
     nameLabel.textContent = 'Location Name:';
     const nameInput = document.createElement('input');
     nameInput.value = path.split('/').pop();
-    editor.appendChild(nameLabel);
-    editor.appendChild(nameInput);
-
+    nameInput.type = 'text';
+    
     // Description input
     const descLabel = document.createElement('label');
     descLabel.textContent = 'Description:';
     const descInput = document.createElement('textarea');
     descInput.value = area.description;
-    descInput.style.height = '100px';
-    editor.appendChild(descLabel);
-    editor.appendChild(descInput);
+    descInput.style.minHeight = '100px';
 
-    let visualInput;
+    detailsSection.appendChild(nameLabel);
+    detailsSection.appendChild(nameInput);
+    detailsSection.appendChild(descLabel);
+    detailsSection.appendChild(descInput);
+
+    let visualSection;
     if (areas[path]) {
-        // Visual prompt input for generated areas
+        // Visual section for generated areas
+        visualSection = document.createElement('div');
+        visualSection.className = 'editor-section';
+
+        // Visual prompt input
         const visualLabel = document.createElement('label');
         visualLabel.textContent = 'Visual Prompt:';
-        visualInput = document.createElement('textarea');
+        const visualInput = document.createElement('textarea');
         visualInput.value = area.visual || '';
-        visualInput.style.height = '100px';
-        editor.appendChild(visualLabel);
-        editor.appendChild(visualInput);
+        visualInput.style.minHeight = '100px';
 
         // Seed input
         const seedLabel = document.createElement('label');
@@ -390,121 +422,86 @@ function openLocationEditor(area, path) {
         const seedInput = document.createElement('input');
         seedInput.type = 'number';
         seedInput.value = area.seed || Math.floor(Math.random() * 4294967295) + 1;
-        editor.appendChild(seedLabel);
-        editor.appendChild(seedInput);
 
-        // Create button container for all action buttons
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.display = 'flex';
-        buttonContainer.style.gap = '10px';
-        buttonContainer.style.marginTop = '20px';
-        buttonContainer.style.justifyContent = 'center';
-        buttonContainer.style.flexWrap = 'wrap';
+        visualSection.appendChild(visualLabel);
+        visualSection.appendChild(visualInput);
+        visualSection.appendChild(seedLabel);
+        visualSection.appendChild(seedInput);
+    }
 
+    content.appendChild(detailsSection);
+    if (visualSection) content.appendChild(visualSection);
+
+    // Action buttons
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'settings-actions';
+
+    if (areas[path]) {
         // Regenerate visual prompt button
         const regenPromptBtn = document.createElement('button');
         regenPromptBtn.textContent = 'Regenerate Visual Prompt';
+        regenPromptBtn.className = 'btn-secondary';
         regenPromptBtn.onclick = async () => {
             const newVisual = await generateVisualPrompt(area.name, descInput.value);
             area.visual = newVisual;
             visualInput.value = newVisual;
         };
-        buttonContainer.appendChild(regenPromptBtn);
+        actionButtons.appendChild(regenPromptBtn);
 
         // Regenerate image button
         const regenBtn = document.createElement('button');
         regenBtn.textContent = 'Regenerate Image';
+        regenBtn.className = 'btn-secondary';
         regenBtn.onclick = async () => {
             area.visual = visualInput.value;
             area.seed = parseInt(seedInput.value);
             const artBlob = await generateArt(area.visual, "", area.seed);
             if (artBlob instanceof Blob) {
                 area.image = artBlob;
+                const previewImage = previewSection.querySelector('.editor-preview-image');
                 previewImage.src = URL.createObjectURL(artBlob);
                 if (path === currentArea) {
-                    document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
+                    // ...existing code...
                 }
                 const locationElement = document.getElementById(`location-${path}`);
                 if (locationElement) {
-                    locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
+                    // ...existing code...
                 }
                 updateImageGrid(currentArea);
             }
         };
-        buttonContainer.appendChild(regenBtn);
-
-        // Save button
-        const saveBtn = document.createElement('button');
-        saveBtn.textContent = 'Save Changes';
-        saveBtn.onclick = () => {
-            const newName = nameInput.value.trim();
-            if (newName && newName !== path.split('/').pop()) {
-                // Update name in parent's sublocations
-                const parentPath = path.split('/').slice(0, -1).join('/');
-                const oldName = path.split('/').pop();
-                const subloc = areas[parentPath].sublocations[oldName];
-                delete areas[parentPath].sublocations[oldName];
-                areas[parentPath].sublocations[newName] = subloc;
-                subloc.name = newName;
-                subloc.path = parentPath + '/' + newName;
-                if (areas[path]) {
-                    areas[subloc.path] = areas[path];
-                    delete areas[path];
-                }
-            }
-            area.description = descInput.value;
-            if (areas[path]) {
-                area.visual = visualInput.value;
-                area.seed = parseInt(seedInput.value);
-            }
-            overlay.remove();
-            updateSublocationRow(currentArea);
-        };
-        buttonContainer.appendChild(saveBtn);
-
-        // Cancel button
-        const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
-        cancelBtn.onclick = () => overlay.remove();
-        buttonContainer.appendChild(cancelBtn);
-
-        editor.appendChild(buttonContainer);
-    } else {
-        // Simple save/cancel for non-generated areas
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.display = 'flex';
-        buttonContainer.style.gap = '10px';
-        buttonContainer.style.marginTop = '20px';
-        buttonContainer.style.justifyContent = 'center';
-
-        const saveBtn = document.createElement('button');
-        saveBtn.textContent = 'Save Changes';
-        saveBtn.onclick = () => {
-            const newName = nameInput.value.trim();
-            if (newName && newName !== path.split('/').pop()) {
-                // Update name in parent's sublocations
-                const parentPath = path.split('/').slice(0, -1).join('/');
-                const oldName = path.split('/').pop();
-                const subloc = areas[parentPath].sublocations[oldName];
-                delete areas[parentPath].sublocations[oldName];
-                areas[parentPath].sublocations[newName] = subloc;
-                subloc.name = newName;
-                subloc.path = parentPath + '/' + newName;
-            }
-            area.description = descInput.value;
-            overlay.remove();
-            updateSublocationRow(currentArea);
-        };
-        buttonContainer.appendChild(saveBtn);
-
-        const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
-        cancelBtn.onclick = () => overlay.remove();
-        buttonContainer.appendChild(cancelBtn);
-
-        editor.appendChild(buttonContainer);
+        actionButtons.appendChild(regenBtn);
     }
 
+    // Save button
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save Changes';
+    saveBtn.className = 'btn-primary';
+    saveBtn.onclick = () => {
+        const newName = nameInput.value.trim();
+        if (newName && newName !== path.split('/').pop()) {
+            // ...existing code...
+        }
+        area.description = descInput.value;
+        if (areas[path] && visualSection) {
+            area.visual = visualSection.querySelector('textarea').value;
+            area.seed = parseInt(visualSection.querySelector('input[type="number"]').value);
+        }
+        overlay.remove();
+        updateSublocationRow(currentArea);
+    };
+
+    // Cancel button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn-secondary';
+    cancelBtn.onclick = () => overlay.remove();
+
+    actionButtons.appendChild(saveBtn);
+    actionButtons.appendChild(cancelBtn);
+
+    editor.appendChild(content);
+    editor.appendChild(actionButtons);
     overlay.appendChild(editor);
     document.body.appendChild(overlay);
 }

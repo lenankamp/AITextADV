@@ -510,7 +510,7 @@ function provokeAlly(name) {
 }
 
 function advanceTime(timePassed) {
-    const dateParts = currentTime.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
+    const dateParts = settings.current_time.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
     let [year, month, day, hours, minutes, seconds] = dateParts.slice(1).map(Number);
 
     seconds += timePassed;
@@ -536,7 +536,7 @@ function advanceTime(timePassed) {
         month -= 12;
         year += 1;
     }
-    currentTime = `${year.toString()}-${month.toString()}-${day.toString()} ${hours.toString()}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    settings.current_time = `${year.toString()}-${month.toString()}-${day.toString()} ${hours.toString()}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 async function outputCheck(text, context="") {
@@ -640,7 +640,7 @@ async function outputAutoCheck(text, context="") {
             } else if (timePassedLower.includes("hours")) {
                 advanceTime((randomInt(2) + 1) * 3600);
             } else if (timePassedLower.includes("full rest")) {
-                const dateParts = currentTime.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
+                const dateParts = settings.current_time.match(/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/);
                 let [year, month, day, hours, minutes, seconds] = dateParts.slice(1).map(Number);
                 let timeToAdvance = 0;
                 if(hours < 8) {
@@ -653,13 +653,13 @@ async function outputAutoCheck(text, context="") {
                     settings.charsheet_fae.consequences.mild.shift();
                 } else if (settings.charsheet_fae.consequences.moderate.length > 0) {
                     const firstModerateTime = settings.charsheet_fae.consequenceTime.moderate[0];
-                    if (timeDiff(firstModerateTime, currentTime) > 7) {
+                    if (timeDiff(firstModerateTime, settings.current_time) > 7) {
                         settings.charsheet_fae.consequences.moderate.shift();
                         settings.charsheet_fae.consequenceTime.moderate.shift();
                     }
                 } else if (settings.charsheet_fae.consequences.severe.length > 0) {
                     const firstSevereTime = settings.charsheet_fae.consequenceTime.severe[0];
-                    if (timeDiff(firstSevereTime, currentTime) > 30) {
+                    if (timeDiff(firstSevereTime, settings.current_time) > 30) {
                         settings.charsheet_fae.consequences.severe.shift();
                         settings.charsheet_fae.consequenceTime.severe.shift();
                     }
@@ -706,10 +706,10 @@ async function outputAutoCheck(text, context="") {
                             settings.charsheet_fae.consequences.mild.push(consequence);
                         } else if (severity === 2) {
                             settings.charsheet_fae.consequences.moderate.push(consequence);
-                            settings.charsheet_fae.consequenceTime.moderate.push(currentTime);
+                            settings.charsheet_fae.consequenceTime.moderate.push(settings.current_time);
                         } else if (severity === 3) {
                             settings.charsheet_fae.consequences.severe.push(consequence);
-                            settings.charsheet_fae.consequenceTime.severe.push(currentTime);
+                            settings.charsheet_fae.consequenceTime.severe.push(settings.current_time);
                         }
 
                     }
@@ -1124,7 +1124,7 @@ function randomInt(max) {
 }
 
 function getTimeofDay() {
-    const hours = parseInt(currentTime.match(/(\d+):/)[1], 10);
+    const hours = parseInt(settings.current_time.match(/(\d+):/)[1], 10);
     if (hours >= 2 && hours < 6) {
         return "Early Morning before dawn";
     } else if (hours >= 6 && hours < 12) {
@@ -1155,7 +1155,7 @@ function timeDiff(startTime, endTime) {
 
 function getSeason() {
     const seasons = ["Winter", "Spring", "Summer", "Fall"];
-    const month = parseInt(currentTime.match(/-(\d+)-/)[1], 10) - 1;
+    const month = parseInt(settings.current_time.match(/-(\d+)-/)[1], 10) - 1;
     return seasons[Math.floor((month % 12) / 3)];
 }
 
@@ -1166,8 +1166,8 @@ function updateTime() {
     const dateSeasonSpan = timeElement.querySelector('.date-season');
     const timeSpan = timeElement.querySelector('.time');
     
-    const [date] = currentTime.split(' ');
-    const [time] = currentTime.match(/\d+:\d+:\d+/);
+    const [date] = settings.current_time.split(' ');
+    const [time] = settings.current_time.match(/\d+:\d+:\d+/);
     
     dateSeasonSpan.textContent = `${season} ${date}`;
     timeSpan.textContent = time;
@@ -1175,7 +1175,6 @@ function updateTime() {
 
 let areas = {};
 let currentArea;
-let currentTime;
 
     // get half width and height of map to get center
     const mapWidth = map.offsetWidth;
@@ -1188,7 +1187,6 @@ let currentTime;
     overrideSettings();
     areas[settings.starting_area] = {};
     currentArea = settings.starting_area;
-    currentTime = settings.starting_date;
     updateTime();
 
 // Update restartGame function
@@ -1231,7 +1229,6 @@ loadSettings();
 overrideSettings();
 areas[settings.starting_area] = {};
 currentArea = settings.starting_area;
-currentTime = settings.starting_date;
 updateTime();
 updateApproachDisplay();
 updateCharacterInfo();
