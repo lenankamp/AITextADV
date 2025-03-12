@@ -107,6 +107,16 @@ async function saveToFile(data) {
         });
     };
 
+    // Process followers' images
+    if (data.state.followers) {
+        data.state.followers.forEach(follower => {
+            if (follower.image instanceof Blob) {
+                images[`follower_${follower.name}`] = follower.image;
+                follower.image = null;
+            }
+        });
+    }
+
     // Process all areas and their sublocations
     for (const [areaName, area] of Object.entries(areas)) {
         processAreaImages(area, areaName);
@@ -332,6 +342,7 @@ async function restoreGameState(data, images = null) {
     const output = document.getElementById('output');
     areas = data.state.areas;
     currentArea = data.state.currentArea;
+    followers = data.state.followers;
     output.innerHTML = data.state.outputLog;
     settings = data.state.settings;
     output.scrollTop = output.scrollHeight;
@@ -383,6 +394,16 @@ async function restoreGameState(data, images = null) {
                     continue;
                 }
 
+                // Handle follower images
+                if (path.startsWith('follower_')) {
+                    const followerName = path.replace('follower_', '');
+                    const follower = followers.find(f => f.name === followerName);
+                    if (follower) {
+                        follower.image = await fetchImage(imageData);
+                        continue;
+                    }
+                }
+
                 // Find the target area/entity and update its image
                 if (areas[path]) {
                     areas[path].image = await fetchImage(imageData);
@@ -417,5 +438,6 @@ async function restoreGameState(data, images = null) {
 
     // Refresh UI
     updateImageGrid(currentArea);
+    updateFollowerArt();
     updateSublocationRow(currentArea);
 }
