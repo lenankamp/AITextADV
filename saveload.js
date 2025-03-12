@@ -344,7 +344,7 @@ async function restoreGameState(data, images = null) {
     currentArea = data.state.currentArea;
     followers = data.state.followers;
     output.innerHTML = data.state.outputLog;
-    settings = data.state.settings;
+    settings = Object.assign({}, settings, data.state.settings);
     output.scrollTop = output.scrollHeight;
 
     // Update UI elements first

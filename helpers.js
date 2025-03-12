@@ -145,3 +145,182 @@ String.prototype.stripNonAlpha = function(excludedChars='') {
     const regex = new RegExp(`[^\\p{L}\\s${excludedChars}]`, 'gu');
     return this.replace(regex, '');
 };
+
+function openOutputEditor() {
+    const overlay = document.createElement('div');
+    overlay.className = 'output-editor-overlay';
+    overlay.style.display = 'flex';
+
+    const container = document.createElement('div');
+    container.className = 'output-editor-container';
+
+    const header = document.createElement('div');
+    header.className = 'output-editor-header';
+    header.innerHTML = '<h2>Edit Output</h2>';
+
+    const content = document.createElement('div');
+    content.className = 'output-editor-content';
+
+    // Get output content and create editor entries
+    const output = document.getElementById('output');
+    const entries = Array.from(output.children);
+    let lastEntryDiv;
+    
+    entries.forEach(entry => {
+        const entryDiv = document.createElement('div');
+        entryDiv.className = 'output-entry';
+        
+        const textarea = document.createElement('textarea');
+        const textContent = entry.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+        textarea.value = textContent;
+        textarea.dataset.originalHtml = entry.outerHTML;
+        
+        // Auto-adjust height on input
+        const adjustHeight = (el) => {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+        };
+        
+        textarea.addEventListener('input', (e) => adjustHeight(e.target));
+        textarea.addEventListener('focus', (e) => adjustHeight(e.target));
+
+        // Entry controls
+        const controls = document.createElement('div');
+        controls.className = 'entry-controls';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'entry-control-btn';
+        deleteBtn.innerHTML = '×';
+        deleteBtn.title = 'Delete Entry';
+        deleteBtn.onclick = () => {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                entryDiv.remove();
+            }
+        };
+
+        controls.appendChild(deleteBtn);
+        entryDiv.appendChild(controls);
+        entryDiv.appendChild(textarea);
+        content.appendChild(entryDiv);
+        lastEntryDiv = entryDiv;
+        
+        // Initial height adjustment
+        requestAnimationFrame(() => adjustHeight(textarea));
+    });
+
+    const actions = document.createElement('div');
+    actions.className = 'output-editor-actions';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-changes-btn btn-primary';
+    saveBtn.textContent = 'Save Changes';
+    saveBtn.onclick = () => {
+        const entries = Array.from(content.querySelectorAll('.output-entry textarea'));
+        output.innerHTML = '';
+        entries.forEach(textarea => {
+            const originalElement = document.createElement('div');
+            originalElement.innerHTML = textarea.dataset.originalHtml;
+            const newElement = originalElement.firstChild;
+            newElement.innerHTML = textarea.value.replace(/\n/g, '<br>');
+            output.appendChild(newElement);
+        });
+        overlay.remove();
+    };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'cancel-edit-btn btn-secondary';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => overlay.remove();
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(saveBtn);
+
+    container.appendChild(header);
+    container.appendChild(content);
+    container.appendChild(actions);
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+
+    // Scroll to the latest entry with a slight delay to ensure everything is rendered
+    setTimeout(() => {
+        if (lastEntryDiv) {
+            lastEntryDiv.scrollIntoView({ behavior: 'instant', block: 'end' });
+        }
+    }, 50);
+}
+
+// Add event listener to edit button
+document.addEventListener('DOMContentLoaded', () => {
+    const editBtn = document.getElementById('editOutputBtn');
+    if (editBtn) {
+        editBtn.addEventListener('click', openOutputEditor);
+    }
+});
+
+async function generateSummary(text) {
+    return await generateText(settings.summary_param, "Text: " + text + "/n/n" + settings.summary_prompt);
+}
+
+async function processRecursiveSummary(config = {
+    thresholds: [
+        { minElements: settings.summary_first_layer_max, elementsToSummarize: settings.summary_first_layer_chunk }, // text-1 -> text-2
+        { minElements: settings.summary_second_layer_max, elementsToSummarize: settings.summary_second_layer_chunk }, // text-2 -> text-3
+        { minElements: settings.summary_bonus_layer_max, elementsToSummarize: settings.summary_bonus_layer_chunk }, // text-3 -> text-4
+    ],
+    maxLevels: settings.summary_max_layers,
+    colors: [
+        '#FFFFFF', // text-1 black, unused
+        '#0000FF', // text-4 blue
+        '#00FFFF',  // text-2 cyan
+        '#00FF00', // text-3 green
+        '#FFFF00', // text-5 yellow
+        '#FF0000', // text-6 red
+        '#FF00FF', // text-7 purple
+        '#FFA500', // text-8 orange
+        '#808080', // text-9 grey
+        '#800080' // text-10 purple
+    ]
+}) {
+    const output = document.getElementById('output');
+    if (!output) return;
+
+    for (let level = 1; level <= config.maxLevels; level++) {
+        const currentClass = `text-${level}`;
+        const elements = output.getElementsByClassName(currentClass);
+
+        const threshold = config.thresholds[level > 2 ? 2 : level - 1];
+
+        if (elements.length < threshold.minElements) break;
+
+        const elementsToSummarize = Array.from(elements)
+            .slice(0, threshold.elementsToSummarize);
+
+        const textToSummarize = elementsToSummarize
+            .map(el => el.innerHTML.replace(/<br\s*\/?>/g, '\n').trim())
+            .join('\n\n');
+
+        try {
+            const summary = await generateSummary(textToSummarize);
+
+            const summaryElement = document.createElement('div');
+            summaryElement.className = `text-${level + 1}`;
+            summaryElement.innerHTML = summary.replace(/\n/g, '<br>');
+            summaryElement.style.borderLeft = `5px solid ${config.colors[level] || '#999999'}`;
+            summaryElement.style.paddingLeft = '10px';
+            summaryElement.style.margin = '10px 0';
+
+            output.insertBefore(summaryElement, elementsToSummarize[0]);
+            elementsToSummarize.forEach(el => el.remove());
+
+            if (level === config.maxLevels) {
+                const highestLevelElements = output.getElementsByClassName(`text-${config.maxLevels}`);
+                while (highestLevelElements.length > threshold.minElements) {
+                    highestLevelElements[0].remove();
+                }
+            }
+        } catch (error) {
+            break;
+        }
+    }
+}
+

@@ -189,12 +189,8 @@ function updateImageGrid(areaName) {
 }
 
 function openEntitySubmenu(entity, category, x, y) {
-    console.log('Opening entity submenu for:', entity, 'category:', category);
-    // Remove any existing submenu and its handler
     let submenu = document.getElementById('entitySubmenu');
     if (submenu) {
-        console.log('Removing existing submenu');
-        // Remove the old click handler if it exists
         if (submenu.closeHandler) {
             document.removeEventListener('click', submenu.closeHandler);
         }
@@ -212,7 +208,6 @@ function openEntitySubmenu(entity, category, x, y) {
     editBtn.textContent = 'Edit';
     editBtn.onclick = (e) => {
         e.stopPropagation();
-        console.log('Edit button clicked');
         openUnifiedEditor(entity, category);
         submenu.remove();
         if (submenu.closeHandler) {
@@ -222,16 +217,12 @@ function openEntitySubmenu(entity, category, x, y) {
 
     // Special handling for followers
     const isFollower = followers.some(f => f.name === entity.name);
-    console.log('Is follower check:', isFollower, 'for entity:', entity.name);
-    console.log('Current followers:', followers.map(f => f.name));
     
     if (isFollower) {
-        console.log('Creating dismiss button for follower');
         const dismissBtn = document.createElement('button');
         dismissBtn.textContent = 'Dismiss';
         dismissBtn.onclick = (e) => {
             e.stopPropagation();
-            console.log('Dismiss button clicked for:', entity.name);
             dismissFollower(entity);
             updateFollowerArt();
             submenu.remove();
@@ -299,10 +290,6 @@ function openEntitySubmenu(entity, category, x, y) {
     submenu.style.left = posX + 'px';
     submenu.style.top = posY + 'px';
 
-    console.log('Submenu added to document body at:', posX, posY);
-    console.log('Submenu dimensions:', menuRect.width, menuRect.height);
-
-    // Create the close handler and store it on the submenu element
     submenu.closeHandler = (e) => {
         if (!submenu.contains(e.target)) {
             submenu.remove();

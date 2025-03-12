@@ -100,7 +100,7 @@ function loadDefaultSettings() {
       max_length: 400,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
       stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
-      system_prompt: "Simply and clearly answer the question. Be as concise as possible.",
+      system_prompt: "Simply and clearly answer the questions. Be as concise as possible.",
       quiet: false,
       rep_pen: 1.0,
       rep_pen_range: 0,
@@ -120,7 +120,7 @@ function loadDefaultSettings() {
       max_length: 400,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
       stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
-      system_prompt: "Simply and clearly answer the question. Be as concise as possible.",
+      system_prompt: "Simply and clearly answer the questions. Be as concise as possible.",
       quiet: false,
       rep_pen: 1.0,
       rep_pen_range: 0,
@@ -132,6 +132,35 @@ function loadDefaultSettings() {
       top_p: 0.6,
       typical: 1
     },
+    summary_param: {
+      textAPI: "http://localhost:5001/v1/",
+      textAPItype: "openai",
+      model: "mistral-small-24b-instruct-2501-abliterated-i1",
+      max_context_length: 4096,
+      max_length: 600,
+      text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
+      stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
+      system_prompt: "Summarize the text in paragraph form without preface, headings, or bullet points.",
+      quiet: false,
+      rep_pen: 1.0,
+      rep_pen_range: 0,
+      rep_pen_slope: 1,
+      temperature: 0.8,
+      tfs: 1,
+      top_a: 0,
+      top_k: 100,
+      top_p: 0.8,
+      typical: 1
+    },
+    // summary settings
+    summary_prompt: "Could you please provide a summary of the given text, including all key points and supporting details? The summary should be comprehensive and accurately reflect the main message and arguments presented in the original text, while also being concise and easy to understand. It is important to maintain the tone of the original text, if it is violent or explicit in language, the summary should be just as much so. Additionally, the summary should avoid any personal biases or interpretations and remain objective and factual throughout. Keep the summary in second person, bearing in mind that 'You' refers to $settings.player_name$.",
+    summary_first_layer_max: 5,
+    summary_first_layer_chunk: 3,
+    summary_second_layer_max: 4,
+    summary_second_layer_chunk: 2,
+    summary_bonus_layer_max: 3,
+    summary_bonus_layer_chunk: 2,
+    summary_max_layers: 10,
     // text prompt settings
     output_length: "two paragraphs",
     full_context: "Context Info:\n$world$player$player_desc$locale\n\nStory:\n$story",
@@ -236,6 +265,11 @@ function openSettings() {
       'Player Details': [
           'player_name', 'player_description', 'player_visual', 'player_seed'
       ],
+      'Summary Settings': [
+        'summary_prompt', 'summary_first_layer_max', 'summary_first_layer_chunk', 
+        'summary_second_layer_max', 'summary_second_layer_chunk', 'summary_bonus_layer_max', 
+        'summary_bonus_layer_chunk', 'summary_max_layers'
+      ],
       'Generation Settings': [
           'sdAPI', 'default_prompt', 'default_negative_prompt',
           'person_prompt', 'person_negprompt',
@@ -246,10 +280,11 @@ function openSettings() {
       ],
       'Text Generation': [
           'story_param', 'question_param', 'creative_question_param',
-          'output_length', 'full_context'
+          'summary_param', 'output_length'
       ],
       'Text Prompts': [
-          'generateAreaDescriptionPrompt', 'areaContext', 'areaPeopleContext','areaFollowerContext',
+          'full_context', 'generateAreaDescriptionPrompt', 'areaContext', 
+          'areaPeopleContext','areaFollowerContext',
           'areaThingsContext', 'areaCreaturesContext', 'areaPathsContext',
           'areaTimeContext', 'subLocationFormat', 'entityFormat',
           'action_string', 'generateSublocationsPrompt', 'generateEntitiesPrompt',

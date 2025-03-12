@@ -1025,6 +1025,7 @@ async function sendMessage(message = input.value) {
     const priorMessageElement = output.querySelector('.new-message');
     if (priorMessageElement) {
         priorMessageElement.classList.remove('new-message');
+        priorMessageElement.classList.add('text-1');
     }
 
     if (message.trim()) {
@@ -1078,6 +1079,7 @@ async function sendMessage(message = input.value) {
     await outputCheck(text, '');
     await outputAutoCheck(text, '');
     await saveGame();
+    processRecursiveSummary();
 }
 
 function undoLastAction() {

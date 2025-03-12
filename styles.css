@@ -1250,3 +1250,187 @@ textarea.setting-item:focus,
     color: #e0e0e0;
     font-size: 0.9em;
 }
+
+.edit-output-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: rgba(45, 45, 45, 0.6);
+    color: #808080;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+    z-index: 10;
+    opacity: 0.4;
+}
+
+.edit-output-btn:hover {
+    background: rgba(64, 64, 64, 0.9);
+    color: #e0e0e0;
+    opacity: 1;
+}
+
+.output-editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.output-editor-container {
+    background-color: #2d2d2d;
+    padding: 8px;
+    border-radius: 8px;
+    width: 98%;
+    max-width: 1400px;
+    height: 98vh;
+    border: 1px solid #404040;
+    display: flex;
+    flex-direction: column;
+}
+
+.output-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid #404040;
+    margin-bottom: 8px;
+}
+
+.output-editor-header h2 {
+    margin: 0;
+    color: #e0e0e0;
+    font-size: 1.1em;
+}
+
+.output-editor-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0;
+    margin: 4px 0;
+    min-height: 0;
+}
+
+.output-entry {
+    background-color: #363636;
+    border-radius: 4px;
+    padding: 4px 28px 4px 4px;
+    position: relative;
+    min-height: min-content;
+}
+
+.output-entry textarea {
+    width: 100%;
+    background-color: #363636;
+    border: none;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 0;
+    margin: 0;
+    resize: none;
+    overflow: hidden;
+    height: auto;
+}
+
+.output-entry textarea:focus {
+    outline: none;
+}
+
+.entry-controls {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.output-entry:hover .entry-controls {
+    opacity: 1;
+}
+
+.entry-control-btn {
+    background: none;
+    border: none;
+    color: #808080;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 16px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    line-height: 1;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.entry-control-btn:hover {
+    background-color: rgba(255, 80, 80, 0.2);
+    color: #ff5050;
+}
+
+.output-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #404040;
+    margin-top: 8px;
+}
+
+.output-editor-actions button {
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.save-changes-btn {
+    background-color: #4a9eff;
+    color: #ffffff;
+}
+
+.save-changes-btn:hover {
+    background-color: #3d8de6;
+    transform: translateY(-1px);
+}
+
+.save-changes-btn:active {
+    transform: translateY(0);
+}
+
+.cancel-edit-btn {
+    background-color: #404040;
+    color: #e0e0e0;
+}
+
+.cancel-edit-btn:hover {
+    background-color: #505050;
+    transform: translateY(-1px);
+}
+
+.cancel-edit-btn:active {
+    transform: translateY(0);
+}
