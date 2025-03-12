@@ -129,7 +129,8 @@ body {
 }
 
 .output button:active {
-    background-color: #505050;
+    transform: scale(0.98);
+    background-color: #0056b3;
 }
 
 .input-container {
@@ -467,6 +468,14 @@ body {
     object-fit: cover;
     flex-shrink: 0;
     margin-left: auto; /* Push to right side */
+}
+
+#followerart {
+    width: 0%;
+    height: 100%;
+    object-fit: cover;
+    transition: width 0.3s ease-in-out;
+    cursor: pointer;
 }
 
 .approach-column {

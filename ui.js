@@ -15,6 +15,30 @@ resizerMap.addEventListener('mousedown', initDragMap);
 
 document.addEventListener('DOMContentLoaded', (event) => {
     document.getElementById('fileInput').addEventListener('change', loadFromFile);
+    
+    // Add followerart click handler with debug
+    const followerArt = document.getElementById('followerart');
+    console.log('Setting up followerart click handler');
+    followerArt.addEventListener('click', (e) => {
+        e.stopPropagation(); // Stop event from reaching document click handler
+        console.log('Followerart clicked');
+        console.log('Current followers:', followers);
+        if (followers.length > 0) {
+            const follower = followers[0]; // Currently only showing first follower
+            console.log('Selected follower:', follower);
+            const submenu = document.getElementById('entitySubmenu');
+            if (submenu) {
+                console.log('Removing existing submenu');
+                if (submenu.closeHandler) {
+                    document.removeEventListener('click', submenu.closeHandler);
+                }
+                submenu.remove();
+            }
+            openEntitySubmenu(follower, follower.type, e.clientX, e.clientY);
+        } else {
+            console.log('No followers available');
+        }
+    });
 });
 
 function toggleSidebar() {
@@ -465,9 +489,15 @@ function updateImageGrid(areaName) {
 }
 
 function openEntitySubmenu(entity, category, x, y) {
-    // Remove any existing submenu
+    console.log('Opening entity submenu for:', entity, 'category:', category);
+    // Remove any existing submenu and its handler
     let submenu = document.getElementById('entitySubmenu');
     if (submenu) {
+        console.log('Removing existing submenu');
+        // Remove the old click handler if it exists
+        if (submenu.closeHandler) {
+            document.removeEventListener('click', submenu.closeHandler);
+        }
         submenu.remove();
     }
 
@@ -475,41 +505,114 @@ function openEntitySubmenu(entity, category, x, y) {
     submenu.id = 'entitySubmenu';
     submenu.classList.add('submenu');
     submenu.style.display = 'block';
+    submenu.style.position = 'fixed';
+    submenu.style.zIndex = '1000';
 
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
-    editBtn.onclick = () => {
+    editBtn.onclick = (e) => {
+        e.stopPropagation();
+        console.log('Edit button clicked');
         openUnifiedEditor(entity, category);
         submenu.remove();
-    };
-
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent = 'Remove';
-    removeBtn.onclick = () => {
-        if (confirm(`Are you sure you want to remove ${entity.name}?`)) {
-            const index = areas[currentArea][category].findIndex(item => item.name === entity.name);
-            if (index > -1) {
-                areas[currentArea][category].splice(index, 1);
-                updateImageGrid(currentArea);
-            }
+        if (submenu.closeHandler) {
+            document.removeEventListener('click', submenu.closeHandler);
         }
-        submenu.remove();
     };
 
-    submenu.appendChild(editBtn);
-    submenu.appendChild(removeBtn);
+    // Special handling for followers
+    const isFollower = followers.some(f => f.name === entity.name);
+    console.log('Is follower check:', isFollower, 'for entity:', entity.name);
+    console.log('Current followers:', followers.map(f => f.name));
+    
+    if (isFollower) {
+        console.log('Creating dismiss button for follower');
+        const dismissBtn = document.createElement('button');
+        dismissBtn.textContent = 'Dismiss';
+        dismissBtn.onclick = (e) => {
+            e.stopPropagation();
+            console.log('Dismiss button clicked for:', entity.name);
+            dismissFollower(entity.name);
+            updateFollowerArt();
+            submenu.remove();
+            if (submenu.closeHandler) {
+                document.removeEventListener('click', submenu.closeHandler);
+            }
+        };
+        submenu.appendChild(editBtn);
+        submenu.appendChild(dismissBtn);
+    } else {
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'Remove';
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm(`Are you sure you want to remove ${entity.name}?`)) {
+                const index = areas[currentArea][category].findIndex(item => item.name === entity.name);
+                if (index > -1) {
+                    areas[currentArea][category].splice(index, 1);
+                    updateImageGrid(currentArea);
+                }
+            }
+            submenu.remove();
+            if (submenu.closeHandler) {
+                document.removeEventListener('click', submenu.closeHandler);
+            }
+        };
 
-    submenu.style.left = x + 'px';
-    submenu.style.top = y + 'px';
-    submenu.style.position = 'fixed';
+        submenu.appendChild(editBtn);
+        submenu.appendChild(removeBtn);
+
+        // Add Follower option for people and creatures
+        if (category === 'people' || category === 'creatures') {
+            const followBtn = document.createElement('button');
+            followBtn.textContent = 'Add Follower';
+            followBtn.onclick = (e) => {
+                e.stopPropagation();
+                addFollower(entity.name);
+                updateFollowerArt();
+                submenu.remove();
+                if (submenu.closeHandler) {
+                    document.removeEventListener('click', submenu.closeHandler);
+                }
+            };
+            submenu.appendChild(followBtn);
+        }
+    }
+
+    // Ensure menu is positioned within viewport bounds
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    let posX = x;
+    let posY = y;
 
     document.body.appendChild(submenu);
+    
+    // Adjust position if menu would overflow viewport
+    const menuRect = submenu.getBoundingClientRect();
+    if (posX + menuRect.width > viewportWidth) {
+        posX = viewportWidth - menuRect.width - 10;
+    }
+    if (posY + menuRect.height > viewportHeight) {
+        posY = viewportHeight - menuRect.height - 10;
+    }
 
-    document.addEventListener('click', function closeSubmenu(e) {
+    submenu.style.left = posX + 'px';
+    submenu.style.top = posY + 'px';
+
+    console.log('Submenu added to document body at:', posX, posY);
+    console.log('Submenu dimensions:', menuRect.width, menuRect.height);
+
+    // Create the close handler and store it on the submenu element
+    submenu.closeHandler = (e) => {
         if (!submenu.contains(e.target)) {
             submenu.remove();
-            document.removeEventListener('click', closeSubmenu);
+            document.removeEventListener('click', submenu.closeHandler);
         }
+    };
+    
+    // Delay adding the click handler to prevent immediate closure
+    requestAnimationFrame(() => {
+        document.addEventListener('click', submenu.closeHandler);
     });
 }
 
@@ -765,6 +868,7 @@ function openUnifiedEditor(item, type, path = null) {
             updateSublocationRow(currentArea);
         } else {
             updateImageGrid(currentArea);
+            updateFollowerArt();
         }
     };
     if (!path && type === 'location' && item.x !== undefined && item.y !== undefined) {
@@ -782,4 +886,58 @@ function openUnifiedEditor(item, type, path = null) {
     document.body.appendChild(overlay);
 
     setTimeout(() => nameInput.focus(), 100);
+}
+
+function updateTime() {
+    const timeElement = document.getElementById('currentTime');
+    const season = getSeason();
+    
+    const dateSeasonSpan = timeElement.querySelector('.date-season');
+    const timeSpan = timeElement.querySelector('.time');
+    
+    const [date] = settings.current_time.split(' ');
+    const [time] = getPreciseTime();
+    
+    dateSeasonSpan.textContent = `${season} ${date} ` + getDayOfWeek();
+    timeSpan.textContent = time;
+}
+
+function updateFollowerArt() {
+    const followerArt = document.getElementById('followerart');
+    
+    // Clean up any existing blob URLs
+    if (followerArt.src.startsWith('blob:')) {
+        URL.revokeObjectURL(followerArt.src);
+    }
+
+    // Update follower art display
+    if (followers.length > 0) {
+        const follower = followers[0]; // Currently only showing first follower
+        followerArt.style.width = '30%';
+        if (follower.image instanceof Blob) {
+            followerArt.src = URL.createObjectURL(follower.image);
+        } else if (follower.image === 'placeholder') {
+            followerArt.src = 'placeholder.png';
+            // Generate follower image if needed
+            setTimeout(async () => {
+                let negprompt = "";
+                let posprompt = "";
+                if (follower.type === "people") {
+                    posprompt = settings.person_prompt;
+                    negprompt = settings.person_negprompt;
+                } else if (follower.type === "creatures") {
+                    posprompt = settings.creature_prompt;
+                    negprompt = settings.creature_negprompt;
+                }
+                const artBlob = await generateArt(posprompt + follower.visual, negprompt, follower.seed);
+                if (artBlob instanceof Blob) {
+                    follower.image = artBlob;
+                    followerArt.src = URL.createObjectURL(artBlob);
+                }
+            }, 0);
+        }
+    } else {
+        followerArt.style.width = '0%';
+        followerArt.src = '';
+    }
 }

@@ -92,40 +92,6 @@ async function generateText(params, input, post='', variables={}, sample_message
     }
 }
 
-// Helper function to replace all variables in a string
-function replaceVariables(text, variables) {
-    if (!text || typeof text !== 'string') return text;
-    
-    let result = text;
-    
-    // First, handle specific variables with $ prefix
-    if (variables) {
-        for (const [key, value] of Object.entries(variables)) {
-            const variablePattern = new RegExp('\\$' + key, 'g');
-            result = result.replace(variablePattern, value);
-        }
-    }
-    
-    // Then handle any settings variables that might be referenced
-    const settingsVarPattern = /\$settings\.([^\$]+)\$/g;
-    result = result.replace(settingsVarPattern, (match, settingPath) => {
-        const paths = settingPath.split('.');
-        let value = settings;
-        
-        for (const path of paths) {
-            if (value && value[path] !== undefined) {
-                value = value[path];
-            } else {
-                return match; // Keep original if path doesn't exist
-            }
-        }
-        
-        return value !== undefined ? value : match;
-    });
-    
-    return result;
-}
-
 async function generateArt(prompt, negprompt='', seed=-1) {
     // Show loader
     document.getElementById('loader').style.display = 'block';

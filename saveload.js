@@ -51,6 +51,7 @@ async function saveGame(saveFile = false) {
         state: {
             areas: areas,
             currentArea: currentArea,
+            followers: followers,
             outputLog: document.getElementById('output').innerHTML,
             settings: settings,
             playerImage: playerImageDataUrl
