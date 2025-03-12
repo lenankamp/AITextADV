@@ -903,41 +903,68 @@ function updateTime() {
 }
 
 function updateFollowerArt() {
-    const followerArt = document.getElementById('followerart');
+    const followersContainer = document.getElementById('followers-container');
     
-    // Clean up any existing blob URLs
-    if (followerArt.src.startsWith('blob:')) {
-        URL.revokeObjectURL(followerArt.src);
+    // Clear existing follower images and blob URLs
+    while (followersContainer.firstChild) {
+        const img = followersContainer.firstChild;
+        if (img.src && img.src.startsWith('blob:')) {
+            URL.revokeObjectURL(img.src);
+        }
+        followersContainer.removeChild(img);
     }
 
-    // Update follower art display
+    // Update followers container display
     if (followers.length > 0) {
-        const follower = followers[0]; // Currently only showing first follower
-        followerArt.style.width = '30%';
-        if (follower.image instanceof Blob) {
-            followerArt.src = URL.createObjectURL(follower.image);
-        } else if (follower.image === 'placeholder') {
-            followerArt.src = 'placeholder.png';
-            // Generate follower image if needed
-            setTimeout(async () => {
-                let negprompt = "";
-                let posprompt = "";
-                if (follower.type === "people") {
-                    posprompt = settings.person_prompt;
-                    negprompt = settings.person_negprompt;
-                } else if (follower.type === "creatures") {
-                    posprompt = settings.creature_prompt;
-                    negprompt = settings.creature_negprompt;
+        followersContainer.style.width = '30%';
+        const width = `${100 / followers.length}%`;
+        
+        followers.forEach((follower, index) => {
+            const img = document.createElement('img');
+            img.classList.add('follower-image');
+            img.style.width = width;
+            
+            if (follower.image instanceof Blob) {
+                img.src = URL.createObjectURL(follower.image);
+            } else if (follower.image === 'placeholder') {
+                img.src = 'placeholder.png';
+                // Generate follower image if needed
+                setTimeout(async () => {
+                    let negprompt = "";
+                    let posprompt = "";
+                    if (follower.type === "people") {
+                        posprompt = settings.person_prompt;
+                        negprompt = settings.person_negprompt;
+                    } else if (follower.type === "creatures") {
+                        posprompt = settings.creature_prompt;
+                        negprompt = settings.creature_negprompt;
+                    }
+                    const artBlob = await generateArt(posprompt + follower.visual, negprompt, follower.seed);
+                    if (artBlob instanceof Blob) {
+                        follower.image = artBlob;
+                        img.src = URL.createObjectURL(artBlob);
+                    }
+                }, 0);
+            }
+            
+            // Add click handler for each follower
+            img.addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log('Follower clicked:', follower);
+                const submenu = document.getElementById('entitySubmenu');
+                if (submenu) {
+                    console.log('Removing existing submenu');
+                    if (submenu.closeHandler) {
+                        document.removeEventListener('click', submenu.closeHandler);
+                    }
+                    submenu.remove();
                 }
-                const artBlob = await generateArt(posprompt + follower.visual, negprompt, follower.seed);
-                if (artBlob instanceof Blob) {
-                    follower.image = artBlob;
-                    followerArt.src = URL.createObjectURL(artBlob);
-                }
-            }, 0);
-        }
+                openEntitySubmenu(follower, follower.type, e.clientX, e.clientY);
+            });
+            
+            followersContainer.appendChild(img);
+        });
     } else {
-        followerArt.style.width = '0%';
-        followerArt.src = '';
+        followersContainer.style.width = '0';
     }
 }

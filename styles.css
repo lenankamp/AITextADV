@@ -478,6 +478,21 @@ body {
     cursor: pointer;
 }
 
+#followers-container {
+    display: flex;
+    width: 0;
+    height: 100%;
+    overflow: hidden;
+    transition: width 0.3s ease-in-out;
+}
+
+.follower-image {
+    height: 100%;
+    object-fit: cover;
+    transition: width 0.3s ease-in-out;
+    cursor: pointer;
+}
+
 .approach-column {
     width: 46px;
     padding: 5px;
