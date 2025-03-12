@@ -484,13 +484,27 @@ body {
     height: 100%;
     overflow: hidden;
     transition: width 0.3s ease-in-out;
+    justify-content: flex-start;
+    position: relative;
 }
 
 .follower-image {
     height: 100%;
     object-fit: cover;
-    transition: width 0.3s ease-in-out;
     cursor: pointer;
+    transform: translateX(100%);
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out, width 0.3s ease-out, right 0.3s ease-out;
+}
+
+.follower-image.show {
+    transform: translateX(0);
+    opacity: 1;
+    position: relative;
+    right: auto;
 }
 
 .approach-column {

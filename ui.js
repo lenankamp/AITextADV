@@ -13,34 +13,6 @@ resizerRow1.addEventListener('mousedown', initDragRow);
 resizerRow2.addEventListener('mousedown', initDragRow);
 resizerMap.addEventListener('mousedown', initDragMap);
 
-document.addEventListener('DOMContentLoaded', (event) => {
-    document.getElementById('fileInput').addEventListener('change', loadFromFile);
-    
-    // Add followerart click handler with debug
-    const followerArt = document.getElementById('followerart');
-    console.log('Setting up followerart click handler');
-    followerArt.addEventListener('click', (e) => {
-        e.stopPropagation(); // Stop event from reaching document click handler
-        console.log('Followerart clicked');
-        console.log('Current followers:', followers);
-        if (followers.length > 0) {
-            const follower = followers[0]; // Currently only showing first follower
-            console.log('Selected follower:', follower);
-            const submenu = document.getElementById('entitySubmenu');
-            if (submenu) {
-                console.log('Removing existing submenu');
-                if (submenu.closeHandler) {
-                    document.removeEventListener('click', submenu.closeHandler);
-                }
-                submenu.remove();
-            }
-            openEntitySubmenu(follower, follower.type, e.clientX, e.clientY);
-        } else {
-            console.log('No followers available');
-        }
-    });
-});
-
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.toggle('collapsed');
@@ -905,66 +877,73 @@ function updateTime() {
 function updateFollowerArt() {
     const followersContainer = document.getElementById('followers-container');
     
-    // Clear existing follower images and blob URLs
-    while (followersContainer.firstChild) {
-        const img = followersContainer.firstChild;
-        if (img.src && img.src.startsWith('blob:')) {
-            URL.revokeObjectURL(img.src);
-        }
-        followersContainer.removeChild(img);
-    }
-
     // Update followers container display
     if (followers.length > 0) {
         followersContainer.style.width = '30%';
         const width = `${100 / followers.length}%`;
         
-        followers.forEach((follower, index) => {
-            const img = document.createElement('img');
-            img.classList.add('follower-image');
+        // Handle existing followers first
+        const existingFollowers = Array.from(followersContainer.children);
+        existingFollowers.forEach((img) => {
             img.style.width = width;
-            
-            if (follower.image instanceof Blob) {
-                img.src = URL.createObjectURL(follower.image);
-            } else if (follower.image === 'placeholder') {
-                img.src = 'placeholder.png';
-                // Generate follower image if needed
-                setTimeout(async () => {
-                    let negprompt = "";
-                    let posprompt = "";
-                    if (follower.type === "people") {
-                        posprompt = settings.person_prompt;
-                        negprompt = settings.person_negprompt;
-                    } else if (follower.type === "creatures") {
-                        posprompt = settings.creature_prompt;
-                        negprompt = settings.creature_negprompt;
-                    }
-                    const artBlob = await generateArt(posprompt + follower.visual, negprompt, follower.seed);
-                    if (artBlob instanceof Blob) {
-                        follower.image = artBlob;
-                        img.src = URL.createObjectURL(artBlob);
-                    }
-                }, 0);
-            }
-            
-            // Add click handler for each follower
-            img.addEventListener('click', (e) => {
-                e.stopPropagation();
-                console.log('Follower clicked:', follower);
-                const submenu = document.getElementById('entitySubmenu');
-                if (submenu) {
-                    console.log('Removing existing submenu');
-                    if (submenu.closeHandler) {
-                        document.removeEventListener('click', submenu.closeHandler);
-                    }
-                    submenu.remove();
+        });
+
+        // Add new follower after a small delay
+        const newFollower = followers[followers.length - 1];
+        const img = document.createElement('img');
+        img.classList.add('follower-image');
+        img.style.width = width;
+        
+        if (newFollower.image instanceof Blob) {
+            img.src = URL.createObjectURL(newFollower.image);
+        } else if (newFollower.image === 'placeholder') {
+            img.src = 'placeholder.png';
+            setTimeout(async () => {
+                let negprompt = "";
+                let posprompt = "";
+                if (newFollower.type === "people") {
+                    posprompt = settings.person_prompt;
+                    negprompt = settings.person_negprompt;
+                } else if (newFollower.type === "creatures") {
+                    posprompt = settings.creature_prompt;
+                    negprompt = settings.creature_negprompt;
                 }
-                openEntitySubmenu(follower, follower.type, e.clientX, e.clientY);
-            });
-            
-            followersContainer.appendChild(img);
+                const artBlob = await generateArt(posprompt + newFollower.visual, negprompt, newFollower.seed);
+                if (artBlob instanceof Blob) {
+                    newFollower.image = artBlob;
+                    img.src = URL.createObjectURL(artBlob);
+                }
+            }, 0);
+        }
+        
+        img.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const submenu = document.getElementById('entitySubmenu');
+            if (submenu) {
+                if (submenu.closeHandler) {
+                    document.removeEventListener('click', submenu.closeHandler);
+                }
+                submenu.remove();
+            }
+            openEntitySubmenu(newFollower, newFollower.type, e.clientX, e.clientY);
+        });
+        
+        followersContainer.appendChild(img);
+        
+        // Trigger the animation after a small delay
+        requestAnimationFrame(() => {
+            img.classList.add('show');
         });
     } else {
         followersContainer.style.width = '0';
+        
+        // Clean up any existing follower images and blob URLs
+        while (followersContainer.firstChild) {
+            const img = followersContainer.firstChild;
+            if (img.src && img.src.startsWith('blob:')) {
+                URL.revokeObjectURL(img.src);
+            }
+            followersContainer.removeChild(img);
+        }
     }
 }

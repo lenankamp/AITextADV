@@ -544,20 +544,26 @@ function addConfirmButton(label, defaultValue, callback) {
 }
 
 function renameEntity(name, prevName) {
-    const personIndex = areas[currentArea]['people'].findIndex(person => person.name === prevName);
-    if (personIndex !== -1) {
-        const person = areas[currentArea]['people'][personIndex];
-        person.name = name;
+    const followerIndex = followers.findIndex(follower => follower.name === prevName);
+    if (followerIndex !== -1) {
+        const follower = followers[followerIndex];
+        follower.name = name;
     } else {
-        const creatureIndex = areas[currentArea]['creatures'].findIndex(creature => creature.name === prevName);
-        if (creatureIndex !== -1) {
-            const creature = areas[currentArea]['creatures'][creatureIndex];
-            creature.name = name;
+        const personIndex = areas[currentArea]['people'].findIndex(person => person.name === prevName);
+        if (personIndex !== -1) {
+            const person = areas[currentArea]['people'][personIndex];
+            person.name = name;
         } else {
-            const thingIndex = areas[currentArea]['things'].findIndex(thing => thing.name === prevName);
-            if (thingIndex !== -1) {
-                const thing = areas[currentArea]['things'][thingIndex];
-                thing.name = name;
+            const creatureIndex = areas[currentArea]['creatures'].findIndex(creature => creature.name === prevName);
+            if (creatureIndex !== -1) {
+                const creature = areas[currentArea]['creatures'][creatureIndex];
+                creature.name = name;
+            } else {
+                const thingIndex = areas[currentArea]['things'].findIndex(thing => thing.name === prevName);
+                if (thingIndex !== -1) {
+                    const thing = areas[currentArea]['things'][thingIndex];
+                    thing.name = name;
+                }
             }
         }
     }
@@ -595,14 +601,14 @@ async function outputCheck(text, context="") {
         if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
             const names = line.replace("1. ", '').trim().split(',').map(name => name.stripNonAlpha().trim());
             for (const name of names) {
-                if (!areas[currentArea]['people'].some(person => person.name === name)) {
+                if (!areas[currentArea]['people'].some(person => person.name === name) && !followers.some(follower => follower.name === name)) {
                     addConfirmButton('New Person', name, (inputValue) => addPerson(inputValue || name, currentArea, text, context));
                 }
             }
         } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
             const names = line.replace("2. ", '').trim().split(',').map(name => name.stripNonAlpha().trim());
             for (const name of names) {
-                if (!areas[currentArea]['creatures'].some(creature => creature.name === name)) {
+                if (!areas[currentArea]['creatures'].some(creature => creature.name === name)  && !followers.some(follower => follower.name === name)) {
                     addConfirmButton('New Creature', name, (inputValue) => addCreature(inputValue || name, currentArea, text, context));
                 }
             }
@@ -623,6 +629,8 @@ async function outputCheck(text, context="") {
                     text: text
                 }, settings.sampleQuestions);
                 if (prevName.trim() != "N/A" && areas[currentArea].people.some(person => person.name.toLowerCase() === prevName.toLowerCase())) {
+                    addConfirmButton('Rename ' + prevName, newName, (inputValue) => renameEntity(inputValue || newName, prevName));
+                } else if  (followers.some(follower => follower.name.toLowerCase() === prevName.toLowerCase())) {
                     addConfirmButton('Rename ' + prevName, newName, (inputValue) => renameEntity(inputValue || newName, prevName));
                 } else {
                     // Check if newName exists as a person in some other area, and then delete that person
