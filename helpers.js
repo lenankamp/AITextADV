@@ -324,3 +324,21 @@ async function processRecursiveSummary(config = {
     }
 }
 
+function getSummary(skip = 0, limit = 0) {
+    const output = document.getElementById('output');
+    if (!output) return;
+
+    const elements = Array.from(output.children);
+    let summary = '';
+    let count = 0;
+    for(let level = 1; level <= settings.summary_max_layers; level++) {
+        const currentClass = `text-${level}`;
+        const elements = output.getElementsByClassName(currentClass);
+        for (let i = 0; i < elements.length; i++) {
+            if (count >= skip && (limit === 0 || count < skip + limit)) {
+                summary += elements[i].innerHTML.replace(/<br\s*\/?>/g, ' ').trim();
+            }
+            count++;
+        }
+    }
+}

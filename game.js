@@ -286,148 +286,6 @@ async function addSublocation(name, area=currentArea, text="", context="") {
     updateImageGrid(currentArea);
 }
 
-async function moveToArea(area, prevArea, text="") {
-    if (area === currentArea || area === currentArea.split('/').pop()) {
-        return;
-    }
-    let targetArea = null;
-    //check if the area exists or is a sublocation within the current area
-    if(areas[area]) {
-        targetArea = area;
-    } else if (areas[currentArea].sublocations[area]) {
-        targetArea = areas[currentArea].sublocations[area].path;
-        if(!areas[targetArea]) {
-            if(text === "")
-                await generateArea(targetArea, areas[currentArea].sublocations[area].description);
-            else await generateArea(targetArea, areas[currentArea].sublocations[area].description, contextDepth=3);
-        }
-    } else if (area.includes('/')) {
-        const [topArea, ...subPaths] = area.split('/');
-        if (!areas[topArea]) {
-            let newX, newY;
-            const maxAttempts = 100;
-            let attempts = 0;
-            const distance = 30;
-
-            do {
-                newX = areas[currentArea.split('/')[0]].x + Math.floor(Math.random() * distance * 2) - distance;
-                newY = areas[currentArea.split('/')[0]].y + Math.floor(Math.random() * distance * 2) - distance;
-                attempts++;
-            } while (attempts < maxAttempts && Object.values(areas).some(a => a.x === newX && a.y === newY));
-
-            if (attempts >= maxAttempts) {
-                throw new Error("Unable to find a suitable location for the new area.");
-            }
-
-            await generateArea(newX, newY, topArea);
-        }
-
-        let currentPath = topArea;
-        for (const subPath of subPaths) {
-            const parentPath = currentPath;
-            currentPath += '/' + subPath;
-            await generateArea(currentPath);
-            if (!areas[parentPath].sublocations[subPath]) {
-                areas[parentPath].sublocations[subPath] = { path: currentPath, name: subPath, description: areas[currentPath].description };
-            }
-        }
-        targetArea = currentPath;
-    } else if (!areas[area]) {
-        const areaList = Object.keys(areas).join(', ') + ', ' + Object.keys(areas[currentArea].sublocations).join(', ');
-        const proximityPrompt = replaceVariables(settings.moveToAreaProximityPrompt, {
-            newArea: area
-        });
-        
-        const response = await generateText(settings.question_param, settings.world_description + "\n\n\nPassage:\n" + text + "\nLocations: "+ areaList + "\n\n" + proximityPrompt, '', {
-            areaList: areaList,
-            currentArea: currentArea,
-            newArea: area,
-            text: text
-        }, settings.sampleQuestions);
-        
-        if (response !== 'N/A') {
-            const responseCleaned = response.stripNonAlpha();
-            const parentArea = Object.keys(areas).find(a => {
-                const isMatch = a === responseCleaned || Object.keys(areas[a].sublocations).includes(responseCleaned);
-                return isMatch;
-            });
-            if(text === "")
-                await generateArea(parentArea + "/" + area);
-            else await generateArea(parentArea + "/" + area, contextDepth=3);
-
-            if (!areas[parentArea].sublocations) {
-                areas[parentArea].sublocations = {};
-            }
-            areas[parentArea].sublocations[area] = { path: parentArea + '/' + area, name: area, description: areas[parentArea + '/' + area].description };
-            targetArea = parentArea + '/' + area;
-        }
-    } 
-    if(targetArea === null) {
-        let newX, newY;
-        const maxAttempts = 100;
-        let attempts = 0;
-        const distance = 5;
-
-        do {
-            newX = areas[currentArea.split('/')[0]].x + 200*(Math.floor(Math.random() * distance * 2) - distance);
-            newY = areas[currentArea.split('/')[0]].y + 200*(Math.floor(Math.random() * distance * 2) - distance);
-            attempts++;
-        } while (attempts < maxAttempts && Object.values(areas).some(a => a.x === newX && a.y === newY));
-
-        if (attempts >= maxAttempts) {
-            throw new Error("Unable to find a suitable location for the new area.");
-        }
-
-        await generateArea(area, '', newX, newY, 3);
-        targetArea = area;
-    }
-
-    if(text != "" && areas[currentArea].people.length > 0) {
-        const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');
-        const peoplePrompt = replaceVariables(settings.moveToAreaPeoplePrompt, {
-            peopleNames: peopleNames
-        });
-        
-        const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + peoplePrompt, '', {
-            currentArea: currentArea,
-            newArea: area,
-            text: text,
-            peopleNames: peopleNames
-        }, settings.sampleQuestions);
-        
-        const movers = movingPeople.split('\n');
-        for (const mover of movers) {
-            if (mover.trim() != "") {
-                const personIndex = areas[currentArea].people.findIndex(person => person.name === mover);
-                if (personIndex !== -1) {
-                    const person = areas[currentArea].people.splice(personIndex, 1)[0];
-                    areas[targetArea].people.push(person);
-                }
-            }
-        }
-    }
-    
-    currentArea = targetArea;
-    updateAreaDisplay(currentArea);
-    
-    // Update scene art with proper URL cleanup
-    const sceneArt = document.getElementById('sceneart');
-    if (sceneArt.src.startsWith('blob:')) {
-        URL.revokeObjectURL(sceneArt.src);
-    }
-    
-    if (areas[currentArea].image instanceof Blob) {
-        const objectUrl = URL.createObjectURL(areas[currentArea].image);
-        sceneArt.src = objectUrl;
-    } else {
-        sceneArt.src = 'placeholder.png';
-    }
-    
-    // Make sure the image grid and sublocation row are updated after area change
-    updateImageGrid(currentArea);
-    updateSublocationRow(currentArea);
-}
-
 async function entityLeavesArea(name, text) {
     const prompt = replaceVariables(settings.entityLeavesAreaPrompt, {
         name: name
@@ -615,7 +473,7 @@ async function outputCheck(text, context="") {
         } else if (line.startsWith('3.') && !line.includes('N/A') && line.trim() !== '3.') {
             const newArea = line.replace("3. ", '').stripNonAlpha().trim();
             if (newArea !== currentArea && newArea !== currentArea.split('/').pop()) {
-                addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, currentArea, text, 3));
+                addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, 0, text, 3));
             }
         } else if (line.startsWith('4.') && !line.includes('N/A') && line.trim() !== '4.') {
             const newName = line.replace("4. ", '').stripNonAlpha().trim();
@@ -885,16 +743,19 @@ function areaContext(areaPath) {
 
 function fullContext(limit = null) {
     let outputContent = document.getElementById('output').innerText;
+    let summary;
     if (limit !== null) {
         const output = document.getElementById('output');
         const children = Array.from(output.children);
         const limitedChildren = children.slice(-limit);
         outputContent = limitedChildren.map(child => child.outerText).join('');
+        summary = getSummary(limit);
     }
     return settings.full_context
         .replace('$world', "World Description: " + settings.world_description + "\n")
         .replace('$player', "Player Name: " + settings.player_name + "\n")
         .replace('$player_desc', "Player Description: " + settings.player_description + "\n")
+        .replace('$summary', summary ? "Summary of Previous Events: " + summary +"\n" : '')
         .replace('$locale', areaContext(currentArea))
         .replace('$story', outputContent);
 }
@@ -1011,7 +872,7 @@ async function playerAction(action) {
     }
 }
 
-async function sendMessage(message = input.value) {
+async function sendMessage(message = input.value, bypassCheck = false, extraContext = '') {
     const input = document.getElementById('input');
     const output = document.getElementById('output');
     const messageElement = document.createElement('div');
@@ -1033,7 +894,6 @@ async function sendMessage(message = input.value) {
             const parts = message.split(' ');
             const command = parts[0];
             const name = parts.slice(1).join(' ');
-
             if (command === '/char') {
                 await addPerson(name);
             } else if (command === '/thing') {
@@ -1041,7 +901,7 @@ async function sendMessage(message = input.value) {
             } else if (command === '/creature') {
                 await addCreature(name);
             } else if (command === '/move') {
-                await moveToArea(name, currentArea);
+                await moveToArea(name);
             } else if (command === '/rename') {
                 // name command is passed as /rename 'old name' 'new name'
                 const [oldName, newName] = name.split("' '").map(n => n.replace(/'/g, '').trim());
@@ -1054,6 +914,8 @@ async function sendMessage(message = input.value) {
                 output.scrollTop = output.scrollHeight;
                 messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$.]';
             } else return;
+        } else if (bypassCheck) {
+            messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$ as ' + message +']';
         } else {
             messageElement.innerHTML = message;
             messageElement.innerHTML = await playerAction(message);
@@ -1066,7 +928,7 @@ async function sendMessage(message = input.value) {
     output.appendChild(messageElement);
     output.scrollTop = output.scrollHeight;
 
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(), '', {
+    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(3), '', {
         message: message,
         currentArea: currentArea,
         playerName: settings.player_name
@@ -1133,6 +995,7 @@ async function setupStart() {
     updateApproachDisplay();
     updateCharacterInfo();
     updateConsequences();
+    updateFollowerArt();
     updateAreaDisplay(settings.starting_area);
 
     await generateArea(settings.starting_area, settings.starting_area_description, 3500, 3500);
@@ -1163,8 +1026,6 @@ async function setupStart() {
 
 // Update restartGame function
 function restartGame() {
-    loadDefaultSettings();     // for debugging, rest to default settings to clear settings from
-    overrideSettings(); // previous game that was auto loaded
     
     // Clean up any existing object URLs
     const sceneArt = document.getElementById('sceneart');
@@ -1173,15 +1034,13 @@ function restartGame() {
     }
     
     areas = {};
+    followers = [];
     document.querySelectorAll('.location').forEach(location => {
         location.remove();
     });
     currentArea = settings.starting_area;
     document.getElementById('output').innerHTML = '';
     document.getElementById('imageGrid').innerHTML = '';
-    updateApproachDisplay();
-    updateCharacterInfo();
-    updateConsequences();
     setupStart();
 }
 
@@ -1235,8 +1094,7 @@ async function setupStart() {
     });
 }
 
-// Add to moveToArea function where area changes
-async function moveToArea(area, prevArea, text="") {
+async function moveToArea(area, describe=0, text="") {
     if (area === currentArea || area === currentArea.split('/').pop()) {
         return;
     }
@@ -1356,16 +1214,41 @@ async function moveToArea(area, prevArea, text="") {
             }
         }
     }
+    let prompt;
+    if(describe) {
+        prompt = settings.player_name + " leaves " + areas[currentArea].name + " and " + (describe>1 ? settings.player_distant_movement : settings.player_local_movement);
+        if(followers.length > 0) {
+            const followerNames = followers.map(follower => follower.name).join(', ');
+            prompt += " along with " + followerNames;
+        }
+        if (describe > 1)
+            prompt += " many miles";
+        prompt += " and arrives at ";
+    }
     
     currentArea = targetArea;
     updateAreaDisplay(currentArea);
-    if(areas[currentArea].image instanceof Blob)
-        document.getElementById('sceneart').src = URL.createObjectURL(areas[currentArea].image);
-    else
-        document.getElementById('sceneart').src = 'placeholder.png';
-    document.getElementById('sceneart').alt = areas[currentArea].description;
+    
+    // Update scene art with proper URL cleanup
+    const sceneArt = document.getElementById('sceneart');
+    if (sceneArt.src.startsWith('blob:')) {
+        URL.revokeObjectURL(sceneArt.src);
+    }
+    
+    if (areas[currentArea].image instanceof Blob) {
+        const objectUrl = URL.createObjectURL(areas[currentArea].image);
+        sceneArt.src = objectUrl;
+    } else {
+        sceneArt.src = 'placeholder.png';
+    }
+    
+    // Make sure the image grid and sublocation row are updated after area change
     updateImageGrid(currentArea);
     updateSublocationRow(currentArea);
+    if(describe) {
+        prompt += areas[currentArea].name + '.';
+        sendMessage(prompt, true);
+    }
 }
 
 // At the end of the file, where the initial game setup is done

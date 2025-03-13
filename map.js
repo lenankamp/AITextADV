@@ -150,7 +150,7 @@ function openSubmenu(name, x, y) {
     const enterBtn = document.createElement('button');
     enterBtn.textContent = `Enter ${name}`;
     enterBtn.onclick = () => {
-        goToLocation(name);
+        goToLocation(name, true);
         menu.remove();
     };
     menu.appendChild(enterBtn);
@@ -184,8 +184,8 @@ document.addEventListener('click', (e) => {
 });
 
 // Go to a location
-function goToLocation(name) {
-    moveToArea(name, currentArea).then(() => {
+function goToLocation(name, distant = false) {
+    moveToArea(name, distant ? 2 : 1).then(() => {
         updateSublocationRow(name);
     });
 }
@@ -252,7 +252,7 @@ function openSublocationMenu(area, path, x, y) {
     const enterBtn = document.createElement('button');
     enterBtn.textContent = `Enter ${path.split('/').pop()}`;
     enterBtn.onclick = () => {
-        goToLocation(path);
+        goToLocation(path, false);
         menu.remove();
     };
     menu.appendChild(enterBtn);

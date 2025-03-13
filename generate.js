@@ -34,6 +34,7 @@ async function generateText(params, input, post='', variables={}, sample_message
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + params.apiKey,
             },
             body: JSON.stringify({
                 model: params.model,
