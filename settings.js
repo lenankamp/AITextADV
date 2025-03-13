@@ -7,37 +7,39 @@ function loadDefaultSettings() {
     topright_height: "640px",
     column_width: "640px",
     // world generation settings
-    world_description: "A vast and mysterious world filled with magic and wonder.",
-    starting_area: "Home",
-    starting_area_description: "A cozy and warm room within a wooden cabin, your bed sits in the corner. A fire crackles in the fireplace, casting flickering shadows on the walls. The smell of pine and woodsmoke fills the air.",
-    current_time: "800-01-12 08:00:00",
+    world_description: "The Kanto region is a region of the Pokémon world. Everyone aspires to be a Pokémon trainer. Pokémon trainers train their Pokémon to duel and seek to become champions.",
+    starting_area: "Professor Oak's Lab",
+    starting_area_description: "A small, cluttered laboratory filled with books, equipment, and various Pokémon specimens. The air is filled with the scent of chemicals and the sound of bubbling beakers. A large desk is covered in papers and a computer, while shelves are lined with jars containing strange creatures.",
+    current_time: "2025-06-12 08:00:00",
     // player details and character sheet
-    player_name: "Adventurer",
-    player_description: "A brave and adventurous soul, ready to explore the unknown.",
-    player_visual: "A young adult with a determined expression, wearing a simple tunic and trousers.",
+    player_name: "Young Trainer",
+    player_description: "A young and eager Pokémon trainer, ready to embark on an adventure. They have a determined look in their eyes and a backpack slung over their shoulder. Their clothes are practical and comfortable, suitable for traveling through the wilderness.",
+    player_visual: "Pokémon Trainer, young, determined, wearing a cap and backpack, with a Pokéball in hand, standing in front of a lab filled with books and equipment.",
     player_seed: 11111,
+    player_local_movement: "walks",
+    player_distant_movement: "rides horse",
     rule_set: "Fate Accelerated",
     ruleprompt_fae_action1: "Approach defintions:\nCareful: A Careful action is when you pay close attention to detail and take your time to do the job right. Lining up a long-range arrow shot. Attentively standing watch. Disarming a bank’s alarm system.\nClever: A Clever action requires that you think fast, solve problems, or account for complex variables. Finding the weakness in an enemy swordsman’s style. Finding the weak point in a fortress wall. Fixing a computer.\nFlashy: A Flashy action draws attention to you; it’s full of style and panache. Delivering an inspiring speech to your army. Embarrassing your opponent in a duel. Producing a magical fireworks display.\nForceful: A Forceful action isn’t subtle—it’s brute strength. Wrestling a bear. Staring down a thug. Casting a big, powerful magic spell. \nQuick: A Quick action requires that you move quickly and with dexterity. Dodging an arrow. Getting in the first punch. Disarming a bomb as it ticks 3… 2… 1… \nSneaky: A Sneaky action is done with an emphasis on misdirection, stealth, or deceit. Talking your way out of getting arrested. Picking a pocket. Feinting in a sword fight.\n\nPlayer is attempting the action: '$action'. Given the context and the player character sheet, answer the following questions in a numbered list format, only giving the simple answer without preface or explanation. 1. How likely is success for the character's action? Answer among one of the following: trivial(little chance of failure or no consequences to failure), plausible(reasonable chance of failure), challenging(significant chance of failure), extremely difficult(extremely high risk of failure), impossible(physiologically implausible, anachronism, required items not present). 2. What is the player's approach? Answer the one that best fits among: careful, clever, flashy, forceful, quick, or sneaky 3. Give a comma separated list of specifically relevant aspects, stunts, or situational advantages that make this action more likely to succeed. If none are relevant to the action answer n/a. 4. Give a comma separated list of specifically relevant aspects or situational disadvantages that make this action more likely to fail. If none are relevant to the action answer n/a.",
     charsheet_fae: {
-      high_concept: "Determined Adventurer",
+      high_concept: "Young Pokémon Trainer",
       trouble: "Curious to a Fault",
       approaches: {
         careful: 1,
-        clever: 3,
-        flashy: 2,
+        clever: 2,
+        flashy: 3,
         forceful: 1,
         quick: 2,
         sneaky: 0
       },
       aspects: [
-        "Adept with a Sword",
-        "Fast Runner",
-        "Winning Smile"
+        "Adventurous Spirit",
+        "Eager Learner",
+        "Loyal Friend"
       ],
       stunts: {
-        swordplay: "You get a +2 to overcome obstacles when using your sword.",
-        fast: "You get a +2 to overcome obstacles when running.",
-        disarming_charm: "You get a +2 to create advantages when using your charm."
+        'Pokémon Bond': "You get a +2 to create advantages when working with your Pokémon.",
+        'Quick Reflexes': "You get a +2 to overcome obstacles when dodging attacks.",
+        'Strategic Thinker': "You get a +2 to create advantages when planning your next move."
       },
       stress: {
         1: false,
@@ -55,12 +57,12 @@ function loadDefaultSettings() {
       }
     },
     // image generation settings
-    sdAPI: "http://localhost:7860/sdapi/v1/txt2img",
-    default_prompt: "__default__,",
+    sdAPI: "https://b6de60edc66c97d6c9.gradio.live/sdapi/v1/txt2img",
+    default_prompt: "__default__,Pokémon style,",
     default_negative_prompt: "__defaultneg__,",
     person_prompt: "",
     person_negprompt: "",
-    creature_prompt: "(nopeople),",
+    creature_prompt: "(nopeople),((Pokémon)),",
     creature_negprompt: "((person, human)),",
     thing_prompt: "(nopeople),",
     thing_negprompt: "((people, human, person)),",
@@ -73,9 +75,10 @@ function loadDefaultSettings() {
     seed_variation: 3,
     // text generation API settings
     story_param: {
-      textAPI: "http://localhost:5001/v1/",
+      textAPI: "https://openrouter.ai/api/v1/",
       textAPItype: "openai",
-      model: "mistral-small-24b-instruct-2501-abliterated-i1",
+      apiKey: "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",
+      model: "mistralai/mistral-small-24b-instruct-2501:free",
       max_context_length: 4096,
       max_length: 400,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -93,9 +96,10 @@ function loadDefaultSettings() {
       typical: 1
     },
     question_param: {
-      textAPI: "http://localhost:5001/v1/",
+      textAPI: "https://openrouter.ai/api/v1/",
       textAPItype: "openai",
-      model: "mistral-small-24b-instruct-2501-abliterated-i1",
+      apiKey: "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",
+      model: "mistralai/mistral-small-24b-instruct-2501:free",
       max_context_length: 4096,
       max_length: 400,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -113,9 +117,10 @@ function loadDefaultSettings() {
       typical: 1
     },
     creative_question_param: {
-      textAPI: "http://localhost:5001/v1/",
+      textAPI: "https://openrouter.ai/api/v1/",
       textAPItype: "openai",
-      model: "mistral-small-24b-instruct-2501-abliterated-i1",
+      apiKey: "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",
+      model: "mistralai/mistral-small-24b-instruct-2501:free",
       max_context_length: 4096,
       max_length: 400,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -133,9 +138,10 @@ function loadDefaultSettings() {
       typical: 1
     },
     summary_param: {
-      textAPI: "http://localhost:5001/v1/",
+      textAPI: "https://openrouter.ai/api/v1/",
       textAPItype: "openai",
-      model: "mistral-small-24b-instruct-2501-abliterated-i1",
+      apiKey: "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",
+      model: "mistralai/mistral-small-24b-instruct-2501:free",
       max_context_length: 4096,
       max_length: 600,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -169,7 +175,7 @@ function loadDefaultSettings() {
     areaContext: "\nCurrently in: $name : $description\n\n",
     areaPeopleContext: "People within $name\n$peopleList\n",
     areaThingsContext: "Things within $name\n$thingsList\n",
-    areaCreaturesContext: "Creatures within $name\n$creaturesList\n",
+    areaCreaturesContext: "Pokémon within $name\n$creaturesList\n",
     areaPathsContext: "Paths or Exits may lead to:\n$paths",
     areaTimeContext: "Time: $timeOfDay of $dayOfWeek in $season\n",
     subLocationFormat: "$name: $description\n",
@@ -407,6 +413,7 @@ function openSettings() {
               section.className = 'settings-section';
               section.dataset.section = sectionName;
               
+
               const header = document.createElement('div');
               header.className = 'settings-section-header';
               header.innerHTML = `<span>${sectionName}</span><span class="section-toggle">▼</span>`;
@@ -417,9 +424,11 @@ function openSettings() {
                   e.stopPropagation();
               };
               
+
               const content = document.createElement('div');
               content.className = 'settings-section-content';
               
+
               section.appendChild(header);
               section.appendChild(content);
               sectionsContainer.appendChild(section);
@@ -453,6 +462,7 @@ function openSettings() {
               input.id = key;
               input.name = key;
               
+
               if (typeof value === 'boolean') {
                   input.type = 'checkbox';
                   input.checked = value;
@@ -466,6 +476,7 @@ function openSettings() {
                   input.value = typeof value === 'string' ? value.replace(/\n/g, '\\n') : value;
               }
               
+
               settingContainer.appendChild(input);
           }
 
@@ -488,10 +499,21 @@ function openSettings() {
   const cancelButton = document.createElement('button');
   cancelButton.textContent = 'Cancel';
   cancelButton.className = 'btn-secondary';
-  cancelButton.onclick = closeSettings;
+  cancelButton.type = 'button'; // Prevent form submission
+  cancelButton.onclick = (e) => {
+    e.preventDefault();
+    closeSettings();
+  };
   
+  const resetButton = document.createElement('button');
+  resetButton.textContent = 'Reset to Defaults';
+  resetButton.className = 'btn-secondary';
+  resetButton.type = 'button'; // Explicitly set type to button
+  resetButton.onclick = resetSettings;
+
   actionButtons.appendChild(saveButton);
   actionButtons.appendChild(cancelButton);
+  actionButtons.appendChild(resetButton);
   form.appendChild(actionButtons);
 
   // Update search functionality for collapsible sections
@@ -526,6 +548,12 @@ function openSettings() {
 
 function closeSettings() {
   document.getElementById('settingsOverlay').style.display = 'none';
+}
+
+function resetSettings() {
+  loadDefaultSettings();
+  overrideSettings();
+  closeSettings();
 }
 
 function saveSettings() {
