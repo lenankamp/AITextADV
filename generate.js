@@ -34,6 +34,7 @@ async function generateText(params, input, post='', variables={}, sample_message
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${params.apiKey}`
             },
             body: JSON.stringify({
                 model: params.model,
@@ -85,8 +86,11 @@ async function generateText(params, input, post='', variables={}, sample_message
     document.getElementById('loader').style.display = 'none';
 
     if(params.textAPItype == 'openai') {
-        console.log(data.choices[0].message.content);
-        return data.choices[0].message.content;
+//        console.log(data.choices[0].message.content);
+        if (data.choices)
+            return data.choices[0].message.content;
+        else
+            return '';
     } else {
         return data.results[0].text;
     }
@@ -104,84 +108,167 @@ async function generateArt(prompt, negprompt='', seed=-1) {
         sum = seed;
     }
 
-    try {
-        const response = await fetch(settings.sdAPI, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "prompt": settings.default_prompt + prompt,
-                "negative_prompt": settings.default_negative_prompt + negprompt,
-                "width": settings.sd_width,
-                "height": settings.sd_height,
-                "steps": settings.steps,
-                "seed": sum + Math.floor(Math.random() * settings.seed_variation),
-                "cfg_scale": settings.cfg_scale,
-                "send_images": true,
-                "save_images": settings.save_images,
-                "sampler_name": settings.sampler_name
-            })
-        });
+    if (settings.sdAPI == '') { //5 fantasy art, 3 none, 16 watercolor, 17 realistic, 7 hd
+        const imageBase64 = await send_task_to_dream_api(16, prompt);
+        return await base64ToWebP(imageBase64);
+    } else {
+            try {
+                const response = await fetch(settings.sdAPI, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "prompt": settings.default_prompt + prompt,
+                        "negative_prompt": settings.default_negative_prompt + negprompt,
+                        "width": settings.sd_width,
+                        "height": settings.sd_height,
+                        "steps": settings.steps,
+                        "seed": sum + Math.floor(Math.random() * settings.seed_variation),
+                        "cfg_scale": settings.cfg_scale,
+                        "send_images": true,
+                        "save_images": settings.save_images,
+                        "sampler_name": settings.sampler_name
+                    })
+                });
 
-        const data = await response.json();
-        // Assuming the image data is in data.images[0] as a base64 string
-        const imageBase64 = data.images[0];
-        const binaryString = window.atob(imageBase64);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
+            const data = await response.json();
+            const imageBase64 = data.images[0];
+            return await base64ToWebP(imageBase64);
 
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
+
+        } catch (error) {
+            console.error('Error generating art:', error);
+            // Hide loader
+            document.getElementById('loader').style.display = 'none';
+            // Return placeholder image
+            return 'placeholder';
         }
-
-        const pngBlob = new Blob([bytes], { type: 'image/png' });
-
-        // Converting PNG to WebP for file size reduction, should make quality or even this feature options
-
-        const img = new Image();
-
-        // Create a canvas element to draw the image
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        if (!ctx) {
-            throw new Error("Unable to obtain 2D rendering context.");
-        }
-
-        img.src = URL.createObjectURL(pngBlob);
-        await new Promise((resolve) => {
-            img.onload = () => resolve();
-        });
-
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        ctx.drawImage(img, 0, 0);
-
-        const webpBlob = await new Promise((resolve) => {
-            canvas.toBlob(
-                (blob) => {
-                    if (blob) {
-                        resolve(blob);
-                    } else {
-                        throw new Error("Failed to convert to WebP format.");
-                    }
-                },
-                "image/webp",
-                0.6 // quality 0-1, 1 being best quality
-            );
-        });
-
-        // Hide loader
-        document.getElementById('loader').style.display = 'none';
-
-        return webpBlob;
-    } catch (error) {
-        console.error('Error generating art:', error);
-        // Hide loader
-        document.getElementById('loader').style.display = 'none';
-        // Return placeholder image
-        return 'placeholder';
     }
+}
+
+async function send_task_to_dream_api(style_id = 0, prompt, negprompt='', seed=-1) {
+    /**
+    Send requests to the dream API.
+    prompt is the text prompt.
+    style_id is which style to use (a mapping of ids to names is in the docs).
+    target_img_path is an optional base64 string of the target image.
+    Returns: base64 string of generated image or throws error
+    */
+
+    const post_payload = { "use_target_image": (false) };
+    const BASE_URL = 'https://api.luan.tools/api/tasks/';
+    const headers = {
+        'Authorization': `Bearer qVo2UrCJ5ofXlbq6ewa7WqNrCgu0wkfx`,
+        'Content-Type': 'application/json'
+    };
+
+    // Step 1: Create task
+    const response = await fetch(BASE_URL, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(post_payload)
+    });
+    if (!response.ok) throw new Error('Failed to create task');
+    const taskData = await response.json();
+
+    // Step 2: Configure generation task
+    const task_id = taskData.id;
+    const task_url = `${BASE_URL}${task_id}`;
+    const put_payload = {
+        'input_spec': {
+            'style': style_id,
+            'prompt': prompt,
+            'negative_prompt': negprompt,
+            'width': 512,
+            'height': 768,
+            'seed': seed
+        }
+    };
+    
+    const putResponse = await fetch(task_url, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify(put_payload)
+    });
+    if (!putResponse.ok) throw new Error('Failed to configure task');
+
+    // Step 3: Poll for results
+    while (true) {
+        const statusResponse = await fetch(task_url, { headers });
+        if (!statusResponse.ok) throw new Error('Failed to check status');
+        
+        const statusData = await statusResponse.json();
+        if (statusData.state === 'failed') {
+            throw new Error('Image generation failed');
+        } else if (statusData.state === 'completed') {
+            const imageResponse = await fetch(statusData.result);
+            const blob = await imageResponse.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    // Extract just the base64 part if it's a data URL
+                    const base64Data = reader.result.split(',')[1] || reader.result;
+                    resolve(base64Data);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+        await new Promise(res => setTimeout(res, 4000));
+    }
+}
+
+async function base64ToWebP(imageBase64) {
+            // Assuming the image data is in data.images[0] as a base64 string
+            const binaryString = window.atob(imageBase64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            const pngBlob = new Blob([bytes], { type: 'image/png' });
+
+            // Converting PNG to WebP for file size reduction, should make quality or even this feature options
+
+            const img = new Image();
+
+            // Create a canvas element to draw the image
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+
+            if (!ctx) {
+                throw new Error("Unable to obtain 2D rendering context.");
+            }
+
+            img.src = URL.createObjectURL(pngBlob);
+            await new Promise((resolve) => {
+                img.onload = () => resolve();
+            });
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+
+            const webpBlob = await new Promise((resolve) => {
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            resolve(blob);
+                        } else {
+                            throw new Error("Failed to convert to WebP format.");
+                        }
+                    },
+                    "image/webp",
+                    0.6 // quality 0-1, 1 being best quality
+                );
+            });
+
+            // Hide loader
+            document.getElementById('loader').style.display = 'none';
+
+            return webpBlob;
 }
