@@ -57,7 +57,7 @@ function loadDefaultSettings() {
       }
     },
     // image generation settings
-    sdAPI: "https://b6de60edc66c97d6c9.gradio.live/sdapi/v1/txt2img",
+    sdAPI: "",
     default_prompt: "__default__,Pokémon style,",
     default_negative_prompt: "__defaultneg__,",
     person_prompt: "",
@@ -596,13 +596,24 @@ function saveSettings() {
       console.error('Error saving settings to localStorage:', e);
   }
 
-  // Apply visual settings
+  // Apply visual settings using CSS Grid variables
   try {
-      document.getElementById('q1').style.height = settings.topleft_height;
-      document.getElementById('q2').style.height = settings.topright_height;
-      document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - .5vh)`;
-      document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - .5vh)`;
-      document.querySelector('.content').style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
+      const contentEl = document.querySelector('.content');
+      const q1 = document.getElementById('q1');
+      const q2 = document.getElementById('q2');
+      const q3 = document.getElementById('q3');
+      const q4 = document.getElementById('q4');
+      
+      // Update layout using CSS custom properties
+      document.documentElement.style.setProperty('--top-left-height', settings.topleft_height);
+      document.documentElement.style.setProperty('--top-right-height', settings.topright_height);
+      document.documentElement.style.setProperty('--column-width', settings.column_width);
+      
+      q1.style.height = `var(--top-left-height)`;
+      q2.style.height = `var(--top-right-height)`;
+      q3.style.height = `calc(100vh - var(--top-left-height) - .5vh)`;
+      q4.style.height = `calc(100vh - var(--top-right-height) - .5vh)`;
+      contentEl.style.gridTemplateColumns = `var(--column-width) .5vh 1fr`;
   } catch (e) {
       console.error('Error applying visual settings:', e);
   }

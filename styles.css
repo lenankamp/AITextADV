@@ -38,20 +38,27 @@ body {
     bottom: 20px; /* Fixed vertical position relative to the bottom */
 }
 .content {
-    flex: 1;
     display: grid;
-    grid-template-columns: 1fr 5px 1fr;
+    grid-template-columns: 300px .5vh 1fr;
+    height: calc(100vh - 60px);
     gap: 0;
-    padding: 0px;
-    max-height: 100vh;
-    background-color: #1a1a1a;
+    position: relative;
+    overflow: hidden;
 }
 .side {
+    height: 100%;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    max-height: 100vh;
-    min-height: 100vh;
+    overflow: hidden;
+}
+#left {
+    min-width: 100px;
+    max-width: calc(100vw - 100px);
+    width: 100%;
+}
+#right {
+    min-width: 100px;
+    width: 100%;
 }
 .quadrant {
     background-color: #2d2d2d;
@@ -65,6 +72,21 @@ body {
     overflow: auto;
 }
 
+#q1 {
+    height: 65vh;
+}
+
+#q3 {
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-start;
+}
+
+#q2 {
+    height: 40vh;
+    display: flex;
+    overflow: hidden;
+}
 
 .toggle-btn {
     background-color: #404040;
@@ -675,6 +697,7 @@ progress::-moz-progress-bar {
     overflow-x: auto;
     position: relative;
     padding-bottom: 30px; /* Make room for sublocation row */
+    width: 40%;
 }
 .map {
     width: 8000px; /* Arbitrary large size for the map */
@@ -841,6 +864,14 @@ progress::-moz-progress-bar {
 .sceneart-container {
     position: relative;
     overflow: hidden;
+    width: 60%;
+    height: 100%;
+}
+
+#sceneart {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
 }
 
 .area-name-overlay {
@@ -1428,4 +1459,69 @@ textarea.setting-item:focus,
 
 .cancel-edit-btn:active {
     transform: translateY(0);
+}
+
+.error-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #ff4444;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    max-width: 300px;
+    word-wrap: break-word;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#fileInput {
+    display: none;
+}
+
+/* Dynamic state classes */
+.hidden {
+    display: none !important;
+}
+
+.visible {
+    display: block;
+}
+
+.flex-visible {
+    display: flex;
+}
+
+/* Dynamic sizing classes */
+.full-width {
+    width: 100% !important;
+}
+
+.full-height {
+    height: 100% !important;
+}
+
+.auto-height {
+    height: auto !important;
+}
+
+/* Follower container states */
+.followers-visible {
+    width: 30% !important;
+}
+
+.follower-visible {
+    width: auto !important;
+}
+
+/* Tooltip positioning - will be updated via JavaScript but without inline styles */
+.tooltip-visible {
+    display: block;
+    position: fixed;
 }

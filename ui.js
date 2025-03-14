@@ -27,15 +27,20 @@ function handleKeyDown(event) {
 }
 
 function initDragCol(e) {
+    e.preventDefault();
     startX = e.clientX;
-    startWidth = parseInt(document.defaultView.getComputedStyle(content).getPropertyValue('grid-template-columns').split(' ')[0]);
+    const leftSide = document.getElementById('left');
+    startWidth = leftSide.offsetWidth;
     document.addEventListener('mousemove', doDragCol, false);
     document.addEventListener('mouseup', stopDragCol, false);
 }
 
 function doDragCol(e) {
-    const newWidth = startWidth + (e.clientX - startX);
+    e.preventDefault();
+    const leftSide = document.getElementById('left');
+    const newWidth = Math.max(100, Math.min(window.innerWidth - 100, startWidth + e.clientX - startX));
     content.style.gridTemplateColumns = `${newWidth}px .5vh 1fr`;
+    leftSide.style.width = `${newWidth}px`;
 }
 
 function stopDragCol() {
@@ -171,12 +176,13 @@ function updateImageGrid(areaName) {
                 });
 
                 container.addEventListener('mousemove', (e) => {
-                    tooltip.style.left = e.pageX + 10 + 'px';
-                    tooltip.style.top = e.pageY + 10 + 'px';
+                    tooltip.classList.add('tooltip-visible');
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY + 10}px`;
                 });
 
                 container.addEventListener('mouseout', () => {
-                    tooltip.style.display = 'none';
+                    tooltip.classList.remove('tooltip-visible');
                 });
 
                 container.appendChild(img);
@@ -615,12 +621,12 @@ function updateFollowerArt() {
     
     // Update followers container display
     if (followers.length > 0) {
-        followersContainer.style.width = '30%';
+        followersContainer.classList.add('followers-visible');
         const width = `${100 / followers.length}%`;
         
         // Update existing images' widths first
         Array.from(followersContainer.children).forEach(img => {
-            img.style.width = width;
+            img.classList.add('follower-visible');
         });
 
         // Add/update followers
@@ -631,7 +637,7 @@ function updateFollowerArt() {
                 img = document.createElement('img');
                 img.classList.add('follower-image', 'show');
                 img.dataset.followerName = follower.name;
-                img.style.width = width;
+                img.classList.add('follower-visible');
                 
                 if (follower.image instanceof Blob) {
                     img.src = URL.createObjectURL(follower.image);
@@ -682,7 +688,7 @@ function updateFollowerArt() {
             }
         });
     } else {
-        followersContainer.style.width = '0';
+        followersContainer.classList.remove('followers-visible');
         
         // Clean up any existing follower images and blob URLs
         while (followersContainer.firstChild) {
@@ -710,3 +716,52 @@ playerArt.addEventListener('click', (e) => {
     };
     openEntitySubmenu(player, 'player', e.clientX, e.clientY);
 });
+
+function showError(message) {
+    // Remove any existing error notifications
+    const existingErrors = document.querySelectorAll('.error-notification');
+    existingErrors.forEach(error => error.remove());
+
+    // Create and show the new error notification
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-notification';
+    errorDiv.textContent = message;
+
+    // Add to document
+    document.body.appendChild(errorDiv);
+
+    // Remove after 5 seconds
+    setTimeout(() => {
+        errorDiv.style.opacity = '0';
+        setTimeout(() => errorDiv.remove(), 300);
+    }, 5000);
+}
+
+// Listen for errors from the main process
+if (window.ipc) {
+    window.ipc.receive('fromMain', (data) => {
+        if (data.type === 'error') {
+            showError(data.message);
+        }
+    });
+}
+
+function showLoader() {
+    document.getElementById('loader').classList.remove('hidden');
+}
+
+function hideLoader() {
+    document.getElementById('loader').classList.add('hidden');
+}
+
+function toggleOverlay(show) {
+    const overlay = document.getElementById('settingsOverlay');
+    if (show) {
+        overlay.classList.add('flex-visible');
+    } else {
+        overlay.classList.remove('flex-visible');
+    }
+}
+
+// Export functions that need to be accessible from other modules
+window.showError = showError;
