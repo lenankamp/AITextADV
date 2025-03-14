@@ -62,7 +62,7 @@ function timeDiff(startTime, endTime) {
     const endTotalSeconds = endYear * 365 * 24 * 3600 + endMonth * 30 * 24 * 3600 + endDay * 24 * 3600 + endHours * 3600 + endMinutes * 60 + endSeconds;
 
     const timeDifferenceInSeconds = endTotalSeconds - startTotalSeconds;
-    return timeDifferenceInSeconds / (24 * 3600); // Convert seconds to days
+    return timeDifferenceInSeconds;
 }
 
 function getSeason() {

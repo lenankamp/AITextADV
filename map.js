@@ -65,7 +65,6 @@ map.addEventListener('mouseleave', () => {
 
 // Add mouse wheel listener for zooming
 map.addEventListener('wheel', (e) => {
-    e.preventDefault();
     const zoomIntensity = 0.2;
     const mouseX = e.clientX - map.getBoundingClientRect().left;
     const mouseY = e.clientY - map.getBoundingClientRect().top;
@@ -96,7 +95,7 @@ map.addEventListener('wheel', (e) => {
         location.style.left = `${areas[name].x * scale}px`;
         location.style.top = `${areas[name].y * scale}px`;
     });
-});
+}, { passive: true });
 
 // Add locations to the map
 function addLocation(name) {

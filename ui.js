@@ -35,7 +35,7 @@ function initDragCol(e) {
 
 function doDragCol(e) {
     const newWidth = startWidth + (e.clientX - startX);
-    content.style.gridTemplateColumns = `${newWidth}px 5px 1fr`;
+    content.style.gridTemplateColumns = `${newWidth}px .5vh 1fr`;
 }
 
 function stopDragCol() {
@@ -60,7 +60,7 @@ function doDragRow(e) {
     // Adjust the height of the quadrant below
     const nextQuadrant = quadrant.nextElementSibling.nextElementSibling;
     if (nextQuadrant && nextQuadrant.classList.contains('quadrant')) {
-        nextQuadrant.style.height = `calc(100vh - ${newHeight}px - 5px)`; // 5px for the resizer
+        nextQuadrant.style.height = `calc(100vh - ${newHeight}px - .5vh)`; // 5px for the resizer
     }
 }
 
@@ -80,7 +80,7 @@ function initDragMap(e) {
 function doDragMap(e) {
     const newWidth = startWidth + (e.clientX - startX);
     mapContainer.style.width = `${newWidth}px`;
-    sceneartContainer.style.width = `calc(100% - ${newWidth}px - 5px)`; // 5px for the resizer
+    sceneartContainer.style.width = `calc(100% - ${newWidth}px - .5vh)`; // 5px for the resizer
 }
 
 function stopDragMap() {
@@ -215,58 +215,60 @@ function openEntitySubmenu(entity, category, x, y) {
         }
     };
 
-    // Special handling for followers
-    const isFollower = followers.some(f => f.name === entity.name);
-    
-    if (isFollower) {
-        const dismissBtn = document.createElement('button');
-        dismissBtn.textContent = 'Dismiss';
-        dismissBtn.onclick = (e) => {
-            e.stopPropagation();
-            dismissFollower(entity);
-            updateFollowerArt();
-            submenu.remove();
-            if (submenu.closeHandler) {
-                document.removeEventListener('click', submenu.closeHandler);
-            }
-        };
-        submenu.appendChild(editBtn);
-        submenu.appendChild(dismissBtn);
-    } else {
-        const removeBtn = document.createElement('button');
-        removeBtn.textContent = 'Remove';
-        removeBtn.onclick = (e) => {
-            e.stopPropagation();
-            if (confirm(`Are you sure you want to remove ${entity.name}?`)) {
-                const index = areas[currentArea][category].findIndex(item => item.name === entity.name);
-                if (index > -1) {
-                    areas[currentArea][category].splice(index, 1);
-                    updateImageGrid(currentArea);
-                }
-            }
-            submenu.remove();
-            if (submenu.closeHandler) {
-                document.removeEventListener('click', submenu.closeHandler);
-            }
-        };
+    submenu.appendChild(editBtn);
 
-        submenu.appendChild(editBtn);
-        submenu.appendChild(removeBtn);
-
-        // Add Follower option for people and creatures
-        if (category === 'people' || category === 'creatures') {
-            const followBtn = document.createElement('button');
-            followBtn.textContent = 'Add Follower';
-            followBtn.onclick = (e) => {
+    // Only show remove/follower options for non-player entities
+    if (category !== 'player') {
+        // Special handling for followers
+        const isFollower = followers.some(f => f.name === entity.name);
+        
+        if (isFollower) {
+            const dismissBtn = document.createElement('button');
+            dismissBtn.textContent = 'Dismiss';
+            dismissBtn.onclick = (e) => {
                 e.stopPropagation();
-                addFollower(entity);
+                dismissFollower(entity);
                 updateFollowerArt();
                 submenu.remove();
                 if (submenu.closeHandler) {
                     document.removeEventListener('click', submenu.closeHandler);
                 }
             };
-            submenu.appendChild(followBtn);
+            submenu.appendChild(dismissBtn);
+        } else {
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm(`Are you sure you want to remove ${entity.name}?`)) {
+                    const index = areas[currentArea][category].findIndex(item => item.name === entity.name);
+                    if (index > -1) {
+                        areas[currentArea][category].splice(index, 1);
+                        updateImageGrid(currentArea);
+                    }
+                }
+                submenu.remove();
+                if (submenu.closeHandler) {
+                    document.removeEventListener('click', submenu.closeHandler);
+                }
+            };
+            submenu.appendChild(removeBtn);
+
+            // Add Follower option for people and creatures
+            if (category === 'people' || category === 'creatures') {
+                const followBtn = document.createElement('button');
+                followBtn.textContent = 'Add Follower';
+                followBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    addFollower(entity);
+                    updateFollowerArt();
+                    submenu.remove();
+                    if (submenu.closeHandler) {
+                        document.removeEventListener('click', submenu.closeHandler);
+                    }
+                };
+                submenu.appendChild(followBtn);
+            }
         }
     }
 
@@ -361,55 +363,54 @@ function openUnifiedEditor(item, type, path = null) {
     previewSection.style.position = 'relative';
     previewSection.style.aspectRatio = '1';
 
-    if (item.image) {
-        const previewImage = document.createElement('img');
-        previewImage.className = 'editor-preview-image';
-        previewImage.style.width = '100%';
-        previewImage.style.height = '100%';
-        previewImage.style.objectFit = 'cover';
-        if (item.image instanceof Blob) {
-            previewImage.src = URL.createObjectURL(item.image);
-        } else {
-            previewImage.src = 'placeholder.png';
-        }
-        previewSection.appendChild(previewImage);
+    const previewImage = document.createElement('img');
+    previewImage.className = 'editor-preview-image';
+    previewImage.style.width = '100%';
+    previewImage.style.height = '100%';
+    previewImage.style.objectFit = 'cover';
+    
+    // Special handling for player image
+    if (type === 'player') {
+        const currentPlayerArt = document.getElementById('playerart');
+        previewImage.src = currentPlayerArt.src;
+    } else if (item.image instanceof Blob) {
+        previewImage.src = URL.createObjectURL(item.image);
+    } else {
+        previewImage.src = 'placeholder.png';
+    }
+    previewSection.appendChild(previewImage);
 
-        if (item.visual !== undefined) {
-            const refreshImageBtn = document.createElement('button');
-            refreshImageBtn.className = 'refresh-button top-right';
-            refreshImageBtn.innerHTML = '🔄';
-            refreshImageBtn.title = 'Regenerate Image';
-            refreshImageBtn.onclick = async () => {
-                let negprompt = "";
-                let posprompt = "";
-                if (type === "people") {
-                    posprompt = settings.person_prompt;
-                    negprompt = settings.person_negprompt;
-                } else if (type === "creatures") {
-                    posprompt = settings.creature_prompt;
-                    negprompt = settings.creature_negprompt;
-                } else if (type === "things") {
-                    posprompt = settings.thing_prompt;
-                    negprompt = settings.thing_negprompt;
-                }
-                const artBlob = await generateArt(posprompt + item.visual, negprompt, item.seed);
+    if (item.visual !== undefined) {
+        const refreshImageBtn = document.createElement('button');
+        refreshImageBtn.className = 'refresh-button top-right';
+        refreshImageBtn.innerHTML = '🔄';
+        refreshImageBtn.title = 'Regenerate Image';
+        refreshImageBtn.onclick = async () => {
+            let negprompt = "";
+            let posprompt = "";
+            if (type === "people") {
+                posprompt = settings.person_prompt;
+                negprompt = settings.person_negprompt;
+            } else if (type === "creatures") {
+                posprompt = settings.creature_prompt;
+                negprompt = settings.creature_negprompt;
+            } else if (type === "things") {
+                posprompt = settings.thing_prompt;
+                negprompt = settings.thing_negprompt;
+            }
+            const visualInput = editor.querySelector('textarea[style*="calc(100% - 35px)"]');
+            const seedInput = editor.querySelector('input[type="number"].seed-input');
+            if (visualInput && seedInput) {
+                const visualPrompt = type === 'player' ? visualInput.value : posprompt + visualInput.value;
+                const negativePrompt = type === 'player' ? "" : negprompt;
+                const artBlob = await generateArt(visualPrompt, negativePrompt, parseInt(seedInput.value));
                 if (artBlob instanceof Blob) {
                     item.image = artBlob;
                     previewImage.src = URL.createObjectURL(artBlob);
-                    if (path === currentArea) {
-                        document.getElementById('sceneart').src = URL.createObjectURL(artBlob);
-                    }
-                    if (path) {
-                        const locationElement = document.getElementById(`location-${path}`);
-                        if (locationElement) {
-                            locationElement.style.backgroundImage = `url(${URL.createObjectURL(artBlob)})`;
-                        }
-                    }
-                    updateImageGrid(currentArea);
                 }
-            };
-            previewSection.appendChild(refreshImageBtn);
-        }
+            }
+        };
+        previewSection.appendChild(refreshImageBtn);
     }
 
     // Name input
@@ -527,36 +528,56 @@ function openUnifiedEditor(item, type, path = null) {
     saveBtn.className = 'btn-primary';
     saveBtn.onclick = async () => {
         const newName = nameInput.value.trim();
-        if (newName && ((path && newName !== path.split('/').pop()) || (!path && newName !== item.name))) {
-            if (path) {
-                console.log('Location name changed to:', newName);
-            } else {
-                renameEntity(newName, item.name);
+        if (type === 'player') {
+            // Update player settings
+            settings.player_name = newName;
+            settings.player_description = descInput.value;
+            if (item.visual !== undefined) {
+                const visualInput = editor.querySelector('textarea[style*="calc(100% - 35px)"]');
+                const seedInput = editor.querySelector('input[type="number"].seed-input');
+                if (visualInput && seedInput) {
+                    settings.player_visual = visualInput.value;
+                    settings.player_seed = parseInt(seedInput.value);
+                    // Only update player art if it was regenerated in the editor
+                    if (item.image instanceof Blob) {
+                        const currentPlayerArt = document.getElementById('playerart');
+                        currentPlayerArt.src = URL.createObjectURL(item.image);
+                    }
+                }
             }
-        }
-        item.description = descInput.value;
-        
-        // Only update visual and seed if the item has visual properties and the inputs exist
-        if (item.visual !== undefined) {
-            const visualInput = editor.querySelector('textarea[style*="calc(100% - 35px)"]');
-            const seedInput = editor.querySelector('input[type="number"].seed-input');
-            if (visualInput && seedInput) {
-                item.visual = visualInput.value;
-                item.seed = parseInt(seedInput.value);
-            }
-        }
-
-        if (!path && type === 'location' && item.x !== undefined && item.y !== undefined) {
-            await generateArea(newName, item.description, item.x, item.y);
-        }
-
-        overlay.remove();
-        if (path) {
-            updateSublocationRow(currentArea);
+            updateCharacterInfo();
         } else {
-            updateImageGrid(currentArea);
-            updateFollowerArt();
+            if (newName && ((path && newName !== path.split('/').pop()) || (!path && newName !== item.name))) {
+                if (path) {
+                    console.log('Location name changed to:', newName);
+                } else {
+                    renameEntity(newName, item.name);
+                }
+            }
+            item.description = descInput.value;
+            
+            // Only update visual and seed if the item has visual properties and the inputs exist
+            if (item.visual !== undefined) {
+                const visualInput = editor.querySelector('textarea[style*="calc(100% - 35px)"]');
+                const seedInput = editor.querySelector('input[type="number"].seed-input');
+                if (visualInput && seedInput) {
+                    item.visual = visualInput.value;
+                    item.seed = parseInt(seedInput.value);
+                }
+            }
+
+            if (!path && type === 'location' && item.x !== undefined && item.y !== undefined) {
+                await generateArea(newName, item.description, item.x, item.y);
+            }
+
+            if (path) {
+                updateSublocationRow(currentArea);
+            } else {
+                updateImageGrid(currentArea);
+                updateFollowerArt();
+            }
         }
+        overlay.remove();
     };
     if (!path && type === 'location' && item.x !== undefined && item.y !== undefined) {
         const cancelBtn = document.createElement('button');
@@ -673,3 +694,19 @@ function updateFollowerArt() {
         }
     }
 }
+
+// Add player art click handler
+const playerArt = document.getElementById('playerart');
+playerArt.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Create player object with current state
+    const player = {
+        name: settings.player_name,
+        description: settings.player_description,
+        visual: settings.player_visual,
+        seed: settings.player_seed,
+        // Just pass through the current image blob if it exists
+        image: playerArt.src.startsWith('blob:') ? 'current' : 'placeholder'
+    };
+    openEntitySubmenu(player, 'player', e.clientX, e.clientY);
+});

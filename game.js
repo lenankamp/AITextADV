@@ -37,8 +37,12 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0) 
         const prompt = replaceVariables(settings.generateAreaDescriptionPrompt, {
             areaName: area.name,
             time: getTimeofDay(),
-            season: getSeason()    
-        });
+            season: getSeason(),    
+            description: area.description,
+            world: "World Info: " + settings.world_description + "\n",
+            mainLocation: areaName.includes('/') ? "Within the " + areas[areaName.split('/')[0]].name + " described as " + areas[areaName.split('/')[0]].description + "\n" : '',
+            parentArea: (areaName.match(/\//g) || []).length > 1 ? "More Locally within: " + areaName.split('/').slice(0, -1).join('/') : '',
+            });
         response = await generateText(settings.creative_question_param, minContext(contextDepth) + "\n" + prompt, '', {
             areaName: area.name
         });
@@ -46,6 +50,7 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0) 
     } else {
         area.description = description;
     }
+    area.lastVisted = '';
 
     // Generate potential sublocations
     const existingLocations = Object.keys(areas)
@@ -53,16 +58,14 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0) 
         .flatMap(key => Object.keys(areas[key].sublocations))
         .join(', ')
         + ',' + areaName.split('/')[0];
-    const sublocationsPrompt = replaceVariables(settings.generateSublocationsPrompt, {
+    
+    response = await generateText(settings.creative_question_param, settings.generateSublocationsPrompt, '', {
         areaName: area.name,
         description: area.description,
-        locations: existingLocations
-    });
-    
-    response = await generateText(settings.creative_question_param, sublocationsPrompt, '', {
-        world: settings.world_description,
-        areaName: area.name,
-        description: area.description
+        locations: existingLocations ? "Existing Nearby Locations: " + existingLocations : '',
+        world: "World Info: " + settings.world_description + "\n",
+        mainLocation: areaName.includes('/') ? "Within the " + areas[areaName.split('/')[0]].name + " described as " + areas[areaName.split('/')[0]].description + "\n" : '',
+        parentArea: (areaName.match(/\//g) || []).length > 1 ? "More Locally within: " + areaName.split('/').slice(0, -1).join('/') : '',
     }, settings.sampleSublocations);
 
     let lines = response.split('\n');
@@ -98,15 +101,13 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0) 
     }
 
     const allPeople = Object.values(areas).flatMap(area => area.people.map(person => person.name)).join(', ');
-    const entitiesPrompt = replaceVariables(settings.generateEntitiesPrompt, {
+    response = await generateText(settings.creative_question_param, settings.generateEntitiesPrompt, '', {
         people: allPeople,
         areaName: area.name,
-        description: area.description
-    });
-
-    response = await generateText(settings.creative_question_param, minContext(contextDepth) + "\n" + entitiesPrompt, '', {
-        areaName: area.name,
-        description: area.description
+        description: area.description,
+        world: "World Info: " + settings.world_description + "\n",
+        mainLocation: areaName.includes('/') ? "Within the " + areas[areaName.split('/')[0]].name + " described as " + areas[areaName.split('/')[0]].description + "\n" : '',
+        parentArea: (areaName.match(/\//g) || []).length > 1 ? "More Locally within: " + areaName.split('/').slice(0, -1).join('/') : '',
     }, settings.sampleEntities);
 
     lines = response.split('\n');
@@ -209,11 +210,7 @@ function dismissFollower(entity) {
 }
 
 async function addPerson(name, area=currentArea, context="", text="") {
-    const descriptionPrompt = replaceVariables(settings.addPersonDescriptionPrompt, {
-        name: name
-    });
-
-    const description = await generateText(settings.creative_question_param, "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, "\n\nContext:\n" + context +"\n" + text + "\n\n" + addPersonDescriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
@@ -230,11 +227,7 @@ async function addPerson(name, area=currentArea, context="", text="") {
 }
 
 async function addThing(name, area=currentArea, context="", text="") {
-    const descriptionPrompt = replaceVariables(settings.addThingDescriptionPrompt, {
-        name: name
-    });
-
-    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + settings.addThingDescriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
@@ -254,11 +247,7 @@ async function addThing(name, area=currentArea, context="", text="") {
 }
 
 async function addCreature(name, area=currentArea, context="", text="") {
-    const descriptionPrompt = replaceVariables(settings.addCreatureDescriptionPrompt, {
-        name: name
-    });
-
-    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + settings.addCreatureDescriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
@@ -272,12 +261,14 @@ async function addCreature(name, area=currentArea, context="", text="") {
 }
 
 async function addSublocation(name, area=currentArea, text="", context="") {
-    const descriptionPrompt = replaceVariables(settings.addSubLocationDescriptionPrompt, {
-        name: name
-    });
-    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + descriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, "Context:\n" + context +"\n" + text + "\n\n" + settings.generateAreaDescriptionPrompt, '', {
         name: name,
-        area: area,
+        time: getTimeofDay(),
+        season: getSeason(),
+        world: "World Info: " + settings.world_description + "\n",
+        mainLocation: areas[area].name.includes('/') ? "Within the " + areas[areas[area].name.split('/')[0]].name + " described as " + areas[areas[area].name.split('/')[0]].description + "\n" : '',
+        parentArea: (areas[area].name.match(/\//g) || []).length > 1 ? "More Locally within: " + areas[area].name.split('/').slice(0, -1).join('/') : '',
+        area: areas[area].name,
         context: context,
         text: text
     });
@@ -287,10 +278,7 @@ async function addSublocation(name, area=currentArea, text="", context="") {
 }
 
 async function entityLeavesArea(name, text) {
-    const prompt = replaceVariables(settings.entityLeavesAreaPrompt, {
-        name: name
-    });
-    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
+    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + settings.entityLeavesAreaPrompt, '', {
         currentArea: currentArea,
         name: name,
         text: text
@@ -323,12 +311,8 @@ async function entityLeavesArea(name, text) {
 }
 
 async function generateNewDescription(name, type) {
-    if (type === 'people') {
-        const prompt = replaceVariables(settings.addPersonDescriptionPrompt, {
-            name: name,
-            world: settings.world_description
-        });
-        return await generateText(settings.creative_question_param, prompt, '', {
+    if (type === 'people' || type === 'player') {
+        return await generateText(settings.creative_question_param, settings.addPersonDescriptionPrompt, '', {
             name: name,
             world: settings.world_description,
             areaName: currentArea.name,
@@ -336,35 +320,27 @@ async function generateNewDescription(name, type) {
         });
     
     } else if (type === 'creatures') {
-        const prompt = replaceVariables(settings.addCreatureDescriptionPrompt, {
-            name: name,
-            world: settings.world_description
-        });
-        return await generateText(settings.creative_question_param, prompt, '', {
+        return await generateText(settings.creative_question_param, settings.addCreatureDescriptionPrompt, '', {
             name: name,
             world: settings.world_description,
             areaName: currentArea.name,
             areaDescription: currentArea.description
         });
     } else if (type === 'things') {
-        const prompt = replaceVariables(settings.addThingDescriptionPrompt, {
-            name: name,
-            world: settings.world_description
-        });
-        return await generateText(settings.creative_question_param, prompt, '', {
+        return await generateText(settings.creative_question_param, settings.addThingDescriptionPrompt, '', {
             name: name,
             world: settings.world_description,
             areaName: currentArea.name,
             areaDescription: currentArea.description
         });
     } else {
-        const prompt = replaceVariables(settings.addSubLocationDescriptionPrompt, {
+        return await generateText(settings.creative_question_param, settings.generateAreaDescriptionPrompt, '', {
             name: name,
-            world: settings.world_description
-        });
-        return await generateText(settings.creative_question_param, prompt, '', {
-            name: name,
-            world: settings.world_description,
+            time: getTimeofDay(),
+            season: getSeason(),
+            world: "World Info: " + settings.world_description + "\n",
+            mainLocation: '',
+            parentArea: '',
             areaName: currentArea.name,
             areaDescription: currentArea.description
         });
@@ -459,14 +435,14 @@ async function outputCheck(text, context="") {
         if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
             const names = line.replace("1. ", '').trim().split(',').map(name => name.stripNonAlpha().trim());
             for (const name of names) {
-                if (!areas[currentArea]['people'].some(person => person.name === name) && !followers.some(follower => follower.name === name)) {
+                if (!areas[currentArea]['people'].some(person => person.name === name) && !followers.some(follower => follower.name === name) && name.toLowerCase() != settings.player_name.toLowerCase()) {
                     addConfirmButton('New Person', name, (inputValue) => addPerson(inputValue || name, currentArea, text, context));
                 }
             }
         } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
             const names = line.replace("2. ", '').trim().split(',').map(name => name.stripNonAlpha().trim());
             for (const name of names) {
-                if (!areas[currentArea]['creatures'].some(creature => creature.name === name)  && !followers.some(follower => follower.name === name)) {
+                if (!areas[currentArea]['creatures'].some(creature => creature.name === name)  && !followers.some(follower => follower.name === name) && name.toLowerCase() != settings.player_name.toLowerCase()) {
                     addConfirmButton('New Creature', name, (inputValue) => addCreature(inputValue || name, currentArea, text, context));
                 }
             }
@@ -506,19 +482,19 @@ async function outputCheck(text, context="") {
             }
         } else if (line.startsWith('5.') && !line.includes('N/A') && line.trim() !== '5.') {
             const name = line.replace("5. ", '').stripNonAlpha().trim();
-            if (areas[currentArea].people.some(person => person.name === name) || areas[currentArea].creatures.some(creature => creature.name === name))
+            if (areas[currentArea].people.some(person => person.name.toLowerCase() === name.toLowerCase()) || areas[currentArea].creatures.some(creature => creature.name.toLowerCase() === name.toLowerCase()))
                 addConfirmButton('Leaving Area', name, (inputValue) => entityLeavesArea(inputValue || name, text));
         } else if (line.startsWith('6.') && !line.includes('N/A') && line.trim() !== '6.') {
             const name = line.replace("6. ", '').stripNonAlpha().trim();
-            if (areas[currentArea].creatures.some(creature => creature.name === name))
+            if (areas[currentArea].creatures.some(creature => creature.name.toLowerCase() === name.toLowerCase()))
                 addConfirmButton('Befriend', name, (inputValue) => befrienCreature(inputValue || name));
         } else if (line.startsWith('7.') && !line.includes('N/A') && line.trim() !== '7.') {
             const name = line.replace("7. ", '').stripNonAlpha().trim();
-            if (areas[currentArea].people.some(person => person.name === name))
+            if (areas[currentArea].people.some(person => person.name.toLowerCase() === name.toLowerCase()))
                 addConfirmButton('Provoke', name, (inputValue) => provokeAlly(inputValue || name));
         } else if (line.startsWith('8.') && !line.includes('N/A') && line.trim() !== '8.') {
             const name = line.replace("8. ", '').stripNonAlpha().trim();
-            if (!areas[currentArea].things.some(thing => thing.name === name))
+            if (!areas[currentArea].things.some(thing => thing.name.toLowerCase() === name.toLowerCase()))
                 addConfirmButton('New Thing', name, (inputValue) => addThing(inputValue || name));
         } else if (line.startsWith('9.') && !line.includes('N/A') && line.trim() !== '9.') {
             const name = line.replace("9. ", '').stripNonAlpha().trim();
@@ -562,13 +538,13 @@ async function outputAutoCheck(text, context="") {
                     settings.charsheet_fae.consequences.mild.shift();
                 } else if (settings.charsheet_fae.consequences.moderate.length > 0) {
                     const firstModerateTime = settings.charsheet_fae.consequenceTime.moderate[0];
-                    if (timeDiff(firstModerateTime, settings.current_time) > 7) {
+                    if (timeDiff(firstModerateTime, settings.current_time) > 7*60*60*24) {
                         settings.charsheet_fae.consequences.moderate.shift();
                         settings.charsheet_fae.consequenceTime.moderate.shift();
                     }
                 } else if (settings.charsheet_fae.consequences.severe.length > 0) {
                     const firstSevereTime = settings.charsheet_fae.consequenceTime.severe[0];
-                    if (timeDiff(firstSevereTime, settings.current_time) > 30) {
+                    if (timeDiff(firstSevereTime, settings.current_time) > 30*60*60*24) {
                         settings.charsheet_fae.consequences.severe.shift();
                         settings.charsheet_fae.consequenceTime.severe.shift();
                     }
@@ -582,12 +558,7 @@ async function outputAutoCheck(text, context="") {
             let section = null;
             let target = null;
             if (name.toLowerCase() === settings.player_name.toLowerCase() || name.toLowerCase() === "you") {
-                const consequencePrompt = replaceVariables(settings.consequencePrompt, {
-                    player: settings.player_name,
-                    description: settings.player_description
-                });
-
-                const response = await generateText(settings.creative_question_param, minContext(3) + consequencePrompt, '', {
+                const response = await generateText(settings.creative_question_param, minContext(3) + settings.consequencePrompt, '', {
                     player: settings.player_name,
                     description: settings.player_description
                 },settings.sampleQuestions);
@@ -634,17 +605,17 @@ async function outputAutoCheck(text, context="") {
             } else if (areas[currentArea].things.some(thing => thing.name === name)) {
                 section = 'things';
                 target = areas[currentArea].things.find(thing => thing.name === name);
+            } else if (followers.some(follower => follower.name === name)) {
+                section = 'followers';
+                target = followers.find(follower => follower.name === name);
             }
             if (section && target) {
-                const descriptionChangePrompt = replaceVariables(settings.generateNewDescription, {
+                const description = await generateText(settings.creative_question_param, minContext(3) + settings.generateNewDescription, '', {
                     name: target.name,
                     description: target.description
                 });
 
-                const description = await generateText(settings.creative_question_param, minContext(3) + descriptionChangePrompt, '', {
-                    name: target.name,
-                    description: target.description
-                });
+                console.log("Generated new description for " + name + " changing\n\n " + target.description + "\n\n " + description);
 
                 target.description = description;
             }
@@ -741,22 +712,28 @@ function areaContext(areaPath) {
     return context;
 }
 
-function fullContext(limit = null) {
-    let outputContent = document.getElementById('output').innerText;
-    let summary;
+function fullContext(limit = null, extraContext = "") {
+    const output = document.getElementById('output').innerText;
+    let outputContent;
+    let summary = '';
     if (limit !== null) {
-        const output = document.getElementById('output');
-        const children = Array.from(output.children);
-        const limitedChildren = children.slice(-limit);
-        outputContent = limitedChildren.map(child => child.outerText).join('');
-        summary = getSummary(limit);
+        const outputLines = output.split('\n');
+        const limitedLines = outputLines.slice(-limit - 1, -1); // Get the last 'limit' lines excluding the last line
+        outputContent = limitedLines.join('\n');
+        summary = outputLines.slice(0, -limit - 1).join('\n'); // Get all lines before the limited lines
+    } else {
+        const outputLines = output.split('\n');
+        outputContent = outputLines.slice(0, -1).join('\n'); // Get all lines except the last one
     }
+
+
     return settings.full_context
         .replace('$world', "World Description: " + settings.world_description + "\n")
         .replace('$player', "Player Name: " + settings.player_name + "\n")
         .replace('$player_desc', "Player Description: " + settings.player_description + "\n")
         .replace('$summary', summary ? "Summary of Previous Events: " + summary +"\n" : '')
         .replace('$locale', areaContext(currentArea))
+        .replace('$extra', extraContext ? "Context: " + extraContext + "\n" : '')
         .replace('$story', outputContent);
 }
 
@@ -812,6 +789,7 @@ async function playerAction(action) {
                 action: action,
                 currentArea: currentArea
             }, settings.sampleQuestions);
+            console.log("Player Action Response:", response);
             const lines = response.toLowerCase().split('\n');
             let disadvantage = 1;
             let advantage = 0;
@@ -822,11 +800,11 @@ async function playerAction(action) {
                     if (line.includes('trivial')) {
                         return "[Continue the story for another $settings.output_length$ as player '" + action + "'. "+ settings.action_string +"]";
                     } else if (line.includes('challeng')) {
-                        disadvantage += 2;
+                        disadvantage += 3;
                     } else if (line.includes('extreme')) {
-                        disadvantage += 4;
+                        disadvantage += 5;
                     } else if (line.includes('impossible')) {
-                        return "[Continue the story for another $settings.output_length$ as player considers the impossibility of '" + action + "'. "+ settings.action_string +"]"
+                        return "[Continue the story for another $settings.output_length$ as player considers why it's impossibility to '" + action + "'. "+ settings.action_string +"]"
                     }
                 } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
                     //conditions if line contains careful, clever, flashy, forceful, quick, or sneaky.
@@ -878,6 +856,7 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     const messageElement = document.createElement('div');
     messageElement.classList.add('new-message');
     input.value = '';
+    let postPrompt = '';
 
     const confirmElement = document.getElementById('outputCheckConfirm');
     if (confirmElement) {
@@ -890,7 +869,7 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     }
 
     if (message.trim()) {
-        if (message.startsWith('/')) {
+        if (message.startsWith('/') || message.startsWith('"')) {
             const parts = message.split(' ');
             const command = parts[0];
             const name = parts.slice(1).join(' ');
@@ -912,10 +891,13 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
                 directInput.innerHTML = message.replace('//', '');
                 output.appendChild(directInput);
                 output.scrollTop = output.scrollHeight;
-                messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$.]';
+            } 
+            if (message.startsWith('"')) {
+                messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$ as the player says ' + message + '. Be sure to include their words verbatim and ' + settings.action_string + ']';
             } else return;
+
         } else if (bypassCheck) {
-            messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$ as ' + message +']';
+            messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$ as ' + message + ' ' + settings.action_string +']';
         } else {
             messageElement.innerHTML = message;
             messageElement.innerHTML = await playerAction(message);
@@ -928,7 +910,7 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     output.appendChild(messageElement);
     output.scrollTop = output.scrollHeight;
 
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(3), '', {
+    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(3, extraContext), postPrompt, {
         message: message,
         currentArea: currentArea,
         playerName: settings.player_name
@@ -1024,10 +1006,8 @@ async function setupStart() {
     });
 }
 
-// Update restartGame function
 function restartGame() {
     
-    // Clean up any existing object URLs
     const sceneArt = document.getElementById('sceneart');
     if (sceneArt.src.startsWith('blob:')) {
         URL.revokeObjectURL(sceneArt.src);
@@ -1060,12 +1040,13 @@ function updateAreaDisplay(areaName) {
     areaNameOverlay.textContent = areaName.split('/').pop();
 }
 
-// Add to setupStart function
+
 async function setupStart() {
     document.getElementById('sceneart').src = 'placeholder.png';
     updateApproachDisplay();
     updateCharacterInfo();
     updateConsequences();
+    updateFollowerArt();
     updateAreaDisplay(settings.starting_area);
 
     await generateArea(settings.starting_area, settings.starting_area_description, 3500, 3500);
@@ -1099,7 +1080,6 @@ async function moveToArea(area, describe=0, text="") {
         return;
     }
     let targetArea = null;
-    //check if the area exists or is a sublocation within the current area
     if(areas[area]) {
         targetArea = area;
     } else if (areas[currentArea].sublocations[area]) {
@@ -1215,7 +1195,44 @@ async function moveToArea(area, describe=0, text="") {
         }
     }
     let prompt;
+    let leftbehind;
     if(describe) {
+        leftbehind = "Left behind " + areas[currentArea].name + ".\n";
+        if (areas[currentArea].people.length > 0) {
+            const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');
+            leftbehind +=  peopleNames + " were left behind in " + areas[currentArea].name + ".";
+        } 
+        if (areas[currentArea].creatures.length > 0) {
+            const creatureNames = areas[currentArea].creatures.map(creature => creature.name).join(', ');
+            leftbehind += creatureNames + " were left behind in " + areas[currentArea].name + ".";
+        } 
+        if (areas[currentArea].things.length > 0) {
+            const thingNames = areas[currentArea].things.map(thing => thing.name).join(', ');
+            leftbehind += thingNames + " were left behind in " + areas[currentArea].name + ".\n";
+        }
+
+        if (areas[targetArea].lastVisted === '') {
+            leftbehind += " This is the first time " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+        } else {
+            const timeSinceLastVisit = timeDiff(areas[targetArea].lastVisted, settings.current_time);
+            if (timeSinceLastVisit < 60) {
+                leftbehind += " It has been less than a minute since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+            } else if (timeSinceLastVisit < 3600) {
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 60) + " minutes since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+            } else if (timeSinceLastVisit < 86400) {
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 3600) + " hours since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+            } else if (timeSinceLastVisit < 604800) {
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 86400) + " days since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+            } else if (timeSinceLastVisit < 2592000) {
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 604800) + " weeks since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+            } else if (timeSinceLastVisit < 31536000) {
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 2592000) + " months since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+            } else {
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 31536000) + " years since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+            }
+        }
+
+
         prompt = settings.player_name + " leaves " + areas[currentArea].name + " and " + (describe>1 ? settings.player_distant_movement : settings.player_local_movement);
         if(followers.length > 0) {
             const followerNames = followers.map(follower => follower.name).join(', ');
@@ -1223,13 +1240,13 @@ async function moveToArea(area, describe=0, text="") {
         }
         if (describe > 1)
             prompt += " many miles";
-        prompt += " and arrives at ";
+        prompt += " and arrives at " + areas[targetArea].name + '.';
     }
     
+    currentArea.lastVisted = settings.current_time;
     currentArea = targetArea;
     updateAreaDisplay(currentArea);
     
-    // Update scene art with proper URL cleanup
     const sceneArt = document.getElementById('sceneart');
     if (sceneArt.src.startsWith('blob:')) {
         URL.revokeObjectURL(sceneArt.src);
@@ -1246,8 +1263,7 @@ async function moveToArea(area, describe=0, text="") {
     updateImageGrid(currentArea);
     updateSublocationRow(currentArea);
     if(describe) {
-        prompt += areas[currentArea].name + '.';
-        sendMessage(prompt, true);
+        sendMessage(prompt, true, leftbehind);
     }
 }
 

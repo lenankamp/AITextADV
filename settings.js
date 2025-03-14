@@ -3,9 +3,9 @@ let settings;
 function loadDefaultSettings() {
   const defaultSettings = {
     //ui settings
-    topleft_height: "600px",
-    topright_height: "640px",
-    column_width: "640px",
+    topleft_height: "60vh",
+    topright_height: "40vh",
+    column_width: "40vw",
     // world generation settings
     world_description: "The Kanto region is a region of the Pokémon world. Everyone aspires to be a Pokémon trainer. Pokémon trainers train their Pokémon to duel and seek to become champions.",
     starting_area: "Professor Oak's Lab",
@@ -169,8 +169,9 @@ function loadDefaultSettings() {
     summary_max_layers: 10,
     // text prompt settings
     output_length: "two paragraphs",
-    full_context: "Context Info:\n$world$player$player_desc$locale\n\nStory:\n$story",
-    generateAreaDescriptionPrompt: "[Generate a description of the area named $areaName in $season.]",
+    common_names: "Elara,Seraphina,Orion",
+    full_context: "Context Info:\n$world$player$player_desc$locale\n$extra\n\nStory:\n$story",
+    generateAreaDescriptionPrompt: "$world$locations$mainLocation$parentArea[Generate a description of the area named $areaName in $season.]",
     areaFollowerContext: "Accompanying $player:\n$followers\n",
     areaContext: "\nCurrently in: $name : $description\n\n",
     areaPeopleContext: "People within $name\n$peopleList\n",
@@ -181,20 +182,19 @@ function loadDefaultSettings() {
     subLocationFormat: "$name: $description\n",
     entityFormat: "$name: $description\n",
     action_string: "Describe the player taking the action and then the resulting story.",
-    generateSublocationsPrompt: "World Info: $world\nExisting Nearby Locations: $locations\n\n[Be creative and generate a list of interesting things and locations that could reasonably be found in and around $areaName described as: $description \nIf the location only has a single entrance then there are no locations, reply with None. Do not generate more than 3 things or 6 locations. Locations must not duplicate existing nearby locations. Things must be stationary physical interactable pieces of interest within a $areaName. Descriptions should be 2-3 sentences. Answer in a formatted list with name and description on one line as such: \nThings\n- Name: Description\n...\nLocations\n- Name: Description\n...]",
-    generateEntitiesPrompt: "Existing People:Elara,Seraphina,Orion,$people\n\n[Be creative and generate a list of people and creatures that could reasonably be found in $areaName with the following details: $description \nIf no people or creatures might be reasonably found in $areaName, reply with None. Do not generate more than 4 in one category. People must not include people who already exist. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]",
+    generateSublocationsPrompt: "$world$locations$mainLocation\n\n[Be creative and generate a list of interesting things and locations that could reasonably be found in and around $areaName described as: $description \nIf the location only has a single entrance then there are no locations, reply with None. Do not generate more than 3 things or 6 locations. Locations must not duplicate existing nearby locations. Things must be stationary physical interactable pieces of interest within a $areaName. Descriptions should be 2-3 sentences. Answer in a formatted list with name and description on one line as such: \nThings\n- Name: Description\n...\nLocations\n- Name: Description\n...]",
+    generateEntitiesPrompt: "$world$mainLocation$ParentArea\nExisting People:$settings.common_names$,$people\n\n[Be creative and generate a list of people and creatures that could reasonably be found in $areaName with the following details: $description \nIf no people or creatures might be reasonably found in $areaName, reply with None. Do not generate more than 4 in one category. People must not include people who already exist. Descriptions should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks. Answer in a formatted list with name and description on one line as such: \nPeople\n- Name: Description\n...\nCreatures\n- Name: Description\n...\n]",
     generateVisualPrompt: "[How would you describe '$name' described as '$description It is $season and $time' in a comma separated list ordered from most important details to least without specifying names for an AI image generation model?]",
     addPersonDescriptionPrompt: "World Info: $world\nLocated in $areaName: $areaDescription\n\n[Write a description of '$name'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]",
     addThingDescriptionPrompt: "World Info: $world\nLocated in $areaName: $areaDescription\n\n[Write a description of '$name'. Write a 2-3 sentence physical description. If there is not enough information in the context, be creative.]",
     addCreatureDescriptionPrompt: "World Info: $world\nLocated in $areaName: $areaDescription\n\n[Write a description of '$name'. Write a 1-2 sentence physical description, and a 1-2 sentence description of attidue dispositon or apparrent motivation. If there is not enough information in the context, be creative.]",
-    addSubLocationDescriptionPrompt: "World Info: $world\nLocated in $areaName: $areaDescription\n\n[Describe the area named $name in 1-2 sentences.]",
     outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If a new person is in the scene, what is their name, or a simple two word description if name is not revealed? 2. If a new creature is in the scene, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. If creature has turned into a person, what is their name? 7. If a person has turned into a creature, what is their name? 8. If a new thing is in the scene, what is its name? 9. If a new location nearby has been revealed, what is its name?]",
     outputAutoCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. If a question has multiple answers, answer the question multiple times preceeded by the question number on each line separated by new lines. 1. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest. 2. If a person, creature, or thing had a signficant change to their physical or emotional state, what was their name?]",
     consequencePrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'N/A'. 1. If I, the player $player, suffered emotional or physical harm in the passage, how long would you estimate it would take to recover? Answer in terms of rest time choosing one of the following: hours, days, years, or longer. 2. If $player suffered emotional or physical harm, creatively describe the lingering effects in 6 words.]",
     moveToAreaProximityPrompt: '[Depending on the distance traveled in the passage, would "$newArea" be best described as proximate to one of the previously listed locations? Specify the location and only the location name from the list if such is the case, otherwise answer N/A.]',
     moveToAreaPeoplePrompt: '[Answer the following question in a list format separate by \'\n\' in regard to the passage. If the question can not be answered just respond with \'N/A\' and no explanation. Among $peopleNames, who moved with the player?]',
     entityLeavesAreaPrompt: '[In the passage, to which of the adjacent areas in the context did $name move to? If ambiguous be creative and give the most fitting among the options.]',
-    generateNewDescription: '\nPrevious Description: $description\n\n[Generate a new description for $name reflecting any significant changes in the context. Description should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks.]',
+    generateNewDescription: '\nPrevious Description: $description\n\n[Generate a new description for $name reflecting any significant changes in the context. The previous description should remain relatively unchanged unless something from recent events contradicts or is significantly important. Only $name should be mentioned in the description output. Description should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks.]',
     // sample prompts
     sampleSublocations: [
       {
@@ -248,11 +248,11 @@ function loadDefaultSettings() {
   settings = defaultSettings;
 
   // Apply settings to elements
-  document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - 5px)`;
-  document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - 5px)`;
+  document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - .5vh)`;
+  document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - .5vh)`;
   document.getElementById('q1').style.height = settings.topleft_height;
   document.getElementById('q2').style.height = settings.topright_height;
-  content.style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
+  content.style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
 }
 
 function overrideSettings() { };
@@ -269,7 +269,8 @@ function openSettings() {
           'current_time'
       ],
       'Player Details': [
-          'player_name', 'player_description', 'player_visual', 'player_seed'
+          'player_name', 'player_description', 'player_visual', 'player_seed',
+          'player_local_movement', 'player_distant_movement'
       ],
       'Summary Settings': [
         'summary_prompt', 'summary_first_layer_max', 'summary_first_layer_chunk', 
@@ -296,7 +297,7 @@ function openSettings() {
           'action_string', 'generateSublocationsPrompt', 'generateEntitiesPrompt',
           'generateVisualPrompt', 'addPersonDescriptionPrompt',
           'addThingDescriptionPrompt', 'addCreatureDescriptionPrompt',
-          'addSubLocationDescriptionPrompt', 'outputCheckPrompt',
+          'outputCheckPrompt',
           'outputAutoCheckPrompt', 'consequencePrompt',
           'moveToAreaProximityPrompt', 'moveToAreaPeoplePrompt',
           'entityLeavesAreaPrompt', 'generateNewDescription'
@@ -376,7 +377,6 @@ function openSettings() {
       'addPersonDescriptionPrompt': 'Prompt for adding person descriptions',
       'addThingDescriptionPrompt': 'Prompt for adding thing descriptions',
       'addCreatureDescriptionPrompt': 'Prompt for adding creature descriptions',
-      'addSubLocationDescriptionPrompt': 'Prompt for adding sub-location descriptions',
       'outputCheckPrompt': 'Prompt for checking the output',
       'outputAutoCheckPrompt': 'Prompt for automatically checking the output',
       'consequencePrompt': 'Prompt for determining consequences',
@@ -600,9 +600,9 @@ function saveSettings() {
   try {
       document.getElementById('q1').style.height = settings.topleft_height;
       document.getElementById('q2').style.height = settings.topright_height;
-      document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - 5px)`;
-      document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - 5px)`;
-      document.querySelector('.content').style.gridTemplateColumns = `${settings.column_width} 5px 1fr`;
+      document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - .5vh)`;
+      document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - .5vh)`;
+      document.querySelector('.content').style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
   } catch (e) {
       console.error('Error applying visual settings:', e);
   }
