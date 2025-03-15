@@ -1,4 +1,63 @@
+// Static queues and processing states
+let artRequestQueue = [];
+let textRequestQueue = [];
+let isProcessingArt = false;
+let isProcessingText = false;
+
+async function processTextQueue() {
+    if (isProcessingText || textRequestQueue.length === 0) return;
+    
+    isProcessingText = true;
+    const request = textRequestQueue.shift();
+    
+    try {
+        const result = await generateTextImpl(
+            request.params,
+            request.input,
+            request.post,
+            request.variables,
+            request.sample_messages
+        );
+        request.resolve(result);
+    } catch (error) {
+        request.reject(error);
+    } finally {
+        isProcessingText = false;
+        processTextQueue();
+    }
+}
+
+async function processArtQueue() {
+    // Don't process art if text is being processed and concurrent_art is false
+    if (isProcessingText && !settings.concurrent_art) return;
+    
+    if (isProcessingArt || artRequestQueue.length === 0) return;
+    
+    isProcessingArt = true;
+    const request = artRequestQueue.shift();
+    
+    try {
+        const result = await generateArtImpl(request.prompt, request.negprompt, request.seed);
+        request.resolve(result);
+    } catch (error) {
+        request.reject(error);
+    } finally {
+        isProcessingArt = false;
+        // Process next request if any
+        processArtQueue();
+    }
+}
+
+// Main generateText function that adds to queue
 async function generateText(params, input, post='', variables={}, sample_messages=[]) {
+    return new Promise((resolve, reject) => {
+        textRequestQueue.push({ params, input, post, variables, sample_messages, resolve, reject });
+        processTextQueue();
+    });
+}
+
+// Implementation of text generation
+async function generateTextImpl(params, input, post='', variables={}, sample_messages=[]) {
     // Show loader
     document.getElementById('loader').style.display = 'block';
 
@@ -86,7 +145,6 @@ async function generateText(params, input, post='', variables={}, sample_message
     document.getElementById('loader').style.display = 'none';
 
     if(params.textAPItype == 'openai') {
-//        console.log(data.choices[0].message.content);
         if (data.choices)
             return data.choices[0].message.content;
         else
@@ -97,9 +155,17 @@ async function generateText(params, input, post='', variables={}, sample_message
 }
 
 async function generateArt(prompt, negprompt='', seed=-1) {
-    // Show loader
-    document.getElementById('loader').style.display = 'block';
+    return new Promise((resolve, reject) => {
+        artRequestQueue.push({ prompt, negprompt, seed, resolve, reject });
+        // Only try to process art queue if we're not processing text, or if concurrent_art is true
+        if (!isProcessingText || settings.concurrent_art) {
+            processArtQueue();
+        }
+    });
+}
 
+// Implementation of the art generation
+async function generateArtImpl(prompt, negprompt='', seed=-1) {
     let sum = 0;
     if (typeof seed == "string") {
         for (let i = 0; i < seed.length; i++)
@@ -112,38 +178,32 @@ async function generateArt(prompt, negprompt='', seed=-1) {
         const imageBase64 = await send_task_to_dream_api(16, prompt);
         return await base64ToWebP(imageBase64);
     } else {
-            try {
-                const response = await fetch(settings.sdAPI, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "prompt": settings.default_prompt + prompt,
-                        "negative_prompt": settings.default_negative_prompt + negprompt,
-                        "width": settings.sd_width,
-                        "height": settings.sd_height,
-                        "steps": settings.steps,
-                        "seed": sum + Math.floor(Math.random() * settings.seed_variation),
-                        "cfg_scale": settings.cfg_scale,
-                        "send_images": true,
-                        "save_images": settings.save_images,
-                        "sampler_name": settings.sampler_name
-                    })
-                });
+        const response = await fetch(settings.sdAPI, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "prompt": settings.default_prompt + prompt,
+                "negative_prompt": settings.default_negative_prompt + negprompt,
+                "width": settings.sd_width,
+                "height": settings.sd_height,
+                "steps": settings.steps,
+                "seed": sum + Math.floor(Math.random() * settings.seed_variation),
+                "cfg_scale": settings.cfg_scale,
+                "send_images": true,
+                "save_images": settings.save_images,
+                "sampler_name": settings.sampler_name
+            })
+        });
 
-            const data = await response.json();
-            const imageBase64 = data.images[0];
-            return await base64ToWebP(imageBase64);
-
-
-        } catch (error) {
-            console.error('Error generating art:', error);
-            // Hide loader
-            document.getElementById('loader').style.display = 'none';
-            // Return placeholder image
+        const data = await response.json();
+        if (!response.ok) {
             return 'placeholder';
         }
+        
+        const imageBase64 = data.images[0];
+        return await base64ToWebP(imageBase64);
     }
 }
 
@@ -268,7 +328,5 @@ async function base64ToWebP(imageBase64) {
             });
 
             // Hide loader
-            document.getElementById('loader').style.display = 'none';
-
             return webpBlob;
 }

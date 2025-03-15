@@ -249,14 +249,6 @@ function openOutputEditor() {
     }, 50);
 }
 
-// Add event listener to edit button
-document.addEventListener('DOMContentLoaded', () => {
-    const editBtn = document.getElementById('editOutputBtn');
-    if (editBtn) {
-        editBtn.addEventListener('click', openOutputEditor);
-    }
-});
-
 async function generateSummary(text) {
     return await generateText(settings.summary_param, "Text: " + text + "/n/n" + settings.summary_prompt);
 }

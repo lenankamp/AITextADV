@@ -8,6 +8,48 @@ const sceneartContainer = document.querySelector('.sceneart-container');
 
 let startX, startY, startWidth, startHeight;
 
+// Add data-action event handler
+document.addEventListener('click', (e) => {
+    const action = e.target.dataset.action;
+    if (!action) return;
+
+    switch (action) {
+        case 'toggleMenu':
+            toggleSidebar();
+            break;
+        case 'saveGame':
+            saveGame(true);
+            break;
+        case 'loadGame':
+            const fileInput = document.getElementById('fileInput');
+            fileInput.click();
+            break;
+        case 'openSettings':
+            openSettings();
+            break;
+        case 'restartGame':
+            openWorldGeneration();
+            break;
+        case 'editOutput':
+            openOutputEditor();
+            break;
+        case 'undoAction':
+            undoLastAction();
+            break;
+        case 'sendMessage':
+            sendMessage();
+            break;
+    }
+});
+
+// Add input handler for file input
+document.getElementById('fileInput').addEventListener('change', (e) => {
+    loadFromFile(e);
+});
+
+// Add input handler for text input
+document.getElementById('input').addEventListener('keydown', handleKeyDown);
+
 resizerCol.addEventListener('mousedown', initDragCol);
 resizerRow1.addEventListener('mousedown', initDragRow);
 resizerRow2.addEventListener('mousedown', initDragRow);
@@ -27,15 +69,25 @@ function handleKeyDown(event) {
 }
 
 function initDragCol(e) {
+    e.preventDefault();
     startX = e.clientX;
-    startWidth = parseInt(document.defaultView.getComputedStyle(content).getPropertyValue('grid-template-columns').split(' ')[0]);
+    const leftSide = document.getElementById('left');
+    startWidth = leftSide.offsetWidth;
     document.addEventListener('mousemove', doDragCol, false);
     document.addEventListener('mouseup', stopDragCol, false);
 }
 
 function doDragCol(e) {
-    const newWidth = startWidth + (e.clientX - startX);
-    content.style.gridTemplateColumns = `${newWidth}px .5vh 1fr`;
+    e.preventDefault();
+    const leftSide = document.getElementById('left');
+    const rightSide = document.getElementById('right');
+    const containerWidth = content.offsetWidth;
+    const newWidth = Math.max(300, Math.min(containerWidth - 300, startWidth + (e.clientX - startX)));
+    const leftPercentage = (newWidth / containerWidth) * 100;
+    const rightPercentage = 100 - leftPercentage;
+    
+    leftSide.style.flex = `0 0 ${newWidth}px`;
+    rightSide.style.flex = '1';
 }
 
 function stopDragCol() {
@@ -89,7 +141,7 @@ function stopDragMap() {
 }
 
 function updateImageGrid(areaName) {
-    const imageGrid = document.getElementById('imageGrid');
+    const imageGrid = document.getElementById('image-grid');
     const tooltip = document.getElementById('tooltip');
     imageGrid.innerHTML = '';
 
@@ -115,35 +167,32 @@ function updateImageGrid(areaName) {
         sceneArt.src = 'placeholder.png';
     }
 
-    // Rest of the image grid update logic...
+    // Create image rows for each category
     const categories = ['people', 'things', 'creatures'];
     categories.forEach(category => {
-        if (areas[areaName][category]) {
+        if (areas[areaName][category] && areas[areaName][category].length > 0) {
             const row = document.createElement('div');
             row.classList.add('image-row');
+            
             areas[areaName][category].forEach(item => {
                 const container = document.createElement('div');
                 container.classList.add('image-container');
                 
-                const nameOverlay = document.createElement('div');
-                nameOverlay.classList.add('image-name-overlay');
-                nameOverlay.textContent = item.name;
-                
                 const img = document.createElement('img');
                 if (item.image instanceof Blob) {
                     img.src = URL.createObjectURL(item.image);
-                } else if(item.image == 'placeholder') {
+                } else if (item.image === 'placeholder') {
                     img.src = 'placeholder.png';
                     setTimeout(async () => {
                         let negprompt = "";
                         let posprompt = "";
-                        if (category == "people") {
+                        if (category === "people") {
                             posprompt = settings.person_prompt;
                             negprompt = settings.person_negprompt;
-                        } else if (category == "creatures") {
+                        } else if (category === "creatures") {
                             posprompt = settings.creature_prompt;
                             negprompt = settings.creature_negprompt;
-                        } else if (category == "things") {
+                        } else if (category === "things") {
                             posprompt = settings.thing_prompt;
                             negprompt = settings.thing_negprompt;
                         }
@@ -153,36 +202,41 @@ function updateImageGrid(areaName) {
                             img.src = URL.createObjectURL(artBlob);
                         }
                     }, 0);
-                } else {
-                    console.error('Invalid image Blob:', areaName, category, item.name, item.image);
                 }
                 img.alt = item.name;
-
+                
+                // Create name overlay
+                const nameOverlay = document.createElement('div');
+                nameOverlay.classList.add('image-name-overlay');
+                nameOverlay.textContent = item.name;
+                
                 // Add click handler for entity submenu
                 container.addEventListener('click', (e) => {
                     e.stopPropagation();
                     openEntitySubmenu(item, category, e.clientX, e.clientY);
                 });
 
-                // Existing hover handlers
+                // Update tooltip handlers
                 container.addEventListener('mouseover', () => {
-                    tooltip.style.display = 'block';
+                    tooltip.classList.add('tooltip-visible');
                     tooltip.innerHTML = `<strong>${item.name}</strong><br>${item.description}<br><img src="${img.src}" alt="${item.name}" style="width: 100px; height: auto;">`;
                 });
 
                 container.addEventListener('mousemove', (e) => {
-                    tooltip.style.left = e.pageX + 10 + 'px';
-                    tooltip.style.top = e.pageY + 10 + 'px';
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY + 10}px`;
                 });
 
                 container.addEventListener('mouseout', () => {
-                    tooltip.style.display = 'none';
+                    tooltip.classList.remove('tooltip-visible');
                 });
 
+                // Append elements
                 container.appendChild(img);
                 container.appendChild(nameOverlay);
                 row.appendChild(container);
             });
+            
             imageGrid.appendChild(row);
         }
     });
@@ -615,21 +669,20 @@ function updateFollowerArt() {
     
     // Update followers container display
     if (followers.length > 0) {
-        followersContainer.style.width = '30%';
+        followersContainer.classList.add('followers-visible');
         const width = `${100 / followers.length}%`;
         
-        // Update existing images' widths first
-        Array.from(followersContainer.children).forEach(img => {
-            img.style.width = width;
-        });
-
+        // Track which images we've updated to determine removals
+        const updatedFollowers = new Set();
+        
         // Add/update followers
         followers.forEach((follower) => {
             let img = followersContainer.querySelector(`img[data-follower-name="${follower.name}"]`);
+            updatedFollowers.add(follower.name);
             
             if (!img) {
                 img = document.createElement('img');
-                img.classList.add('follower-image', 'show');
+                img.classList.add('follower-image');
                 img.dataset.followerName = follower.name;
                 img.style.width = width;
                 
@@ -668,21 +721,37 @@ function updateFollowerArt() {
                 });
                 
                 followersContainer.appendChild(img);
+                // Add show class after a frame to trigger the transition
+                requestAnimationFrame(() => img.classList.add('show'));
+            } else {
+                img.style.width = width;
             }
         });
 
-        // Remove any followers that are no longer in the list
+        // Remove followers that are no longer in the list
+        const toRemove = [];
         Array.from(followersContainer.children).forEach(img => {
             const followerName = img.dataset.followerName;
-            if (!followers.some(f => f.name === followerName)) {
-                if (img.src && img.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(img.src);
-                }
-                followersContainer.removeChild(img);
+            if (!updatedFollowers.has(followerName)) {
+                img.classList.remove('show');
+                // Store the image for removal after transition
+                toRemove.push(img);
             }
         });
+
+        // Remove elements after transition
+        toRemove.forEach(img => {
+            img.addEventListener('transitionend', () => {
+                if (img.parentNode === followersContainer) {
+                    if (img.src && img.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(img.src);
+                    }
+                    followersContainer.removeChild(img);
+                }
+            }, { once: true }); // Ensure handler runs only once
+        });
     } else {
-        followersContainer.style.width = '0';
+        followersContainer.classList.remove('followers-visible');
         
         // Clean up any existing follower images and blob URLs
         while (followersContainer.firstChild) {
@@ -710,3 +779,208 @@ playerArt.addEventListener('click', (e) => {
     };
     openEntitySubmenu(player, 'player', e.clientX, e.clientY);
 });
+
+function updateConsequences() {
+    const consequencesDiv = document.getElementById('consequences');
+    if (settings.charsheet_fae && settings.charsheet_fae.consequences) {
+        let html = [];
+        if (settings.charsheet_fae.consequences.mild) {
+            html.push(...settings.charsheet_fae.consequences.mild.map(c => 
+                `<div class="Mild">${c}</div>`
+            ));
+        }
+        if (settings.charsheet_fae.consequences.moderate) {
+            html.push(...settings.charsheet_fae.consequences.moderate.map(c => 
+                `<div class="Moderate">${c}</div>`
+            ));
+        }
+        if (settings.charsheet_fae.consequences.severe) {
+            html.push(...settings.charsheet_fae.consequences.severe.map(c => 
+                `<div class="Severe">${c}</div>`
+            ));
+        }
+        consequencesDiv.innerHTML = html.join('');
+    } else {
+        consequencesDiv.innerHTML = '';
+    }
+}
+
+function openWorldGeneration() {
+    const overlay = document.createElement('div');
+    overlay.classList.add('overlay');
+    overlay.style.display = 'flex';
+
+    const container = document.createElement('div');
+    container.classList.add('settings-container');
+    container.style.maxWidth = '800px';
+
+    // Main editor section
+    const editorSection = document.createElement('div');
+    editorSection.className = 'editor-section';
+    editorSection.style.display = 'flex';
+    editorSection.style.flexDirection = 'column';
+    editorSection.style.gap = '15px';
+    editorSection.style.padding = '20px';
+    editorSection.style.flex = '1';
+    editorSection.style.minHeight = '0';
+
+    // Theme input with generate button
+    const themeGroup = document.createElement('div');
+    themeGroup.style.position = 'relative';
+    const themeLabel = document.createElement('label');
+    themeLabel.textContent = 'World Theme:';
+    const themeInput = document.createElement('input');
+    themeInput.type = 'text';
+    themeInput.value = '';
+    themeInput.style.width = '100%';
+    themeInput.placeholder = 'Enter a theme like "medieval fantasy" or "cyberpunk future"';
+
+    const refreshThemeBtn = document.createElement('button');
+    refreshThemeBtn.className = 'refresh-button top-right';
+    refreshThemeBtn.innerHTML = '🔄';
+    refreshThemeBtn.title = 'Generate World Description';
+    refreshThemeBtn.onclick = async () => {
+        const theme = themeInput.value.trim();
+        if (theme) {
+            const desc = await generateText(settings.creative_question_param, 
+                `Generate a rich, detailed world description for a ${theme} setting in 3-4 sentences.`);
+            worldDescInput.value = desc;
+        }
+    };
+
+    themeGroup.appendChild(themeLabel);
+    themeGroup.appendChild(themeInput);
+
+    // World description
+    const worldGroup = document.createElement('div');
+    worldGroup.style.flex = '1';
+    worldGroup.style.position = 'relative';
+    const worldLabel = document.createElement('label');
+    worldLabel.textContent = 'World Description:';
+    const worldDescInput = document.createElement('textarea');
+    worldDescInput.value = settings.world_description;
+    worldDescInput.style.height = '200px';
+
+    worldGroup.appendChild(worldLabel);
+    themeGroup.appendChild(refreshThemeBtn);
+    worldGroup.appendChild(worldDescInput);
+
+    // Starting area with generate button
+    const areaGroup = document.createElement('div');
+    areaGroup.style.position = 'relative';
+    const areaLabel = document.createElement('label');
+    areaLabel.textContent = 'Starting Area:';
+    const areaInput = document.createElement('input');
+    areaInput.type = 'text';
+    areaInput.value = settings.starting_area;
+    areaInput.style.width = '100%';
+
+    const refreshAreaBtn = document.createElement('button');
+    refreshAreaBtn.className = 'refresh-button top-right';
+    refreshAreaBtn.innerHTML = '🔄';
+    refreshAreaBtn.title = 'Generate Starting Area';
+    refreshAreaBtn.onclick = async () => {
+        const response = await generateText(settings.creative_question_param, 
+            `Based on this world: ${worldDescInput.value}\nGenerate a name for an interesting starting location, if it would be within another larger place answer from largest to smallest with each location separated by a '/', eg. City/College/Dormitory/Bedroom.`);
+            const desc = response.trim().replaceAll(' / ', '/');
+        areaInput.value = desc;
+        // Also generate its description
+        const areaDesc = await generateText(settings.creative_question_param, 
+            `Generate a detailed description in 2-3 sentences of this location: ${desc.includes('/') ? desc.split('/').pop() : desc} that exists in this world: ${worldDescInput.value}`);
+        areaDescInput.value = areaDesc;
+    };
+
+    areaGroup.appendChild(areaLabel);
+    areaGroup.appendChild(areaInput);
+    areaGroup.appendChild(refreshAreaBtn);
+
+    // Area description with generate button
+    const areaDescGroup = document.createElement('div');
+    areaDescGroup.style.flex = '1';
+    areaDescGroup.style.position = 'relative';
+    const areaDescLabel = document.createElement('label');
+    areaDescLabel.textContent = 'Starting Area Description:';
+    const areaDescInput = document.createElement('textarea');
+    areaDescInput.value = settings.starting_area_description;
+    areaDescInput.style.height = '200px';
+
+    const refreshAreaDescBtn = document.createElement('button');
+    refreshAreaDescBtn.className = 'refresh-button top-right';
+    refreshAreaDescBtn.innerHTML = '🔄';
+    refreshAreaDescBtn.title = 'Regenerate Area Description';
+    refreshAreaDescBtn.onclick = async () => {
+        const areaDesc = await generateText(settings.creative_question_param, 
+            `Generate a detailed description in 2-3 sentences of this location: ${areaInput.value} that exists in this world: ${worldDescInput.value}`);
+        areaDescInput.value = areaDesc;
+    };
+
+    areaDescGroup.appendChild(areaDescLabel);
+    areaDescGroup.appendChild(areaDescInput);
+    areaDescGroup.appendChild(refreshAreaDescBtn);
+
+    // Date input
+    const dateGroup = document.createElement('div');
+    const dateLabel = document.createElement('label');
+    dateLabel.textContent = 'Starting Date/Time:';
+    const dateInput = document.createElement('input');
+    dateInput.type = 'text';
+    dateInput.value = settings.current_time;
+    dateInput.style.width = '100%';
+    dateInput.placeholder = 'YYYY-MM-DD HH:MM:SS';
+
+    dateGroup.appendChild(dateLabel);
+    dateGroup.appendChild(dateInput);
+
+    // Add all inputs to editor section
+    editorSection.appendChild(themeGroup);
+    editorSection.appendChild(worldGroup);
+    editorSection.appendChild(areaGroup);
+    editorSection.appendChild(areaDescGroup);
+    editorSection.appendChild(dateGroup);
+
+    // Action buttons
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'settings-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn-secondary';
+    cancelBtn.onclick = () => overlay.remove();
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.className = 'btn-secondary';
+    saveBtn.onclick = () => {
+        settings.world_description = worldDescInput.value;
+        settings.starting_area = areaInput.value;
+        settings.starting_area_description = areaDescInput.value;
+        settings.current_time = dateInput.value;
+        overlay.remove();
+    };
+
+    const restartBtn = document.createElement('button');
+    restartBtn.textContent = 'Restart';
+    restartBtn.className = 'btn-primary';
+    restartBtn.onclick = () => {
+        if (confirm('Are you sure you want to restart? This will erase your current progress.')) {
+            settings.world_description = worldDescInput.value;
+            settings.starting_area = areaInput.value;
+            settings.starting_area_description = areaDescInput.value;
+            settings.current_time = dateInput.value;
+            overlay.remove();
+            restartGame();
+        }
+    };
+
+    actionButtons.appendChild(cancelBtn);
+    actionButtons.appendChild(saveBtn);
+    actionButtons.appendChild(restartBtn);
+
+    // Add sections to container
+    container.appendChild(editorSection);
+    container.appendChild(actionButtons);
+
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+}
+

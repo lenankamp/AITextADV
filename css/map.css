@@ -1,0 +1,51 @@
+/* Auto-generated CSS module */
+.map {
+    width: 8000px; /* Arbitrary large size for the map */
+    height: 8000px;
+    position: absolute;
+    cursor: grab;
+ }
+
+.map img {
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Disable default click and drag behavior */
+ }
+
+.location {
+    position: absolute;
+    background-color: red;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+ }
+
+.sublocation-row {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(45, 45, 45, 0.8);
+    padding: 5px;
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 60px;
+ }
+
+.sublocation-image {
+    height: 50px;
+    width: 50px;
+    flex-shrink: 0;
+    object-fit: cover;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    border-radius: 4px;
+ }
+
+.sublocation-image:hover {
+    border-color: #fff;
+ }
+

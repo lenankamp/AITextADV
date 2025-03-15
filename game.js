@@ -13,9 +13,12 @@ async function generateVisualPrompt(name, description) {
     });
 }
 
-async function generateArea(areaName, description='', x=0, y=0, contextDepth=0) {
+async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, sublocation='') {
     if (areas[areaName]) {
         return;
+       // else if area's parent does not exist, generate the parent area first 
+    } else if (areaName.includes('/') && !areas[areaName.split('/').slice(0, -1).join('/')]) {
+        await generateArea(areaName.split('/').slice(0, -1).join('/'), '', x, y, contextDepth, areaName);
     }
     let area;
     areas[areaName] = {};
@@ -30,7 +33,13 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0) 
     area['people'] = [];
     area['things'] = [];
     area['creatures'] = [];
-    area['sublocations'] = {};
+    area['sublocations'] = [];
+    if(sublocation !== '') {
+            area.sublocations[sublocation.split('/').pop()] = {
+                path: sublocation,
+                name: sublocation.split('/').pop()
+            };
+        }
 
     let response;
     if (description == '') {
@@ -66,8 +75,9 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0) 
         world: "World Info: " + settings.world_description + "\n",
         mainLocation: areaName.includes('/') ? "Within the " + areas[areaName.split('/')[0]].name + " described as " + areas[areaName.split('/')[0]].description + "\n" : '',
         parentArea: (areaName.match(/\//g) || []).length > 1 ? "More Locally within: " + areaName.split('/').slice(0, -1).join('/') : '',
+        topAreaDirective: (!areaName.includes('/')) ? settings.topAreaDirective : '',
     }, settings.sampleSublocations);
-
+console.log ("Generated sublocations: " + response);
     let lines = response.split('\n');
     let currentSection = null;
     for (const line of lines) {
@@ -335,14 +345,12 @@ async function generateNewDescription(name, type) {
         });
     } else {
         return await generateText(settings.creative_question_param, settings.generateAreaDescriptionPrompt, '', {
-            name: name,
+            areaName: name,
             time: getTimeofDay(),
             season: getSeason(),
             world: "World Info: " + settings.world_description + "\n",
             mainLocation: '',
-            parentArea: '',
-            areaName: currentArea.name,
-            areaDescription: currentArea.description
+            parentArea: ''
         });
     }
 }
@@ -432,39 +440,38 @@ async function outputCheck(text, context="") {
     const lines = response.split('\n');
 
     for (const line of lines) {
-        if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
+        if (line.startsWith('1.') && !line.includes('n/a') && line.trim() !== '1.') {
             const names = line.replace("1. ", '').trim().split(',').map(name => name.stripNonAlpha().trim());
             for (const name of names) {
-                if (!areas[currentArea]['people'].some(person => person.name === name) && !followers.some(follower => follower.name === name) && name.toLowerCase() != settings.player_name.toLowerCase()) {
+                if (!areas[currentArea]['people'].some(person => person.name.toLowerCase() === name.toLowerCase()) && !followers.some(follower => follower.name.toLowerCase() === name.toLowerCase()) && name.toLowerCase() != settings.player_name.toLowerCase()) {
                     addConfirmButton('New Person', name, (inputValue) => addPerson(inputValue || name, currentArea, text, context));
                 }
             }
-        } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
+        } else if (line.startsWith('2.') && !line.includes('n/a') && line.trim() !== '2.') {
             const names = line.replace("2. ", '').trim().split(',').map(name => name.stripNonAlpha().trim());
             for (const name of names) {
-                if (!areas[currentArea]['creatures'].some(creature => creature.name === name)  && !followers.some(follower => follower.name === name) && name.toLowerCase() != settings.player_name.toLowerCase()) {
+                if (!areas[currentArea]['creatures'].some(creature => creature.name.toLowerCase() === name.toLowerCase())  && !followers.some(follower => follower.name.toLowerCase() === name.toLowerCase()) && name.toLowerCase() != settings.player_name.toLowerCase()) {
                     addConfirmButton('New Creature', name, (inputValue) => addCreature(inputValue || name, currentArea, text, context));
                 }
             }
-        } else if (line.startsWith('3.') && !line.includes('N/A') && line.trim() !== '3.') {
+        } else if (line.startsWith('3.') && !line.includes('n/a') && line.trim() !== '3.') {
             const newArea = line.replace("3. ", '').stripNonAlpha().trim();
             if (newArea !== currentArea && newArea !== currentArea.split('/').pop()) {
                 addConfirmButton('Move to', newArea, (inputValue) => moveToArea(inputValue || newArea, 0, text, 3));
             }
-        } else if (line.startsWith('4.') && !line.includes('N/A') && line.trim() !== '4.') {
+        } else if (line.startsWith('4.') && !line.includes('n/a') && line.trim() !== '4.') {
             const newName = line.replace("4. ", '').stripNonAlpha().trim();
-            if (!areas[currentArea].people.some(person => person.name.toLowerCase() === newName.toLowerCase()) && newName.toLowerCase() != settings.player_name.toLowerCase()) {
-                const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');
-                const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'N/A' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]", '', {
+            // check for false positive of name of someone already here
+            if (!areas[currentArea].people.some(person => person.name.toLowerCase() === newName.toLowerCase()) && newName.toLowerCase() != settings.player_name.toLowerCase() && !followers.some(follower => follower.name.toLowerCase() === newName.toLowerCase())) {
+                const peopleNames = areas[currentArea].people.map(person => person.name).join(', ') + (followers.length > 0 ? ', ' + followers.map(follower => follower.name).join(', ') : '');
+                const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'n/a' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]", '', {
                     peopleNames: peopleNames,
                     newName: newName,
                     currentArea: currentArea,
                     context: context,
                     text: text
                 }, settings.sampleQuestions);
-                if (prevName.trim() != "N/A" && areas[currentArea].people.some(person => person.name.toLowerCase() === prevName.toLowerCase())) {
-                    addConfirmButton('Rename ' + prevName, newName, (inputValue) => renameEntity(inputValue || newName, prevName));
-                } else if  (followers.some(follower => follower.name.toLowerCase() === prevName.toLowerCase())) {
+                if (prevName.trim() != "n/a" && areas[currentArea].people.some(person => person.name.toLowerCase() === prevName.toLowerCase()) || followers.some(follower => follower.name.toLowerCase() === prevName.toLowerCase())) {
                     addConfirmButton('Rename ' + prevName, newName, (inputValue) => renameEntity(inputValue || newName, prevName));
                 } else {
                     // Check if newName exists as a person in some other area, and then delete that person
@@ -480,23 +487,23 @@ async function outputCheck(text, context="") {
                         addConfirmButton('New Person', newName, (inputValue) => addPerson(inputValue || newName, currentArea, text, context));
                 }
             }
-        } else if (line.startsWith('5.') && !line.includes('N/A') && line.trim() !== '5.') {
+        } else if (line.startsWith('5.') && !line.includes('n/a') && line.trim() !== '5.') {
             const name = line.replace("5. ", '').stripNonAlpha().trim();
             if (areas[currentArea].people.some(person => person.name.toLowerCase() === name.toLowerCase()) || areas[currentArea].creatures.some(creature => creature.name.toLowerCase() === name.toLowerCase()))
                 addConfirmButton('Leaving Area', name, (inputValue) => entityLeavesArea(inputValue || name, text));
-        } else if (line.startsWith('6.') && !line.includes('N/A') && line.trim() !== '6.') {
+        } else if (line.startsWith('6.') && !line.includes('n/a') && line.trim() !== '6.') {
             const name = line.replace("6. ", '').stripNonAlpha().trim();
             if (areas[currentArea].creatures.some(creature => creature.name.toLowerCase() === name.toLowerCase()))
                 addConfirmButton('Befriend', name, (inputValue) => befrienCreature(inputValue || name));
-        } else if (line.startsWith('7.') && !line.includes('N/A') && line.trim() !== '7.') {
+        } else if (line.startsWith('7.') && !line.includes('n/a') && line.trim() !== '7.') {
             const name = line.replace("7. ", '').stripNonAlpha().trim();
             if (areas[currentArea].people.some(person => person.name.toLowerCase() === name.toLowerCase()))
                 addConfirmButton('Provoke', name, (inputValue) => provokeAlly(inputValue || name));
-        } else if (line.startsWith('8.') && !line.includes('N/A') && line.trim() !== '8.') {
+        } else if (line.startsWith('8.') && !line.includes('n/a') && line.trim() !== '8.') {
             const name = line.replace("8. ", '').stripNonAlpha().trim();
             if (!areas[currentArea].things.some(thing => thing.name.toLowerCase() === name.toLowerCase()))
                 addConfirmButton('New Thing', name, (inputValue) => addThing(inputValue || name));
-        } else if (line.startsWith('9.') && !line.includes('N/A') && line.trim() !== '9.') {
+        } else if (line.startsWith('9.') && !line.includes('n/a') && line.trim() !== '9.') {
             const name = line.replace("9. ", '').stripNonAlpha().trim();
             if (!areas[currentArea].sublocations[name])
                 addConfirmButton('New Path', name, (inputValue) => addSublocation(inputValue || name, currentArea, text));
@@ -515,7 +522,7 @@ async function outputAutoCheck(text, context="") {
     const lines = response.split('\n');
 
     for (const line of lines) {
-        if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
+        if (line.startsWith('1.') && !line.includes('n/a') && line.trim() !== '1.') {
             const timePassed = line.replace("1. ", '').stripNonAlpha().trim();
             const timePassedLower = timePassed.toLowerCase();
             if (timePassedLower.includes("moments")) {
@@ -553,7 +560,7 @@ async function outputAutoCheck(text, context="") {
                 advanceTime(timeToAdvance);
             }
             updateTime();
-        } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
+        } else if (line.startsWith('2.') && !line.includes('n/a') && line.trim() !== '2.') {
             const name = line.replace("2. ", '').stripNonAlpha().trim();
             let section = null;
             let target = null;
@@ -564,7 +571,7 @@ async function outputAutoCheck(text, context="") {
                 },settings.sampleQuestions);
                 let severity = 0;
                 for(const consequenceTest of response.split('\n')) {
-                    if (consequenceTest.startsWith('1.') && !consequenceTest.includes('N/A') && consequenceTest.trim() !== '1.') {
+                    if (consequenceTest.startsWith('1.') && !consequenceTest.includes('n/a') && consequenceTest.trim() !== '1.') {
                         const timeInjured = consequenceTest.replace("1. ", '').stripNonAlpha().toLowerCase().trim();
                         if (timeInjured.includes("hours") && severity === 0) {
                             severity = 1;
@@ -573,7 +580,7 @@ async function outputAutoCheck(text, context="") {
                         } else if ((timeInjured.includes("years") || timeInjured.includes("longer")) && severity <= 2) {
                             severity = 3;
                         }
-                    } else if (severity > 0 && consequenceTest.startsWith('2.') && !consequenceTest.includes('N/A') && consequenceTest.trim() !== '2.') {
+                    } else if (severity > 0 && consequenceTest.startsWith('2.') && !consequenceTest.includes('n/a') && consequenceTest.trim() !== '2.') {
                         const consequence = consequenceTest.replace("2. ", '').stripNonAlpha().trim();
                         console.log("Adding consequence.",severity,consequence);
                         if(!settings.charsheet_fae.consequences) {
@@ -712,18 +719,19 @@ function areaContext(areaPath) {
     return context;
 }
 
-function fullContext(limit = null, extraContext = "") {
-    const output = document.getElementById('output').innerText;
+function fullContext(limit = null, summaryLength = 0, extraContext = "") {
+    const output = document.getElementById('output');
+    const outputElements = Array.from(output.children).map(child => child.innerText);
     let outputContent;
     let summary = '';
+
     if (limit !== null) {
-        const outputLines = output.split('\n');
-        const limitedLines = outputLines.slice(-limit - 1, -1); // Get the last 'limit' lines excluding the last line
-        outputContent = limitedLines.join('\n');
-        summary = outputLines.slice(0, -limit - 1).join('\n'); // Get all lines before the limited lines
+        const limitedElements = outputElements.slice(-limit); // Get the last 'limit' elements
+        outputContent = limitedElements.join(' ');
+        summary = outputElements.slice(-summaryLength - limit, -limit).join(' '); // Get the last 'summaryLength' elements before the limited elements
     } else {
-        const outputLines = output.split('\n');
-        outputContent = outputLines.slice(0, -1).join('\n'); // Get all lines except the last one
+        outputContent = outputElements.slice(0, -1).join(' '); // Get all elements except the last one
+        summary = outputElements.slice(-summaryLength - 1, -1).join(' '); // Get the last 'summaryLength' elements
     }
 
 
@@ -733,7 +741,7 @@ function fullContext(limit = null, extraContext = "") {
         .replace('$player_desc', "Player Description: " + settings.player_description + "\n")
         .replace('$summary', summary ? "Summary of Previous Events: " + summary +"\n" : '')
         .replace('$locale', areaContext(currentArea))
-        .replace('$extra', extraContext ? "Context: " + extraContext + "\n" : '')
+        .replace('$extra_context', extraContext + '\n' ? extraContext : '')
         .replace('$story', outputContent);
 }
 
@@ -784,19 +792,19 @@ function faeCharSheet(charsheet) {
 async function playerAction(action) {
     switch (settings.rule_set) {
         case 'Fate Accelerated':
-            const prompt = settings.ruleprompt_fae_action1.replace('$action', action);
-            const response = await generateText(settings.question_param, fullContext(2) + "\n\n" + faeCharSheet(settings.charsheet_fae) + prompt, '', {
+            console.log(fullContext(2) + "\n\n" + faeCharSheet(settings.charsheet_fae) + replaceVariables(settings.ruleprompt_fae_action1, { action: action }));
+            const response = await generateText(settings.question_param, fullContext(2) + "\n\n" + faeCharSheet(settings.charsheet_fae) + settings.ruleprompt_fae_action1, '', {
                 action: action,
                 currentArea: currentArea
-            }, settings.sampleQuestions);
+            }, settings.sampleFAEAction);
             console.log("Player Action Response:", response);
             const lines = response.toLowerCase().split('\n');
             let disadvantage = 1;
             let advantage = 0;
 
             for (const line of lines) {
-                if (line.startsWith('1.') && !line.includes('N/A') && line.trim() !== '1.') {
-                    // conditionals if line contains trivial, challeng, extreme, or impossible. plausible is default case
+                if (line.startsWith('1.') && !line.includes('n/a') && line.trim() !== '1.') {
+                    // conditionals if line contains trivial, challeng, extreme, or impossible. simple is default case
                     if (line.includes('trivial')) {
                         return "[Continue the story for another $settings.output_length$ as player '" + action + "'. "+ settings.action_string +"]";
                     } else if (line.includes('challeng')) {
@@ -806,7 +814,7 @@ async function playerAction(action) {
                     } else if (line.includes('impossible')) {
                         return "[Continue the story for another $settings.output_length$ as player considers why it's impossibility to '" + action + "'. "+ settings.action_string +"]"
                     }
-                } else if (line.startsWith('2.') && !line.includes('N/A') && line.trim() !== '2.') {
+                } else if (line.startsWith('2.') && !line.includes('n/a') && line.trim() !== '2.') {
                     //conditions if line contains careful, clever, flashy, forceful, quick, or sneaky.
                     if (line.includes('careful')) {
                         advantage += settings.charsheet_fae.approaches['careful'];
@@ -821,10 +829,10 @@ async function playerAction(action) {
                     } else if (line.includes('sneaky')) {
                         advantage += settings.charsheet_fae.approaches['sneaky'];
                     }
-                } else if (line.startsWith('3.') && !line.includes('N/A') && line.trim() !== '3.') {
+                } else if (line.startsWith('3.') && !line.includes('n/a') && line.trim() !== '3.') {
                     // simply count the number of commas returned and add to the advantage
                     advantage += line.split(',').length;;
-                } else if (line.startsWith('4.') && !line.includes('N/A') && line.trim() !== '4.') {
+                } else if (line.startsWith('4.') && !line.includes('n/a') && line.trim() !== '4.') {
                     // simply count the number of commas returned and add to the disadvantage
                     disadvantage += line.split(',').length;;
                 }
@@ -893,7 +901,7 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
                 output.scrollTop = output.scrollHeight;
             } 
             if (message.startsWith('"')) {
-                messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$ as the player says ' + message + '. Be sure to include their words verbatim and ' + settings.action_string + ']';
+                messageElement.innerHTML = '\n[Have the player say ' + message + '. And then, Continue the story for another $settings.output_length$.]';
             } else return;
 
         } else if (bypassCheck) {
@@ -910,7 +918,7 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     output.appendChild(messageElement);
     output.scrollTop = output.scrollHeight;
 
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(3, extraContext), postPrompt, {
+    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(3, 0, extraContext) + messageElement.innerHTML, postPrompt, {
         message: message,
         currentArea: currentArea,
         playerName: settings.player_name
@@ -1020,7 +1028,7 @@ function restartGame() {
     });
     currentArea = settings.starting_area;
     document.getElementById('output').innerHTML = '';
-    document.getElementById('imageGrid').innerHTML = '';
+    document.getElementById('image-grid').innerHTML = '';
     setupStart();
 }
 
@@ -1133,7 +1141,7 @@ async function moveToArea(area, describe=0, text="") {
             text: text
         }, settings.sampleQuestions);
         
-        if (response !== 'N/A') {
+        if (response !== 'n/a') {
             const responseCleaned = response.stripNonAlpha();
             const parentArea = Object.keys(areas).find(a => {
                 const isMatch = a === responseCleaned || Object.keys(areas[a].sublocations).includes(responseCleaned);
@@ -1232,14 +1240,19 @@ async function moveToArea(area, describe=0, text="") {
             }
         }
 
+        // check if current area is the parent of targetarea, if so, add a message to the prompt that the player is moving to a sublocation of the current area
+        if (targetArea.split('/').slice(0, -1).join('/') === currentArea) {
+            prompt = settings.player_name + " " + (describe>1 ? settings.player_distant_movement : settings.player_local_movement) + " further through " + areas[currentArea].name;
+        } else {
+            prompt = settings.player_name + " leaves " + areas[currentArea].name + " and " + (describe>1 ? settings.player_distant_movement : settings.player_local_movement);
+        }
+        if (describe > 1)
+            prompt += " many miles";
 
-        prompt = settings.player_name + " leaves " + areas[currentArea].name + " and " + (describe>1 ? settings.player_distant_movement : settings.player_local_movement);
         if(followers.length > 0) {
             const followerNames = followers.map(follower => follower.name).join(', ');
             prompt += " along with " + followerNames;
         }
-        if (describe > 1)
-            prompt += " many miles";
         prompt += " and arrives at " + areas[targetArea].name + '.';
     }
     

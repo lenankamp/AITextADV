@@ -4,25 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AITextADV</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
     <div class="sidebar collapsed" id="sidebar">
-        <button class="toggle-btn" onclick="toggleSidebar()">Menu</button>
-        <button class="toggle-btn" onclick="saveGame(true)">Save</button>
-        <button class="toggle-btn" onclick="document.getElementById('fileInput').click()">Load</button>
-        <button class="toggle-btn" onclick="openSettings()">Settings</button>
-        <button class="toggle-btn" onclick="restartGame()">Restart</button>
-        <input type="file" id="fileInput" style="display:none">
+        <button class="toggle-btn" id="menuBtn" data-action="toggleMenu">Menu</button>
+        <button class="toggle-btn" id="saveBtn" data-action="saveGame">Save</button>
+        <button class="toggle-btn" id="loadBtn" data-action="loadGame">Load</button>
+        <button class="toggle-btn" id="settingsBtn" data-action="openSettings">Settings</button>
+        <button class="toggle-btn" id="restartBtn" data-action="restartGame">Edit World</button>
+        <input type="file" id="fileInput" data-action="handleFileInput">
     </div>
     <div class="content">
         <div class="tooltip" id="tooltip"></div>
         <div class="side" id="left">
-            <div class="quadrant" id="q1" style="height: 65vh;">
-                <div class="image-grid" id="imageGrid"></div>
+            <div class="quadrant" id="q1">
+                <div class="image-grid" id="image-grid"></div>
             </div>
             <div class="resizer horizontal" id="resizer-row1"></div>
-            <div class="quadrant" id="q3" style="display: flex; flex-flow: row; justify-content: flex-start;">
+            <div class="quadrant" id="q3">
                 <img id="playerart">
                 <div class="approach-column">
                     <div class="approach-box">
@@ -65,26 +65,26 @@
         </div>
         <div class="resizer" id="resizer-col"></div>
         <div class="side" id="right">
-            <div class="quadrant" id="q2" style="height: 40vh; display: flex; overflow:hidden;">
-                <div class="map-container" style="width: 40%;">
+            <div class="quadrant" id="q2">
+                <div class="map-container">
                     <div class="map" id="map">
                         <img src="map.webp" alt="Map">
                     </div>
                 </div>
                 <div class="resizer" id="resizer-map"></div>
-                <div class="sceneart-container" style="width: 60%; height: 100%;">
+                <div class="sceneart-container">
                     <div class="area-name-overlay" id="areaNameOverlay"></div>
-                    <img id="sceneart" style="height:100%; width: 100%; object-fit: cover;">
+                    <img id="sceneart">
                 </div>
             </div>
             <div class="resizer horizontal" id="resizer-row2"></div>
-            <div class="quadrant" id="q4" style="flex: 1;">
-                <button id="editOutputBtn" class="edit-output-btn" title="Edit Output">✎</button>
+            <div class="quadrant" id="q4">
+                <button id="editOutputBtn" class="edit-output-btn" title="Edit Output" data-action="editOutput">✎</button>
                 <div class="output" id="output"></div>
                 <div class="input-container">
-                    <button onclick="undoLastAction()">Undo</button>
-                    <input type="text" id="input" placeholder="Type your message here..." onkeydown="handleKeyDown(event)">
-                    <button onclick="sendMessage(input.value)">Send</button>
+                    <button id="undoBtn" data-action="undoAction">Undo</button>
+                    <input type="text" id="input" placeholder="Type your message here..." data-action="handleInput">
+                    <button id="sendBtn" data-action="sendMessage">Send</button>
                 </div>
             </div>
         </div>
@@ -97,15 +97,16 @@
         </div>
     </div>
 
-    <div class="loader" id="loader" style="display: none;"></div>
+    <div class="loader" id="loader"></div>
 
+    <script src="defaultsettings.js"></script>
     <script src="settings.js"></script>
     <script src="helpers.js"></script>
     <script src="generate.js"></script>
-    <script src="saveload.js"></script>
     <script src="ui.js"></script>
     <script src="map.js"></script>
     <script src="settings_override.js"></script>
     <script src="game.js"></script>
+    <script src="saveload.js"></script>
 </body>
 </html>
