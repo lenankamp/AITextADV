@@ -30,8 +30,11 @@ document.addEventListener('click', (e) => {
         case 'editCharacter':
             openCharacterEditor();
             break;
-        case 'restartGame':
+        case 'editWorld':
             openWorldGeneration();
+            break;
+        case 'newGame':
+            startNewGame();
             break;
         case 'editOutput':
             openOutputEditor();
@@ -650,6 +653,12 @@ function openUnifiedEditor(item, type, path = null) {
                 if (visualInput && seedInput) {
                     item.visual = visualInput.value;
                     item.seed = parseInt(seedInput.value);
+                    
+                    // Force image refresh if preview was updated
+                    if (previewImage.src !== 'placeholder.png' && previewImage.src.startsWith('blob:')) {
+                        const blobUrl = previewImage.src;
+                        item.image = await (await fetch(blobUrl)).blob();
+                    }
                 }
             }
 
@@ -660,7 +669,22 @@ function openUnifiedEditor(item, type, path = null) {
             if (path) {
                 updateSublocationRow(currentArea);
             } else {
-                updateImageGrid(currentArea);
+                // Find the container and update its image
+                const container = document.querySelector(`.image-container[data-entity-name="${item.name}"]`);
+                if (container) {
+                    const img = container.querySelector('img');
+                    if (img && item.image instanceof Blob) {
+                        // Revoke old blob URL if it exists
+                        if (img.src.startsWith('blob:')) {
+                            URL.revokeObjectURL(img.src);
+                        }
+                        // Set new image
+                        img.src = URL.createObjectURL(item.image);
+                    }
+                } else {
+                    // If container not found, do full grid update
+                    updateImageGrid(currentArea);
+                }
                 updateFollowerArt();
             }
         }
@@ -685,7 +709,7 @@ function openUnifiedEditor(item, type, path = null) {
 
 function updateTime() {
     const timeElement = document.getElementById('currentTime');
-    const season = getSeason();
+    const season = settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '';
     
     const dateSeasonSpan = timeElement.querySelector('.date-season');
     const timeSpan = timeElement.querySelector('.time');
@@ -838,7 +862,7 @@ function updateConsequences() {
     }
 }
 
-function openWorldGeneration() {
+function openWorldGeneration(isNewGame = false, onNext = null) {
     const overlay = document.createElement('div');
     overlay.classList.add('overlay');
     overlay.style.display = 'flex';
@@ -895,7 +919,7 @@ function openWorldGeneration() {
     worldDescInput.style.height = '200px';
 
     worldGroup.appendChild(worldLabel);
-    themeGroup.appendChild(refreshThemeBtn);
+    worldGroup.appendChild(refreshThemeBtn);
     worldGroup.appendChild(worldDescInput);
 
     // Starting area with generate button
@@ -943,7 +967,7 @@ function openWorldGeneration() {
     refreshAreaDescBtn.title = 'Regenerate Area Description';
     refreshAreaDescBtn.onclick = async () => {
         const areaDesc = await generateText(settings.creative_question_param, 
-            `Generate a detailed description in 2-3 sentences of this location: ${areaInput.value} that exists in this world: ${worldDescInput.value}`);
+            `Generate a detailed description in 2-3 sentences of this location: ${areaInput.value.includes('/') ? areaInput.value.split('/').pop() : areaInput.value} that exists in this world: ${worldDescInput.value}`);
         areaDescInput.value = areaDesc;
     };
 
@@ -980,44 +1004,43 @@ function openWorldGeneration() {
     cancelBtn.className = 'btn-secondary';
     cancelBtn.onclick = () => overlay.remove();
 
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save';
-    saveBtn.className = 'btn-secondary';
-    saveBtn.onclick = () => {
-        settings.world_description = worldDescInput.value;
-        settings.starting_area = areaInput.value;
-        settings.starting_area_description = areaDescInput.value;
-        settings.current_time = dateInput.value;
-        overlay.remove();
-    };
-
-    const restartBtn = document.createElement('button');
-    restartBtn.textContent = 'Restart';
-    restartBtn.className = 'btn-primary';
-    restartBtn.onclick = () => {
-        if (confirm('Are you sure you want to restart? This will erase your current progress.')) {
+    const primaryBtn = document.createElement('button');
+    if (isNewGame && onNext) {
+        primaryBtn.textContent = 'Next: Create Character';
+        primaryBtn.onclick = () => {
+            const worldSettings = {
+                world_description: worldDescInput.value,
+                starting_area: areaInput.value,
+                starting_area_description: areaDescInput.value,
+                current_time: dateInput.value
+            };
+            // Save world settings
+            Object.assign(settings, worldSettings);
+            overlay.remove();
+            onNext(worldSettings);
+        };
+    } else {
+        primaryBtn.textContent = 'Save';
+        primaryBtn.onclick = () => {
             settings.world_description = worldDescInput.value;
             settings.starting_area = areaInput.value;
             settings.starting_area_description = areaDescInput.value;
             settings.current_time = dateInput.value;
             overlay.remove();
-            restartGame();
-        }
-    };
+        };
+    }
+    primaryBtn.className = 'btn-primary';
 
     actionButtons.appendChild(cancelBtn);
-    actionButtons.appendChild(saveBtn);
-    actionButtons.appendChild(restartBtn);
+    actionButtons.appendChild(primaryBtn);
 
-    // Add sections to container
     container.appendChild(editorSection);
     container.appendChild(actionButtons);
-
     overlay.appendChild(container);
     document.body.appendChild(overlay);
 }
 
-function openCharacterEditor() {
+function openCharacterEditor(isNewGame = false) {
     const overlay = document.createElement('div');
     overlay.classList.add('overlay');
     overlay.style.display = 'flex';
@@ -1048,7 +1071,32 @@ function openCharacterEditor() {
     
     const currentPlayerArt = document.getElementById('playerart');
     previewImage.src = currentPlayerArt.src;
+
+    // Create temporary item object for handling the image
+    const item = {
+        image: currentPlayerArt.src.startsWith('blob:') ? 'current' : 'placeholder'
+    };
+
     previewSection.appendChild(previewImage);
+
+    // Add refresh button here, but it will use visualInput which we'll create later
+    let visualInput; // Declare this so we can reference it in the refresh button
+    const refreshImageBtn = document.createElement('button');
+    refreshImageBtn.className = 'refresh-button top-right';
+    refreshImageBtn.innerHTML = '🔄';
+    refreshImageBtn.title = 'Regenerate Character Image';
+    refreshImageBtn.onclick = async () => {
+        if (visualInput && visualInput.value) {
+            const artBlob = await generateArt(visualInput.value, "", Math.floor(Math.random() * 4294967295) + 1);
+            if (artBlob instanceof Blob) {
+                previewImage.src = URL.createObjectURL(artBlob);
+                item.image = artBlob;
+            }
+        }
+    };
+    previewSection.appendChild(refreshImageBtn);
+
+    container.appendChild(previewSection);
 
     // Main editor section with scroll
     const editorSection = document.createElement('div');
@@ -1131,7 +1179,7 @@ function openCharacterEditor() {
     visualGroup.style.position = 'relative';
     const visualLabel = document.createElement('label');
     visualLabel.textContent = 'Visual Prompt:';
-    const visualInput = document.createElement('textarea');
+    visualInput = document.createElement('textarea');
     visualInput.value = settings.player_visual || '';
     visualInput.style.height = '100px';
     visualInput.style.width = '100%';
@@ -1145,7 +1193,7 @@ function openCharacterEditor() {
             settings.generateVisualPrompt, '', {
                 name: nameInput.value,
                 description: descInput.value,
-                season: getSeason(),
+                season: settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '',
                 time: ''
             });
         visualInput.value = visual.trim();
@@ -1274,11 +1322,18 @@ function openCharacterEditor() {
     cancelBtn.className = 'btn-secondary';
     cancelBtn.onclick = () => overlay.remove();
 
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'Save';
-    saveBtn.className = 'btn-primary';
-    saveBtn.onclick = () => {
-        // Save all character data to settings
+    const primaryBtn = document.createElement('button');
+    primaryBtn.textContent = isNewGame ? 'Start Game' : 'Save';
+    primaryBtn.className = 'btn-primary';
+    primaryBtn.onclick = () => {
+        saveCharacterSettings();
+        overlay.remove();
+        if (isNewGame) {
+            restartGame();
+        }
+    };
+
+    function saveCharacterSettings() {
         settings.player_name = nameInput.value;
         settings.player_description = descInput.value;
         settings.player_visual = visualInput.value;
@@ -1288,23 +1343,25 @@ function openCharacterEditor() {
         settings.charsheet_fae.aspects = aspectInputs.map(input => input.value);
         settings.charsheet_fae.trouble = troubleInput.value;
 
-        // Update character info display
         updateCharacterInfo();
         
-        // If we generated a new image, update the player art
         if (previewImage.src !== currentPlayerArt.src) {
             currentPlayerArt.src = previewImage.src;
         }
-        
-        overlay.remove();
-    };
+    }
 
     actionButtons.appendChild(cancelBtn);
-    actionButtons.appendChild(saveBtn);
+    actionButtons.appendChild(primaryBtn);
 
     // Add sections to container
     container.appendChild(actionButtons);
     overlay.appendChild(container);
     document.body.appendChild(overlay);
+}
+
+function startNewGame() {
+    openWorldGeneration(true, (worldSettings) => {
+        openCharacterEditor(true);
+    });
 }
 

@@ -3,7 +3,7 @@ async function generateVisualPrompt(name, description) {
         name: name,
         description: description,
         time: getTimeofDay(),
-        season: getSeason()
+        season: settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : ''
 
     });
 
@@ -53,7 +53,7 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
         const prompt = replaceVariables(settings.generateAreaDescriptionPrompt, {
             areaName: area.name,
             time: getTimeofDay(),
-            season: getSeason(),    
+            season: settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '',    
             description: area.description,
             world: "World Info: " + settings.world_description + "\n",
             mainLocation: areaName.includes('/') ? "Within the " + areas[areaName.split('/')[0]].name + " described as " + areas[areaName.split('/')[0]].description + "\n" : '',
@@ -280,7 +280,7 @@ async function addSublocation(name, area=currentArea, text="", context="") {
     const description = await generateText(settings.creative_question_param, "Context:\n" + context +"\n" + text + "\n\n" + settings.generateAreaDescriptionPrompt, '', {
         name: name,
         time: getTimeofDay(),
-        season: getSeason(),
+        season: settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '',
         world: "World Info: " + settings.world_description + "\n",
         mainLocation: areas[area].name.includes('/') ? "Within the " + areas[areas[area].name.split('/')[0]].name + " described as " + areas[areas[area].name.split('/')[0]].description + "\n" : '',
         parentArea: (areas[area].name.match(/\//g) || []).length > 1 ? "More Locally within: " + areas[area].name.split('/').slice(0, -1).join('/') : '',
@@ -353,7 +353,7 @@ async function generateNewDescription(name, type) {
         return await generateText(settings.creative_question_param, settings.generateAreaDescriptionPrompt, '', {
             areaName: name,
             time: getTimeofDay(),
-            season: getSeason(),
+            season: settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '',
             world: "World Info: " + settings.world_description + "\n",
             mainLocation: '',
             parentArea: ''
@@ -511,7 +511,7 @@ async function outputCheck(text, context="") {
                 addConfirmButton('New Thing', name, (inputValue) => addThing(inputValue || name));
         } else if (line.startsWith('9.') && !line.includes('n/a') && line.trim() !== '9.') {
             const name = line.replace("9. ", '').stripNonAlpha().trim();
-            if (!areas[currentArea].sublocations[name])
+            if (!areas[currentArea].sublocations[name]  && !currentArea.includes(name))
                 addConfirmButton('New Path', name, (inputValue) => addSublocation(inputValue || name, currentArea, text));
         }
     }
@@ -717,7 +717,7 @@ function areaContext(areaPath) {
 
     context += replaceVariables(settings.areaTimeContext, {
         timeOfDay: getTimeofDay(),
-        season: getSeason(),
+        season: settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '',
         dayOfWeek: getDayOfWeek(),
         time: getPreciseTime()
     });
@@ -1071,7 +1071,7 @@ async function setupStart() {
 
     responseElement.innerHTML = text.replace(/\n/g, '<br>');
     output.appendChild(responseElement);
-    output.scrollTop = output.scrollHeight;
+    output.scrollTop = 0;
     await outputCheck(text);
     updateImageGrid(settings.starting_area);
     updateSublocationRow(settings.starting_area);
@@ -1082,6 +1082,7 @@ async function setupStart() {
             document.getElementById('playerart').src = URL.createObjectURL(blob);
     });
 }
+
 function restartGame() {
     
     const sceneArt = document.getElementById('sceneart');
@@ -1287,7 +1288,7 @@ async function moveToArea(area, describe=0, text="") {
             const followerNames = followers.map(follower => follower.name).join(', ');
             prompt += " along with " + followerNames;
         }
-        prompt += " and arrives at " + areas[targetArea].name + '.';
+        prompt += describe > 1 ? " and arrives at " : " and enters " + areas[targetArea].name + '.';
     }
     
     currentArea.lastVisted = settings.current_time;

@@ -66,6 +66,9 @@ function timeDiff(startTime, endTime) {
 }
 
 function getSeason() {
+    if(settings.climate === '' || settings.climate === 'none') return '';
+    else if (settings.climate !== 'temperate') return settings.climate;
+    
     const seasons = ["Winter", "Spring", "Summer", "Fall"];
     const month = parseInt(settings.current_time.match(/-(\d+)-/)[1], 10) - 1;
     return seasons[Math.floor((month % 12) / 3)];

@@ -7,7 +7,7 @@ function openSettings() {
       'UI': ['column_width', 'topleft_height', 'topright_height'],
       'World Generation': [
           'world_description', 'starting_area', 'starting_area_description', 
-          'current_time'
+          'current_time', 'climate'
       ],
       'Player Details': [
           'player_name', 'player_description', 'player_visual', 'player_seed',

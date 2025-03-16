@@ -538,3 +538,38 @@ body {
     width: 30% !important;
  }
 
+ #outputCheckConfirm {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    margin-top: 5px;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 5px; /* Prevent scrollbar from covering content */
+    scrollbar-width: thin;
+}
+
+#outputCheckConfirm input {
+    min-width: 100px;
+    max-width: 200px;
+    flex-shrink: 0;
+}
+
+#outputCheckConfirm button {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Style scrollbar for webkit browsers */
+#outputCheckConfirm::-webkit-scrollbar {
+    height: 4px;
+}
+
+#outputCheckConfirm::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+#outputCheckConfirm::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+}

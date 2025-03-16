@@ -135,7 +135,7 @@
     width: 60px;  /* Slightly smaller size to fit better */
     height: 60px;
     display: none;
-    z-index: 1000;
+    z-index: 1001;
     pointer-events: none;
     background: url('../loader.webp') no-repeat center center;
     background-size: contain;
