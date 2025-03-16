@@ -236,16 +236,58 @@ function updateSublocationRow(currentAreaPath) {
     }
 
     document.querySelector('.map-container').appendChild(row);
+
+    // Check if art queue is empty to process sublocation images
+    if (isArtQueueEmpty()) {
+        generateSublocationImages(currentAreaPath);
+    } else {
+        // Listen for queue empty event
+        document.addEventListener('artQueueEmpty', () => generateSublocationImages(currentAreaPath), { once: true });
+    }
+}
+
+async function generateSublocationImages(areaPath) {
+    const currentLocation = areas[areaPath];
+    if (!currentLocation || !currentLocation.sublocations) return;
+
+    for (const [subName, subloc] of Object.entries(currentLocation.sublocations)) {
+        // Skip if there's already a permanent image in areas
+        if (areas[subloc.path]?.image) continue;
+        
+        // Skip if sublocation already has a temporary image
+        if (subloc.tempImage) continue;
+
+        // Generate a visual prompt from the sublocation description
+        const visual = await generateVisualPrompt(subName, subloc.description);
+        const seed = Math.floor(Math.random() * 4294967295) + 1;
+        
+        // Generate temporary art for the sublocation
+        const artBlob = await generateArt(visual, "", seed);
+        if (artBlob instanceof Blob) {
+            subloc.tempImage = artBlob;
+            // Update the image in the sublocation row
+            const img = document.querySelector(`.sublocation-image[title="${subName}"]`);
+            if (img) {
+                img.src = URL.createObjectURL(artBlob);
+            }
+        }
+    }
 }
 
 function addSublocationImage(container, area, path, isParent) {
     const img = document.createElement('img');
     img.classList.add('sublocation-image');
-    if (area.image instanceof Blob) {
-        img.src = URL.createObjectURL(area.image);
+    
+    if (areas[path]?.image instanceof Blob) {
+        // Use permanent image if available
+        img.src = URL.createObjectURL(areas[path].image);
+    } else if (!isParent && area.tempImage instanceof Blob) {
+        // Use temporary image for sublocations if available
+        img.src = URL.createObjectURL(area.tempImage);
     } else {
         img.src = 'placeholder.png';
     }
+    
     img.title = isParent ? `Parent: ${path}` : path.split('/').pop();
     
     img.addEventListener('click', (e) => {

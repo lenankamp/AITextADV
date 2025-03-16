@@ -5,6 +5,13 @@ let isProcessingArt = false;
 let isProcessingText = false;
 
 async function processTextQueue() {
+    if (isProcessingArt || artRequestQueue.length === 0) {
+        if (!isProcessingArt && !isProcessingText) {
+            // Queue is empty, trigger sublocation image generation
+            const event = new CustomEvent('artQueueEmpty');
+            document.dispatchEvent(event);
+        }
+    }
     if (isProcessingText || textRequestQueue.length === 0) return;
     
     isProcessingText = true;
@@ -27,11 +34,22 @@ async function processTextQueue() {
     }
 }
 
+function isArtQueueEmpty() {
+    return artRequestQueue.length === 0 && !isProcessingArt;
+}
+
 async function processArtQueue() {
     // Don't process art if text is being processed and concurrent_art is false
     if (isProcessingText && !settings.concurrent_art) return;
     
-    if (isProcessingArt || artRequestQueue.length === 0) return;
+    if (isProcessingArt || artRequestQueue.length === 0) {
+        if (!isProcessingArt && !isProcessingText) {
+            // Queue is empty, trigger sublocation image generation
+            const event = new CustomEvent('artQueueEmpty');
+            document.dispatchEvent(event);
+        }
+        return;
+    }
     
     isProcessingArt = true;
     const request = artRequestQueue.shift();

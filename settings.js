@@ -13,7 +13,8 @@ function openSettings() {
           'player_name', 'player_description', 'player_visual', 'player_seed',
           'player_local_movement', 'player_distant_movement'
       ],
-      'Rule System': ['rule_set', 'ruleprompt_fae_action1', 'charsheet_fae'],
+      'Rule System': ['rule_set', 'charsheet_fae', 'ruleprompt_fae_action1', 
+        'ruleprompt_fae_action2', 'sampleFAEAction'],
       'Summary': [
         'summary_prompt', 'summary_first_layer_max', 'summary_first_layer_chunk', 
         'summary_second_layer_max', 'summary_second_layer_chunk', 'summary_bonus_layer_max', 
@@ -32,9 +33,9 @@ function openSettings() {
           'summary_param', 'output_length'
       ],
       'Text Prompts': [
-          'common_names', 'full_context', 'generateAreaDescriptionPrompt', 
-          'areaContext', 'topAreaDirective',
-          'areaPeopleContext','areaFollowerContext',
+          'common_names', 'max_context_entries', 'max_summary_entries', 
+          'full_context', 'generateAreaDescriptionPrompt','areaContext', 
+          'topAreaDirective', 'areaPeopleContext','areaFollowerContext',
           'areaThingsContext', 'areaCreaturesContext', 'areaPathsContext',
           'areaTimeContext', 'subLocationFormat', 'entityFormat',
           'action_string', 'generateSublocationsPrompt', 'generateEntitiesPrompt',
@@ -45,9 +46,7 @@ function openSettings() {
           'moveToAreaProximityPrompt', 'moveToAreaPeoplePrompt',
           'entityLeavesAreaPrompt', 'generateNewDescription'
       ],
-      'Sample Data': ['sampleSublocations', 'sampleEntities', 'sampleQuestions',
-        'sampleFAEAction'
-      ]
+      'Sample Data': ['sampleSublocations', 'sampleEntities', 'sampleQuestions']
   };
 
   // Create search filter

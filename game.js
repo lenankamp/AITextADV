@@ -29,6 +29,13 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
     if (!areaName.includes('/')) {
         area.x = x;
         area.y = y;
+    } else {
+        const parentPath = areaName.split('/').slice(0, -1).join('/');
+        const subName = areaName.split('/').pop();
+        if (areas[parentPath]?.sublocations[subName]?.tempImage) {
+            URL.revokeObjectURL(areas[parentPath].sublocations[subName].tempImage);
+            delete areas[parentPath].sublocations[subName].tempImage;
+        }
     }
     area['people'] = [];
     area['things'] = [];

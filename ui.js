@@ -146,7 +146,13 @@ function stopDragMap() {
 function updateImageGrid(areaName) {
     const imageGrid = document.getElementById('image-grid');
     const tooltip = document.getElementById('tooltip');
-    imageGrid.innerHTML = '';
+    
+    // Track current images to determine changes
+    const existingContainers = new Map();
+    imageGrid.querySelectorAll('.image-container').forEach(container => {
+        const img = container.querySelector('img');
+        existingContainers.set(container.dataset.entityName, container);
+    });
 
     // Handle the scene art
     const sceneArt = document.getElementById('sceneart');
@@ -159,7 +165,6 @@ function updateImageGrid(areaName) {
     if (area.image instanceof Blob) {
         const objectUrl = URL.createObjectURL(area.image);
         sceneArt.src = objectUrl;
-        // Clean up old object URL after image loads
         sceneArt.onload = () => {
             if (sceneArt.dataset.previousUrl) {
                 URL.revokeObjectURL(sceneArt.dataset.previousUrl);
@@ -170,77 +175,103 @@ function updateImageGrid(areaName) {
         sceneArt.src = 'placeholder.png';
     }
 
-    // Create image rows for each category
+    // Create or update image rows for each category
     const categories = ['people', 'things', 'creatures'];
+    const updatedContainers = new Set();
+    
     categories.forEach(category => {
-        if (areas[areaName][category] && areas[areaName][category].length > 0) {
-            const row = document.createElement('div');
-            row.classList.add('image-row');
+        let row = imageGrid.querySelector(`.image-row[data-category="${category}"]`);
+        const hasItems = areas[areaName][category] && areas[areaName][category].length > 0;
+        
+        if (hasItems) {
+            if (!row) {
+                row = document.createElement('div');
+                row.classList.add('image-row');
+                row.dataset.category = category;
+                imageGrid.appendChild(row);
+            }
             
             areas[areaName][category].forEach(item => {
-                const container = document.createElement('div');
-                container.classList.add('image-container');
+                let container = existingContainers.get(item.name);
                 
-                const img = document.createElement('img');
-                if (item.image instanceof Blob) {
-                    img.src = URL.createObjectURL(item.image);
-                } else if (item.image === 'placeholder') {
-                    img.src = 'placeholder.png';
-                    setTimeout(async () => {
-                        let negprompt = "";
-                        let posprompt = "";
-                        if (category === "people") {
-                            posprompt = settings.person_prompt;
-                            negprompt = settings.person_negprompt;
-                        } else if (category === "creatures") {
-                            posprompt = settings.creature_prompt;
-                            negprompt = settings.creature_negprompt;
-                        } else if (category === "things") {
-                            posprompt = settings.thing_prompt;
-                            negprompt = settings.thing_negprompt;
-                        }
-                        const artBlob = await generateArt(posprompt + item.visual, negprompt, item.seed);
-                        if (artBlob instanceof Blob) {
-                            item.image = artBlob;
-                            img.src = URL.createObjectURL(artBlob);
-                        }
-                    }, 0);
+                if (!container) {
+                    // Create new container if it doesn't exist
+                    container = document.createElement('div');
+                    container.classList.add('image-container');
+                    container.dataset.entityName = item.name;
+                    
+                    const img = document.createElement('img');
+                    if (item.image instanceof Blob) {
+                        img.src = URL.createObjectURL(item.image);
+                    } else if (item.image === 'placeholder') {
+                        img.src = 'placeholder.png';
+                        setTimeout(async () => {
+                            let negprompt = "";
+                            let posprompt = "";
+                            if (category === "people") {
+                                posprompt = settings.person_prompt;
+                                negprompt = settings.person_negprompt;
+                            } else if (category === "creatures") {
+                                posprompt = settings.creature_prompt;
+                                negprompt = settings.creature_negprompt;
+                            } else if (category === "things") {
+                                posprompt = settings.thing_prompt;
+                                negprompt = settings.thing_negprompt;
+                            }
+                            const artBlob = await generateArt(posprompt + item.visual, negprompt, item.seed);
+                            if (artBlob instanceof Blob) {
+                                item.image = artBlob;
+                                img.src = URL.createObjectURL(artBlob);
+                            }
+                        }, 0);
+                    }
+                    img.alt = item.name;
+                    
+                    const nameOverlay = document.createElement('div');
+                    nameOverlay.classList.add('image-name-overlay');
+                    nameOverlay.textContent = item.name;
+                    
+                    container.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openEntitySubmenu(item, category, e.clientX, e.clientY);
+                    });
+
+                    container.addEventListener('mouseover', () => {
+                        tooltip.classList.add('tooltip-visible');
+                        tooltip.innerHTML = `<strong>${item.name}</strong><br>${item.description}<br><img src="${img.src}" alt="${item.name}" style="width: 100px; height: auto;">`;
+                    });
+
+                    container.addEventListener('mousemove', (e) => {
+                        tooltip.style.left = `${e.pageX + 10}px`;
+                        tooltip.style.top = `${e.pageY + 10}px`;
+                    });
+
+                    container.addEventListener('mouseout', () => {
+                        tooltip.classList.remove('tooltip-visible');
+                    });
+
+                    container.appendChild(img);
+                    container.appendChild(nameOverlay);
                 }
-                img.alt = item.name;
                 
-                // Create name overlay
-                const nameOverlay = document.createElement('div');
-                nameOverlay.classList.add('image-name-overlay');
-                nameOverlay.textContent = item.name;
-                
-                // Add click handler for entity submenu
-                container.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openEntitySubmenu(item, category, e.clientX, e.clientY);
-                });
-
-                // Update tooltip handlers
-                container.addEventListener('mouseover', () => {
-                    tooltip.classList.add('tooltip-visible');
-                    tooltip.innerHTML = `<strong>${item.name}</strong><br>${item.description}<br><img src="${img.src}" alt="${item.name}" style="width: 100px; height: auto;">`;
-                });
-
-                container.addEventListener('mousemove', (e) => {
-                    tooltip.style.left = `${e.pageX + 10}px`;
-                    tooltip.style.top = `${e.pageY + 10}px`;
-                });
-
-                container.addEventListener('mouseout', () => {
-                    tooltip.classList.remove('tooltip-visible');
-                });
-
-                // Append elements
-                container.appendChild(img);
-                container.appendChild(nameOverlay);
-                row.appendChild(container);
+                updatedContainers.add(item.name);
+                if (container.parentElement !== row) {
+                    row.appendChild(container);
+                }
             });
-            
-            imageGrid.appendChild(row);
+        } else if (row) {
+            row.remove();
+        }
+    });
+
+    // Remove any containers that are no longer present
+    existingContainers.forEach((container, name) => {
+        if (!updatedContainers.has(name)) {
+            const img = container.querySelector('img');
+            if (img && img.src.startsWith('blob:')) {
+                URL.revokeObjectURL(img.src);
+            }
+            container.remove();
         }
     });
 }
@@ -1058,9 +1089,14 @@ function openCharacterEditor() {
     refreshConceptBtn.innerHTML = '🔄';
     refreshConceptBtn.title = 'Generate High Concept';
     refreshConceptBtn.onclick = async () => {
-        const concept = await generateText(settings.creative_question_param, 
-            `Generate a creative and unique high concept for a character that would exist in this world: ${settings.world_description}. The high concept should be a short phrase that captures their primary role or defining characteristic. Format as a single phrase without explanation.`);
-        conceptInput.value = concept.trim();
+        const concepts = await generateText(settings.creative_question_param, 
+            `Generate 5 creative and unique high concepts for a character that would exist in this world: ${settings.world_description}. 
+            Each high concept should be a short phrase three to six word phrase that captures their primary role or defining characteristic.
+            Format as 5 distinct phrases, one per line, without explanations or numbers.`);
+            console.log(concepts);
+        const conceptList = concepts.trim().replaceAll('\n\n', '\n').split('\n').map(c => c.trim());
+        const selectedConcept = conceptList[Math.floor(Math.random() * conceptList.length)];
+        conceptInput.value = selectedConcept;
     };
 
     conceptGroup.appendChild(conceptLabel);
@@ -1082,7 +1118,7 @@ function openCharacterEditor() {
     refreshDescBtn.title = 'Generate Description';
     refreshDescBtn.onclick = async () => {
         const desc = await generateText(settings.creative_question_param, 
-            `Generate a detailed character description for a character with this high concept: ${conceptInput.value}. The character exists in this world: ${settings.world_description}. Write 2-3 sentences about their appearance and demeanor.`);
+            `Set in a world described as ${settings.world_description}\n[Write a description of ${nameInput.value} described simply as ${conceptInput.value}. Without referencing their name and using clear gendered pronouns, write a single paragraph with 1-2 sentence physical description and 1-2 sentence description of attidue dispositon or apparrent motivation. If there is not enough information in the context, be creative.]`);
         descInput.value = desc.trim();
     };
 
@@ -1106,7 +1142,12 @@ function openCharacterEditor() {
     refreshVisualBtn.title = 'Generate Visual Description & Image';
     refreshVisualBtn.onclick = async () => {
         const visual = await generateText(settings.creative_question_param, 
-            `Generate a detailed visual description for image generation of a character who is: ${conceptInput.value} and is described as: ${descInput.value}. Focus on physical appearance details that would be important for creating an image.`);
+            settings.generateVisualPrompt, '', {
+                name: nameInput.value,
+                description: descInput.value,
+                season: getSeason(),
+                time: ''
+            });
         visualInput.value = visual.trim();
         
         // Generate new image
@@ -1154,12 +1195,14 @@ function openCharacterEditor() {
                 existingAspects.push(troubleInput.value);
             }
             
-            const aspect = await generateText(settings.creative_question_param, 
-                `Generate a unique and creative character aspect for a character who ${descInput.value}. 
-                The aspect should be completely different from their existing aspects: ${existingAspects.join(', ')}.
-                This should reveal something new and interesting about their personality, background, or beliefs that hasn't been covered by other aspects.
-                Format as a single compelling phrase without explanation.`);
-            input.value = aspect.trim();
+            const aspects = await generateText(settings.creative_question_param, 
+                `Generate 5 unique and creative character aspects for a character who is described as ${descInput.value}. 
+                These aspects should be completely different from their existing aspects: ${existingAspects.join(', ')}.
+                Each should represent their talents, abilities, personality, background, or beliefs that hasn't been covered by other aspects.
+                Format as 5 distinct compelling phrases, one per line, without explanations or numbers. Each must be between two to six words without punctuation.`);
+            const aspectList = aspects.trim().replaceAll('\n\n', '\n').split('\n').map(a => a.trim());
+            const selectedAspect = aspectList[Math.floor(Math.random() * aspectList.length)];
+            input.value = selectedAspect;
         };
         
         aspectGroup.appendChild(input);
@@ -1192,13 +1235,15 @@ function openCharacterEditor() {
             }
         });
         
-        const trouble = await generateText(settings.creative_question_param, 
-            `Generate a trouble aspect for a character who ${descInput.value}.
+        const troubles = await generateText(settings.creative_question_param, 
+            `Generate 5 trouble aspects for a character who is described as ${descInput.value}.
             Their existing aspects are: ${existingAspects.join(', ')}.
-            The trouble should be a compelling flaw, weakness, or recurring problem that causes complications in their life.
-            Make it distinct from their other aspects but connected to their character.
-            Format as a single phrase without explanation.`);
-        troubleInput.value = trouble.trim();
+            Each trouble should be a compelling flaw, weakness, or recurring problem that causes complications in their life.
+            Make them distinct from their other aspects but connected to their character.
+            Format as 5 distinct compelling phrases, one per line, without explanations or numbers. Each must be between two to six words without punctuation.`);
+        const troubleList = troubles.trim().replaceAll('\n\n', '\n').split('\n').map(t => t.trim());
+        const selectedTrouble = troubleList[Math.floor(Math.random() * troubleList.length)];
+        troubleInput.value = selectedTrouble;
     };
 
     troubleGroup.appendChild(troubleLabel);
