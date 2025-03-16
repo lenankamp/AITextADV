@@ -123,6 +123,7 @@
     pointer-events: none;
  }
 
+/* Tooltip positioning - will be updated via JavaScript but without inline styles */
 .tooltip-visible {
     display: block;
  }
@@ -212,10 +213,3 @@
 #fileInput {
     display: none;
  }
-
-/* Tooltip positioning - will be updated via JavaScript but without inline styles */
-.tooltip-visible {
-    display: block;
-    position: fixed;
- }
-

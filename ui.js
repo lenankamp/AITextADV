@@ -27,6 +27,9 @@ document.addEventListener('click', (e) => {
         case 'openSettings':
             openSettings();
             break;
+        case 'editCharacter':
+            openCharacterEditor();
+            break;
         case 'restartGame':
             openWorldGeneration();
             break;
@@ -360,12 +363,12 @@ function openEntitySubmenu(entity, category, x, y) {
 }
 
 function openNewLocationPrompt(x, y) {
-    // Create a temporary location object
+    // Create a temporary location object with coordinates adjusted for centering
     const tempLocation = {
         name: '',
         description: '',
-        x: x,
-        y: y,
+        x: x + 25/scale, // Add half the location width to center the click point
+        y: y + 25/scale, // Add half the location height to center the click point
         visual: '',
         seed: Math.floor(Math.random() * 4294967295) + 1,
         image: 'placeholder.png',
@@ -376,7 +379,6 @@ function openNewLocationPrompt(x, y) {
     };
 
     // Open the unified editor with the temporary location
-    // The path is null since this is a new location
     openUnifiedEditor(tempLocation, 'location', null);
 }
 
@@ -980,6 +982,283 @@ function openWorldGeneration() {
     container.appendChild(editorSection);
     container.appendChild(actionButtons);
 
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+}
+
+function openCharacterEditor() {
+    const overlay = document.createElement('div');
+    overlay.classList.add('overlay');
+    overlay.style.display = 'flex';
+
+    const container = document.createElement('div');
+    container.classList.add('settings-container');
+    container.style.maxWidth = '800px';
+    container.style.maxHeight = '90vh';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.overflowY = 'hidden';
+    container.style.padding = '20px';
+    container.style.gap = '15px';
+
+    // Preview section with adjusted height
+    const previewSection = document.createElement('div');
+    previewSection.className = 'editor-section preview-section';
+    previewSection.style.position = 'relative';
+    previewSection.style.height = '30vh';
+    previewSection.style.margin = '0 auto';
+    previewSection.style.flexShrink = '0'; // Prevent image from shrinking
+
+    const previewImage = document.createElement('img');
+    previewImage.className = 'editor-preview-image';
+    previewImage.style.width = '100%';
+    previewImage.style.height = '100%';
+    previewImage.style.objectFit = 'cover';
+    
+    const currentPlayerArt = document.getElementById('playerart');
+    previewImage.src = currentPlayerArt.src;
+    previewSection.appendChild(previewImage);
+
+    // Main editor section with scroll
+    const editorSection = document.createElement('div');
+    editorSection.className = 'editor-section';
+    editorSection.style.display = 'flex';
+    editorSection.style.flexDirection = 'column';
+    editorSection.style.gap = '15px';
+    editorSection.style.overflowY = 'auto';
+    editorSection.style.flex = '1';
+    editorSection.style.minHeight = '0'; // Allow flex container to shrink
+
+    // Character name input
+    const nameGroup = document.createElement('div');
+    nameGroup.style.position = 'relative';
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Character Name:';
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = settings.player_name || '';
+    nameInput.style.width = '100%';
+
+    nameGroup.appendChild(nameLabel);
+    nameGroup.appendChild(nameInput);
+
+    // High concept with generate button
+    const conceptGroup = document.createElement('div');
+    conceptGroup.style.position = 'relative';
+    const conceptLabel = document.createElement('label');
+    conceptLabel.textContent = 'High Concept:';
+    const conceptInput = document.createElement('input');
+    conceptInput.type = 'text';
+    conceptInput.value = settings.charsheet_fae?.high_concept || '';
+    conceptInput.style.width = '100%';
+    conceptInput.placeholder = 'A defining trait or role that describes your character';
+
+    const refreshConceptBtn = document.createElement('button');
+    refreshConceptBtn.className = 'refresh-button top-right';
+    refreshConceptBtn.innerHTML = '🔄';
+    refreshConceptBtn.title = 'Generate High Concept';
+    refreshConceptBtn.onclick = async () => {
+        const concept = await generateText(settings.creative_question_param, 
+            `Generate a creative and unique high concept for a character that would exist in this world: ${settings.world_description}. The high concept should be a short phrase that captures their primary role or defining characteristic. Format as a single phrase without explanation.`);
+        conceptInput.value = concept.trim();
+    };
+
+    conceptGroup.appendChild(conceptLabel);
+    conceptGroup.appendChild(conceptInput);
+    conceptGroup.appendChild(refreshConceptBtn);
+
+    // Character description with generate button
+    const descGroup = document.createElement('div');
+    descGroup.style.position = 'relative';
+    const descLabel = document.createElement('label');
+    descLabel.textContent = 'Description:';
+    const descInput = document.createElement('textarea');
+    descInput.value = settings.player_description || '';
+    descInput.style.height = '100px';
+
+    const refreshDescBtn = document.createElement('button');
+    refreshDescBtn.className = 'refresh-button top-right';
+    refreshDescBtn.innerHTML = '🔄';
+    refreshDescBtn.title = 'Generate Description';
+    refreshDescBtn.onclick = async () => {
+        const desc = await generateText(settings.creative_question_param, 
+            `Generate a detailed character description for a character with this high concept: ${conceptInput.value}. The character exists in this world: ${settings.world_description}. Write 2-3 sentences about their appearance and demeanor.`);
+        descInput.value = desc.trim();
+    };
+
+    descGroup.appendChild(descLabel);
+    descGroup.appendChild(descInput);
+    descGroup.appendChild(refreshDescBtn);
+
+    // Visual prompt moved here (after description) and made visible
+    const visualGroup = document.createElement('div');
+    visualGroup.style.position = 'relative';
+    const visualLabel = document.createElement('label');
+    visualLabel.textContent = 'Visual Prompt:';
+    const visualInput = document.createElement('textarea');
+    visualInput.value = settings.player_visual || '';
+    visualInput.style.height = '100px';
+    visualInput.style.width = '100%';
+
+    const refreshVisualBtn = document.createElement('button');
+    refreshVisualBtn.className = 'refresh-button top-right';
+    refreshVisualBtn.innerHTML = '🔄';
+    refreshVisualBtn.title = 'Generate Visual Description & Image';
+    refreshVisualBtn.onclick = async () => {
+        const visual = await generateText(settings.creative_question_param, 
+            `Generate a detailed visual description for image generation of a character who is: ${conceptInput.value} and is described as: ${descInput.value}. Focus on physical appearance details that would be important for creating an image.`);
+        visualInput.value = visual.trim();
+        
+        // Generate new image
+        const artBlob = await generateArt(visualInput.value, "", Math.floor(Math.random() * 4294967295) + 1);
+        if (artBlob instanceof Blob) {
+            previewImage.src = URL.createObjectURL(artBlob);
+        }
+    };
+
+    visualGroup.appendChild(visualLabel);
+    visualGroup.appendChild(visualInput);
+    visualGroup.appendChild(refreshVisualBtn);
+
+    // Aspects section
+    const aspectsGroup = document.createElement('div');
+    aspectsGroup.style.position = 'relative';
+    const aspectsLabel = document.createElement('label');
+    aspectsLabel.textContent = 'Character Aspects:';
+    
+    // Create aspect inputs with improved generation
+    const aspectInputs = [];
+    for (let i = 0; i < 3; i++) {
+        const aspectGroup = document.createElement('div');
+        aspectGroup.style.position = 'relative';
+        aspectGroup.style.marginTop = '10px';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = settings.charsheet_fae?.aspects?.[i] || '';
+        input.style.width = '100%';
+        
+        const refreshBtn = document.createElement('button');
+        refreshBtn.className = 'refresh-button top-right';
+        refreshBtn.innerHTML = '🔄';
+        refreshBtn.title = 'Generate Aspect';
+        refreshBtn.onclick = async () => {
+            // Gather existing aspects for context
+            const existingAspects = [conceptInput.value];
+            aspectInputs.forEach(inp => {
+                if (inp.value && inp !== input) {
+                    existingAspects.push(inp.value);
+                }
+            });
+            if (troubleInput.value) {
+                existingAspects.push(troubleInput.value);
+            }
+            
+            const aspect = await generateText(settings.creative_question_param, 
+                `Generate a unique and creative character aspect for a character who ${descInput.value}. 
+                The aspect should be completely different from their existing aspects: ${existingAspects.join(', ')}.
+                This should reveal something new and interesting about their personality, background, or beliefs that hasn't been covered by other aspects.
+                Format as a single compelling phrase without explanation.`);
+            input.value = aspect.trim();
+        };
+        
+        aspectGroup.appendChild(input);
+        aspectGroup.appendChild(refreshBtn);
+        aspectInputs.push(input);
+        aspectsGroup.appendChild(aspectGroup);
+    }
+
+    // Trouble aspect with improved generation
+    const troubleGroup = document.createElement('div');
+    troubleGroup.style.position = 'relative';
+    troubleGroup.style.marginTop = '20px';
+    const troubleLabel = document.createElement('label');
+    troubleLabel.textContent = 'Trouble Aspect:';
+    const troubleInput = document.createElement('input');
+    troubleInput.type = 'text';
+    troubleInput.value = settings.charsheet_fae?.trouble || '';
+    troubleInput.style.width = '100%';
+
+    const refreshTroubleBtn = document.createElement('button');
+    refreshTroubleBtn.className = 'refresh-button top-right';
+    refreshTroubleBtn.innerHTML = '🔄';
+    refreshTroubleBtn.title = 'Generate Trouble';
+    refreshTroubleBtn.onclick = async () => {
+        // Gather existing aspects for context
+        const existingAspects = [conceptInput.value];
+        aspectInputs.forEach(inp => {
+            if (inp.value) {
+                existingAspects.push(inp.value);
+            }
+        });
+        
+        const trouble = await generateText(settings.creative_question_param, 
+            `Generate a trouble aspect for a character who ${descInput.value}.
+            Their existing aspects are: ${existingAspects.join(', ')}.
+            The trouble should be a compelling flaw, weakness, or recurring problem that causes complications in their life.
+            Make it distinct from their other aspects but connected to their character.
+            Format as a single phrase without explanation.`);
+        troubleInput.value = trouble.trim();
+    };
+
+    troubleGroup.appendChild(troubleLabel);
+    troubleGroup.appendChild(troubleInput);
+    troubleGroup.appendChild(refreshTroubleBtn);
+
+    // Add sections to container in the correct order
+    container.appendChild(previewSection);
+    container.appendChild(editorSection);
+
+    // Add name, concept, description, visual prompt, aspects, and trouble sections to editorSection
+    editorSection.appendChild(nameGroup);
+    editorSection.appendChild(conceptGroup);
+    editorSection.appendChild(descGroup);
+    editorSection.appendChild(visualGroup);
+    editorSection.appendChild(aspectsLabel);
+    editorSection.appendChild(aspectsGroup);
+    editorSection.appendChild(troubleGroup);
+
+    // Action buttons
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'settings-actions';
+    actionButtons.style.marginTop = '15px';
+    actionButtons.style.flexShrink = '0'; // Prevent buttons from shrinking
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn-secondary';
+    cancelBtn.onclick = () => overlay.remove();
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.className = 'btn-primary';
+    saveBtn.onclick = () => {
+        // Save all character data to settings
+        settings.player_name = nameInput.value;
+        settings.player_description = descInput.value;
+        settings.player_visual = visualInput.value;
+        
+        if (!settings.charsheet_fae) settings.charsheet_fae = {};
+        settings.charsheet_fae.high_concept = conceptInput.value;
+        settings.charsheet_fae.aspects = aspectInputs.map(input => input.value);
+        settings.charsheet_fae.trouble = troubleInput.value;
+
+        // Update character info display
+        updateCharacterInfo();
+        
+        // If we generated a new image, update the player art
+        if (previewImage.src !== currentPlayerArt.src) {
+            currentPlayerArt.src = previewImage.src;
+        }
+        
+        overlay.remove();
+    };
+
+    actionButtons.appendChild(cancelBtn);
+    actionButtons.appendChild(saveBtn);
+
+    // Add sections to container
+    container.appendChild(actionButtons);
     overlay.appendChild(container);
     document.body.appendChild(overlay);
 }

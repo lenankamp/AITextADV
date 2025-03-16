@@ -13,6 +13,15 @@ const submenu = document.createElement('div');
 submenu.classList.add('submenu');
 document.body.appendChild(submenu);
 
+// Create a shared tooltip
+const tooltip = document.createElement('div');
+tooltip.id = 'tooltip';
+tooltip.style.display = 'none';
+tooltip.style.position = 'fixed';
+tooltip.style.zIndex = '1000';
+tooltip.classList.add('tooltip');
+document.body.appendChild(tooltip);
+
 map.addEventListener('mousedown', (e) => {
     isDragging = false; // Start as not dragging
     dragStartX = e.clientX;
@@ -89,30 +98,35 @@ map.addEventListener('wheel', (e) => {
     map.style.left = `${map.offsetLeft - dx}px`;
     map.style.top = `${map.offsetTop - dy}px`;
 
-    // Adjust locations
+    // Adjust locations with centering offset
     document.querySelectorAll('.location').forEach(location => {
         const name = location.id.replace('location-', '');
-        location.style.left = `${areas[name].x * scale}px`;
-        location.style.top = `${areas[name].y * scale}px`;
+        location.style.left = `${(areas[name].x * scale) - 25}px`;
+        location.style.top = `${(areas[name].y * scale) - 25}px`;
     });
 }, { passive: true });
 
 // Add locations to the map
 function addLocation(name) {
-    const tooltip = document.getElementById('tooltip');
     const location = document.createElement('div');
     location.classList.add('location');
     location.id = `location-${name}`;
-    location.style.left = `${areas[name].x * scale}px`;
-    location.style.top = `${areas[name].y * scale}px`;
-    location.style.width = '50px'; // Set the width of the square
-    location.style.height = '50px'; // Set the height of the square
+    
+    // Set dimensions first so we can use them for centering
+    location.style.width = '50px';
+    location.style.height = '50px';
+    
+    // Center the location by offsetting by half its width and height
+    location.style.left = `${(areas[name].x * scale) - 25}px`;
+    location.style.top = `${(areas[name].y * scale) - 25}px`;
+    
     if (areas[name].image instanceof Blob)
-        location.style.backgroundImage = `url(${URL.createObjectURL(areas[name].image)}`; // Set the background image
+        location.style.backgroundImage = `url(${URL.createObjectURL(areas[name].image)})`; // Set the background image
     else
         location.style.backgroundImage = `url(placeholder.png)`; // Set the background image
     location.style.backgroundSize = 'cover'; // Ensure the image covers the square
-    location.style.border = '1px solid #ccc'; // Optional: Add a border to the square
+    location.style.border = '1px solid #ccc';
+    
     location.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -122,21 +136,26 @@ function addLocation(name) {
         }
         openSubmenu(name, e.clientX, e.clientY);
     });
+
+    const tooltip = document.getElementById('tooltip');
     location.addEventListener('mouseover', () => {
-        tooltip.style.display = 'block';
+        tooltip.classList.add('tooltip-visible');
         let tooltipContent = `<strong>${name}</strong><br>${areas[name].description}`;
         if (areas[name].image instanceof Blob) {
             tooltipContent += `<br><img src="${URL.createObjectURL(areas[name].image)}" alt="${name}" style="width: 60%; height: auto;">`;
         }
         tooltip.innerHTML = tooltipContent;
     });
+
     location.addEventListener('mousemove', (e) => {
-        tooltip.style.left = e.pageX + 10 + 'px';
-        tooltip.style.top = e.pageY + 10 + 'px';
+        tooltip.style.left = `${e.pageX + 10}px`;
+        tooltip.style.top = `${e.pageY + 10}px`;
     });
+
     location.addEventListener('mouseout', () => {
-        tooltip.style.display = 'none';
+        tooltip.classList.remove('tooltip-visible');
     });
+
     map.appendChild(location);
 }
 
@@ -149,7 +168,8 @@ function openSubmenu(name, x, y) {
     const enterBtn = document.createElement('button');
     enterBtn.textContent = `Enter ${name}`;
     enterBtn.onclick = () => {
-        goToLocation(name, true);
+        const distance = !currentArea.includes(name) ? Math.abs(areas[currentArea.split('/')[0]].y - areas[name.split('/')[0]].y) : 1;
+        goToLocation(name, distance);
         menu.remove();
     };
     menu.appendChild(enterBtn);
@@ -183,9 +203,10 @@ document.addEventListener('click', (e) => {
 });
 
 // Go to a location
-function goToLocation(name, distant = false) {
-    moveToArea(name, distant ? 2 : 1).then(() => {
+function goToLocation(name, distant = 0) {
+    moveToArea(name, distant).then(() => {
         updateSublocationRow(name);
+        centerMapOnLocation(name);
     });
 }
 
@@ -207,8 +228,8 @@ function updateSublocationRow(currentAreaPath) {
     }
 
     // Add current area and its sublocations
-    const currentArea = areas[currentAreaPath];
-    for (const [subName, subloc] of Object.entries(currentArea.sublocations)) {
+    const currentLocation = areas[currentAreaPath];
+    for (const [subName, subloc] of Object.entries(currentLocation.sublocations)) {
         const path = subloc.path;
         const area = areas[path] || subloc;
         addSublocationImage(row, area, path, false);
@@ -251,7 +272,7 @@ function openSublocationMenu(area, path, x, y) {
     const enterBtn = document.createElement('button');
     enterBtn.textContent = `Enter ${path.split('/').pop()}`;
     enterBtn.onclick = () => {
-        goToLocation(path, false);
+        goToLocation(path, 1);
         menu.remove();
     };
     menu.appendChild(enterBtn);
@@ -277,3 +298,34 @@ function openSublocationMenu(area, path, x, y) {
         }
     });
 }
+
+// Center map view on a location
+function centerMapOnLocation(locationPath) {
+    const topLevelPath = locationPath.split('/')[0];
+    const area = areas[topLevelPath];
+    if (!area) return;
+
+    const mapContainer = document.querySelector('.map-container');
+    if (!mapContainer) return;
+
+    // Calculate the center position
+    const centerX = (mapContainer.clientWidth / 2) - (area.x * scale);
+    const centerY = (mapContainer.clientHeight / 2) - (area.y * scale);
+
+    // Smoothly animate to the new position
+    map.style.transition = 'left 0.5s, top 0.5s';
+    map.style.left = `${centerX}px`;
+    map.style.top = `${centerY}px`;
+
+    // Remove transition after animation
+    setTimeout(() => {
+        map.style.transition = '';
+    }, 500);
+}
+
+// Call centerMapOnLocation when moving to a new area
+document.addEventListener('DOMContentLoaded', () => {
+    if (currentArea) {
+        centerMapOnLocation(currentArea);
+    }
+});

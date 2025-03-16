@@ -77,7 +77,6 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
         parentArea: (areaName.match(/\//g) || []).length > 1 ? "More Locally within: " + areaName.split('/').slice(0, -1).join('/') : '',
         topAreaDirective: (!areaName.includes('/')) ? settings.topAreaDirective : '',
     }, settings.sampleSublocations);
-console.log ("Generated sublocations: " + response);
     let lines = response.split('\n');
     let currentSection = null;
     for (const line of lines) {
@@ -719,33 +718,58 @@ function areaContext(areaPath) {
     return context;
 }
 
-function fullContext(limit = null, summaryLength = 0, extraContext = "") {
+function fullContext(limit = null, summaryLength = 0, maxContext, extraContext = "") {
     const output = document.getElementById('output');
-    const outputElements = Array.from(output.children).map(child => child.innerText);
-    let outputContent;
+    const outputElements = Array.from(output.children).filter(child => !['outputCheckConfirm', 'system-message', 'player-action'].includes(child.id)).map(child => child.innerText);
+    let outputContent = '';
     let summary = '';
+    let totalCharacters = 0;
 
     if (limit !== null) {
         const limitedElements = outputElements.slice(-limit); // Get the last 'limit' elements
-        outputContent = limitedElements.join(' ');
-        summary = outputElements.slice(-summaryLength - limit, -limit).join(' '); // Get the last 'summaryLength' elements before the limited elements
-    } else {
-        outputContent = outputElements.slice(0, -1).join(' '); // Get all elements except the last one
-        summary = outputElements.slice(-summaryLength - 1, -1).join(' '); // Get the last 'summaryLength' elements
-    }
+        for (let i = limitedElements.length - 1; i >= 0; i--) {
+            const element = limitedElements[i];
+            if (totalCharacters + element.length > maxContext * 4) break;
+            outputContent = element + ' ' + outputContent;
+            totalCharacters += element.length;
+        }
 
+        if (summaryLength === -1) {
+            for (let i = 0; i < outputElements.length - limitedElements.length; i++) {
+                const element = outputElements[i];
+                if (totalCharacters + element.length > maxContext * 4) break;
+                summary += element + ' ';
+                totalCharacters += element.length;
+            }
+        } else if (summaryLength > 0) {
+            const summaryElements = outputElements.slice(-summaryLength - limitedElements.length, -limitedElements.length);
+            for (let i = summaryElements.length - 1; i >= 0; i--) {
+                const element = summaryElements[i];
+                if (totalCharacters + element.length > maxContext * 4) break;
+                summary = element + ' ' + summary;
+                totalCharacters += element.length;
+            }
+        }
+    } else {
+        for (let i = outputElements.length - 1; i >= 0; i--) {
+            const element = outputElements[i];
+            if (totalCharacters + element.length > maxContext * 4) break;
+            outputContent = element + ' ' + outputContent;
+            totalCharacters += element.length;
+        }
+    }
 
     return settings.full_context
         .replace('$world', "World Description: " + settings.world_description + "\n")
         .replace('$player', "Player Name: " + settings.player_name + "\n")
         .replace('$player_desc', "Player Description: " + settings.player_description + "\n")
-        .replace('$summary', summary ? "Summary of Previous Events: " + summary +"\n" : '')
-        .replace('$locale', areaContext(currentArea))
+        .replace('$summary', summary ? "\nSummary of Previous Events: " + summary.trim() +"\n" : '')
+        .replace('$locale', "\nCurrent Situation:\n" + areaContext(currentArea))
         .replace('$extra_context', extraContext + '\n' ? extraContext : '')
         .replace('$story', outputContent);
 }
 
-function minContext(limit = null) {
+function minContext(limit = null, extraContext = "") {
     let outputContent = document.getElementById('output').innerText;
     if (limit !== null) {
         const output = document.getElementById('output');
@@ -757,7 +781,9 @@ function minContext(limit = null) {
         .replace('$world', "World Description: " + settings.world_description + "\n")
         .replace('$player', '')
         .replace('$player_desc', '')
+        .replace('$summary', '')
         .replace('$locale', '')
+        .replace('$extra_context', extraContext + '\n' ? extraContext : '')
         .replace('$story', outputContent);
 }
 
@@ -792,27 +818,37 @@ function faeCharSheet(charsheet) {
 async function playerAction(action) {
     switch (settings.rule_set) {
         case 'Fate Accelerated':
-            console.log(fullContext(2) + "\n\n" + faeCharSheet(settings.charsheet_fae) + replaceVariables(settings.ruleprompt_fae_action1, { action: action }));
-            const response = await generateText(settings.question_param, fullContext(2) + "\n\n" + faeCharSheet(settings.charsheet_fae) + settings.ruleprompt_fae_action1, '', {
+            const response1 = await generateText(settings.question_param, fullContext(turnsAtCurrentArea > 2 ? 2 : turnsAtCurrentArea, 0, settings.question_param.max_context_length) + "\n" + settings.ruleprompt_fae_action1, '', {
                 action: action,
                 currentArea: currentArea
             }, settings.sampleFAEAction);
-            console.log("Player Action Response:", response);
-            const lines = response.toLowerCase().split('\n');
+            const response2 = await generateText(settings.question_param, fullContext(turnsAtCurrentArea > 2 ? 2 : turnsAtCurrentArea, 0, settings.question_param.max_context_length) + "\n\n" + faeCharSheet(settings.charsheet_fae) + settings.ruleprompt_fae_action2, '', {
+                action: action,
+                currentArea: currentArea
+            }, settings.sampleFAEAction);
+            console.log("Player Action Response:\n", response1, '\n', response2);
+
             let disadvantage = 1;
             let advantage = 0;
+/*      default case for now
+            if (response1.toLowerCase().includes('intermediate')) {
+                disadvantage += 1;
+            } else*/ if (response1.toLowerCase().includes('expert')) {
+                disadvantage += 2;
+            } else if (response1.toLowerCase().includes('master') || response1.toLowerCase().includes('impossible')) {
+                disadvantage += 4;
+            } else if (response1.toLowerCase().includes('none') || response1.toLowerCase().includes('basic')) {
+                return "[Continue the story for another $settings.output_length$ as player '" + action + "'. "+ settings.action_string +"]";
+            }
+
+
+            const lines = response2.toLowerCase().split('\n');
 
             for (const line of lines) {
                 if (line.startsWith('1.') && !line.includes('n/a') && line.trim() !== '1.') {
                     // conditionals if line contains trivial, challeng, extreme, or impossible. simple is default case
-                    if (line.includes('trivial')) {
-                        return "[Continue the story for another $settings.output_length$ as player '" + action + "'. "+ settings.action_string +"]";
-                    } else if (line.includes('challeng')) {
-                        disadvantage += 3;
-                    } else if (line.includes('extreme')) {
-                        disadvantage += 5;
-                    } else if (line.includes('impossible')) {
-                        return "[Continue the story for another $settings.output_length$ as player considers why it's impossibility to '" + action + "'. "+ settings.action_string +"]"
+                    if (line.includes('yes')) {
+                        return "[Continue the story for another $settings.output_length$ as player considers why it's impossibile to '" + action + "'. "+ settings.action_string +"]";
                     }
                 } else if (line.startsWith('2.') && !line.includes('n/a') && line.trim() !== '2.') {
                     //conditions if line contains careful, clever, flashy, forceful, quick, or sneaky.
@@ -838,8 +874,9 @@ async function playerAction(action) {
                 }
             }
             // roll 4d3-8+advantage-disadvantage
-            let roll = randomInt(3) + randomInt(3) + randomInt(3) + randomInt(3) - 4 + advantage - disadvantage;
-            console.log('Roll 4d4-8 +',advantage,'-',disadvantage,'=', roll);
+            let roll = randomInt(3) + randomInt(3) + randomInt(3) + randomInt(3) - 4;
+            console.log('Roll 4d4-8('+ roll + ') +' + advantage + '-' + disadvantage + '=' + roll + advantage - disadvantage);
+            roll += advantage - disadvantage;
             if(roll >= 3) {
                 return "[The player's actions are extremely successful, so much so that they will create advantages in similar actions in the future. Continue the story for another $settings.output_length$ as player successfully '" + action + "'. "+ settings.action_string + "]";
             } else if (roll >= 1) {
@@ -847,7 +884,7 @@ async function playerAction(action) {
             } else if (roll === 0) {
                 return "[Continue the story for another $settings.output_length$ as player attempts to '" + action + "'. "+ settings.action_string +"]"
             } else if (roll >= -2) {
-                return "[Continue the story for another $settings.output_length$ as player fails to '" + action + "'. While a failure, it may still achieve the desired result at a cost. " + settings.action_string +"]"
+                return "[Continue the story for another $settings.output_length$ as player fails to '" + action + "'. While a failure, it may still achieve the desired result at personal cost. " + settings.action_string +"]"
             } else {
                 return "[Continue the story for another $settings.output_length$ as player fails to '" + action + "'. The failure is significant having negative consequences for the player. " + settings.action_string +"]";
             }
@@ -861,14 +898,18 @@ async function playerAction(action) {
 async function sendMessage(message = input.value, bypassCheck = false, extraContext = '') {
     const input = document.getElementById('input');
     const output = document.getElementById('output');
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('new-message');
+    const inputElement = document.createElement('div');
+    inputElement.id = 'player-action';
     input.value = '';
     let postPrompt = '';
 
     const confirmElement = document.getElementById('outputCheckConfirm');
     if (confirmElement) {
         confirmElement.remove();
+    }
+    const systemElement = document.getElementById('system-message');
+    if (systemElement) {
+        systemElement.remove();
     }
     const priorMessageElement = output.querySelector('.new-message');
     if (priorMessageElement) {
@@ -893,38 +934,52 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
                 // name command is passed as /rename 'old name' 'new name'
                 const [oldName, newName] = name.split("' '").map(n => n.replace(/'/g, '').trim());
                 renameEntity(newName, oldName);
+            } else if (command === '/help') {
+                const helpOutput = document.createElement('div');
+                helpOutput.id = 'system-message';
+                helpOutput.classList.add('new-message');
+                helpOutput.innerHTML = '<br>You can use the following commands to add a new person, creature, or thing to the current area: <br> /char [name], /thing [name], /creature [name]. <br> <br> You can also use the following commands to move to a different area: <br> /move [area name]. <br> <br> To rename an existing person, creature, or thing: <br> /rename [old name] [new name]. <br><br> Prepending // will add the input as a direct input to the story. <br> <br> Prepending a " will at least attempt to have the player say your words, no skill check. If wanting a skill check, just try beginning with the action such as, \'Pursaude by saying "Words".\'';
+                output.appendChild(helpOutput);
+                output.scrollTop = output.scrollHeight;
             }
             if (message.startsWith('//')) {
                 const directInput = document.createElement('div');
                 directInput.innerHTML = message.replace('//', '');
                 output.appendChild(directInput);
                 output.scrollTop = output.scrollHeight;
+                turnsAtCurrentArea++;
             } 
             if (message.startsWith('"')) {
-                messageElement.innerHTML = '\n[Have the player say ' + message + '. And then, Continue the story for another $settings.output_length$.]';
+                inputElement.innerHTML = '\n[Have the player say ' + message + ' Inlcude every letter and punctuation verbatim, and then continue the story for another $settings.output_length$.]';
             } else return;
 
         } else if (bypassCheck) {
-            messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$ as ' + message + ' ' + settings.action_string +']';
+            inputElement.innerHTML = '\n[Continue the story for another $settings.output_length$ as ' + message + ' ' + settings.action_string +']';
         } else {
-            messageElement.innerHTML = message;
-            messageElement.innerHTML = await playerAction(message);
+            inputElement.innerHTML = message;
+            inputElement.innerHTML = await playerAction(message);
         }
     } else {
-        messageElement.innerHTML = '\n[Continue the story for another $settings.output_length$.]';
+        inputElement.innerHTML = '\n[Continue the story for another $settings.output_length$.]';
     }
-    messageElement.innerHTML = replaceVariables(messageElement.innerHTML);
+    inputElement.innerHTML = replaceVariables(inputElement.innerHTML);
 
-    output.appendChild(messageElement);
+    output.appendChild(inputElement);
     output.scrollTop = output.scrollHeight;
 
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(3, 0, extraContext) + messageElement.innerHTML, postPrompt, {
+    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(turnsAtCurrentArea > settings.max_passage_entries ? settings.max_passage_entries : turnsAtCurrentArea, settings.max_summary_entries, settings.story_param.max_context_length, extraContext) + inputElement.innerHTML, postPrompt, {
         message: message,
         currentArea: currentArea,
         playerName: settings.player_name
     }));
-    
+
+    turnsAtCurrentArea++;
+    inputElement.remove();
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('new-message');
     messageElement.innerHTML = "<br>" + text.replace(/\n/g, '<br>');
+    output.appendChild(messageElement);
+    
 
     output.scrollTop = output.lastChild.offsetTop;
 
@@ -940,8 +995,15 @@ function undoLastAction() {
     if (confirmElement) {
         confirmElement.remove();
     }
+    const systemElement = document.getElementById('system-message');
+    if (systemElement) {
+        systemElement.remove();
+    }
     if (output.lastChild) {
         output.removeChild(output.lastChild);
+    }
+    if (turnsAtCurrentArea > 0) {
+        turnsAtCurrentArea--;
     }
 }
 
@@ -979,7 +1041,6 @@ function updateCharacterInfo() {
     }
 }
 
-// Modify setupStart function to include consequences update
 async function setupStart() {
     document.getElementById('sceneart').src = 'placeholder.png';
     updateApproachDisplay();
@@ -989,11 +1050,12 @@ async function setupStart() {
     updateAreaDisplay(settings.starting_area);
 
     await generateArea(settings.starting_area, settings.starting_area_description, 3500, 3500);
-    
+    document.getElementById('sceneart').alt = areas[settings.starting_area].description;
+    centerMapOnLocation(settings.starting_area);
     const responseElement = document.createElement('div');
     responseElement.classList.add('new-message');
     
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext() + "\n" + "[Generate the beginning of the story. Response should be less than 300 words.]", '', {
+    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(0,0,settings.story_param.max_context_length, '') + "\n" + "[Generate the beginning of the story. Response should be less than 300 words.]", '', {
         playerName: settings.player_name,
         areaName: settings.starting_area,
         areaDescription: areas[settings.starting_area].description,
@@ -1013,7 +1075,6 @@ async function setupStart() {
             document.getElementById('playerart').src = URL.createObjectURL(blob);
     });
 }
-
 function restartGame() {
     
     const sceneArt = document.getElementById('sceneart');
@@ -1027,6 +1088,7 @@ function restartGame() {
         location.remove();
     });
     currentArea = settings.starting_area;
+    turnsAtCurrentArea = 1;
     document.getElementById('output').innerHTML = '';
     document.getElementById('image-grid').innerHTML = '';
     setupStart();
@@ -1046,41 +1108,6 @@ function updateApproachDisplay() {
 function updateAreaDisplay(areaName) {
     const areaNameOverlay = document.getElementById('areaNameOverlay');
     areaNameOverlay.textContent = areaName.split('/').pop();
-}
-
-
-async function setupStart() {
-    document.getElementById('sceneart').src = 'placeholder.png';
-    updateApproachDisplay();
-    updateCharacterInfo();
-    updateConsequences();
-    updateFollowerArt();
-    updateAreaDisplay(settings.starting_area);
-
-    await generateArea(settings.starting_area, settings.starting_area_description, 3500, 3500);
-    document.getElementById('sceneart').alt = areas[settings.starting_area].description;
-    const responseElement = document.createElement('div');
-    responseElement.classList.add('new-message');
-    
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext() + "\n" + "[Generate the beginning of the story. Response should be less than 300 words.]", '', {
-        playerName: settings.player_name,
-        areaName: settings.starting_area,
-        areaDescription: areas[settings.starting_area].description,
-        worldDescription: settings.world_description
-    }));
-
-    responseElement.innerHTML = text.replace(/\n/g, '<br>');
-    output.appendChild(responseElement);
-    output.scrollTop = output.scrollHeight;
-    await outputCheck(text);
-    updateImageGrid(settings.starting_area);
-    updateSublocationRow(settings.starting_area);
-
-    document.getElementById('playerart').src = 'placeholder.png';
-    generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
-        if (blob instanceof Blob)
-            document.getElementById('playerart').src = URL.createObjectURL(blob);
-    });
 }
 
 async function moveToArea(area, describe=0, text="") {
@@ -1246,7 +1273,7 @@ async function moveToArea(area, describe=0, text="") {
         } else {
             prompt = settings.player_name + " leaves " + areas[currentArea].name + " and " + (describe>1 ? settings.player_distant_movement : settings.player_local_movement);
         }
-        if (describe > 1)
+        if (describe > 1) // 1 is local movement, otherwise it's the distance between map locations, should handle better
             prompt += " many miles";
 
         if(followers.length > 0) {
@@ -1258,6 +1285,9 @@ async function moveToArea(area, describe=0, text="") {
     
     currentArea.lastVisted = settings.current_time;
     currentArea = targetArea;
+    if (describe)
+        turnsAtCurrentArea = 0;
+    else turnsAtCurrentArea = 1; // presume the entrance as part of the room description when moved through confirmation
     updateAreaDisplay(currentArea);
     
     const sceneArt = document.getElementById('sceneart');
@@ -1284,6 +1314,7 @@ async function moveToArea(area, describe=0, text="") {
 let areas = {};
 let followers = [];
 let currentArea;
+let turnsAtCurrentArea = 1;
 
 // get half width and height of map to get center
 const mapWidth = map.offsetWidth;

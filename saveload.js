@@ -51,6 +51,7 @@ async function saveGame(saveFile = false) {
         state: {
             areas: areas,
             currentArea: currentArea,
+            turnsAtCurrentArea: turnsAtCurrentArea,
             followers: followers,
             outputLog: document.getElementById('output').innerHTML,
             settings: settings,
@@ -255,9 +256,14 @@ async function restoreGameState(data, images = null) {
     const output = document.getElementById('output');
     areas = data.state.areas;
     currentArea = data.state.currentArea;
+    turnsAtCurrentArea = data.state.turnsAtCurrentArea;
     followers = data.state.followers;
     output.innerHTML = data.state.outputLog;
     settings = Object.assign({}, settings, data.state.settings);
+    const confirmElement = document.getElementById('outputCheckConfirm');
+    if (confirmElement) {
+        confirmElement.remove();
+    }
     output.scrollTop = output.scrollHeight;
 
     // Update UI elements first
@@ -350,6 +356,7 @@ async function restoreGameState(data, images = null) {
     }
 
     // Refresh UI
+    centerMapOnLocation(currentArea);
     updateImageGrid(currentArea);
     updateFollowerArt();
     updateSublocationRow(currentArea);

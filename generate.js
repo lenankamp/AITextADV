@@ -89,6 +89,12 @@ async function generateTextImpl(params, input, post='', variables={}, sample_mes
             "role": "user",
             "content": input
         });
+        if (post) {
+            messages.push({
+                "role": "assistant",
+                "content": post
+            });
+        }
         response = await fetch(params.textAPI + 'chat/completions', {
             method: 'POST',
             headers: {
@@ -186,11 +192,11 @@ async function generateArtImpl(prompt, negprompt='', seed=-1) {
             body: JSON.stringify({
                 "prompt": settings.default_prompt + prompt,
                 "negative_prompt": settings.default_negative_prompt + negprompt,
-                "width": settings.sd_width,
-                "height": settings.sd_height,
-                "steps": settings.steps,
+                "width": parseInt(settings.sd_width),
+                "height": parseInt(settings.sd_height),
+                "steps": parseInt(settings.steps),
                 "seed": sum + Math.floor(Math.random() * settings.seed_variation),
-                "cfg_scale": settings.cfg_scale,
+                "cfg_scale": parseFloat(settings.cfg_scale),
                 "send_images": true,
                 "save_images": settings.save_images,
                 "sampler_name": settings.sampler_name
