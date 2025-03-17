@@ -709,7 +709,7 @@ function openUnifiedEditor(item, type, path = null) {
 
 function updateTime() {
     const timeElement = document.getElementById('currentTime');
-    const season = settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '';
+    const season = settings.climate !='' ? (settings.climate != 'temperate' ? settings.climate : getSeason()) : '';
     
     const dateSeasonSpan = timeElement.querySelector('.date-season');
     const timeSpan = timeElement.querySelector('.time');

@@ -59,8 +59,10 @@ function loadDefaultSettings() {
       }
     },
     // image generation settings
+    autogenerate_prompts: false,
     concurrent_art: true,
     sdAPI: "https://b6de60edc66c97d6c9.gradio.live/sdapi/v1/txt2img",
+    sdAPItype: "a1111",
     default_prompt: "__default__,Pokémon style,",
     default_negative_prompt: "__defaultneg__,",
     person_prompt: "",

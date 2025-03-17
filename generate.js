@@ -5,18 +5,12 @@ let isProcessingArt = false;
 let isProcessingText = false;
 
 async function processTextQueue() {
-    if (isProcessingArt || artRequestQueue.length === 0) {
-        if (!isProcessingArt && !isProcessingText) {
-            // Queue is empty, trigger sublocation image generation
-            const event = new CustomEvent('artQueueEmpty');
-            document.dispatchEvent(event);
-        }
-    }
     if (isProcessingText || textRequestQueue.length === 0) return;
-    
+    if (isProcessingArt && !settings.concurrent_art) return;
+
     isProcessingText = true;
     const request = textRequestQueue.shift();
-    
+
     try {
         const result = await generateTextImpl(
             request.params,
@@ -31,6 +25,8 @@ async function processTextQueue() {
     } finally {
         isProcessingText = false;
         processTextQueue();
+        if(!isProcessingText && !isArtQueueEmpty())
+            processArtQueue();
     }
 }
 
@@ -41,7 +37,7 @@ function isArtQueueEmpty() {
 async function processArtQueue() {
     // Don't process art if text is being processed and concurrent_art is false
     if (isProcessingText && !settings.concurrent_art) return;
-    
+
     if (isProcessingArt || artRequestQueue.length === 0) {
         if (!isProcessingArt && !isProcessingText) {
             // Queue is empty, trigger sublocation image generation
@@ -50,10 +46,10 @@ async function processArtQueue() {
         }
         return;
     }
-    
+
     isProcessingArt = true;
     const request = artRequestQueue.shift();
-    
+
     try {
         const result = await generateArtImpl(request.prompt, request.negprompt, request.seed);
         request.resolve(result);
@@ -62,12 +58,15 @@ async function processArtQueue() {
     } finally {
         isProcessingArt = false;
         // Process next request if any
-        processArtQueue();
+        if (textRequestQueue.length > 0)
+            processTextQueue();
+        else
+            processArtQueue();
     }
 }
 
 // Main generateText function that adds to queue
-async function generateText(params, input, post='', variables={}, sample_messages=[]) {
+async function generateText(params, input, post = '', variables = {}, sample_messages = []) {
     return new Promise((resolve, reject) => {
         textRequestQueue.push({ params, input, post, variables, sample_messages, resolve, reject });
         processTextQueue();
@@ -75,34 +74,34 @@ async function generateText(params, input, post='', variables={}, sample_message
 }
 
 // Implementation of text generation
-async function generateTextImpl(params, input, post='', variables={}, sample_messages=[]) {
+async function generateTextImpl(params, input, post = '', variables = {}, sample_messages = []) {
     // Show loader
     document.getElementById('loader').style.display = 'block';
 
     // Process input string for variable replacements if it contains $variables
     input = replaceVariables(input, variables);
-    
+
     // Process system_prompt for variable replacements
     const system_prompt = replaceVariables(params.system_prompt, variables);
 
     let response;
 
     // Send message to API
-    if(params.textAPItype == 'openai') {
+    if (params.textAPItype == 'openai') {
         const messages = [
             {
                 "role": "system",
                 "content": system_prompt
             }
         ];
-    
+
         // Include sample_messages if provided
         if (sample_messages.length > 0) {
             sample_messages.forEach(message => {
                 messages.push(message);
             });
         }
-    
+
         messages.push({
             "role": "user",
             "content": input
@@ -130,7 +129,7 @@ async function generateTextImpl(params, input, post='', variables={}, sample_mes
                 stop: params.stop_sequence
             })
         });
-    } else { // default to koboldcpp
+    } else if (params.textAPItype == 'completion') { // default to koboldcpp
         // Process the text_prompt template with variables
         const processedPrompt = replaceVariables(params.text_prompt, {
             ...variables,
@@ -161,6 +160,49 @@ async function generateTextImpl(params, input, post='', variables={}, sample_mes
                 stop_sequence: params.stop_sequence
             })
         });
+    } else {
+        const processedPrompt = replaceVariables(params.text_prompt, {
+            ...variables,
+            system_prompt: system_prompt,
+            input_string: input,
+            response_string: post
+        });
+        const url = "https://aihorde.net/api/v2/generate/text/async";
+        const apiKey = "aqaGvzHTwL2WsfkaGh8UPg"; // Replace with your actual API key
+        const options = {
+            method: "POST",
+            headers: {
+                "apikey": apiKey, // Your API key
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                prompt: processedPrompt, // The text prompt
+                params: {
+                    max_length: 300, // Max tokens to generate
+                    temperature: params.temperature,
+                    top_p: params.top_p,
+                    n: 1,
+                    },
+                models: ["koboldcpp/Meta-Llama-3-8B-Instruct"] // Optional: specify a model
+            })
+        };
+
+        try {
+            // Submit the generation request
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const taskData = await response.json();
+            console.log("Task submitted:", taskData);
+
+            // Poll for the result
+            const taskId = taskData.id;
+            await pollTextStatus(taskId, apiKey);
+        } catch (error) {
+            console.error("Error:", error);
+        }
+
     }
 
     const data = await response.json();
@@ -168,17 +210,44 @@ async function generateTextImpl(params, input, post='', variables={}, sample_mes
     // Hide loader
     document.getElementById('loader').style.display = 'none';
 
-    if(params.textAPItype == 'openai') {
+    if (params.textAPItype == 'openai') {
         if (data.choices)
             return data.choices[0].message.content;
         else
             return '';
     } else {
-        return data.results[0].text;
+        if(data.results)
+            return data.results[0].text;
+        else
+            return '';
     }
 }
 
-async function generateArt(prompt, negprompt='', seed=-1) {
+// Polling function for text generation status
+async function pollTextStatus(taskId, apiKey) {
+    const statusUrl = `https://aihorde.net/api/v2/generate/text/status/${taskId}`;
+    const options = {
+        headers: {
+            "apikey": apiKey
+        }
+    };
+
+    let completed = false;
+    while (!completed) {
+        const response = await fetch(statusUrl, options);
+        const statusData = await response.json();
+
+        if (statusData.done) {
+            console.log("Generated text:", statusData.generations[0].text);
+            completed = true;
+        } else if (statusData.faulted) {
+            throw new Error("Text generation failed");
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+    }
+}
+
+async function generateArt(prompt, negprompt = '', seed = -1) {
     return new Promise((resolve, reject) => {
         artRequestQueue.push({ prompt, negprompt, seed, resolve, reject });
         // Only try to process art queue if we're not processing text, or if concurrent_art is true
@@ -189,7 +258,7 @@ async function generateArt(prompt, negprompt='', seed=-1) {
 }
 
 // Implementation of the art generation
-async function generateArtImpl(prompt, negprompt='', seed=-1) {
+async function generateArtImpl(prompt, negprompt = '', seed = -1) {
     let sum = 0;
     if (typeof seed == "string") {
         for (let i = 0; i < seed.length; i++)
@@ -225,13 +294,13 @@ async function generateArtImpl(prompt, negprompt='', seed=-1) {
         if (!response.ok) {
             return 'placeholder';
         }
-        
+
         const imageBase64 = data.images[0];
         return await base64ToWebP(imageBase64);
     }
 }
 
-async function send_task_to_dream_api(style_id = 0, prompt, negprompt='', seed=-1) {
+async function send_task_to_dream_api(style_id = 0, prompt, negprompt = '', seed = -1) {
     /**
     Send requests to the dream API.
     prompt is the text prompt.
@@ -269,7 +338,7 @@ async function send_task_to_dream_api(style_id = 0, prompt, negprompt='', seed=-
             'seed': seed
         }
     };
-    
+
     const putResponse = await fetch(task_url, {
         method: 'PUT',
         headers: headers,
@@ -281,7 +350,7 @@ async function send_task_to_dream_api(style_id = 0, prompt, negprompt='', seed=-
     while (true) {
         const statusResponse = await fetch(task_url, { headers });
         if (!statusResponse.ok) throw new Error('Failed to check status');
-        
+
         const statusData = await statusResponse.json();
         if (statusData.state === 'failed') {
             throw new Error('Image generation failed');
@@ -304,53 +373,53 @@ async function send_task_to_dream_api(style_id = 0, prompt, negprompt='', seed=-
 }
 
 async function base64ToWebP(imageBase64) {
-            // Assuming the image data is in data.images[0] as a base64 string
-            const binaryString = window.atob(imageBase64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
+    // Assuming the image data is in data.images[0] as a base64 string
+    const binaryString = window.atob(imageBase64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
 
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
 
-            const pngBlob = new Blob([bytes], { type: 'image/png' });
+    const pngBlob = new Blob([bytes], { type: 'image/png' });
 
-            // Converting PNG to WebP for file size reduction, should make quality or even this feature options
+    // Converting PNG to WebP for file size reduction, should make quality or even this feature options
 
-            const img = new Image();
+    const img = new Image();
 
-            // Create a canvas element to draw the image
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
+    // Create a canvas element to draw the image
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-            if (!ctx) {
-                throw new Error("Unable to obtain 2D rendering context.");
-            }
+    if (!ctx) {
+        throw new Error("Unable to obtain 2D rendering context.");
+    }
 
-            img.src = URL.createObjectURL(pngBlob);
-            await new Promise((resolve) => {
-                img.onload = () => resolve();
-            });
+    img.src = URL.createObjectURL(pngBlob);
+    await new Promise((resolve) => {
+        img.onload = () => resolve();
+    });
 
-            canvas.width = img.width;
-            canvas.height = img.height;
+    canvas.width = img.width;
+    canvas.height = img.height;
 
-            ctx.drawImage(img, 0, 0);
+    ctx.drawImage(img, 0, 0);
 
-            const webpBlob = await new Promise((resolve) => {
-                canvas.toBlob(
-                    (blob) => {
-                        if (blob) {
-                            resolve(blob);
-                        } else {
-                            throw new Error("Failed to convert to WebP format.");
-                        }
-                    },
-                    "image/webp",
-                    0.6 // quality 0-1, 1 being best quality
-                );
-            });
+    const webpBlob = await new Promise((resolve) => {
+        canvas.toBlob(
+            (blob) => {
+                if (blob) {
+                    resolve(blob);
+                } else {
+                    throw new Error("Failed to convert to WebP format.");
+                }
+            },
+            "image/webp",
+            0.6 // quality 0-1, 1 being best quality
+        );
+    });
 
-            // Hide loader
-            return webpBlob;
+    // Hide loader
+    return webpBlob;
 }

@@ -21,8 +21,8 @@ function openSettings() {
         'summary_bonus_layer_chunk', 'summary_max_layers'
       ],
       'Image Generation': [
-          'concurrent_art', 'sdAPI', 'default_prompt', 'default_negative_prompt',
-          'person_prompt', 'person_negprompt',
+        'autogenerate_prompts', 'concurrent_art', 'sdAPI', 'default_prompt', 
+        'default_negative_prompt', 'person_prompt', 'person_negprompt',
           'creature_prompt', 'creature_negprompt',
           'thing_prompt', 'thing_negprompt',
           'sd_width', 'sd_height', 'steps', 'cfg_scale',

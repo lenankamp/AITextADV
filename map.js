@@ -258,7 +258,7 @@ async function generateSublocationImages(areaPath) {
         if (subloc.tempImage) continue;
 
         // Generate a visual prompt from the sublocation description
-        const visual = await generateVisualPrompt(subName, subloc.description);
+        const visual = settings.autogenerate_prompts ? await generateVisualPrompt(subName, subloc.description) : subloc.description;
         const seed = Math.floor(Math.random() * 4294967295) + 1;
         
         // Generate temporary art for the sublocation

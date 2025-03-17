@@ -102,7 +102,7 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
 
             
             if(currentSection === 'things') {
-                let visual = "(" + name + "), " + await generateVisualPrompt(name, description);
+                let visual = settings.autogenerate_prompts ? "(" + name + "), " + await generateVisualPrompt(name, description) : description;
                 const seed = Math.floor(Math.random() * 4294967295) + 1;
                 const section = currentSection;
                 area[section].push({ name: name, description, visual, seed, image: 'placeholder' });
@@ -142,14 +142,14 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
                 description = lines[lines.indexOf(line) + 1].trim();
             }
 
-            let visual = await generateVisualPrompt(name, description);
+            let visual = settings.autogenerate_prompts ? await generateVisualPrompt(name, description) : description;
             const seed = Math.floor(Math.random() * 4294967295) + 1;
             const section = currentSection;
             area[section].push({ name: name, description, visual, seed, image: 'placeholder' });
         }
     }
 
-    area.visual = await generateVisualPrompt(area.name, area.description);
+    area.visual = settings.autogenerate_prompts ? await generateVisualPrompt(area.name, area.description) : area.description;
     
     area.image = 'placeholder';
     if (!areaName.includes('/')) {
@@ -236,7 +236,7 @@ async function addPerson(name, area=currentArea, context="", text="") {
         areaDescription: area.description
     });
     
-    const visual = await generateVisualPrompt(name, description);
+    const visual = settings.autogenerate_prompts ? await generateVisualPrompt(name, description) : description;
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);
@@ -250,7 +250,7 @@ async function addThing(name, area=currentArea, context="", text="") {
         text: text
     });
     
-    const visual = await generateVisualPrompt(name, description);
+    const visual = settings.autogenerate_prompts ? await generateVisualPrompt(name, description) : description;
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['things'].push({ 
         name, 
@@ -270,7 +270,7 @@ async function addCreature(name, area=currentArea, context="", text="") {
         text: text
     });
     
-    const visual = await generateVisualPrompt(name, description);
+    const visual = settings.autogenerate_prompts ? await generateVisualPrompt(name, description) : description;
     const seed = Math.floor(Math.random() * 4294967295) + 1;
     areas[currentArea]['creatures'].push({ name, description, visual, seed, image: 'placeholder' });
     updateImageGrid(currentArea);
@@ -906,6 +906,13 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     const input = document.getElementById('input');
     const output = document.getElementById('output');
     const inputElement = document.createElement('div');
+    if (isProcessingText) {
+        inputElement.id = 'system-message';
+        inputElement.innerHTML = '<Please wait for the current action to complete before continuing.>';
+        output.appendChild(inputElement);
+        output.scrollTop = output.scrollHeight;
+        return;
+    }
     inputElement.id = 'player-action';
     input.value = '';
     let postPrompt = '';
