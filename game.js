@@ -105,7 +105,8 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
                 let visual = settings.autogenerate_prompts ? "(" + name + "), " + await generateVisualPrompt(name, description) : description;
                 const seed = Math.floor(Math.random() * 4294967295) + 1;
                 const section = currentSection;
-                area[section].push({ name: name, description, visual, seed, image: 'placeholder' });
+                const startingAffinity = 0;
+                area[section].push({ name: name, description, visual, seed, image: 'placeholder', affinity: startingAffinity });
             } else {
                 area.sublocations[name] = {
                     path: areaName + '/' + name,
@@ -128,6 +129,8 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
 
     lines = response.split('\n');
     currentSection = null;
+    let tempPeople = [];
+    let tempCreatures = [];
     for (const line of lines) {
         const cleanedLine = line.replace('Name:', '').stripNonAlpha(':,.').trim();
         if (cleanedLine.startsWith('People')) {
@@ -145,10 +148,61 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
             let visual = settings.autogenerate_prompts ? await generateVisualPrompt(name, description) : description;
             const seed = Math.floor(Math.random() * 4294967295) + 1;
             const section = currentSection;
-            area[section].push({ name: name, description, visual, seed, image: 'placeholder' });
+            const startingAffinity = 0;
+            if (currentSection === 'people') {
+                tempPeople.push({ name: name, description, visual, seed, image: 'placeholder', affinity: startingAffinity });
+            } else if (currentSection === 'creatures') {
+                tempCreatures.push({ name: name, description, visual, seed, image: 'placeholder', affinity: startingAffinity });
+            }
         }
     }
-
+    //now depending on settings.people_generation_limit, add the people to the area, if the limit is 1, add the first person, if the limit is greater than 1, add the first person and randomly select the rest from the tempPeople array, if the limit is -1 add all, if 0, add none. However if the limit contains a %, use the % chance to randomly determine the chance for each person to be added.
+    
+    if (settings.people_generation_limit === 1) {
+        area.people.push(tempPeople[0]);
+    } else if (settings.people_generation_limit > 1) {
+        area.people.push(tempPeople[0]);
+        tempPeople.splice(0, 1);
+        for (let i = 1; i < settings.people_generation_limit && i < tempPeople.length; i++) {
+            const randomIndex = Math.floor(Math.random() * tempPeople.length);
+            area.people.push(tempPeople[randomIndex]);
+            tempPeople.splice(randomIndex, 1);
+        }
+    } else if (settings.people_generation_limit === -1) {
+        area.people.push(...tempPeople);
+    } else if (settings.people_generation_limit === 0) {
+        // Add none
+    } else if (typeof settings.people_generation_limit === 'string' && settings.people_generation_limit.includes('%')) {
+        const percentage = parseInt(settings.people_generation_limit.replace('%', ''), 10);
+        tempPeople.forEach(person => {
+            if (Math.random() * 100 < percentage) {
+                area.people.push(person);
+            }
+        });
+    }
+        
+    if (settings.creature_generation_limit === 1) {
+        area.creatures.push(tempCreatures[0]);
+    } else if (settings.creature_generation_limit > 1) {
+        area.people.push(tempCreatures[0]);
+        tempCreatures.splice(0, 1);
+        for (let i = 1; i < settings.creature_generation_limit && i < tempCreatures.length; i++) {
+            const randomIndex = Math.floor(Math.random() * tempCreatures.length);
+            area.creatures.push(tempCreatures[randomIndex]);
+            tempCreatures.splice(randomIndex, 1);
+        }
+    } else if (settings.creature_generation_limit === -1) {
+        area.creatures.push(...tempCreatures);
+    } else if (settings.creature_generation_limit === 0) {
+        // Add none
+    } else if (typeof settings.creature_generation_limit === 'string' && settings.creature_generation_limit.includes('%')) {
+        const percentage = parseInt(settings.creature_generation_limit.replace('%', ''), 10);
+        tempCreatures.forEach(person => {
+            if (Math.random() * 100 < percentage) {
+                area.creatures.push(person);
+            }
+        });
+    }
     area.visual = settings.autogenerate_prompts ? await generateVisualPrompt(area.name, area.description) : area.description;
     
     area.image = 'placeholder';
@@ -226,7 +280,7 @@ function dismissFollower(entity) {
 }
 
 async function addPerson(name, area=currentArea, context="", text="") {
-    const description = await generateText(settings.creative_question_param, "\n\nContext:\n" + context +"\n" + text + "\n\n" + addPersonDescriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, "\n\nContext:\n" + context +"\n" + text + "\n\n" + settings.addPersonDescriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
@@ -238,7 +292,8 @@ async function addPerson(name, area=currentArea, context="", text="") {
     
     const visual = settings.autogenerate_prompts ? await generateVisualPrompt(name, description) : description;
     const seed = Math.floor(Math.random() * 4294967295) + 1;
-    areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder' });
+    const startingAffinity = 0;
+    areas[currentArea]['people'].push({ name, description, visual, seed, image: 'placeholder', affinity: startingAffinity });
     updateImageGrid(currentArea);
 }
 
@@ -252,12 +307,14 @@ async function addThing(name, area=currentArea, context="", text="") {
     
     const visual = settings.autogenerate_prompts ? await generateVisualPrompt(name, description) : description;
     const seed = Math.floor(Math.random() * 4294967295) + 1;
+    const startingAffinity = 0;
     areas[currentArea]['things'].push({ 
         name, 
         description, 
         visual: `(${name}), ${visual}`, 
         seed, 
-        image: 'placeholder' 
+        image: 'placeholder',
+        affinity: startingAffinity
     });
     updateImageGrid(currentArea);
 }
@@ -272,7 +329,8 @@ async function addCreature(name, area=currentArea, context="", text="") {
     
     const visual = settings.autogenerate_prompts ? await generateVisualPrompt(name, description) : description;
     const seed = Math.floor(Math.random() * 4294967295) + 1;
-    areas[currentArea]['creatures'].push({ name, description, visual, seed, image: 'placeholder' });
+    const startingAffinity = 0;
+    areas[currentArea]['creatures'].push({ name, description, visual, seed, image: 'placeholder' , affinity: startingAffinity});
     updateImageGrid(currentArea);
 }
 
@@ -526,6 +584,7 @@ async function outputAutoCheck(text, context="") {
         player: settings.player_name
     }, settings.sampleQuestions);
     const lines = response.split('\n');
+    console.log("Output Auto Check Response: ", response);
 
     for (const line of lines) {
         if (line.startsWith('1.') && !line.includes('n/a') && line.trim() !== '1.') {
@@ -633,9 +692,156 @@ async function outputAutoCheck(text, context="") {
                 target.description = description;
             }
 
+        } else if (line.startsWith('3.') && !line.includes('n/a') && line.trim() !== '3.') {
+            const name = line.replace("3. ", '').stripNonAlpha().trim();
+            let section = null;
+            let target = null;
+            if (name.toLowerCase() === settings.player_name.toLowerCase() || name.toLowerCase() === "you") {
+                continue;
+            } else if (areas[currentArea].people.some(person => person.name === name)) {
+                section = 'people';
+                target = areas[currentArea].people.find(person => person.name === name);
+            } else if (areas[currentArea].creatures.some(creature => creature.name === name)) {
+                section = 'creatures';
+                target = areas[currentArea].creatures.find(creature => creature.name === name);
+            } else if (areas[currentArea].things.some(thing => thing.name === name)) {
+                section = 'things';
+                target = areas[currentArea].things.find(thing => thing.name === name);
+            } else if (followers.some(follower => follower.name === name)) {
+                section = 'followers';
+                target = followers.find(follower => follower.name === name);
+            }
+            if (section && target) {
+                if (target.affinity === 0 || target.affinity === undefined) {
+                    target.affinity = 1;
+                } else {
+                    const changeResponse = await generateText(settings.creative_question_param, minContext(2) + settings.affinityLossCheck, '', {
+                        name: target.name,
+                        description: target.description,
+                        affinity: getAffinity(target.affinity),
+                        newaffinity: getAffinity(target.affinity - settings.affinity_threshold),
+                        player: settings.player_name,
+                    });
+                    const changes = changeResponse.split('\n');
+
+                    let affinityChange = 0;
+
+                    for (const change of changes) {
+                        if (change.startsWith('1.')) {
+                            if(change.toLowerCase().includes('yes')) {
+                                affinityChange = (target.affinity % settings.affinity_threshold);
+                                if (affinityChange === 0) affinityChange = settings.affinity_threshold;
+                            } else continue;
+                        } else if (change.startsWith('2.')) {
+                            if (change.toLowerCase().includes('yes')) {
+                                affinityChange = Math.max(1, affinityChange);
+                            }
+                            continue;
+                        } else if (change.startsWith('3.')) {
+                            if (change.toLowerCase().includes('yes')) {
+                                affinityChange = Math.max(1, affinityChange);
+                            }
+                            continue;
+                        } else if (change.startsWith('4.')) {
+                            if (change.toLowerCase().includes('yes')) {
+                                // no immediate removal of enmity
+                                // record memory
+                            }
+                            continue;
+                        }
+                    }                
+                    target.affinity += affinityChange;
+                    if(target.affinity == 0) {
+                        target.affinity = 1;
+                    }
+                    console.log("Affinity change for " + name + " to " + target.affinity + " with response: " + changeResponse);
+                }
+            }
+
+        } else if (line.startsWith('4.') && !line.includes('n/a') && line.trim() !== '4.') {
+            const name = line.replace("3. ", '').stripNonAlpha().trim();
+            let section = null;
+            let target = null;
+            if (name.toLowerCase() === settings.player_name.toLowerCase() || name.toLowerCase() === "you") {
+                continue;
+            } else if (areas[currentArea].people.some(person => person.name === name)) {
+                section = 'people';
+                target = areas[currentArea].people.find(person => person.name === name);
+            } else if (areas[currentArea].creatures.some(creature => creature.name === name)) {
+                section = 'creatures';
+                target = areas[currentArea].creatures.find(creature => creature.name === name);
+            } else if (areas[currentArea].things.some(thing => thing.name === name)) {
+                section = 'things';
+                target = areas[currentArea].things.find(thing => thing.name === name);
+            } else if (followers.some(follower => follower.name === name)) {
+                section = 'followers';
+                target = followers.find(follower => follower.name === name);
+            }
+            if (section && target) {
+                if (target.affinity === 0 || target.affinity === undefined) {
+                    target.affinity = -1;
+                } else {
+                    const changeResponse = await generateText(settings.creative_question_param, minContext(2) + settings.affinityLossCheck, '', {
+                        name: target.name,
+                        description: target.description,
+                        affinity: getAffinity(target.affinity),
+                        newaffinity: getAffinity(target.affinity - settings.affinity_threshold),
+                        player: settings.player_name,
+                    });
+                    const changes = changeResponse.split('\n');
+
+                    let affinityChange = 0;
+
+                    for (const change of changes) {
+                        if (change.startsWith('1.')) {
+                            if(change.toLowerCase().includes('yes')) {
+                                affinityChange = settings.affinity_threshold - (target.affinity % settings.affinity_threshold);
+                                if (affinityChange === 0) affinityChange = settings.affinity_threshold;
+                            } else continue;
+                        } else if (change.startsWith('2.')) {
+                            if (change.toLowerCase().includes('yes')) {
+                                affinityChange = Math.max(1, affinityChange);
+                            }
+                            continue;
+                        } else if (change.startsWith('3.')) {
+                            if (change.toLowerCase().includes('yes')) {
+                                affinityChange = Math.max(1, affinityChange);
+                            }
+                            continue;
+                        } else if (change.startsWith('4.')) {
+                            if (change.toLowerCase().includes('yes')) {
+                                if (target.affinity > 0) {
+                                    affinityChange = target.affinity;
+                                }
+                                // record memory
+                            }
+                            continue;
+                        }
+                    }                
+                    target.affinity -= affinityChange;
+                    if(target.affinity == 0) {
+                        target.affinity = -1;
+                    }
+                    console.log("Affinity change for " + name + " to " + target.affinity + " with response: " + changeResponse);
+                }
+            }
+
         }
     }
 }
+
+function getAffinity(affinity) {
+    if (affinity === 0) return "Never met and doesn't know their name";
+    if (affinity > 0) return settings.positive_affinities[Math.min(Math.floor(affinity / settings.affinity_threshold), settings.positive_affinities.length - 1)];
+    if (affinity < 0) return settings.negative_affinities[Math.min(Math.floor(-affinity / settings.affinity_threshold), settings.negative_affinities.length - 1)];
+}
+
+function getCreatureAffinity(affinity) {
+    if (affinity === 0) return "Hasn't reacted strongly to your presence";
+    if (affinity > 0) return settings.positive_affinities[Math.min(Math.floor(affinity / settings.affinity_threshold), settings.positive_creature_affinities.length - 1)];
+    if (affinity < 0) return settings.negative_affinities[Math.min(Math.floor(-affinity / settings.affinity_threshold), settings.negative_creature_affinities.length - 1)];
+}
+
 
 function areaContext(areaPath) {
     let area = areas[areaPath];
@@ -649,7 +855,8 @@ function areaContext(areaPath) {
         let peopleList = area.people.map(person => 
             replaceVariables(settings.entityFormat, { 
                 name: person.name, 
-                description: person.description 
+                description: person.description,
+                affinity: "Disposition towards " + settings.player_name + ": " + getAffinity(person.affinity) + "\n",
             })
         ).join('');
         context += replaceVariables(settings.areaPeopleContext, { 
@@ -662,7 +869,8 @@ function areaContext(areaPath) {
         let thingsList = area.things.map(thing => 
             replaceVariables(settings.entityFormat, { 
                 name: thing.name, 
-                description: thing.description 
+                description: thing.description,
+                affinity: ''
             })
         ).join('');
         context += replaceVariables(settings.areaThingsContext, { 
@@ -675,10 +883,11 @@ function areaContext(areaPath) {
         let creaturesList = area.creatures.map(creature => 
             replaceVariables(settings.entityFormat, { 
                 name: creature.name, 
-                description: creature.description 
-            })
+                description: creature.description,
+                affinity: "Disposition towards " + settings.player_name + ": " + getCreatureAffinity(creature.affinity) + "\n",
+             })
         ).join('');
-        context += replaceVariables(settings.areaCreaturesContext, { 
+        context += replaceVariables(settings.areaCreaturesContext, {
             name: area.name, 
             creaturesList 
         });
@@ -687,7 +896,8 @@ function areaContext(areaPath) {
         let followersList = followers.map(follower =>
             replaceVariables(settings.entityFormat, {
                 name: follower.name,
-                description: follower.description
+                description: follower.description,
+                affinity: "Disposition towards " + settings.player_name + ": " + (follower.type === 'creature' ? getCreatureAffinity(follower.affinity) : getAffinity(follower.affinity)) + "\n",
             })
         ).join('');
         context += replaceVariables(settings.areaFollowersContext, {
@@ -728,6 +938,7 @@ function areaContext(areaPath) {
 function fullContext(limit = null, summaryLength = 0, maxContext, extraContext = "") {
     const output = document.getElementById('output');
     const outputElements = Array.from(output.children).filter(child => !['outputCheckConfirm', 'system-message', 'player-action'].includes(child.id)).map(child => child.innerText);
+    const estimatedMaxContext = maxContext || settings.question_param.max_context_length - 800;
     let outputContent = '';
     let summary = '';
     let totalCharacters = 0;
@@ -736,7 +947,7 @@ function fullContext(limit = null, summaryLength = 0, maxContext, extraContext =
         const limitedElements = outputElements.slice(-limit); // Get the last 'limit' elements
         for (let i = limitedElements.length - 1; i >= 0; i--) {
             const element = limitedElements[i];
-            if (totalCharacters + element.length > maxContext * 4) break;
+            if (totalCharacters + element.length > estimatedMaxContext * 4) break;
             outputContent = element + ' ' + outputContent;
             totalCharacters += element.length;
         }
@@ -744,7 +955,7 @@ function fullContext(limit = null, summaryLength = 0, maxContext, extraContext =
         if (summaryLength === -1) {
             for (let i = 0; i < outputElements.length - limitedElements.length; i++) {
                 const element = outputElements[i];
-                if (totalCharacters + element.length > maxContext * 4) break;
+                if (totalCharacters + element.length > estimatedMaxContext * 4) break;
                 summary += element + ' ';
                 totalCharacters += element.length;
             }
@@ -752,7 +963,7 @@ function fullContext(limit = null, summaryLength = 0, maxContext, extraContext =
             const summaryElements = outputElements.slice(-summaryLength - limitedElements.length, -limitedElements.length);
             for (let i = summaryElements.length - 1; i >= 0; i--) {
                 const element = summaryElements[i];
-                if (totalCharacters + element.length > maxContext * 4) break;
+                if (totalCharacters + element.length > estimatedMaxContext * 4) break;
                 summary = element + ' ' + summary;
                 totalCharacters += element.length;
             }
@@ -760,7 +971,7 @@ function fullContext(limit = null, summaryLength = 0, maxContext, extraContext =
     } else {
         for (let i = outputElements.length - 1; i >= 0; i--) {
             const element = outputElements[i];
-            if (totalCharacters + element.length > maxContext * 4) break;
+            if (totalCharacters + element.length > estimatedMaxContext * 4) break;
             outputContent = element + ' ' + outputContent;
             totalCharacters += element.length;
         }
@@ -882,7 +1093,7 @@ async function playerAction(action) {
             }
             // roll 4d3-8+advantage-disadvantage
             let roll = randomInt(3) + randomInt(3) + randomInt(3) + randomInt(3) - 4;
-            console.log('Roll 4d4-8('+ roll + ') +' + advantage + '-' + disadvantage + '=' + roll + advantage - disadvantage);
+            console.log('Roll 4d4-8('+ roll + ') +' + advantage + '-' + disadvantage + '=' + (roll + advantage - disadvantage));
             roll += advantage - disadvantage;
             if(roll >= 3) {
                 return "[The player's actions are extremely successful, so much so that they will create advantages in similar actions in the future. Continue the story for another $settings.output_length$ as player successfully '" + action + "'. "+ settings.action_string + "]";
@@ -932,16 +1143,37 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     }
 
     if (message.trim()) {
-        if (message.startsWith('/') || message.startsWith('"')) {
+        if (message.startsWith('/')) {
             const parts = message.split(' ');
             const command = parts[0];
             const name = parts.slice(1).join(' ');
             if (command === '/char') {
-                await addPerson(name);
+                await addPerson(name, currentArea, minContext(3));
             } else if (command === '/thing') {
-                await addThing(name);
+                await addThing(name, currentArea, minContext(3));
             } else if (command === '/creature') {
-                await addCreature(name);
+                await addCreature(name, currentArea, minContext(3));
+            } else if (command === '/setaffinity') {
+                // name command is passed as /setaffinity name value, split from the last space to get the name and value
+                const lastSpaceIndex = name.lastIndexOf(' ');
+                const value = name.slice(lastSpaceIndex + 1).trim();
+                const entityName = name.slice(0, lastSpaceIndex).trim();
+                if (value && !isNaN(value)) {
+                    const entity = areas[currentArea].people.find(p => p.name === entityName) ||
+                        areas[currentArea].creatures.find(c => c.name === entityName) ||
+                        areas[currentArea].things.find(t => t.name === entityName) ||
+                        followers.find(f => f.name === entityName);
+                    if (entity) {
+                        entity.affinity = parseInt(value);
+                        inputElement.innerHTML = `<br>Set affinity of ${entityName} to ${value}.`;
+                    } else {
+                        inputElement.innerHTML = `<br>Entity ${entityName} not found.`;
+                    }
+                }
+                inputElement.id = 'system-message';
+                output.appendChild(inputElement);
+                output.scrollTop = output.scrollHeight;
+        
             } else if (command === '/move') {
                 await moveToArea(name);
             } else if (command === '/rename') {
@@ -963,10 +1195,10 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
                 output.scrollTop = output.scrollHeight;
                 turnsAtCurrentArea++;
             } 
-            if (message.startsWith('"')) {
-                inputElement.innerHTML = '\n[Have the player say ' + message + ' Inlcude every letter and punctuation verbatim, and then continue the story for another $settings.output_length$.]';
-            } else return;
-
+            return;
+            
+        } else if(message.startsWith('"')){
+            inputElement.innerHTML = '\n[Have the player say ' + message + ' Inlcude every letter and punctuation verbatim, and then continue the story for another $settings.output_length$.]';
         } else if (bypassCheck) {
             inputElement.innerHTML = '\n[Continue the story for another $settings.output_length$ as ' + message + ' ' + settings.action_string +']';
         } else {
@@ -991,6 +1223,8 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     inputElement.remove();
     const messageElement = document.createElement('div');
     messageElement.classList.add('new-message');
+// not ready yet
+//    readTextAloud(text, areas[currentArea]);
     messageElement.innerHTML = "<br>" + text.replace(/\n/g, '<br>');
     output.appendChild(messageElement);
     
@@ -1083,11 +1317,14 @@ async function setupStart() {
     updateImageGrid(settings.starting_area);
     updateSublocationRow(settings.starting_area);
 
-    document.getElementById('playerart').src = 'placeholder.png';
-    generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
-        if (blob instanceof Blob)
-            document.getElementById('playerart').src = URL.createObjectURL(blob);
-    });
+    // check if playerart has an image url and if not, create it
+    if (!document.getElementById('playerart').src) {
+        document.getElementById('playerart').src = 'placeholder.png';
+        generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
+            if (blob instanceof Blob)
+                document.getElementById('playerart').src = URL.createObjectURL(blob);
+        });
+    }
 }
 
 function restartGame() {
@@ -1239,6 +1476,14 @@ async function moveToArea(area, describe=0, text="") {
                 const personIndex = areas[currentArea].people.findIndex(person => person.name === mover);
                 if (personIndex !== -1) {
                     const person = areas[currentArea].people.splice(personIndex, 1)[0];
+                    // check if person.name already exists in targetArea and it's never been visited, delete the one from target area if it does
+                    if(areas[targetArea].lastVisted === '') {
+                        const targetIndex = areas[targetArea].people.findIndex(p => p.name === person.name);
+                        if (targetIndex !== -1) {
+                            areas[targetArea].people.splice(targetIndex, 1);
+                        }
+                    }
+                    // add person to targetArea
                     areas[targetArea].people.push(person);
                 }
             }

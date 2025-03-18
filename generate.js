@@ -423,3 +423,64 @@ async function base64ToWebP(imageBase64) {
     // Hide loader
     return webpBlob;
 }
+
+async function generateTikTokTTS(text, voice) {
+    const sessionId = '94f80631579b6e945f4e648bed5a439f';
+    const userAgent = 'com.zhiliaoapp.musically/2022600030 (Linux; U; Android 7.1.2; es_ES; SM-G988N; Build/NRD90M;tt-ok/3.12.13.1)';
+    const ttsEndpoint = 'https://api16-normal-c-useast1a.tiktokv.com/media/api/text/speech/invoke/';
+    const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+
+    try {
+        const payload = {
+            text_speaker: voice,
+            req_text: text,
+            speaker_map_type: 0,
+            aid: 1233
+        };
+
+        const response = await fetch(corsProxy + ttsEndpoint, {
+            method: 'POST',
+            headers: {
+                'User-Agent': userAgent,
+                'Cookie': `sessionid=${sessionId}`,
+                'Accept-Encoding': 'gzip,deflate,compress',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        if (responseData.status_code !== 0) {
+            throw new Error(`API error! Status: ${responseData.status_code}, Message: ${responseData.status_msg}`);
+        }
+
+        const audioData = await response.arrayBuffer();
+        const blob = new Blob([audioData], { type: 'audio/mp3' });
+        const url = URL.createObjectURL(blob);
+
+        const audio = new Audio(url);
+        audio.onerror = (e) => {
+            console.error('Audio playback error:', e);
+        };
+
+        audio.oncanplaythrough = () => {
+            console.log('Audio can play through without interruption.');
+        };
+
+        audio.onloadeddata = () => {
+            console.log('Audio data loaded.');
+        };
+
+        audio.onstalled = () => {
+            console.error('Audio playback stalled.');
+        };
+
+        return audio;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}

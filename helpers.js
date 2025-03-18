@@ -106,8 +106,8 @@ function trimIncompleteSentences(text) {
             if (!result.endsWith('"')) {
                 result += '"';
             } else {
-                console.log("Unmatched quote found in the last sentence.", result, result.slice(0, -1));
                 result = result.slice(0, -1);
+                result += '"';
             }
         }
         return result;
