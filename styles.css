@@ -38,9 +38,9 @@ body {
     bottom: 20px; /* Fixed vertical position relative to the bottom */
 }
 .content {
-    display: grid;
-    grid-template-columns: 300px .5vh 1fr;
-    height: calc(100vh - 60px);
+    display: flex;
+    flex: 1;
+    height: 100vh;
     gap: 0;
     position: relative;
     overflow: hidden;
@@ -52,13 +52,13 @@ body {
     overflow: hidden;
 }
 #left {
-    min-width: 100px;
+    min-width: 300px;
     max-width: calc(100vw - 100px);
-    width: 100%;
+    flex: 1;
 }
 #right {
-    min-width: 100px;
-    width: 100%;
+    min-width: 300px;
+    flex: 1;
 }
 .quadrant {
     background-color: #2d2d2d;
@@ -108,6 +108,7 @@ body {
     width: .5vh;
     height: 100%;
     transition: background-color 0.2s ease;
+    flex-shrink: 0;
 }
 .resizer.horizontal {
     cursor: row-resize;

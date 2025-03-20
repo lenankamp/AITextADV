@@ -1,36 +1,53 @@
 // Remove all requires since we'll use nodeBridge
 
+// Verify bridge availability immediately
+(function verifyBridge() {
+    console.log('Checking bridge availability...');
+    if (!window.nodeBridge) {
+        console.error('nodeBridge is not available!');
+        document.getElementById('loader').classList.add('hidden');
+        throw new Error('Electron bridge not initialized');
+    }
+    console.log('Bridge check complete, bridge is available');
+})();
+
 async function generateText(params, input, post='', variables={}, sample_messages=[]) {
     try {
-        // Show loader
         document.getElementById('loader').classList.remove('hidden');
+        console.log('Starting text generation with params:', { params, input, post, variables });
 
         // Process input string for variable replacements
         input = replaceVariables(input, variables);
         const system_prompt = replaceVariables(params.system_prompt, variables);
 
-        try {
-            let response;
-            console.log('Generating text with params:', { input, system_prompt, params });
+        let response;
+        console.log('Processed inputs:', { input, system_prompt });
 
-            if(params.textAPItype == 'openai') {
-                const messages = [
-                    {
-                        "role": "system",
-                        "content": system_prompt
-                    }
-                ];
-            
-                if (sample_messages.length > 0) {
-                    messages.push(...sample_messages);
+        if(params.textAPItype == 'openai') {
+            const messages = [
+                {
+                    "role": "system",
+                    "content": system_prompt
                 }
-            
-                messages.push({
-                    "role": "user",
-                    "content": input
-                });
+            ];
+        
+            if (sample_messages.length > 0) {
+                messages.push(...sample_messages);
+            }
+        
+            messages.push({
+                "role": "user",
+                "content": input
+            });
 
-                console.log('OpenAI request:', messages);
+            console.log('OpenAI request payload:', {
+                model: params.model,
+                messages: messages,
+                max_completion_tokens: params.max_length,
+                temperature: params.temperature
+            });
+
+            try {
                 response = await window.nodeBridge.fetch(params.textAPI + 'chat/completions', {
                     method: 'POST',
                     headers: {
@@ -48,90 +65,82 @@ async function generateText(params, input, post='', variables={}, sample_message
                         stop: params.stop_sequence
                     })
                 });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error('OpenAI API error:', errorData);
-                    throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
-                }
-            } else {
-                const processedPrompt = replaceVariables(params.text_prompt, {
-                    ...variables,
-                    system_prompt: system_prompt,
-                    input_string: input,
-                    response_string: post
-                });
-
-                console.log('KoboldCPP request:', processedPrompt);
-                response = await window.nodeBridge.fetch(params.textAPI + 'generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        max_context_length: params.max_context_length,
-                        max_length: params.max_length,
-                        prompt: processedPrompt,
-                        quiet: params.quiet,
-                        rep_pen: params.rep_pen,
-                        rep_pen_range: params.rep_pen_range,
-                        rep_pen_slope: params.rep_pen_slope,
-                        temperature: params.temperature,
-                        tfs: params.tfs,
-                        top_a: params.top_a,
-                        top_k: params.top_k,
-                        top_p: params.top_p,
-                        typical: params.typical,
-                        stop_sequence: params.stop_sequence
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error('KoboldCPP API error:', errorData);
-                    throw new Error(`KoboldCPP API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
-                }
+            } catch (fetchError) {
+                console.error('Fetch error:', fetchError);
+                throw new Error(`Network error: ${fetchError.message}`);
             }
 
-            const data = await response.json();
-            console.log('API response:', data);
-
-            document.getElementById('loader').classList.add('hidden');
-
-            if(params.textAPItype == 'openai') {
-                if (!data.choices || data.choices.length === 0) {
-                    throw new Error('No text completion received from OpenAI');
-                }
-                return data.choices[0].message.content;
-            } else {
-                if (!data.results || data.results.length === 0) {
-                    throw new Error('No text completion received from KoboldCPP');
-                }
-                return data.results[0].text;
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('OpenAI API error response:', errorData);
+                throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
             }
-        } catch (error) {
-            console.error('Error generating text:', error);
-            document.getElementById('loader').classList.add('hidden');
-            // Show error in UI
-            if (window.nodeBridge) {
-                window.nodeBridge.send('toMain', { type: 'error', message: `Text generation error: ${error.message}` });
+        } else {
+            const processedPrompt = replaceVariables(params.text_prompt, {
+                ...variables,
+                system_prompt: system_prompt,
+                input_string: input,
+                response_string: post
+            });
+
+            console.log('KoboldCPP request:', processedPrompt);
+            response = await window.nodeBridge.fetch(params.textAPI + 'generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    max_context_length: params.max_context_length,
+                    max_length: params.max_length,
+                    prompt: processedPrompt,
+                    quiet: params.quiet,
+                    rep_pen: params.rep_pen,
+                    rep_pen_range: params.rep_pen_range,
+                    rep_pen_slope: params.rep_pen_slope,
+                    temperature: params.temperature,
+                    tfs: params.tfs,
+                    top_a: params.top_a,
+                    top_k: params.top_k,
+                    top_p: params.top_p,
+                    typical: params.typical,
+                    stop_sequence: params.stop_sequence
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('KoboldCPP API error:', errorData);
+                throw new Error(`KoboldCPP API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
             }
-            throw error;
-        } finally {
-            // Ensure loader is hidden
-            setTimeout(() => {
-                document.getElementById('loader').classList.add('hidden');
-            }, 100);
         }
+
+        const data = await response.json();
+        console.log('API response data:', data);
+
+        let result;
+        if(params.textAPItype == 'openai') {
+            if (!data.choices || data.choices.length === 0) {
+                throw new Error('No text completion received from OpenAI');
+            }
+            result = data.choices[0].message.content;
+        } else {
+            if (!data.results || data.results.length === 0) {
+                throw new Error('No text completion received from KoboldCPP');
+            }
+            result = data.results[0].text;
+        }
+
+        return result;
     } catch (error) {
-        console.error('Error generating text:', error);
-        // Hide loader after error
-        document.getElementById('loader').classList.add('hidden');
+        console.error('Error in generateText:', error);
+        if (window.nodeBridge) {
+            window.nodeBridge.sendError(error);
+        }
+        throw error;
     } finally {
-        // Hide loader after successful completion (with delay for visual feedback)
-        setTimeout(() => {
-            document.getElementById('loader').classList.add('hidden');
-        }, 100);
+        // Ensure loader is always hidden
+        document.getElementById('loader').classList.add('hidden');
+        console.log('Text generation completed');
     }
 }
 
@@ -268,7 +277,7 @@ async function send_task_to_dream_api(style_id = 0, prompt, negprompt='', seed=-
             }
             
             const statusData = await statusResponse.json();
-            console.log('Status response:', statusData); // Debug log
+            console.log('Status response:', statusData);
             
             if (statusData.state === 'failed') {
                 throw new Error(statusData.error || 'Image generation failed');
@@ -278,9 +287,11 @@ async function send_task_to_dream_api(style_id = 0, prompt, negprompt='', seed=-
                     if (!imageResponse.ok) {
                         throw new Error('Failed to fetch generated image');
                     }
-                    const arrayBuffer = await imageResponse.arrayBuffer();
+                    
+                    // Use the arrayBuffer method from our nodeBridge response
+                    const buffer = await imageResponse.arrayBuffer();
                     return window.nodeBridge.bufferToString(
-                        window.nodeBridge.bufferFrom(arrayBuffer),
+                        window.nodeBridge.bufferFrom(buffer),
                         'base64'
                     );
                 } catch (error) {

@@ -38,9 +38,14 @@ function initDragCol(e) {
 function doDragCol(e) {
     e.preventDefault();
     const leftSide = document.getElementById('left');
-    const newWidth = Math.max(100, Math.min(window.innerWidth - 100, startWidth + e.clientX - startX));
-    content.style.gridTemplateColumns = `${newWidth}px .5vh 1fr`;
-    leftSide.style.width = `${newWidth}px`;
+    const rightSide = document.getElementById('right');
+    const containerWidth = content.offsetWidth;
+    const newWidth = Math.max(300, Math.min(containerWidth - 300, e.clientX));
+    const leftPercentage = (newWidth / containerWidth) * 100;
+    const rightPercentage = 100 - leftPercentage;
+    
+    leftSide.style.flex = `0 0 ${newWidth}px`;
+    rightSide.style.flex = '1';
 }
 
 function stopDragCol() {

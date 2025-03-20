@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-hashes'; script-src 'self'; connect-src 'self' https://api.luan.tools https://openrouter.ai https://*.gradio.live; img-src 'self' blob: data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://api.luan.tools https://openrouter.ai https://*.gradio.live http://192.168.86.180:5001 http://192.168.86.180:7860; img-src 'self' blob: data:;">
     <title>AITextADV</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -100,6 +100,7 @@
 
     <div class="loader" id="loader"></div>
 
+    <script src="js/main.js"></script>
     <script src="settings.js"></script>
     <script src="helpers.js"></script>
     <script src="generate.js"></script>
@@ -108,6 +109,5 @@
     <script src="map.js"></script>
     <script src="settings_override.js"></script>
     <script src="game.js"></script>
-    <script src="js/main.js"></script>
 </body>
 </html>
