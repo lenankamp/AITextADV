@@ -5,6 +5,9 @@ function openSettings() {
 
   const sections = {
       'UI': ['column_width', 'topleft_height', 'topright_height'],
+      'Game Settings': [ 'affinity_threshold', 'positive_affinities', 'negative_affinities',
+        'positive_creature_affinities', 'negative_creature_affinities', 'sentient_string',
+        'creature_string', 'sentient_generation_limit', 'creature_generation_limit' ],
       'World Generation': [
           'world_description', 'starting_area', 'starting_area_description', 
           'current_time', 'climate'

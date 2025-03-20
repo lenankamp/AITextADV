@@ -19,15 +19,18 @@ function findLikelyCharacter(gender, peopleInArea) {
 }
 
 function getVoiceForSpeaker(speaker) {
-    if (!speaker) return 'en_uk_003';
-    const desc = speaker.description ? speaker.description.toLowerCase() : '';
-    const gender = getGenderFromText(desc);
-    return gender === 'female' ? 'en_female_emotional' : 'en_uk_003';
+    if (!speaker) return settings.tts_default_male;
+    const desc = speaker.description ? speaker.description : settings.tts_default_male;
+    return desc;
 }
 
+// Queue for audio generation and playback
+const audioQueue = [];
+let isPlaying = false;
+
 async function readTextAloud(text, area) {
-    const narratorVoice = "en_male_ghosthost";
-    const playerVoice = "en_uk_003";
+    const narratorVoice = settings.tts_narrator;
+    const playerVoice = settings.tts_player;
 
     // Create a map of people in the area
     const peopleInArea = new Map();
@@ -211,11 +214,11 @@ async function readTextAloud(text, area) {
             }
             return {
                 speaker: 'unknown_' + effectiveGender,
-                voice: effectiveGender === 'female' ? 'en_female_emotional' : 'en_uk_003'
+                voice: effectiveGender === 'female' ? settings.tts_default_female : settings.tts_default_male
             };
         }
         
-        return { speaker: 'unknown', voice: 'en_uk_003' };
+        return { speaker: 'unknown', voice: settings.tts_default_male };
     }
 
     // Combine sequential segments from the same speaker
@@ -247,17 +250,97 @@ async function readTextAloud(text, area) {
         currentSpeaker = lastSegment.speaker;
     }
 
-    // Narrate each combined segment
+    // Before generating audio, check if any segment is too long, and try to split by punctuation
+    const maxSegmentLength = settings.tts_max_length; // Maximum characters per segment
+
+    // Function to split text into smaller segments based on punctuation
+    function splitTextByPunctuation(text) {
+        if (text.length <= maxSegmentLength) return [text];
+
+        const segments = [];
+        let currentSegment = '';
+        
+        // Split by sentences first
+        const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+        
+        for (const sentence of sentences) {
+            if (currentSegment.length + sentence.length <= maxSegmentLength) {
+                currentSegment += sentence;
+            } else if (sentence.length <= maxSegmentLength) {
+                if (currentSegment) segments.push(currentSegment);
+                currentSegment = sentence;
+            } else {
+                // If sentence is too long, split by commas
+                if (currentSegment) segments.push(currentSegment);
+                const clauseMatches = sentence.match(/[^,]+,\s*/g) || [sentence];
+                let tempSegment = '';
+                
+                for (const clause of clauseMatches) {
+                    if (tempSegment.length + clause.length <= maxSegmentLength) {
+                        tempSegment += clause;
+                    } else {
+                        if (tempSegment) segments.push(tempSegment);
+                        tempSegment = clause;
+                    }
+                }
+                currentSegment = tempSegment;
+            }
+        }    
+        
+        if (currentSegment) segments.push(currentSegment);
+        return segments;
+    }
+
+    // Split long segments before generating audio
+    const processedSegments = [];
     for (const segment of combinedSegments) {
+        if (segment.text.length > maxSegmentLength) {
+            const splitParts = splitTextByPunctuation(segment.text);
+            splitParts.forEach(part => {
+                processedSegments.push({
+                    ...segment,
+                    text: part.trim()
+                });
+            });
+        } else {
+            processedSegments.push(segment);
+        }
+    }
+
+    // Function to play the next audio in queue
+    async function playNextInQueue() {
+        if (audioQueue.length === 0 || isPlaying) return;
+        
+        isPlaying = true;
+        const audio = audioQueue.shift();
+        
         try {
-//            console.log((segment.type == 'narration' ? 'narrator' : segment.speaker) + ':', segment.text);
-            const audio = await generateTikTokTTS(segment.text, segment.voice);
             await new Promise((resolve) => {
-                audio.onended = resolve;
+                audio.onended = () => {
+                    isPlaying = false;
+                    resolve();
+                    playNextInQueue(); // Try to play next audio
+                };
                 audio.play();
             });
         } catch (error) {
-            console.error('Error playing TTS:', error);
+            console.error('Error playing audio:', error);
+            isPlaying = false;
+            playNextInQueue(); // Try next audio even if current one fails
         }
     }
+
+    // Generate all audio segments in parallel but queue them for sequential playback
+    const generationPromises = processedSegments.map(async (segment) => {
+        try {
+            const audio = await generateKoboldTTS(segment.text, segment.voice);
+            audioQueue.push(audio);
+            playNextInQueue(); // Try to start playback if not already playing
+        } catch (error) {
+            console.error('Error generating TTS:', error);
+        }
+    });
+
+    // Wait for all audio to be generated
+    await Promise.all(generationPromises);
 }

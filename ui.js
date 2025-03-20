@@ -183,8 +183,11 @@ function updateImageGrid(areaName) {
     const updatedContainers = new Set();
     
     categories.forEach(category => {
+        // Skip if category array doesn't exist
+        if (!area[category] || !Array.isArray(area[category])) return;
+
         let row = imageGrid.querySelector(`.image-row[data-category="${category}"]`);
-        const hasItems = areas[areaName][category] && areas[areaName][category].length > 0;
+        const hasItems = area[category] && area[category].length > 0;
         
         if (hasItems) {
             if (!row) {
@@ -194,7 +197,10 @@ function updateImageGrid(areaName) {
                 imageGrid.appendChild(row);
             }
             
-            areas[areaName][category].forEach(item => {
+            area[category].forEach(item => {
+                // Skip invalid items
+                if (!item || !item.name) return;
+
                 let container = existingContainers.get(item.name);
                 
                 if (!container) {

@@ -117,7 +117,12 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
         }
     }
 
-    const allPeople = Object.values(areas).flatMap(area => area.people.map(person => person.name)).join(', ');
+    const allPeople = Object.values(areas)
+        .filter(area => area && area.people) // Filter out undefined areas or areas without people
+        .flatMap(area => area.people.map(person => person?.name || ''))
+        .filter(name => name) // Remove any undefined/empty names
+        .join(', ');
+    
     response = await generateText(settings.creative_question_param, settings.generateEntitiesPrompt, '', {
         people: allPeople,
         areaName: area.name,
@@ -133,9 +138,9 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
     let tempCreatures = [];
     for (const line of lines) {
         const cleanedLine = line.replace('Name:', '').stripNonAlpha(':,.').trim();
-        if (cleanedLine.startsWith('People')) {
+        if (cleanedLine.toLowerCase().startsWith(settings.sentient_string.toLowerCase())) {
             currentSection = 'people';
-        } else if (cleanedLine.startsWith('Creatures')) {
+        } else if (cleanedLine.toLowerCase().startsWith(settings.creature_string.toLowerCase())) {
             currentSection = 'creatures';
         } else if (currentSection && cleanedLine && !cleanedLine.includes('None') && cleanedLine.includes(':')) {
             const [namePart, ...descriptionParts] = cleanedLine.split(':');
@@ -156,24 +161,24 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
             }
         }
     }
-    //now depending on settings.people_generation_limit, add the people to the area, if the limit is 1, add the first person, if the limit is greater than 1, add the first person and randomly select the rest from the tempPeople array, if the limit is -1 add all, if 0, add none. However if the limit contains a %, use the % chance to randomly determine the chance for each person to be added.
+    //now depending on settings.sentient_generation_limit, add the people to the area, if the limit is 1, add the first person, if the limit is greater than 1, add the first person and randomly select the rest from the tempPeople array, if the limit is -1 add all, if 0, add none. However if the limit contains a %, use the % chance to randomly determine the chance for each person to be added.
     
-    if (settings.people_generation_limit === 1) {
+    if (settings.sentient_generation_limit === 1) {
         area.people.push(tempPeople[0]);
-    } else if (settings.people_generation_limit > 1) {
+    } else if (settings.sentient_generation_limit > 1) {
         area.people.push(tempPeople[0]);
         tempPeople.splice(0, 1);
-        for (let i = 1; i < settings.people_generation_limit && i < tempPeople.length; i++) {
+        for (let i = 1; i < settings.sentient_generation_limit && i < tempPeople.length; i++) {
             const randomIndex = Math.floor(Math.random() * tempPeople.length);
             area.people.push(tempPeople[randomIndex]);
             tempPeople.splice(randomIndex, 1);
         }
-    } else if (settings.people_generation_limit === -1) {
+    } else if (settings.sentient_generation_limit === -1) {
         area.people.push(...tempPeople);
-    } else if (settings.people_generation_limit === 0) {
+    } else if (settings.sentient_generation_limit === 0) {
         // Add none
-    } else if (typeof settings.people_generation_limit === 'string' && settings.people_generation_limit.includes('%')) {
-        const percentage = parseInt(settings.people_generation_limit.replace('%', ''), 10);
+    } else if (typeof settings.sentient_generation_limit === 'string' && settings.sentient_generation_limit.includes('%')) {
+        const percentage = parseInt(settings.sentient_generation_limit.replace('%', ''), 10);
         tempPeople.forEach(person => {
             if (Math.random() * 100 < percentage) {
                 area.people.push(person);
@@ -668,18 +673,18 @@ async function outputAutoCheck(text, context="") {
                     updateConsequences();
                 }
 
-            } else if (areas[currentArea].people.some(person => person.name === name)) {
+            } else if (areas[currentArea]?.people?.some(person => person?.name === name)) {
                 section = 'people';
-                target = areas[currentArea].people.find(person => person.name === name);
-            } else if (areas[currentArea].creatures.some(creature => creature.name === name)) {
+                target = areas[currentArea].people.find(person => person?.name === name);
+            } else if (areas[currentArea]?.creatures?.some(creature => creature?.name === name)) {
                 section = 'creatures';
-                target = areas[currentArea].creatures.find(creature => creature.name === name);
-            } else if (areas[currentArea].things.some(thing => thing.name === name)) {
+                target = areas[currentArea].creatures.find(creature => creature?.name === name);
+            } else if (areas[currentArea]?.things?.some(thing => thing?.name === name)) {
                 section = 'things';
-                target = areas[currentArea].things.find(thing => thing.name === name);
-            } else if (followers.some(follower => follower.name === name)) {
+                target = areas[currentArea].things.find(thing => thing?.name === name);
+            } else if (followers?.some(follower => follower?.name === name)) {
                 section = 'followers';
-                target = followers.find(follower => follower.name === name);
+                target = followers.find(follower => follower?.name === name);
             }
             if (section && target) {
                 const description = await generateText(settings.creative_question_param, minContext(3) + settings.generateNewDescription, '', {
@@ -698,18 +703,18 @@ async function outputAutoCheck(text, context="") {
             let target = null;
             if (name.toLowerCase() === settings.player_name.toLowerCase() || name.toLowerCase() === "you") {
                 continue;
-            } else if (areas[currentArea].people.some(person => person.name === name)) {
+            } else if (areas[currentArea]?.people?.some(person => person?.name === name)) {
                 section = 'people';
-                target = areas[currentArea].people.find(person => person.name === name);
-            } else if (areas[currentArea].creatures.some(creature => creature.name === name)) {
+                target = areas[currentArea].people.find(person => person?.name === name);
+            } else if (areas[currentArea]?.creatures?.some(creature => creature?.name === name)) {
                 section = 'creatures';
-                target = areas[currentArea].creatures.find(creature => creature.name === name);
-            } else if (areas[currentArea].things.some(thing => thing.name === name)) {
+                target = areas[currentArea].creatures.find(creature => creature?.name === name);
+            } else if (areas[currentArea]?.things?.some(thing => thing?.name === name)) {
                 section = 'things';
-                target = areas[currentArea].things.find(thing => thing.name === name);
-            } else if (followers.some(follower => follower.name === name)) {
+                target = areas[currentArea].things.find(thing => thing?.name === name);
+            } else if (followers?.some(follower => follower?.name === name)) {
                 section = 'followers';
-                target = followers.find(follower => follower.name === name);
+                target = followers.find(follower => follower?.name === name);
             }
             if (section && target) {
                 if (target.affinity === 0 || target.affinity === undefined) {
@@ -764,18 +769,18 @@ async function outputAutoCheck(text, context="") {
             let target = null;
             if (name.toLowerCase() === settings.player_name.toLowerCase() || name.toLowerCase() === "you") {
                 continue;
-            } else if (areas[currentArea].people.some(person => person.name === name)) {
+            } else if (areas[currentArea]?.people?.some(person => person?.name === name)) {
                 section = 'people';
-                target = areas[currentArea].people.find(person => person.name === name);
-            } else if (areas[currentArea].creatures.some(creature => creature.name === name)) {
+                target = areas[currentArea].people.find(person => person?.name === name);
+            } else if (areas[currentArea]?.creatures?.some(creature => creature?.name === name)) {
                 section = 'creatures';
-                target = areas[currentArea].creatures.find(creature => creature.name === name);
-            } else if (areas[currentArea].things.some(thing => thing.name === name)) {
+                target = areas[currentArea].creatures.find(creature => creature?.name === name);
+            } else if (areas[currentArea]?.things?.some(thing => thing?.name === name)) {
                 section = 'things';
-                target = areas[currentArea].things.find(thing => thing.name === name);
-            } else if (followers.some(follower => follower.name === name)) {
+                target = areas[currentArea].things.find(thing => thing?.name === name);
+            } else if (followers?.some(follower => follower?.name === name)) {
                 section = 'followers';
-                target = followers.find(follower => follower.name === name);
+                target = followers.find(follower => follower?.name === name);
             }
             if (section && target) {
                 if (target.affinity === 0 || target.affinity === undefined) {
@@ -852,13 +857,15 @@ function areaContext(areaPath) {
     
     // Build entity lists
     if(area.people.length > 0) {
-        let peopleList = area.people.map(person => 
-            replaceVariables(settings.entityFormat, { 
-                name: person.name, 
-                description: person.description,
-                affinity: "Disposition towards " + settings.player_name + ": " + getAffinity(person.affinity) + "\n",
-            })
-        ).join('');
+        let peopleList = area.people
+            .filter(person => person && person.name && person.description)
+            .map(person => 
+                replaceVariables(settings.entityFormat, { 
+                    name: person.name, 
+                    description: person.description,
+                    affinity: "Disposition towards " + settings.player_name + ": " + getAffinity(person.affinity) + "\n",
+                })
+            ).join('');
         context += replaceVariables(settings.areaPeopleContext, { 
             name: area.name, 
             peopleList 
@@ -866,13 +873,15 @@ function areaContext(areaPath) {
     }
     
     if(area.things.length > 0) {
-        let thingsList = area.things.map(thing => 
-            replaceVariables(settings.entityFormat, { 
-                name: thing.name, 
-                description: thing.description,
-                affinity: ''
-            })
-        ).join('');
+        let thingsList = area.things
+            .filter(thing => thing && thing.name && thing.description)
+            .map(thing => 
+                replaceVariables(settings.entityFormat, { 
+                    name: thing.name, 
+                    description: thing.description,
+                    affinity: ''
+                })
+            ).join('');
         context += replaceVariables(settings.areaThingsContext, { 
             name: area.name, 
             thingsList 
@@ -880,26 +889,30 @@ function areaContext(areaPath) {
     }
     
     if(area.creatures.length > 0) {
-        let creaturesList = area.creatures.map(creature => 
-            replaceVariables(settings.entityFormat, { 
-                name: creature.name, 
-                description: creature.description,
-                affinity: "Disposition towards " + settings.player_name + ": " + getCreatureAffinity(creature.affinity) + "\n",
-             })
-        ).join('');
+        let creaturesList = area.creatures
+            .filter(creature => creature && creature.name && creature.description)
+            .map(creature => 
+                replaceVariables(settings.entityFormat, { 
+                    name: creature.name, 
+                    description: creature.description,
+                    affinity: "Disposition towards " + settings.player_name + ": " + getCreatureAffinity(creature.affinity) + "\n",
+                })
+            ).join('');
         context += replaceVariables(settings.areaCreaturesContext, {
             name: area.name, 
             creaturesList 
         });
     }
     if(followers.length > 0) {
-        let followersList = followers.map(follower =>
-            replaceVariables(settings.entityFormat, {
-                name: follower.name,
-                description: follower.description,
-                affinity: "Disposition towards " + settings.player_name + ": " + (follower.type === 'creature' ? getCreatureAffinity(follower.affinity) : getAffinity(follower.affinity)) + "\n",
-            })
-        ).join('');
+        let followersList = followers
+            .filter(follower => follower && follower.name && follower.description)
+            .map(follower =>
+                replaceVariables(settings.entityFormat, {
+                    name: follower.name,
+                    description: follower.description || '',
+                    affinity: "Disposition towards " + settings.player_name + ": " + (follower.type === 'creature' ? getCreatureAffinity(follower.affinity) : getAffinity(follower.affinity)) + "\n",
+                })
+            ).join('');
         context += replaceVariables(settings.areaFollowersContext, {
             name: area.name,
             followersList
@@ -1223,8 +1236,9 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     inputElement.remove();
     const messageElement = document.createElement('div');
     messageElement.classList.add('new-message');
-// not ready yet
-//    readTextAloud(text, areas[currentArea]);
+    if(settings.tts_enable)
+        readTextAloud(text, areas[currentArea]);
+    
     messageElement.innerHTML = "<br>" + text.replace(/\n/g, '<br>');
     output.appendChild(messageElement);
     
@@ -1310,6 +1324,8 @@ async function setupStart() {
         worldDescription: settings.world_description
     }));
 
+    if(settings.tts_enable)
+        readTextAloud(text, areas[settings.starting_area]);
     responseElement.innerHTML = text.replace(/\n/g, '<br>');
     output.appendChild(responseElement);
     output.scrollTop = 0;
@@ -1457,34 +1473,40 @@ async function moveToArea(area, describe=0, text="") {
         targetArea = area;
     }
 
-    if(text != "" && areas[currentArea].people.length > 0) {
-        const peopleNames = areas[currentArea].people.map(person => person.name).join(', ');
-        const peoplePrompt = replaceVariables(settings.moveToAreaPeoplePrompt, {
-            peopleNames: peopleNames
-        });
-        
-        const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + peoplePrompt, '', {
-            currentArea: currentArea,
-            newArea: area,
-            text: text,
-            peopleNames: peopleNames
-        }, settings.sampleQuestions);
-        
-        const movers = movingPeople.split('\n');
-        for (const mover of movers) {
-            if (mover.trim() != "") {
-                const personIndex = areas[currentArea].people.findIndex(person => person.name === mover);
-                if (personIndex !== -1) {
-                    const person = areas[currentArea].people.splice(personIndex, 1)[0];
-                    // check if person.name already exists in targetArea and it's never been visited, delete the one from target area if it does
-                    if(areas[targetArea].lastVisted === '') {
-                        const targetIndex = areas[targetArea].people.findIndex(p => p.name === person.name);
-                        if (targetIndex !== -1) {
-                            areas[targetArea].people.splice(targetIndex, 1);
+    if(text != "" && areas[currentArea].people && areas[currentArea].people.length > 0) {
+        const peopleNames = areas[currentArea].people
+            .filter(person => person && person.name)
+            .map(person => person.name)
+            .join(', ');
+            
+        if (peopleNames) {
+            const peoplePrompt = replaceVariables(settings.moveToAreaPeoplePrompt, {
+                peopleNames: peopleNames
+            });
+            
+            const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + peoplePrompt, '', {
+                currentArea: currentArea,
+                newArea: area,
+                text: text,
+                peopleNames: peopleNames
+            }, settings.sampleQuestions);
+            
+            const movers = movingPeople.split('\n');
+            for (const mover of movers) {
+                if (mover.trim() != "") {
+                    const personIndex = areas[currentArea].people.findIndex(person => person && person.name === mover);
+                    if (personIndex !== -1) {
+                        const person = areas[currentArea].people.splice(personIndex, 1)[0];
+                        // check if person.name already exists in targetArea and it's never been visited, delete the one from target area if it does
+                        if(areas[targetArea].lastVisted === '') {
+                            const targetIndex = areas[targetArea].people.findIndex(p => p && p.name === person.name);
+                            if (targetIndex !== -1) {
+                                areas[targetArea].people.splice(targetIndex, 1);
+                            }
                         }
+                        // add person to targetArea
+                        areas[targetArea].people.push(person);
                     }
-                    // add person to targetArea
-                    areas[targetArea].people.push(person);
                 }
             }
         }

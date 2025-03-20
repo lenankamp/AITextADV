@@ -484,3 +484,30 @@ async function generateTikTokTTS(text, voice) {
         console.error('Error:', error);
     }
 }
+
+async function generateKoboldTTS(text, voice) {
+    const apiUrl    = settings.tts_api;
+    const voiceName = voice ? voice : 'cheery';
+
+    const requestBody = {
+        voice: voiceName,
+        input: text
+    };
+
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+    } else {
+        const audioBlob = await response.blob();
+        const audioUrl  = URL.createObjectURL(audioBlob);
+        const audio     = new Audio(audioUrl);
+        return audio;
+    }
+}
