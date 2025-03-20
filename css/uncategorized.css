@@ -10,10 +10,6 @@
     flex: 1;
  }
 
-#q4 {
-    overflow: auto;
- }
-
 #q1 {
     height: 65vh;
  }
@@ -22,6 +18,15 @@
     height: 40vh;
     display: flex;
     overflow: hidden;
+ }
+ 
+ #q3 {
+    height: 34vh;
+ }
+
+ #q4 {
+    height: 59vh;
+    overflow: auto;
  }
 
 .setting-item {

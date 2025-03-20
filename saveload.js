@@ -274,9 +274,11 @@ async function restoreGameState(data, images = null) {
     updateTime();
 
     // Apply settings to UI elements
-    document.getElementById('q1').style.height = settings.topleft_height;
-    document.getElementById('q2').style.height = settings.topright_height;
-    content.style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
+      document.getElementById('q1').style.height = settings.topleft_height;
+      document.getElementById('q2').style.height = settings.topright_height;
+      document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - .5vh)`;
+      document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - .5vh)`;
+      document.querySelector('.content').style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
 
     // Clean up the map
     document.querySelectorAll('.location').forEach(location => {
