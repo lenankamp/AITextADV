@@ -1,0 +1,115 @@
+/* Auto-generated CSS module */
+#playerart {
+    height: 100%;
+    width: 30%;
+    object-fit: cover;
+    flex-shrink: 0;
+ }
+
+#followerart {
+    width: 0%;
+    height: 100%;
+    object-fit: cover;
+    transition: width 0.3s ease-in-out;
+    cursor: pointer;
+ }
+
+.character-info {
+    flex: 1;
+    min-width: 180px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background-color: #363636;
+    border-right: 1px solid #404040;
+    height: 96%;
+    overflow-y: auto;
+    overflow-x: hidden;
+ }
+
+.consequences-list {
+    margin-top: auto;
+    color: #e0e0e0;
+    padding: 4px;
+    min-height: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+ }
+
+.consequences-list div {
+    padding: 4px 6px;
+    background-color: #2d2d2d;
+    border-radius: 4px;
+    font-size: 12px;
+ }
+
+/* Color-code different severity levels */
+.consequences-list div[class*="Mild"] {
+    border-left: 3px solid #ffaa44;
+ }
+
+.consequences-list div[class*="Moderate"] {
+    border-left: 3px solid #ff4444;
+ }
+
+.consequences-list div[class*="Severe"] {
+    border-left: 3px solid #aa1111;
+ }
+
+.progress {
+    background-color: #2d2d2d;
+    width: 100%;
+    border: 1px solid #404040;
+ }
+
+progress {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 80%;
+    height: 20px;
+    margin: 5px;
+ }
+
+progress::-webkit-progress-bar {
+    background-color: #2d2d2d;
+    border-radius: 4px;
+ }
+
+progress::-webkit-progress-value {
+    border-radius: 4px;
+ }
+
+progress::-moz-progress-bar {
+    border-radius: 4px;
+ }
+
+/* Custom colors for different progress bars */
+#health::-webkit-progress-value { background-color: #ff4444;  }
+
+#health::-moz-progress-bar { background-color: #ff4444;  }
+
+#mana::-webkit-progress-value { background-color: #4444ff;  }
+
+#mana::-moz-progress-bar { background-color: #4444ff;  }
+
+#exp::-webkit-progress-value { background-color: #44ff44;  }
+
+#exp::-moz-progress-bar { background-color: #44ff44;  }
+
+#level::-webkit-progress-value { background-color: #ffff44;  }
+
+#level::-moz-progress-bar { background-color: #ffff44;  }
+
+#gold::-webkit-progress-value { background-color: #ffd700;  }
+
+#gold::-moz-progress-bar { background-color: #ffd700;  }
+
+.aspects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 4px 0;
+ }
+

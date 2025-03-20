@@ -51,6 +51,7 @@ async function saveGame(saveFile = false) {
         state: {
             areas: areas,
             currentArea: currentArea,
+            turnsAtCurrentArea: turnsAtCurrentArea,
             followers: followers,
             outputLog: document.getElementById('output').innerHTML,
             settings: settings,
@@ -227,93 +228,6 @@ async function fetchImage(imageData) {
     return response.blob();
 }
 
-function updateConsequences() {
-    const consequencesDiv = document.getElementById('consequences');
-    if (settings.charsheet_fae && settings.charsheet_fae.consequences) {
-        let html = [];
-        if (settings.charsheet_fae.consequences.mild) {
-            html.push(...settings.charsheet_fae.consequences.mild.map(c => 
-                `<div class="Mild">${c}</div>`
-            ));
-        }
-        if (settings.charsheet_fae.consequences.moderate) {
-            html.push(...settings.charsheet_fae.consequences.moderate.map(c => 
-                `<div class="Moderate">${c}</div>`
-            ));
-        }
-        if (settings.charsheet_fae.consequences.severe) {
-            html.push(...settings.charsheet_fae.consequences.severe.map(c => 
-                `<div class="Severe">${c}</div>`
-            ));
-        }
-        consequencesDiv.innerHTML = html.join('');
-    } else {
-        consequencesDiv.innerHTML = '';
-    }
-}
-
-function updateImageGrid(areaName) {
-    const area = areas[areaName];
-    if (!area) return;
-
-    // Clear existing images and revoke any existing object URLs
-    const sceneArt = document.getElementById('sceneart');
-    if (sceneArt.src.startsWith('blob:')) {
-        URL.revokeObjectURL(sceneArt.src);
-    }
-    sceneArt.src = 'placeholder.png';
-    sceneArt.alt = ''; // Clear the alt text when resetting
-    
-    const imageGrid = document.getElementById('image-grid');
-    // Revoke any existing object URLs in the image grid
-    Array.from(imageGrid.getElementsByTagName('img')).forEach(img => {
-        if (img.src.startsWith('blob:')) {
-            URL.revokeObjectURL(img.src);
-        }
-    });
-    imageGrid.innerHTML = '';
-
-    // Set scene art and description if available
-    if (area.image) {
-        if (area.image instanceof Blob) {
-            sceneArt.src = URL.createObjectURL(area.image);
-            sceneArt.alt = area.description || '';
-        } else if (typeof area.image === 'string' && !area.image.startsWith('blob:')) {
-            fetchImage(area.image)
-                .then(blob => {
-                    area.image = blob;
-                    sceneArt.src = URL.createObjectURL(blob);
-                    sceneArt.alt = area.description || '';
-                })
-                .catch(error => console.error('Error loading area image:', error));
-        }
-    }
-
-    // Add category images
-    ['people', 'things', 'creatures'].forEach(category => {
-        if (area[category]) {
-            area[category].forEach(item => {
-                if (item.image) {
-                    const img = document.createElement('img');
-                    img.alt = item.name;
-                    img.title = item.name;
-                    if (item.image instanceof Blob) {
-                        img.src = URL.createObjectURL(item.image);
-                    } else if (typeof item.image === 'string' && !item.image.startsWith('blob:')) {
-                        fetchImage(item.image)
-                            .then(blob => {
-                                item.image = blob;
-                                img.src = URL.createObjectURL(blob);
-                            })
-                            .catch(error => console.error(`Error loading ${category} image:`, error));
-                    }
-                    imageGrid.appendChild(img);
-                }
-            });
-        }
-    });
-}
-
 document.addEventListener('DOMContentLoaded', (event) => {
     document.getElementById('fileInput').addEventListener('change', loadFromFile);
     
@@ -342,9 +256,14 @@ async function restoreGameState(data, images = null) {
     const output = document.getElementById('output');
     areas = data.state.areas;
     currentArea = data.state.currentArea;
+    turnsAtCurrentArea = data.state.turnsAtCurrentArea;
     followers = data.state.followers;
     output.innerHTML = data.state.outputLog;
     settings = Object.assign({}, settings, data.state.settings);
+    const confirmElement = document.getElementById('outputCheckConfirm');
+    if (confirmElement) {
+        confirmElement.remove();
+    }
     output.scrollTop = output.scrollHeight;
 
     // Update UI elements first
@@ -355,9 +274,11 @@ async function restoreGameState(data, images = null) {
     updateTime();
 
     // Apply settings to UI elements
-    document.getElementById('q1').style.height = settings.topleft_height;
-    document.getElementById('q2').style.height = settings.topright_height;
-    content.style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
+      document.getElementById('q1').style.height = settings.topleft_height;
+      document.getElementById('q2').style.height = settings.topright_height;
+      document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - .5vh)`;
+      document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - .5vh)`;
+      document.querySelector('.content').style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
 
     // Clean up the map
     document.querySelectorAll('.location').forEach(location => {
@@ -437,6 +358,7 @@ async function restoreGameState(data, images = null) {
     }
 
     // Refresh UI
+    centerMapOnLocation(currentArea);
     updateImageGrid(currentArea);
     updateFollowerArt();
     updateSublocationRow(currentArea);

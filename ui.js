@@ -8,6 +8,54 @@ const sceneartContainer = document.querySelector('.sceneart-container');
 
 let startX, startY, startWidth, startHeight;
 
+// Add data-action event handler
+document.addEventListener('click', (e) => {
+    const action = e.target.dataset.action;
+    if (!action) return;
+
+    switch (action) {
+        case 'toggleMenu':
+            toggleSidebar();
+            break;
+        case 'saveGame':
+            saveGame(true);
+            break;
+        case 'loadGame':
+            const fileInput = document.getElementById('fileInput');
+            fileInput.click();
+            break;
+        case 'openSettings':
+            openSettings();
+            break;
+        case 'editCharacter':
+            openCharacterEditor();
+            break;
+        case 'editWorld':
+            openWorldGeneration();
+            break;
+        case 'newGame':
+            startNewGame();
+            break;
+        case 'editOutput':
+            openOutputEditor();
+            break;
+        case 'undoAction':
+            undoLastAction();
+            break;
+        case 'sendMessage':
+            sendMessage();
+            break;
+    }
+});
+
+// Add input handler for file input
+document.getElementById('fileInput').addEventListener('change', (e) => {
+    loadFromFile(e);
+});
+
+// Add input handler for text input
+document.getElementById('input').addEventListener('keydown', handleKeyDown);
+
 resizerCol.addEventListener('mousedown', initDragCol);
 resizerRow1.addEventListener('mousedown', initDragRow);
 resizerRow2.addEventListener('mousedown', initDragRow);
@@ -40,7 +88,7 @@ function doDragCol(e) {
     const leftSide = document.getElementById('left');
     const rightSide = document.getElementById('right');
     const containerWidth = content.offsetWidth;
-    const newWidth = Math.max(300, Math.min(containerWidth - 300, e.clientX));
+    const newWidth = Math.max(300, Math.min(containerWidth - 300, startWidth + (e.clientX - startX)));
     const leftPercentage = (newWidth / containerWidth) * 100;
     const rightPercentage = 100 - leftPercentage;
     
@@ -99,9 +147,15 @@ function stopDragMap() {
 }
 
 function updateImageGrid(areaName) {
-    const imageGrid = document.getElementById('imageGrid');
+    const imageGrid = document.getElementById('image-grid');
     const tooltip = document.getElementById('tooltip');
-    imageGrid.innerHTML = '';
+    
+    // Track current images to determine changes
+    const existingContainers = new Map();
+    imageGrid.querySelectorAll('.image-container').forEach(container => {
+        const img = container.querySelector('img');
+        existingContainers.set(container.dataset.entityName, container);
+    });
 
     // Handle the scene art
     const sceneArt = document.getElementById('sceneart');
@@ -114,7 +168,6 @@ function updateImageGrid(areaName) {
     if (area.image instanceof Blob) {
         const objectUrl = URL.createObjectURL(area.image);
         sceneArt.src = objectUrl;
-        // Clean up old object URL after image loads
         sceneArt.onload = () => {
             if (sceneArt.dataset.previousUrl) {
                 URL.revokeObjectURL(sceneArt.dataset.previousUrl);
@@ -125,76 +178,109 @@ function updateImageGrid(areaName) {
         sceneArt.src = 'placeholder.png';
     }
 
-    // Rest of the image grid update logic...
+    // Create or update image rows for each category
     const categories = ['people', 'things', 'creatures'];
+    const updatedContainers = new Set();
+    
     categories.forEach(category => {
-        if (areas[areaName][category]) {
-            const row = document.createElement('div');
-            row.classList.add('image-row');
-            areas[areaName][category].forEach(item => {
-                const container = document.createElement('div');
-                container.classList.add('image-container');
+        // Skip if category array doesn't exist
+        if (!area[category] || !Array.isArray(area[category])) return;
+
+        let row = imageGrid.querySelector(`.image-row[data-category="${category}"]`);
+        const hasItems = area[category] && area[category].length > 0;
+        
+        if (hasItems) {
+            if (!row) {
+                row = document.createElement('div');
+                row.classList.add('image-row');
+                row.dataset.category = category;
+                imageGrid.appendChild(row);
+            }
+            
+            area[category].forEach(item => {
+                // Skip invalid items
+                if (!item || !item.name) return;
+
+                let container = existingContainers.get(item.name);
                 
-                const nameOverlay = document.createElement('div');
-                nameOverlay.classList.add('image-name-overlay');
-                nameOverlay.textContent = item.name;
-                
-                const img = document.createElement('img');
-                if (item.image instanceof Blob) {
-                    img.src = URL.createObjectURL(item.image);
-                } else if(item.image == 'placeholder') {
-                    img.src = 'placeholder.png';
-                    setTimeout(async () => {
-                        let negprompt = "";
-                        let posprompt = "";
-                        if (category == "people") {
-                            posprompt = settings.person_prompt;
-                            negprompt = settings.person_negprompt;
-                        } else if (category == "creatures") {
-                            posprompt = settings.creature_prompt;
-                            negprompt = settings.creature_negprompt;
-                        } else if (category == "things") {
-                            posprompt = settings.thing_prompt;
-                            negprompt = settings.thing_negprompt;
-                        }
-                        const artBlob = await generateArt(posprompt + item.visual, negprompt, item.seed);
-                        if (artBlob instanceof Blob) {
-                            item.image = artBlob;
-                            img.src = URL.createObjectURL(artBlob);
-                        }
-                    }, 0);
-                } else {
-                    console.error('Invalid image Blob:', areaName, category, item.name, item.image);
+                if (!container) {
+                    // Create new container if it doesn't exist
+                    container = document.createElement('div');
+                    container.classList.add('image-container');
+                    container.dataset.entityName = item.name;
+                    
+                    const img = document.createElement('img');
+                    if (item.image instanceof Blob) {
+                        img.src = URL.createObjectURL(item.image);
+                    } else if (item.image === 'placeholder') {
+                        img.src = 'placeholder.png';
+                        setTimeout(async () => {
+                            let negprompt = "";
+                            let posprompt = "";
+                            if (category === "people") {
+                                posprompt = settings.person_prompt;
+                                negprompt = settings.person_negprompt;
+                            } else if (category === "creatures") {
+                                posprompt = settings.creature_prompt;
+                                negprompt = settings.creature_negprompt;
+                            } else if (category === "things") {
+                                posprompt = settings.thing_prompt;
+                                negprompt = settings.thing_negprompt;
+                            }
+                            const artBlob = await generateArt(posprompt + item.visual, negprompt, item.seed);
+                            if (artBlob instanceof Blob) {
+                                item.image = artBlob;
+                                img.src = URL.createObjectURL(artBlob);
+                            }
+                        }, 0);
+                    }
+                    img.alt = item.name;
+                    
+                    const nameOverlay = document.createElement('div');
+                    nameOverlay.classList.add('image-name-overlay');
+                    nameOverlay.textContent = item.name;
+                    
+                    container.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openEntitySubmenu(item, category, e.clientX, e.clientY);
+                    });
+
+                    container.addEventListener('mouseover', () => {
+                        tooltip.classList.add('tooltip-visible');
+                        tooltip.innerHTML = `<strong>${item.name}</strong><br>${item.description}<br><img src="${img.src}" alt="${item.name}" style="width: 100px; height: auto;">`;
+                    });
+
+                    container.addEventListener('mousemove', (e) => {
+                        tooltip.style.left = `${e.pageX + 10}px`;
+                        tooltip.style.top = `${e.pageY + 10}px`;
+                    });
+
+                    container.addEventListener('mouseout', () => {
+                        tooltip.classList.remove('tooltip-visible');
+                    });
+
+                    container.appendChild(img);
+                    container.appendChild(nameOverlay);
                 }
-                img.alt = item.name;
-
-                // Add click handler for entity submenu
-                container.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openEntitySubmenu(item, category, e.clientX, e.clientY);
-                });
-
-                // Existing hover handlers
-                container.addEventListener('mouseover', () => {
-                    tooltip.style.display = 'block';
-                    tooltip.innerHTML = `<strong>${item.name}</strong><br>${item.description}<br><img src="${img.src}" alt="${item.name}" style="width: 100px; height: auto;">`;
-                });
-
-                container.addEventListener('mousemove', (e) => {
-                    tooltip.classList.add('tooltip-visible');
-                    tooltip.style.left = `${e.pageX + 10}px`;
-                    tooltip.style.top = `${e.pageY + 10}px`;
-                });
-
-                container.addEventListener('mouseout', () => {
-                    tooltip.classList.remove('tooltip-visible');
-                });
-
-                container.appendChild(img);
-                container.appendChild(nameOverlay);
-                row.appendChild(container);
+                
+                updatedContainers.add(item.name);
+                if (container.parentElement !== row) {
+                    row.appendChild(container);
+                }
             });
-            imageGrid.appendChild(row);
+        } else if (row) {
+            row.remove();
+        }
+    });
+
+    // Remove any containers that are no longer present
+    existingContainers.forEach((container, name) => {
+        if (!updatedContainers.has(name)) {
+            const img = container.querySelector('img');
+            if (img && img.src.startsWith('blob:')) {
+                URL.revokeObjectURL(img.src);
+            }
+            container.remove();
         }
     });
 }
@@ -317,12 +403,12 @@ function openEntitySubmenu(entity, category, x, y) {
 }
 
 function openNewLocationPrompt(x, y) {
-    // Create a temporary location object
+    // Create a temporary location object with coordinates adjusted for centering
     const tempLocation = {
         name: '',
         description: '',
-        x: x,
-        y: y,
+        x: x + 25/scale, // Add half the location width to center the click point
+        y: y + 25/scale, // Add half the location height to center the click point
         visual: '',
         seed: Math.floor(Math.random() * 4294967295) + 1,
         image: 'placeholder.png',
@@ -333,7 +419,6 @@ function openNewLocationPrompt(x, y) {
     };
 
     // Open the unified editor with the temporary location
-    // The path is null since this is a new location
     openUnifiedEditor(tempLocation, 'location', null);
 }
 
@@ -574,6 +659,12 @@ function openUnifiedEditor(item, type, path = null) {
                 if (visualInput && seedInput) {
                     item.visual = visualInput.value;
                     item.seed = parseInt(seedInput.value);
+                    
+                    // Force image refresh if preview was updated
+                    if (previewImage.src !== 'placeholder.png' && previewImage.src.startsWith('blob:')) {
+                        const blobUrl = previewImage.src;
+                        item.image = await (await fetch(blobUrl)).blob();
+                    }
                 }
             }
 
@@ -584,7 +675,22 @@ function openUnifiedEditor(item, type, path = null) {
             if (path) {
                 updateSublocationRow(currentArea);
             } else {
-                updateImageGrid(currentArea);
+                // Find the container and update its image
+                const container = document.querySelector(`.image-container[data-entity-name="${item.name}"]`);
+                if (container) {
+                    const img = container.querySelector('img');
+                    if (img && item.image instanceof Blob) {
+                        // Revoke old blob URL if it exists
+                        if (img.src.startsWith('blob:')) {
+                            URL.revokeObjectURL(img.src);
+                        }
+                        // Set new image
+                        img.src = URL.createObjectURL(item.image);
+                    }
+                } else {
+                    // If container not found, do full grid update
+                    updateImageGrid(currentArea);
+                }
                 updateFollowerArt();
             }
         }
@@ -609,7 +715,7 @@ function openUnifiedEditor(item, type, path = null) {
 
 function updateTime() {
     const timeElement = document.getElementById('currentTime');
-    const season = getSeason();
+    const season = settings.climate !='' ? (settings.climate != 'temperate' ? settings.climate : getSeason()) : '';
     
     const dateSeasonSpan = timeElement.querySelector('.date-season');
     const timeSpan = timeElement.querySelector('.time');
@@ -629,20 +735,19 @@ function updateFollowerArt() {
         followersContainer.classList.add('followers-visible');
         const width = `${100 / followers.length}%`;
         
-        // Update existing images' widths first
-        Array.from(followersContainer.children).forEach(img => {
-            img.classList.add('follower-visible');
-        });
-
+        // Track which images we've updated to determine removals
+        const updatedFollowers = new Set();
+        
         // Add/update followers
         followers.forEach((follower) => {
             let img = followersContainer.querySelector(`img[data-follower-name="${follower.name}"]`);
+            updatedFollowers.add(follower.name);
             
             if (!img) {
                 img = document.createElement('img');
-                img.classList.add('follower-image', 'show');
+                img.classList.add('follower-image');
                 img.dataset.followerName = follower.name;
-                img.classList.add('follower-visible');
+                img.style.width = width;
                 
                 if (follower.image instanceof Blob) {
                     img.src = URL.createObjectURL(follower.image);
@@ -679,18 +784,34 @@ function updateFollowerArt() {
                 });
                 
                 followersContainer.appendChild(img);
+                // Add show class after a frame to trigger the transition
+                requestAnimationFrame(() => img.classList.add('show'));
+            } else {
+                img.style.width = width;
             }
         });
 
-        // Remove any followers that are no longer in the list
+        // Remove followers that are no longer in the list
+        const toRemove = [];
         Array.from(followersContainer.children).forEach(img => {
             const followerName = img.dataset.followerName;
-            if (!followers.some(f => f.name === followerName)) {
-                if (img.src && img.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(img.src);
-                }
-                followersContainer.removeChild(img);
+            if (!updatedFollowers.has(followerName)) {
+                img.classList.remove('show');
+                // Store the image for removal after transition
+                toRemove.push(img);
             }
+        });
+
+        // Remove elements after transition
+        toRemove.forEach(img => {
+            img.addEventListener('transitionend', () => {
+                if (img.parentNode === followersContainer) {
+                    if (img.src && img.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(img.src);
+                    }
+                    followersContainer.removeChild(img);
+                }
+            }, { once: true }); // Ensure handler runs only once
         });
     } else {
         followersContainer.classList.remove('followers-visible');
@@ -722,51 +843,531 @@ playerArt.addEventListener('click', (e) => {
     openEntitySubmenu(player, 'player', e.clientX, e.clientY);
 });
 
-function showError(message) {
-    // Remove any existing error notifications
-    const existingErrors = document.querySelectorAll('.error-notification');
-    existingErrors.forEach(error => error.remove());
-
-    // Create and show the new error notification
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-notification';
-    errorDiv.textContent = message;
-
-    // Add to document
-    document.body.appendChild(errorDiv);
-
-    // Remove after 5 seconds
-    setTimeout(() => {
-        errorDiv.style.opacity = '0';
-        setTimeout(() => errorDiv.remove(), 300);
-    }, 5000);
-}
-
-// Listen for errors from the main process
-if (window.ipc) {
-    window.ipc.receive('fromMain', (data) => {
-        if (data.type === 'error') {
-            showError(data.message);
+function updateConsequences() {
+    const consequencesDiv = document.getElementById('consequences');
+    if (settings.charsheet_fae && settings.charsheet_fae.consequences) {
+        let html = [];
+        if (settings.charsheet_fae.consequences.mild) {
+            html.push(...settings.charsheet_fae.consequences.mild.map(c => 
+                `<div class="Mild">${c}</div>`
+            ));
         }
-    });
-}
-
-function showLoader() {
-    document.getElementById('loader').classList.remove('hidden');
-}
-
-function hideLoader() {
-    document.getElementById('loader').classList.add('hidden');
-}
-
-function toggleOverlay(show) {
-    const overlay = document.getElementById('settingsOverlay');
-    if (show) {
-        overlay.classList.add('flex-visible');
+        if (settings.charsheet_fae.consequences.moderate) {
+            html.push(...settings.charsheet_fae.consequences.moderate.map(c => 
+                `<div class="Moderate">${c}</div>`
+            ));
+        }
+        if (settings.charsheet_fae.consequences.severe) {
+            html.push(...settings.charsheet_fae.consequences.severe.map(c => 
+                `<div class="Severe">${c}</div>`
+            ));
+        }
+        consequencesDiv.innerHTML = html.join('');
     } else {
-        overlay.classList.remove('flex-visible');
+        consequencesDiv.innerHTML = '';
     }
 }
 
-// Export functions that need to be accessible from other modules
-window.showError = showError;
+function openWorldGeneration(isNewGame = false, onNext = null) {
+    const overlay = document.createElement('div');
+    overlay.classList.add('overlay');
+    overlay.style.display = 'flex';
+
+    const container = document.createElement('div');
+    container.classList.add('settings-container');
+    container.style.maxWidth = '800px';
+
+    // Main editor section
+    const editorSection = document.createElement('div');
+    editorSection.className = 'editor-section';
+    editorSection.style.display = 'flex';
+    editorSection.style.flexDirection = 'column';
+    editorSection.style.gap = '15px';
+    editorSection.style.padding = '20px';
+    editorSection.style.flex = '1';
+    editorSection.style.minHeight = '0';
+
+    // Theme input with generate button
+    const themeGroup = document.createElement('div');
+    themeGroup.style.position = 'relative';
+    const themeLabel = document.createElement('label');
+    themeLabel.textContent = 'World Theme:';
+    const themeInput = document.createElement('input');
+    themeInput.type = 'text';
+    themeInput.value = '';
+    themeInput.style.width = '100%';
+    themeInput.placeholder = 'Enter a theme like "medieval fantasy" or "cyberpunk future"';
+
+    const refreshThemeBtn = document.createElement('button');
+    refreshThemeBtn.className = 'refresh-button top-right';
+    refreshThemeBtn.innerHTML = '🔄';
+    refreshThemeBtn.title = 'Generate World Description';
+    refreshThemeBtn.onclick = async () => {
+        const theme = themeInput.value.trim();
+        if (theme) {
+            const desc = await generateText(settings.creative_question_param, 
+                `Generate a rich, detailed world description for a ${theme} setting in 3-4 sentences.`);
+            worldDescInput.value = desc;
+        }
+    };
+
+    themeGroup.appendChild(themeLabel);
+    themeGroup.appendChild(themeInput);
+
+    // World description
+    const worldGroup = document.createElement('div');
+    worldGroup.style.flex = '1';
+    worldGroup.style.position = 'relative';
+    const worldLabel = document.createElement('label');
+    worldLabel.textContent = 'World Description:';
+    const worldDescInput = document.createElement('textarea');
+    worldDescInput.value = settings.world_description;
+    worldDescInput.style.height = '200px';
+
+    worldGroup.appendChild(worldLabel);
+    worldGroup.appendChild(refreshThemeBtn);
+    worldGroup.appendChild(worldDescInput);
+
+    // Starting area with generate button
+    const areaGroup = document.createElement('div');
+    areaGroup.style.position = 'relative';
+    const areaLabel = document.createElement('label');
+    areaLabel.textContent = 'Starting Area:';
+    const areaInput = document.createElement('input');
+    areaInput.type = 'text';
+    areaInput.value = settings.starting_area;
+    areaInput.style.width = '100%';
+
+    const refreshAreaBtn = document.createElement('button');
+    refreshAreaBtn.className = 'refresh-button top-right';
+    refreshAreaBtn.innerHTML = '🔄';
+    refreshAreaBtn.title = 'Generate Starting Area';
+    refreshAreaBtn.onclick = async () => {
+        const response = await generateText(settings.creative_question_param, 
+            `Based on this world: ${worldDescInput.value}\nGenerate a name for an interesting starting location, if it would be within another larger place answer from largest to smallest with each location separated by a '/', eg. City/College/Dormitory/Bedroom.`);
+            const desc = response.trim().replaceAll(' / ', '/');
+        areaInput.value = desc;
+        // Also generate its description
+        const areaDesc = await generateText(settings.creative_question_param, 
+            `Generate a detailed description in 2-3 sentences of this location: ${desc.includes('/') ? desc.split('/').pop() : desc} that exists in this world: ${worldDescInput.value}`);
+        areaDescInput.value = areaDesc;
+    };
+
+    areaGroup.appendChild(areaLabel);
+    areaGroup.appendChild(areaInput);
+    areaGroup.appendChild(refreshAreaBtn);
+
+    // Area description with generate button
+    const areaDescGroup = document.createElement('div');
+    areaDescGroup.style.flex = '1';
+    areaDescGroup.style.position = 'relative';
+    const areaDescLabel = document.createElement('label');
+    areaDescLabel.textContent = 'Starting Area Description:';
+    const areaDescInput = document.createElement('textarea');
+    areaDescInput.value = settings.starting_area_description;
+    areaDescInput.style.height = '200px';
+
+    const refreshAreaDescBtn = document.createElement('button');
+    refreshAreaDescBtn.className = 'refresh-button top-right';
+    refreshAreaDescBtn.innerHTML = '🔄';
+    refreshAreaDescBtn.title = 'Regenerate Area Description';
+    refreshAreaDescBtn.onclick = async () => {
+        const areaDesc = await generateText(settings.creative_question_param, 
+            `Generate a detailed description in 2-3 sentences of this location: ${areaInput.value.includes('/') ? areaInput.value.split('/').pop() : areaInput.value} that exists in this world: ${worldDescInput.value}`);
+        areaDescInput.value = areaDesc;
+    };
+
+    areaDescGroup.appendChild(areaDescLabel);
+    areaDescGroup.appendChild(areaDescInput);
+    areaDescGroup.appendChild(refreshAreaDescBtn);
+
+    // Date input
+    const dateGroup = document.createElement('div');
+    const dateLabel = document.createElement('label');
+    dateLabel.textContent = 'Starting Date/Time:';
+    const dateInput = document.createElement('input');
+    dateInput.type = 'text';
+    dateInput.value = settings.current_time;
+    dateInput.style.width = '100%';
+    dateInput.placeholder = 'YYYY-MM-DD HH:MM:SS';
+
+    dateGroup.appendChild(dateLabel);
+    dateGroup.appendChild(dateInput);
+
+    // Add all inputs to editor section
+    editorSection.appendChild(themeGroup);
+    editorSection.appendChild(worldGroup);
+    editorSection.appendChild(areaGroup);
+    editorSection.appendChild(areaDescGroup);
+    editorSection.appendChild(dateGroup);
+
+    // Action buttons
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'settings-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn-secondary';
+    cancelBtn.onclick = () => overlay.remove();
+
+    const primaryBtn = document.createElement('button');
+    if (isNewGame && onNext) {
+        primaryBtn.textContent = 'Next: Create Character';
+        primaryBtn.onclick = () => {
+            const worldSettings = {
+                world_description: worldDescInput.value,
+                starting_area: areaInput.value,
+                starting_area_description: areaDescInput.value,
+                current_time: dateInput.value
+            };
+            // Save world settings
+            Object.assign(settings, worldSettings);
+            overlay.remove();
+            onNext(worldSettings);
+        };
+    } else {
+        primaryBtn.textContent = 'Save';
+        primaryBtn.onclick = () => {
+            settings.world_description = worldDescInput.value;
+            settings.starting_area = areaInput.value;
+            settings.starting_area_description = areaDescInput.value;
+            settings.current_time = dateInput.value;
+            overlay.remove();
+        };
+    }
+    primaryBtn.className = 'btn-primary';
+
+    actionButtons.appendChild(cancelBtn);
+    actionButtons.appendChild(primaryBtn);
+
+    container.appendChild(editorSection);
+    container.appendChild(actionButtons);
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+}
+
+function openCharacterEditor(isNewGame = false) {
+    const overlay = document.createElement('div');
+    overlay.classList.add('overlay');
+    overlay.style.display = 'flex';
+
+    const container = document.createElement('div');
+    container.classList.add('settings-container');
+    container.style.maxWidth = '800px';
+    container.style.maxHeight = '90vh';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.overflowY = 'hidden';
+    container.style.padding = '20px';
+    container.style.gap = '15px';
+
+    // Preview section with adjusted height
+    const previewSection = document.createElement('div');
+    previewSection.className = 'editor-section preview-section';
+    previewSection.style.position = 'relative';
+    previewSection.style.height = '30vh';
+    previewSection.style.margin = '0 auto';
+    previewSection.style.flexShrink = '0'; // Prevent image from shrinking
+
+    const previewImage = document.createElement('img');
+    previewImage.className = 'editor-preview-image';
+    previewImage.style.width = '100%';
+    previewImage.style.height = '100%';
+    previewImage.style.objectFit = 'cover';
+    
+    const currentPlayerArt = document.getElementById('playerart');
+    previewImage.src = currentPlayerArt.src;
+
+    // Create temporary item object for handling the image
+    const item = {
+        image: currentPlayerArt.src.startsWith('blob:') ? 'current' : 'placeholder'
+    };
+
+    previewSection.appendChild(previewImage);
+
+    // Add refresh button here, but it will use visualInput which we'll create later
+    let visualInput; // Declare this so we can reference it in the refresh button
+    const refreshImageBtn = document.createElement('button');
+    refreshImageBtn.className = 'refresh-button top-right';
+    refreshImageBtn.innerHTML = '🔄';
+    refreshImageBtn.title = 'Regenerate Character Image';
+    refreshImageBtn.onclick = async () => {
+        if (visualInput && visualInput.value) {
+            const artBlob = await generateArt(visualInput.value, "", Math.floor(Math.random() * 4294967295) + 1);
+            if (artBlob instanceof Blob) {
+                previewImage.src = URL.createObjectURL(artBlob);
+                item.image = artBlob;
+            }
+        }
+    };
+    previewSection.appendChild(refreshImageBtn);
+
+    container.appendChild(previewSection);
+
+    // Main editor section with scroll
+    const editorSection = document.createElement('div');
+    editorSection.className = 'editor-section';
+    editorSection.style.display = 'flex';
+    editorSection.style.flexDirection = 'column';
+    editorSection.style.gap = '15px';
+    editorSection.style.overflowY = 'auto';
+    editorSection.style.flex = '1';
+    editorSection.style.minHeight = '0'; // Allow flex container to shrink
+
+    // Character name input
+    const nameGroup = document.createElement('div');
+    nameGroup.style.position = 'relative';
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = 'Character Name:';
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = settings.player_name || '';
+    nameInput.style.width = '100%';
+
+    nameGroup.appendChild(nameLabel);
+    nameGroup.appendChild(nameInput);
+
+    // High concept with generate button
+    const conceptGroup = document.createElement('div');
+    conceptGroup.style.position = 'relative';
+    const conceptLabel = document.createElement('label');
+    conceptLabel.textContent = 'High Concept:';
+    const conceptInput = document.createElement('input');
+    conceptInput.type = 'text';
+    conceptInput.value = settings.charsheet_fae?.high_concept || '';
+    conceptInput.style.width = '100%';
+    conceptInput.placeholder = 'A defining trait or role that describes your character';
+
+    const refreshConceptBtn = document.createElement('button');
+    refreshConceptBtn.className = 'refresh-button top-right';
+    refreshConceptBtn.innerHTML = '🔄';
+    refreshConceptBtn.title = 'Generate High Concept';
+    refreshConceptBtn.onclick = async () => {
+        const concepts = await generateText(settings.creative_question_param, 
+            `Generate 5 creative and unique high concepts for a character that would exist in this world: ${settings.world_description}. 
+            Each high concept should be a short phrase three to six word phrase that captures their primary role or defining characteristic.
+            Format as 5 distinct phrases, one per line, without explanations or numbers.`);
+            console.log(concepts);
+        const conceptList = concepts.trim().replaceAll('\n\n', '\n').split('\n').map(c => c.trim());
+        const selectedConcept = conceptList[Math.floor(Math.random() * conceptList.length)];
+        conceptInput.value = selectedConcept;
+    };
+
+    conceptGroup.appendChild(conceptLabel);
+    conceptGroup.appendChild(conceptInput);
+    conceptGroup.appendChild(refreshConceptBtn);
+
+    // Character description with generate button
+    const descGroup = document.createElement('div');
+    descGroup.style.position = 'relative';
+    const descLabel = document.createElement('label');
+    descLabel.textContent = 'Description:';
+    const descInput = document.createElement('textarea');
+    descInput.value = settings.player_description || '';
+    descInput.style.height = '100px';
+
+    const refreshDescBtn = document.createElement('button');
+    refreshDescBtn.className = 'refresh-button top-right';
+    refreshDescBtn.innerHTML = '🔄';
+    refreshDescBtn.title = 'Generate Description';
+    refreshDescBtn.onclick = async () => {
+        const desc = await generateText(settings.creative_question_param, 
+            `Set in a world described as ${settings.world_description}\n[Write a description of ${nameInput.value} described simply as ${conceptInput.value}. Without referencing their name and using clear gendered pronouns, write a single paragraph with 1-2 sentence physical description and 1-2 sentence description of attidue dispositon or apparrent motivation. If there is not enough information in the context, be creative.]`);
+        descInput.value = desc.trim();
+    };
+
+    descGroup.appendChild(descLabel);
+    descGroup.appendChild(descInput);
+    descGroup.appendChild(refreshDescBtn);
+
+    // Visual prompt moved here (after description) and made visible
+    const visualGroup = document.createElement('div');
+    visualGroup.style.position = 'relative';
+    const visualLabel = document.createElement('label');
+    visualLabel.textContent = 'Visual Prompt:';
+    visualInput = document.createElement('textarea');
+    visualInput.value = settings.player_visual || '';
+    visualInput.style.height = '100px';
+    visualInput.style.width = '100%';
+
+    const refreshVisualBtn = document.createElement('button');
+    refreshVisualBtn.className = 'refresh-button top-right';
+    refreshVisualBtn.innerHTML = '🔄';
+    refreshVisualBtn.title = 'Generate Visual Description & Image';
+    refreshVisualBtn.onclick = async () => {
+        const visual = await generateText(settings.creative_question_param, 
+            settings.generateVisualPrompt, '', {
+                name: nameInput.value,
+                description: descInput.value,
+                season: settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '',
+                time: ''
+            });
+        visualInput.value = visual.trim();
+        
+        // Generate new image
+        const artBlob = await generateArt(visualInput.value, "", Math.floor(Math.random() * 4294967295) + 1);
+        if (artBlob instanceof Blob) {
+            previewImage.src = URL.createObjectURL(artBlob);
+        }
+    };
+
+    visualGroup.appendChild(visualLabel);
+    visualGroup.appendChild(visualInput);
+    visualGroup.appendChild(refreshVisualBtn);
+
+    // Aspects section
+    const aspectsGroup = document.createElement('div');
+    aspectsGroup.style.position = 'relative';
+    const aspectsLabel = document.createElement('label');
+    aspectsLabel.textContent = 'Character Aspects:';
+    
+    // Create aspect inputs with improved generation
+    const aspectInputs = [];
+    for (let i = 0; i < 3; i++) {
+        const aspectGroup = document.createElement('div');
+        aspectGroup.style.position = 'relative';
+        aspectGroup.style.marginTop = '10px';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = settings.charsheet_fae?.aspects?.[i] || '';
+        input.style.width = '100%';
+        
+        const refreshBtn = document.createElement('button');
+        refreshBtn.className = 'refresh-button top-right';
+        refreshBtn.innerHTML = '🔄';
+        refreshBtn.title = 'Generate Aspect';
+        refreshBtn.onclick = async () => {
+            // Gather existing aspects for context
+            const existingAspects = [conceptInput.value];
+            aspectInputs.forEach(inp => {
+                if (inp.value && inp !== input) {
+                    existingAspects.push(inp.value);
+                }
+            });
+            if (troubleInput.value) {
+                existingAspects.push(troubleInput.value);
+            }
+            
+            const aspects = await generateText(settings.creative_question_param, 
+                `Generate 5 unique and creative character aspects for a character who is described as ${descInput.value}. 
+                These aspects should be completely different from their existing aspects: ${existingAspects.join(', ')}.
+                Each should represent their talents, abilities, personality, background, or beliefs that hasn't been covered by other aspects.
+                Format as 5 distinct compelling phrases, one per line, without explanations or numbers. Each must be between two to six words without punctuation.`);
+            const aspectList = aspects.trim().replaceAll('\n\n', '\n').split('\n').map(a => a.trim());
+            const selectedAspect = aspectList[Math.floor(Math.random() * aspectList.length)];
+            input.value = selectedAspect;
+        };
+        
+        aspectGroup.appendChild(input);
+        aspectGroup.appendChild(refreshBtn);
+        aspectInputs.push(input);
+        aspectsGroup.appendChild(aspectGroup);
+    }
+
+    // Trouble aspect with improved generation
+    const troubleGroup = document.createElement('div');
+    troubleGroup.style.position = 'relative';
+    troubleGroup.style.marginTop = '20px';
+    const troubleLabel = document.createElement('label');
+    troubleLabel.textContent = 'Trouble Aspect:';
+    const troubleInput = document.createElement('input');
+    troubleInput.type = 'text';
+    troubleInput.value = settings.charsheet_fae?.trouble || '';
+    troubleInput.style.width = '100%';
+
+    const refreshTroubleBtn = document.createElement('button');
+    refreshTroubleBtn.className = 'refresh-button top-right';
+    refreshTroubleBtn.innerHTML = '🔄';
+    refreshTroubleBtn.title = 'Generate Trouble';
+    refreshTroubleBtn.onclick = async () => {
+        // Gather existing aspects for context
+        const existingAspects = [conceptInput.value];
+        aspectInputs.forEach(inp => {
+            if (inp.value) {
+                existingAspects.push(inp.value);
+            }
+        });
+        
+        const troubles = await generateText(settings.creative_question_param, 
+            `Generate 5 trouble aspects for a character who is described as ${descInput.value}.
+            Their existing aspects are: ${existingAspects.join(', ')}.
+            Each trouble should be a compelling flaw, weakness, or recurring problem that causes complications in their life.
+            Make them distinct from their other aspects but connected to their character.
+            Format as 5 distinct compelling phrases, one per line, without explanations or numbers. Each must be between two to six words without punctuation.`);
+        const troubleList = troubles.trim().replaceAll('\n\n', '\n').split('\n').map(t => t.trim());
+        const selectedTrouble = troubleList[Math.floor(Math.random() * troubleList.length)];
+        troubleInput.value = selectedTrouble;
+    };
+
+    troubleGroup.appendChild(troubleLabel);
+    troubleGroup.appendChild(troubleInput);
+    troubleGroup.appendChild(refreshTroubleBtn);
+
+    // Add sections to container in the correct order
+    container.appendChild(previewSection);
+    container.appendChild(editorSection);
+
+    // Add name, concept, description, visual prompt, aspects, and trouble sections to editorSection
+    editorSection.appendChild(nameGroup);
+    editorSection.appendChild(conceptGroup);
+    editorSection.appendChild(descGroup);
+    editorSection.appendChild(visualGroup);
+    editorSection.appendChild(aspectsLabel);
+    editorSection.appendChild(aspectsGroup);
+    editorSection.appendChild(troubleGroup);
+
+    // Action buttons
+    const actionButtons = document.createElement('div');
+    actionButtons.className = 'settings-actions';
+    actionButtons.style.marginTop = '15px';
+    actionButtons.style.flexShrink = '0'; // Prevent buttons from shrinking
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn-secondary';
+    cancelBtn.onclick = () => overlay.remove();
+
+    const primaryBtn = document.createElement('button');
+    primaryBtn.textContent = isNewGame ? 'Start Game' : 'Save';
+    primaryBtn.className = 'btn-primary';
+    primaryBtn.onclick = () => {
+        saveCharacterSettings();
+        overlay.remove();
+        if (isNewGame) {
+            restartGame();
+        }
+    };
+
+    function saveCharacterSettings() {
+        settings.player_name = nameInput.value;
+        settings.player_description = descInput.value;
+        settings.player_visual = visualInput.value;
+        
+        if (!settings.charsheet_fae) settings.charsheet_fae = {};
+        settings.charsheet_fae.high_concept = conceptInput.value;
+        settings.charsheet_fae.aspects = aspectInputs.map(input => input.value);
+        settings.charsheet_fae.trouble = troubleInput.value;
+
+        updateCharacterInfo();
+        
+        if (previewImage.src !== currentPlayerArt.src) {
+            currentPlayerArt.src = previewImage.src;
+        }
+    }
+
+    actionButtons.appendChild(cancelBtn);
+    actionButtons.appendChild(primaryBtn);
+
+    // Add sections to container
+    container.appendChild(actionButtons);
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+}
+
+function startNewGame() {
+    openWorldGeneration(true, (worldSettings) => {
+        openCharacterEditor(true);
+    });
+}
+

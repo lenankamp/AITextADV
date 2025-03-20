@@ -1,0 +1,176 @@
+/* Auto-generated CSS module - Uncategorized styles */
+#left {
+    min-width: 300px;
+    max-width: calc(100vw - 100px);
+    flex: 1;
+ }
+
+#right {
+    min-width: 300px;
+    flex: 1;
+ }
+
+#q1 {
+    height: 65vh;
+ }
+
+#q2 {
+    height: 40vh;
+    display: flex;
+    overflow: hidden;
+ }
+ 
+ #q3 {
+    height: 34vh;
+ }
+
+ #q4 {
+    height: 59vh;
+    overflow: auto;
+ }
+
+.setting-item {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+ }
+
+.setting-item:last-child {
+    margin-bottom: 0;
+ }
+
+.setting-item textarea {
+    min-height: 120px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    line-height: 1.4;
+    tab-size: 2;
+    -moz-tab-size: 2;
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    overflow-x: hidden;
+ }
+
+.btn-primary:active {
+    transform: translateY(0);
+ }
+
+.btn-secondary:active {
+    transform: translateY(0);
+ }
+
+.image-grid {
+    height: 90%;
+ }
+
+.image-row {
+    display: flex;
+    flex-flow: row;
+    height: 35%;
+    padding: 5px;
+ }
+
+.follower-image.show {
+    opacity: 1;
+    transform: translateX(0);
+ }
+
+.time-display .date-season {
+    text-align: left;
+ }
+
+.time-display .time {
+    text-align: right;
+ }
+
+#sceneart {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+ }
+
+.setting-item textarea {
+    font-family: 'Consolas', 'Monaco', monospace;
+    line-height: 1.4;
+    tab-size: 2;
+    -moz-tab-size: 2;
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    overflow-x: hidden;
+ }
+
+.section-toggle {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+    font-size: 0.8em;
+    display: inline-block;
+    opacity: 0.7;
+ }
+
+#settingsForm {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+ }
+
+.output-entry textarea:focus {
+    outline: none;
+ }
+
+.entry-controls {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+ }
+
+.output-entry:hover .entry-controls {
+    opacity: 1;
+ }
+
+.save-changes-btn:active {
+    transform: translateY(0);
+ }
+
+.cancel-edit-btn:active {
+    transform: translateY(0);
+ }
+
+to { opacity: 1; transform: translateY(0);  }
+
+/* Dynamic state classes */
+.hidden {
+    display: none !important;
+ }
+
+.visible {
+    display: block;
+ }
+
+.flex-visible {
+    display: flex;
+ }
+
+/* Dynamic sizing classes */
+.full-width {
+    width: 100% !important;
+ }
+
+.full-height {
+    height: 100% !important;
+ }
+
+.auto-height {
+    height: auto !important;
+ }
+
+.follower-visible {
+    width: auto !important;
+ }
+

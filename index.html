@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://api.luan.tools https://openrouter.ai https://*.gradio.live http://192.168.86.180:5001 http://192.168.86.180:7860; img-src 'self' blob: data:;">
     <title>AITextADV</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
     <div class="sidebar collapsed" id="sidebar">
         <button class="toggle-btn" id="menuBtn" data-action="toggleMenu">Menu</button>
+        <button class="toggle-btn" id="newGameBtn" data-action="newGame">New Game</button>
         <button class="toggle-btn" id="saveBtn" data-action="saveGame">Save</button>
         <button class="toggle-btn" id="loadBtn" data-action="loadGame">Load</button>
         <button class="toggle-btn" id="settingsBtn" data-action="openSettings">Settings</button>
-        <button class="toggle-btn" id="restartBtn" data-action="restartGame">Restart</button>
+        <button class="toggle-btn" id="editCharBtn" data-action="editCharacter">Edit Character</button>
+        <button class="toggle-btn" id="worldBtn" data-action="editWorld">Edit World</button>
         <input type="file" id="fileInput" data-action="handleFileInput">
     </div>
     <div class="content">
         <div class="tooltip" id="tooltip"></div>
         <div class="side" id="left">
             <div class="quadrant" id="q1">
-                <div class="image-grid" id="imageGrid"></div>
+                <div class="image-grid" id="image-grid"></div>
             </div>
             <div class="resizer horizontal" id="resizer-row1"></div>
             <div class="quadrant" id="q3">
@@ -100,14 +101,15 @@
 
     <div class="loader" id="loader"></div>
 
-    <script src="js/main.js"></script>
+    <script src="defaultsettings.js"></script>
     <script src="settings.js"></script>
     <script src="helpers.js"></script>
     <script src="generate.js"></script>
-    <script src="saveload.js"></script>
     <script src="ui.js"></script>
     <script src="map.js"></script>
+    <script src="tts.js"></script>
     <script src="settings_override.js"></script>
     <script src="game.js"></script>
+    <script src="saveload.js"></script>
 </body>
 </html>

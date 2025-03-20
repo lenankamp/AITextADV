@@ -66,6 +66,9 @@ function timeDiff(startTime, endTime) {
 }
 
 function getSeason() {
+    if(settings.climate === '' || settings.climate === 'none') return '';
+    else if (settings.climate !== 'temperate') return settings.climate;
+    
     const seasons = ["Winter", "Spring", "Summer", "Fall"];
     const month = parseInt(settings.current_time.match(/-(\d+)-/)[1], 10) - 1;
     return seasons[Math.floor((month % 12) / 3)];
@@ -104,6 +107,7 @@ function trimIncompleteSentences(text) {
                 result += '"';
             } else {
                 result = result.slice(0, -1);
+                result += '"';
             }
         }
         return result;
@@ -248,14 +252,6 @@ function openOutputEditor() {
         }
     }, 50);
 }
-
-// Add event listener to edit button
-document.addEventListener('DOMContentLoaded', () => {
-    const editBtn = document.getElementById('editOutputBtn');
-    if (editBtn) {
-        editBtn.addEventListener('click', openOutputEditor);
-    }
-});
 
 async function generateSummary(text) {
     return await generateText(settings.summary_param, "Text: " + text + "/n/n" + settings.summary_prompt);
