@@ -1,40 +1,28 @@
-// CSP Configuration
-const csp = {
-    'default-src': ["'self'"],
-    'style-src': ["'self'", "'unsafe-inline'"], // Allow inline styles
-    'script-src': ["'self'"],
-    'connect-src': [
-        "'self'", 
-        "https://api.luan.tools", 
-        "https://openrouter.ai", 
-        "https://*.gradio.live",
-        "http://192.168.86.180:5001",
-        "http://192.168.86.180:7860"
-    ],
-    'img-src': ["'self'", "blob:", "data:"],
-    'worker-src': ["'self'", "blob:"],
-};
-
 // Convert CSP object to header string
 const cspHeader = {
-    'Content-Security-Policy': Object.entries(csp)
-        .map(([key, values]) => `${key} ${values.join(' ')}`)
-        .join('; ')
+    'Content-Security-Policy': [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob: *",
+        "connect-src 'self' *",  // Allow connections to any domain for API flexibility
+        "worker-src 'self' blob:",
+        "media-src 'self' blob:",
+    ].join('; ')
 };
 
 // Function to validate navigation URLs
 function validateNavigation(url) {
-    const allowedDomains = [
-        'api.luan.tools',
-        'openrouter.ai',
-        '192.168.86.180'
-    ];
     try {
-        const parsedUrl = new URL(url);
-        return allowedDomains.some(domain => parsedUrl.hostname.includes(domain));
+        const urlObj = new URL(url);
+        // Only allow navigation to http/https URLs
+        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
     } catch {
         return false;
     }
 }
 
-module.exports = { cspHeader, validateNavigation };
+module.exports = {
+    cspHeader,
+    validateNavigation
+};

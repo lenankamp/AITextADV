@@ -52,133 +52,52 @@ const bridgeTest = () => {
 
 // Setup API bridge between Node.js and renderer
 contextBridge.exposeInMainWorld('nodeBridge', {
-    // Buffer operations
-    bufferFrom: (data, encoding) => Buffer.from(data, encoding),
-    bufferToString: (buffer, encoding) => buffer.toString(encoding),
-    
-    // Fetch API with enhanced error handling and logging
+    // Fetch implementation with proper error handling
     fetch: async (url, options = {}) => {
-        console.log('Making fetch request:', { 
-            url, 
-            method: options.method,
-            headers: options.headers,
-            bodyPreview: options.body ? options.body.slice(0, 500) + '...' : undefined
-        });
-        
         try {
             const response = await fetch(url, options);
-            console.log('Fetch response status:', {
-                url,
-                ok: response.ok,
-                status: response.status,
-                statusText: response.statusText,
-                headers: Object.fromEntries(response.headers)
-            });
-
-            // Clone the response so we can read it multiple times if needed
-            const responseClone = response.clone();
-
-            if (!response.ok) {
-                let errorText;
-                try {
-                    errorText = await responseClone.text();
-                    let errorJson;
-                    try {
-                        errorJson = JSON.parse(errorText);
-                        console.error('Error response JSON:', errorJson);
-                    } catch (e) {
-                        console.error('Error response text:', errorText);
-                    }
-                } catch (e) {
-                    console.error('Could not read error response:', e);
-                }
-
-                const error = new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
-                error.response = response;
-                error.responseText = errorText;
-                throw error;
-            }
-
+            // Create a response-like object that can be used in the renderer
             return {
                 ok: response.ok,
                 status: response.status,
                 statusText: response.statusText,
-                headers: Object.fromEntries(response.headers),
-                json: async () => {
-                    try {
-                        const data = await response.json();
-                        console.log('Response JSON preview:', 
-                            JSON.stringify(data).slice(0, 500) + '...'
-                        );
-                        return data;
-                    } catch (error) {
-                        console.error('Error parsing JSON:', error);
-                        throw new Error(`Failed to parse JSON response: ${error.message}`);
-                    }
-                },
-                text: async () => {
-                    try {
-                        const text = await response.text();
-                        console.log('Response text length:', text.length);
-                        return text;
-                    } catch (error) {
-                        console.error('Error reading text:', error);
-                        throw error;
-                    }
-                },
-                blob: async () => {
-                    try {
-                        const blob = await response.blob();
-                        console.log('Response blob size:', blob.size);
-                        return blob;
-                    } catch (error) {
-                        console.error('Error reading blob:', error);
-                        throw error;
-                    }
-                },
-                arrayBuffer: async () => {
-                    try {
-                        const buffer = await response.arrayBuffer();
-                        console.log('Response arrayBuffer length:', buffer.byteLength);
-                        return buffer;
-                    } catch (error) {
-                        console.error('Error reading arrayBuffer:', error);
-                        throw error;
-                    }
-                }
+                headers: response.headers,
+                json: async () => await response.json(),
+                text: async () => await response.text(),
+                arrayBuffer: async () => await response.arrayBuffer()
             };
         } catch (error) {
-            console.error(`Fetch error for ${url}:`, error);
-            // Ensure error is serializable
-            const serializedError = {
-                message: error.message,
-                stack: error.stack,
-                name: error.name
-            };
-            // Send detailed error to main process
-            ipcRenderer.send('toMain', { 
-                type: 'error', 
-                message: `Network error (${url}): ${error.message}`,
-                details: JSON.stringify(serializedError, null, 2)
-            });
-            throw error;
+            console.error('Fetch error:', error);
+            throw new Error(`Fetch failed: ${error.message}`);
         }
     },
 
-    // Blob operations
-    createBlob: (parts, options) => new Blob(parts, options),
+    // Buffer utilities
+    bufferFrom: (data, encoding) => {
+        return Buffer.from(data, encoding);
+    },
+    bufferToString: (buffer, encoding) => {
+        return buffer.toString(encoding);
+    },
 
-    // Error handling
+    // Blob creation utility
+    createBlob: (parts, options) => {
+        return new Blob(parts, options);
+    },
+
+    // Error reporting to main process
     sendError: (error) => {
-        console.error('Sending error to main process:', error);
-        ipcRenderer.send('toMain', { 
-            type: 'error', 
-            message: error.message || String(error)
+        ipcRenderer.send('toMain', {
+            type: 'error',
+            message: error.message,
+            details: error.stack
         });
     },
 
-    // Electron compatibility layer
-    electronRequire: electronRequire
+    // Handle messages from main process
+    onMessage: (callback) => {
+        ipcRenderer.on('fromMain', (event, ...args) => callback(...args));
+    }
 });
 
 // Run bridge verification after setup

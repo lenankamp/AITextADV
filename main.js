@@ -2,10 +2,15 @@ const { app, BrowserWindow, ipcMain, session } = require('electron')
 const path = require('path')
 const securityConfig = require('./security-config')
 
-// Enable live reload for development
-require('electron-reload')(__dirname, {
-  electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
-})
+// Check if we're in development mode
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+
+// Enable live reload for development only
+if (isDev) {
+  require('electron-reload')(__dirname, {
+    electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
+  })
+}
 
 // Increase max listeners limit for WebContents
 require('events').EventEmitter.defaultMaxListeners = 30;
@@ -92,8 +97,8 @@ function createWindow () {
   })
 
   // Store window reference globally
+  mainWindow.setMenuBarVisibility(false);
   global.mainWindow = mainWindow
-
   // Track active listeners for cleanup
   const activeListeners = new Set();
 
@@ -136,26 +141,28 @@ function createWindow () {
     global.mainWindow = null;
   });
 
-  // Debug logging for all requests with tracked listener
-  const requestHandler = (details, callback) => {
-    console.log('Request:', {
-      url: details.url,
-      method: details.method,
-      resourceType: details.resourceType
-    });
-    callback({ cancel: false });
-  };
-  mainWindow.webContents.session.webRequest.onBeforeRequest(requestHandler);
+  // Debug logging for all requests with tracked listener (dev only)
+  if (isDev) {
+    const requestHandler = (details, callback) => {
+      console.log('Request:', {
+        url: details.url,
+        method: details.method,
+        resourceType: details.resourceType
+      });
+      callback({ cancel: false });
+    };
+    mainWindow.webContents.session.webRequest.onBeforeRequest(requestHandler);
 
-  // Debug logging for responses with tracked listener
-  const responseHandler = (details) => {
-    console.log('Response:', {
-      url: details.url,
-      statusCode: details.statusCode,
-      statusLine: details.statusLine
-    });
-  };
-  mainWindow.webContents.session.webRequest.onCompleted(responseHandler);
+    // Debug logging for responses with tracked listener
+    const responseHandler = (details) => {
+      console.log('Response:', {
+        url: details.url,
+        statusCode: details.statusCode,
+        statusLine: details.statusLine
+      });
+    };
+    mainWindow.webContents.session.webRequest.onCompleted(responseHandler);
+  }
 
   // Capture renderer console messages with tracked listener
   const consoleHandler = (event, level, message, line, sourceId) => {
@@ -186,11 +193,13 @@ function createWindow () {
   };
   addTrackedListener(mainWindow.webContents, 'did-stop-loading', loadHandler);
 
-  // Enable DevTools in development with single-use listener
-  mainWindow.webContents.once('dom-ready', () => {
-    mainWindow.webContents.openDevTools();
-    console.log('DevTools opened automatically');
-  });
+  // Enable DevTools in development only
+  if (isDev) {
+    mainWindow.webContents.once('dom-ready', () => {
+      mainWindow.webContents.openDevTools();
+      console.log('DevTools opened automatically');
+    });
+  }
 
   // Handle external links
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {

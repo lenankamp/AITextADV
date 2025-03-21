@@ -30,15 +30,15 @@
     ]
   },
   "keywords": [],
-  "author": "",
+  "author": "Justin Hull",
   "license": "ISC",
   "dependencies": {
-    "node-fetch": "^2.6.1",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "electron": "^35.0.1",
-    "electron-builder": "^24.9.1",
+    "electron-builder": "^24.13.3",
     "electron-reload": "^2.0.0-alpha.1"
   }
 }
