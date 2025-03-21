@@ -433,7 +433,13 @@ function saveSettings() {
       document.getElementById('q2').style.height = settings.topright_height;
       document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - .5vh)`;
       document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - .5vh)`;
-      document.querySelector('.content').style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
+    // Update flex properties instead of grid template columns
+    const leftSide = document.getElementById('left');
+    const rightSide = document.getElementById('right');
+    if (leftSide && rightSide) {
+        leftSide.style.flex = `0 0 ${settings.column_width}`;
+        rightSide.style.flex = '1';
+    }
   } catch (e) {
       console.error('Error applying visual settings:', e);
   }

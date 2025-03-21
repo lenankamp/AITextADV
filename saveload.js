@@ -273,12 +273,19 @@ async function restoreGameState(data, images = null) {
     updateConsequences();
     updateTime();
 
-    // Apply settings to UI elements
-      document.getElementById('q1').style.height = settings.topleft_height;
-      document.getElementById('q2').style.height = settings.topright_height;
-      document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - .5vh)`;
-      document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - .5vh)`;
-      document.querySelector('.content').style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
+    // Apply settings to UI elements first
+    document.getElementById('q1').style.height = settings.topleft_height;
+    document.getElementById('q2').style.height = settings.topright_height;
+    document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - .5vh)`;
+    document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - .5vh)`;
+    
+    // Update flex properties instead of grid template columns
+    const leftSide = document.getElementById('left');
+    const rightSide = document.getElementById('right');
+    if (leftSide && rightSide) {
+        leftSide.style.flex = `0 0 ${settings.column_width}`;
+        rightSide.style.flex = '1';
+    }
 
     // Clean up the map
     document.querySelectorAll('.location').forEach(location => {

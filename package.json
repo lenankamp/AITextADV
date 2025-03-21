@@ -8,8 +8,10 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "css:merge": "postcss \"css/**/*.css\" --dir dist/css --config postcss.merge.js",
-    "css:sort": "postcss \"dist/css/merged.css\" --dir css --config postcss.sort.js"
+    "css:merge": "postcss ./css/**/*.css --dir ./dist/css --config postcss.merge.js",
+    "css:sort": "postcss ./dist/css/merged.css --dir ./css --config postcss.sort.js",
+    "css:process": "postcss css/all.css -o dist/css/processed.css --config postcss.config.js",
+    "css:cleanup": "node scripts/css-cleanup.js"
   },
   "build": {
     "appId": "com.aitextadv.app",
@@ -46,7 +48,12 @@
     "postcss": "^8.5.3",
     "postcss-cli": "^11.0.1",
     "postcss-combine-duplicated-selectors": "^10.0.3",
+    "postcss-custom-properties": "^14.0.4",
+    "postcss-discard-duplicates": "^7.0.1",
+    "postcss-import": "^16.1.0",
     "postcss-merge-rules": "^7.0.4",
+    "postcss-nesting": "^13.0.1",
+    "postcss-preset-env": "^10.1.5",
     "postcss-sort-media-queries": "^5.2.0"
   }
 }

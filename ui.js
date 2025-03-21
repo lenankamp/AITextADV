@@ -436,11 +436,10 @@ function openUnifiedEditor(item, type, path = null) {
     editor.style.width = '90vw';
     editor.style.maxWidth = '800px';
 
-    // Main content area with grid layout
+    // Main content area with flex layout
     const content = document.createElement('div');
     content.className = 'editor-content';
-    content.style.display = 'grid';
-    content.style.gridTemplateColumns = '1fr 1fr';
+    content.style.display = 'flex';
     content.style.gap = '10px';
     content.style.height = '100%';
     content.style.overflow = 'hidden';
@@ -448,10 +447,7 @@ function openUnifiedEditor(item, type, path = null) {
     // Left side - Preview and Name
     const leftColumn = document.createElement('div');
     leftColumn.className = 'editor-column';
-    leftColumn.style.display = 'grid';
-    leftColumn.style.gridTemplateRows = 'auto auto 1fr';
-    leftColumn.style.gap = '10px';
-    leftColumn.style.height = '100%';
+    leftColumn.style.flex = '1';
 
     // Preview section with corner refresh button
     const previewSection = document.createElement('div');
@@ -526,8 +522,9 @@ function openUnifiedEditor(item, type, path = null) {
     // Right side - Description and Visual
     const rightColumn = document.createElement('div');
     rightColumn.className = 'editor-column';
-    rightColumn.style.display = 'grid';
-    rightColumn.style.gridTemplateRows = item.visual !== undefined ? '1fr 1fr' : '1fr';
+    rightColumn.style.flex = '1';
+    rightColumn.style.display = 'flex';
+    rightColumn.style.flexDirection = 'column';
     rightColumn.style.gap = '10px';
     rightColumn.style.height = '100%';
 

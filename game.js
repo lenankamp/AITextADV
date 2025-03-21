@@ -1200,6 +1200,13 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
                 helpOutput.innerHTML = '<br>You can use the following commands to add a new person, creature, or thing to the current area: <br> /char [name], /thing [name], /creature [name]. <br> <br> You can also use the following commands to move to a different area: <br> /move [area name]. <br> <br> To rename an existing person, creature, or thing: <br> /rename [old name] [new name]. <br><br> Prepending // will add the input as a direct input to the story. <br> <br> Prepending a " will at least attempt to have the player say your words, no skill check. If wanting a skill check, just try beginning with the action such as, \'Pursaude by saying "Words".\'';
                 output.appendChild(helpOutput);
                 output.scrollTop = output.scrollHeight;
+            } else if (command === '/helpintro') {
+                const helpOutput = document.createElement('div');
+                helpOutput.id = 'system-message';
+                helpOutput.classList.add('new-message');
+                helpOutput.innerHTML = '<br>To start a new game, click on the menu button in the bottom left corner and select New Game.<br><br>The interface itself is divided into 4 corners: <br>Top left will show anyone or thing notable in the area. Click on them to edit, remove, or have a living thing follow you. <br>Top right show an image for the current area, and a general map. The images at the bottom of the map are adjacent areas you can move to locally. The map it self can have a new location added by pressing and holding a click without dragging. <br>Bottom left shows the character display, not much to do here but followers can be edited or dismissed. <br>Bottom right is the input and text display. The top right corner has an editor icon to edit previous history. Enter actions here, a preceeding " will attempt to speak the words you input, a blank input will default to resuming the story, ctrl-z will delete the last entry from the output, and there are some other commands for when the AI fails to recognize events, you can learn more about those by entering /help.';
+                output.appendChild(helpOutput);
+                output.scrollTop = output.scrollHeight;
             }
             if (message.startsWith('//')) {
                 const directInput = document.createElement('div');
@@ -1613,3 +1620,4 @@ updateTime();
 updateApproachDisplay();
 updateCharacterInfo();
 updateConsequences();
+sendMessage("/helpintro");
