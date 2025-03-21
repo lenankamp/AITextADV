@@ -318,8 +318,8 @@ body {
     height: fit-content;
     display: flex;
     flex-direction: column;
-    gap: 15px;
     max-width: 1000px;
+    gap: 0px;
  }
 
 .editor-content {
@@ -384,19 +384,6 @@ body {
 .settings-section.collapsed .settings-section-content {
     display: none;
     opacity: 0;
- }
-
-.editor-container {
-    background-color: #2d2d2d;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    max-height: 90vh;
-    height: fit-content;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-width: 1000px;
  }
 
 .refresh-button {

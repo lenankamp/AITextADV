@@ -128,17 +128,59 @@
     display: block;
  }
 
-.loader {
+.loader-container {
     position: absolute;
-    bottom: 15px;  /* Closer to the input container */
-    right: 15px;
-    width: 60px;  /* Slightly smaller size to fit better */
-    height: 60px;
+    bottom: 15px;
+    right: 0;
     display: none;
+    align-items: center;
     z-index: 1001;
     pointer-events: none;
+    background-color: rgba(45, 45, 45, 0.9);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-right: 15px;  /* Use margin instead of right positioning to prevent overflow */
+}
+
+#q3 {
+    position: relative;  /* Positioning context */
+    display: flex;      /* Keep the flex display */
+    flex-flow: row;     /* Keep the row flow */
+    justify-content: flex-start;
+    overflow: visible !important; /* Allow the loader to be visible */
+}
+
+.queue-status {
+    color: #e0e0e0;
+    margin-right: 12px;  /* Increased margin */
+    font-size: 16px;  /* Increased font size */
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+.loader {
+    width: 50px;  /* 50% larger */
+    height: 50px;  /* 50% larger */
+    display: none;
     background: url('../loader.webp') no-repeat center center;
     background-size: contain;
+}
+
+@keyframes ellipsis {
+    0% { content: '.'; }
+    33% { content: '..'; }
+    66% { content: '...'; }
+    100% { content: '.'; }
+}
+
+.queue-status::after {
+    content: '.';
+    display: inline-block;
+    width: 12px;  /* Fixed width for the ellipsis */
+    text-align: left;
+    animation: ellipsis 1.5s infinite;
+    margin-left: 2px;  /* Small gap between text and ellipsis */
 }
 
 .submenu {

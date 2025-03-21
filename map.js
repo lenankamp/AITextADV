@@ -22,6 +22,17 @@ tooltip.style.zIndex = '1000';
 tooltip.classList.add('tooltip');
 document.body.appendChild(tooltip);
 
+// Handle click events on the map with event delegation
+map.addEventListener('click', (e) => {
+    const target = e.target;
+    if (target.matches('.location')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const name = target.id.replace('location-', '');
+        openSubmenu(name, e.clientX, e.clientY);
+    }
+});
+
 map.addEventListener('mousedown', (e) => {
     isDragging = false; // Start as not dragging
     dragStartX = e.clientX;

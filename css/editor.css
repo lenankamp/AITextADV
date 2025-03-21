@@ -53,8 +53,33 @@
     border: 1px solid #404040;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    overflow: hidden;
+    height: auto;
+    min-height: 0;
+ }
+
+.editor-section:last-child {
+    margin-bottom: 0;
+ }
+
+.editor-section textarea,
+.editor-section input {
+    background-color: #2d2d2d;
+    border: 1px solid #404040;
+    border-radius: 4px;
+    padding: 8px;
+    color: #e0e0e0;
+    font-size: 0.9em;
+    width: 100%;
+    margin-top: 5px;
+ }
+
+.editor-section input[type="text"] {
+    margin: 0;
+}
+
+.editor-section label {
+    color: #e0e0e0;
+    font-size: 0.9em;
  }
 
 .editor-preview-image {
@@ -160,32 +185,38 @@ textarea.setting-item:focus,
     resize: vertical;
  }
 
-.editor-section {
-    position: relative;
-    padding: 8px;
-    background-color: #363636;
-    border-radius: 4px;
-    border: 1px solid #404040;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
- }
-
 .editor-preview-image {
     border-radius: 4px;
     border: 1px solid #404040;
  }
 
+.refresh-button {
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    background: rgba(45, 45, 45, 0.9);
+    color: #e0e0e0;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    width: 26px;
+    height: 26px;
+}
+
 .refresh-button:hover {
-    background: rgba(64, 64, 64, 0.95);
+    opacity: 1;
     transform: rotate(180deg);
- }
+    background: rgba(64, 64, 64, 0.95);
+}
 
 .refresh-button.top-right {
+    position: absolute;
     top: 8px;
     right: 8px;
- }
+}
 
 .preview-section {
     position: relative;
@@ -267,3 +298,60 @@ textarea.setting-item:focus,
     transition: all 0.2s ease;
  }
 
+.editor-section.movement-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    min-height: 60px;
+ }
+
+ .editor-section.approaches-section {
+    min-height: 120px;
+ }
+
+.editor-section.approaches-section .approaches-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #404040;
+ }
+
+.editor-section.approaches-section .approaches-header .refresh-button {
+    position: static;
+    width: 24px;
+    height: 24px;
+    margin-left: auto;
+ }
+
+.editor-section.approaches-section .approaches-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+ }
+
+.editor-section.approaches-section .approaches-grid .approach-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #2d2d2d;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #404040;
+ }
+
+.editor-section.approaches-section .approaches-grid .approach-group label {
+    flex: 1;
+    margin: 0;
+ }
+
+.editor-section.approaches-section .approaches-grid .approach-group input[type="number"] {
+    width: 40px;
+    text-align: center;
+    appearance: textfield;
+    -moz-appearance: textfield;
+ }
+
+.editor-section.approaches-section .approaches-grid .approach-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+ }

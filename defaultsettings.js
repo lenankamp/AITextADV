@@ -1,5 +1,5 @@
 let settings;
-
+function overrideSettings() {}
 function loadDefaultSettings() {
   const defaultSettings = {
     //ui settings
@@ -7,15 +7,16 @@ function loadDefaultSettings() {
     topright_height: "40vh",
     column_width: "40vw",
     // game settings
+    writing_style: "Terry Pratchett",
+    sentient_string: "People",
+    creature_string: "Creatures",
+    sentient_generation_limit: "3",
+    creature_generation_limit: "10%",
     affinity_threshold: 3,
     positive_affinities: ["passing acquaintance", "familiar face", "acquaintance", "casual friend", "good friend", "close friend", "best friend", "ally", "confidant", "best friend", "BFF", "super awesome bestest friend forever and ever"],
     negative_affinities: ["suspicious", "distrustful", "unfriendly", "confrontational", "adversarial", "hostile", "mortal enemy", "arch enemy"],
     positive_creature_affinities: ["curious", "friendly", "trusting", "companionable", "loyal", "bonded", "best friend"],
     negative_creature_affinities: ["suspicious", "unfriendly", "adversarial", "hostile"],
-    sentient_string: "People",
-    creature_string: "Pokémon",
-    sentient_generation_limit: "3",
-    creature_generation_limit: "10%",
     // world generation settings
     world_description: "The Kanto region is a region of the Pokémon world. Everyone aspires to be a Pokémon trainer. Pokémon trainers train their Pokémon to duel and seek to become champions.",
     starting_area: "Professor Oak's Lab",
@@ -72,7 +73,7 @@ function loadDefaultSettings() {
     // tts settings
     tts_enable: false,
     tts_type: "Kobold",
-    tts_api: "http://localhost:5000/api/extra/tts/",
+    tts_api: "http://localhost:5001/api/extra/tts/",
     tts_api_key: "b8f3c5b0d5f1e4c8a6e9b1c2d4f3e2f1",
     tts_default_male: "kobo",
     tts_default_female: "cheery",
@@ -82,13 +83,13 @@ function loadDefaultSettings() {
     // image generation settings
     autogenerate_prompts: false,
     concurrent_art: false,
-    sdAPI: "https://b6de60edc66c97d6c9.gradio.live/sdapi/v1/txt2img",
+    sdAPI: "http://localhost:7860/sdapi/v1/txt2img",
     sdAPItype: "a1111",
-    default_prompt: "__default__,Pokémon style,",
-    default_negative_prompt: "__defaultneg__,",
+    default_prompt: ",",
+    default_negative_prompt: ",",
     person_prompt: "",
     person_negprompt: "",
-    creature_prompt: "(nopeople),((Pokémon)),",
+    creature_prompt: "(nopeople),",
     creature_negprompt: "((person, human)),",
     thing_prompt: "(nopeople),",
     thing_negprompt: "((people, human, person)),",
@@ -98,10 +99,10 @@ function loadDefaultSettings() {
     cfg_scale: 7,
     save_images: false,
     sampler_name: "Euler_a",
-    seed_variation: 3,
+    seed_variation: 0,
     // text generation API settings
     story_param: {
-      textAPI: "https://openrouter.ai/api/v1/",
+      textAPI: "http://localhost:5001/api/v1/",
       textAPItype: "openai",
       apiKey: "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",
       model: "mistralai/mistral-small-24b-instruct-2501:free",
@@ -109,7 +110,7 @@ function loadDefaultSettings() {
       max_length: 400,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
       stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
-      system_prompt: "Continue the story according to the bracketed instructions. Create a lifelike atmosphere with vivid, immersive details that draw the reader into the story. Use 2nd-person perspective, present tense, referring to the player as \"you\". Avoid vague statements, flowery metaphors, summaries, or send-off messages (do not end the scene). Focus on the moment, including visual and sensory detail, with quoted dialogue if appropriate. Be creative and don't always make events predictable. Characters should behave realistically and not always pander to the player. Write in the style of: Terry Pratchett.",
+      system_prompt: "Continue the story according to the bracketed instructions. Create a lifelike atmosphere with vivid, immersive details that draw the reader into the story. Use 2nd-person perspective, present tense, referring to the player as \"you\". Avoid vague statements, flowery metaphors, summaries, or send-off messages (do not end the scene). Focus on the moment, including visual and sensory detail, with quoted dialogue if appropriate. Be creative and don't always make events predictable. Characters should behave realistically and not always pander to the player. Write in the style of: $settings.writing_style$.",
       quiet: false,
       rep_pen: 1.1,
       rep_pen_range: 256,
@@ -122,7 +123,7 @@ function loadDefaultSettings() {
       typical: 1
     },
     question_param: {
-      textAPI: "https://openrouter.ai/api/v1/",
+      textAPI: "http://localhost:5001/api/v1/",
       textAPItype: "openai",
       apiKey: "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",
       model: "mistralai/mistral-small-24b-instruct-2501:free",
@@ -143,7 +144,7 @@ function loadDefaultSettings() {
       typical: 1
     },
     creative_question_param: {
-      textAPI: "https://openrouter.ai/api/v1/",
+      textAPI: "http://localhost:5001/api/v1/",
       textAPItype: "openai",
       apiKey: "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",
       model: "mistralai/mistral-small-24b-instruct-2501:free",
@@ -164,7 +165,7 @@ function loadDefaultSettings() {
       typical: 1
     },
     summary_param: {
-      textAPI: "https://openrouter.ai/api/v1/",
+      textAPI: "http://localhost:5001/api/v1/",
       textAPItype: "openai",
       apiKey: "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",
       model: "mistralai/mistral-small-24b-instruct-2501:free",

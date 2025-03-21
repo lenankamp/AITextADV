@@ -39,10 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'sendMessage':
                 const input = document.getElementById('input');
-                if (input.value.trim()) {
-                    sendMessage(input.value);
-                    input.value = '';
-                }
+                const message = input.value.trim();
+                sendMessage(message);
                 break;
         }
     });

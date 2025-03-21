@@ -463,7 +463,6 @@ function openUnifiedEditor(item, type, path = null) {
     previewImage.className = 'editor-preview-image';
     previewImage.style.width = '100%';
     previewImage.style.height = '100%';
-    previewImage.style.objectFit = 'cover';
     
     // Special handling for player image
     if (type === 'player') {
@@ -882,10 +881,6 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
     editorSection.className = 'editor-section';
     editorSection.style.display = 'flex';
     editorSection.style.flexDirection = 'column';
-    editorSection.style.gap = '15px';
-    editorSection.style.padding = '20px';
-    editorSection.style.flex = '1';
-    editorSection.style.minHeight = '0';
 
     // Theme input with generate button
     const themeGroup = document.createElement('div');
@@ -1059,7 +1054,6 @@ function openCharacterEditor(isNewGame = false) {
     container.style.flexDirection = 'column';
     container.style.overflowY = 'hidden';
     container.style.padding = '20px';
-    container.style.gap = '15px';
 
     // Preview section with adjusted height
     const previewSection = document.createElement('div');
@@ -1073,7 +1067,6 @@ function openCharacterEditor(isNewGame = false) {
     previewImage.className = 'editor-preview-image';
     previewImage.style.width = '100%';
     previewImage.style.height = '100%';
-    previewImage.style.objectFit = 'cover';
     
     const currentPlayerArt = document.getElementById('playerart');
     previewImage.src = currentPlayerArt.src;
@@ -1093,7 +1086,7 @@ function openCharacterEditor(isNewGame = false) {
     refreshImageBtn.title = 'Regenerate Character Image';
     refreshImageBtn.onclick = async () => {
         if (visualInput && visualInput.value) {
-            const artBlob = await generateArt(visualInput.value, "", Math.floor(Math.random() * 4294967295) + 1);
+            const artBlob = await generateArt(visualInput.value, "", Math.floor(Math.random() - 0.5));
             if (artBlob instanceof Blob) {
                 previewImage.src = URL.createObjectURL(artBlob);
                 item.image = artBlob;
@@ -1126,6 +1119,21 @@ function openCharacterEditor(isNewGame = false) {
 
     nameGroup.appendChild(nameLabel);
     nameGroup.appendChild(nameInput);
+
+    const refreshNameBtn = document.createElement('button');
+    refreshNameBtn.className = 'refresh-button top-right';
+    refreshNameBtn.innerHTML = '🔄';
+    refreshNameBtn.title = 'Generate Random Name';
+    refreshNameBtn.onclick = async () => {
+        const characterContext = conceptInput.value || descInput?.value;
+        const prompt = `Generate 5 unique names that would fit in this world: ${settings.world_description}${characterContext ? `\nFor a character who is ${characterContext}` : ''}.
+            Format as 5 distinct names, one per line, without explanations or descriptions. Each name should be 1-3 words.`;
+        const names = await generateText(settings.creative_question_param, prompt);
+        const nameList = names.trim().replaceAll('\n\n', '\n').split('\n').map(n => n.trim());
+        const selectedName = nameList[Math.floor(Math.random() * nameList.length)];
+        nameInput.value = selectedName;
+    };
+    nameGroup.appendChild(refreshNameBtn);
 
     // High concept with generate button
     const conceptGroup = document.createElement('div');
@@ -1215,6 +1223,96 @@ function openCharacterEditor(isNewGame = false) {
     visualGroup.appendChild(visualInput);
     visualGroup.appendChild(refreshVisualBtn);
 
+    // Movement strings section
+    const movementGroup = document.createElement('div');
+    movementGroup.className = 'editor-section movement-section';
+
+    const localGroup = document.createElement('div');
+    const localLabel = document.createElement('label');
+    localLabel.textContent = 'Local Movement:';
+    const localInput = document.createElement('input');
+    localInput.type = 'text';
+    localInput.value = settings.player_local_movement || 'walks';
+    localGroup.appendChild(localLabel);
+    localGroup.appendChild(localInput);
+
+    const distantGroup = document.createElement('div');
+    const distantLabel = document.createElement('label');
+    distantLabel.textContent = 'Distant Movement:';
+    const distantInput = document.createElement('input');
+    distantInput.type = 'text';
+    distantInput.value = settings.player_distant_movement || 'walks';
+    distantGroup.appendChild(distantLabel);
+    distantGroup.appendChild(distantInput);
+
+    movementGroup.appendChild(localGroup);
+    movementGroup.appendChild(distantGroup);
+    editorSection.appendChild(movementGroup);
+
+    // Approaches section
+    const approachesGroup = document.createElement('div');
+    approachesGroup.className = 'editor-section approaches-section';
+
+    const approachesHeader = document.createElement('div');
+    approachesHeader.className = 'approaches-header';
+
+    const approachesLabel = document.createElement('label');
+    approachesLabel.textContent = 'Approaches:';
+    
+    const regenerateBtn = document.createElement('button');
+    regenerateBtn.className = 'refresh-button';
+    regenerateBtn.innerHTML = '🔄';
+    regenerateBtn.title = 'Randomly Assign Approaches';
+    regenerateBtn.onclick = () => {
+        const values = [0, 1, 1, 2, 2, 3];
+        const shuffled = values.sort(() => Math.random() - 0.5);
+        Object.keys(approaches).forEach((approach, index) => {
+            approaches[approach].value = shuffled[index];
+            // Update the corresponding input element's value
+            const input = approachesGrid.querySelector(`input[data-approach="${approach}"]`);
+            if (input) {
+                input.value = shuffled[index];
+            }
+        });
+    };
+
+    approachesHeader.appendChild(approachesLabel);
+    approachesHeader.appendChild(regenerateBtn);
+    approachesGroup.appendChild(approachesHeader);
+
+    const approachesGrid = document.createElement('div');
+    approachesGrid.className = 'approaches-grid';
+
+    const approaches = {
+        careful: { value: settings.charsheet_fae?.approaches?.careful || 1, label: 'Careful' },
+        clever: { value: settings.charsheet_fae?.approaches?.clever || 2, label: 'Clever' },
+        flashy: { value: settings.charsheet_fae?.approaches?.flashy || 3, label: 'Flashy' },
+        forceful: { value: settings.charsheet_fae?.approaches?.forceful || 1, label: 'Forceful' },
+        quick: { value: settings.charsheet_fae?.approaches?.quick || 2, label: 'Quick' },
+        sneaky: { value: settings.charsheet_fae?.approaches?.sneaky || 0, label: 'Sneaky' }
+    };
+
+    Object.entries(approaches).forEach(([key, data]) => {
+        const approachGroup = document.createElement('div');
+        
+        const label = document.createElement('label');
+        label.textContent = data.label;
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.max = '8';
+        input.value = data.value;
+        input.dataset.approach = key; // Add data attribute to identify the approach
+        
+        approachGroup.appendChild(label);
+        approachGroup.appendChild(input);
+        approachesGrid.appendChild(approachGroup);
+    });
+
+    approachesGroup.appendChild(approachesGrid);
+    editorSection.appendChild(approachesGroup);
+
     // Aspects section
     const aspectsGroup = document.createElement('div');
     aspectsGroup.style.position = 'relative';
@@ -1225,18 +1323,21 @@ function openCharacterEditor(isNewGame = false) {
     const aspectInputs = [];
     for (let i = 0; i < 3; i++) {
         const aspectGroup = document.createElement('div');
+        aspectGroup.style.display = 'flex';
+        aspectGroup.style.alignItems = 'center';
+        aspectGroup.style.gap = '8px';
         aspectGroup.style.position = 'relative';
-        aspectGroup.style.marginTop = '10px';
         
         const input = document.createElement('input');
         input.type = 'text';
         input.value = settings.charsheet_fae?.aspects?.[i] || '';
-        input.style.width = '100%';
+        input.style.flex = '1';
         
         const refreshBtn = document.createElement('button');
-        refreshBtn.className = 'refresh-button top-right';
+        refreshBtn.className = 'refresh-button';
         refreshBtn.innerHTML = '🔄';
         refreshBtn.title = 'Generate Aspect';
+        refreshBtn.style.position = 'static';
         refreshBtn.onclick = async () => {
             // Gather existing aspects for context
             const existingAspects = [conceptInput.value];
@@ -1265,21 +1366,23 @@ function openCharacterEditor(isNewGame = false) {
         aspectsGroup.appendChild(aspectGroup);
     }
 
-    // Trouble aspect with improved generation
+    // Trouble aspect with improved alignment
     const troubleGroup = document.createElement('div');
-    troubleGroup.style.position = 'relative';
+    troubleGroup.style.display = 'flex';
+    troubleGroup.style.alignItems = 'center';
+    troubleGroup.style.gap = '8px';
     troubleGroup.style.marginTop = '20px';
-    const troubleLabel = document.createElement('label');
-    troubleLabel.textContent = 'Trouble Aspect:';
+
     const troubleInput = document.createElement('input');
     troubleInput.type = 'text';
     troubleInput.value = settings.charsheet_fae?.trouble || '';
-    troubleInput.style.width = '100%';
+    troubleInput.style.flex = '1';
 
     const refreshTroubleBtn = document.createElement('button');
-    refreshTroubleBtn.className = 'refresh-button top-right';
+    refreshTroubleBtn.className = 'refresh-button';
     refreshTroubleBtn.innerHTML = '🔄';
     refreshTroubleBtn.title = 'Generate Trouble';
+    refreshTroubleBtn.style.position = 'static';
     refreshTroubleBtn.onclick = async () => {
         // Gather existing aspects for context
         const existingAspects = [conceptInput.value];
@@ -1300,7 +1403,6 @@ function openCharacterEditor(isNewGame = false) {
         troubleInput.value = selectedTrouble;
     };
 
-    troubleGroup.appendChild(troubleLabel);
     troubleGroup.appendChild(troubleInput);
     troubleGroup.appendChild(refreshTroubleBtn);
 
@@ -1313,6 +1415,8 @@ function openCharacterEditor(isNewGame = false) {
     editorSection.appendChild(conceptGroup);
     editorSection.appendChild(descGroup);
     editorSection.appendChild(visualGroup);
+    editorSection.appendChild(movementGroup);
+    editorSection.appendChild(approachesGroup);
     editorSection.appendChild(aspectsLabel);
     editorSection.appendChild(aspectsGroup);
     editorSection.appendChild(troubleGroup);
@@ -1343,11 +1447,20 @@ function openCharacterEditor(isNewGame = false) {
         settings.player_name = nameInput.value;
         settings.player_description = descInput.value;
         settings.player_visual = visualInput.value;
+        settings.player_local_movement = localInput.value;
+        settings.player_distant_movement = distantInput.value;
         
         if (!settings.charsheet_fae) settings.charsheet_fae = {};
         settings.charsheet_fae.high_concept = conceptInput.value;
         settings.charsheet_fae.aspects = aspectInputs.map(input => input.value);
         settings.charsheet_fae.trouble = troubleInput.value;
+
+        // Save approaches
+        settings.charsheet_fae.approaches = {};
+        Object.entries(approaches).forEach(([key, data]) => {
+            const input = approachesGrid.querySelector(`input[data-approach="${key}"]`);
+            settings.charsheet_fae.approaches[key] = parseInt(input.value);
+        });
 
         updateCharacterInfo();
         

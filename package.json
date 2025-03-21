@@ -1,13 +1,15 @@
 {
-  "name": "aitextadv-test",
-  "version": "1.0.0",
+  "name": "aitextadv",
+  "version": "0.4.0",
   "description": "Text adventure game powered by AI",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "css:merge": "postcss \"css/**/*.css\" --dir dist/css --config postcss.merge.js",
+    "css:sort": "postcss \"dist/css/merged.css\" --dir css --config postcss.sort.js"
   },
   "build": {
     "appId": "com.aitextadv.app",
@@ -37,8 +39,14 @@
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {
+    "cssnano": "^7.0.6",
     "electron": "^35.0.1",
     "electron-builder": "^24.13.3",
-    "electron-reload": "^2.0.0-alpha.1"
+    "electron-reload": "^2.0.0-alpha.1",
+    "postcss": "^8.5.3",
+    "postcss-cli": "^11.0.1",
+    "postcss-combine-duplicated-selectors": "^10.0.3",
+    "postcss-merge-rules": "^7.0.4",
+    "postcss-sort-media-queries": "^5.2.0"
   }
 }

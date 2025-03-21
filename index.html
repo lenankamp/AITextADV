@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AITextADV</title>
     <link rel="stylesheet" href="css/index.css">
+    <link rel="icon" href="build/icon.ico" type="image/x-icon">
 </head>
 <body>
     <div class="sidebar collapsed" id="sidebar">
@@ -63,6 +64,10 @@
                     <div id="consequences" class="consequences-list"></div>
                 </div>
                 <div id="followers-container"></div>
+                <div class="loader-container">
+                    <div class="queue-status"></div>
+                    <div class="loader"></div>
+                </div>
             </div>
         </div>
         <div class="resizer" id="resizer-col"></div>
@@ -98,8 +103,6 @@
             <form id="settingsForm"></form>
         </div>
     </div>
-
-    <div class="loader" id="loader"></div>
 
     <script src="defaultsettings.js"></script>
     <script src="settings.js"></script>
