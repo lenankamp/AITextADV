@@ -61,6 +61,94 @@ resizerRow1.addEventListener('mousedown', initDragRow);
 resizerRow2.addEventListener('mousedown', initDragRow);
 resizerMap.addEventListener('mousedown', initDragMap);
 
+// Add touch event listeners
+resizerCol.addEventListener('touchstart', handleTouchStart);
+resizerRow1.addEventListener('touchstart', handleTouchStart);
+resizerRow2.addEventListener('touchstart', handleTouchStart);
+resizerMap.addEventListener('touchstart', handleTouchStart);
+
+function handleTouchStart(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+
+    // Store the initial sizes
+    if (e.target === resizerCol) {
+        const leftSide = document.getElementById('left');
+        startWidth = leftSide.offsetWidth;
+    } else if (e.target === resizerMap) {
+        startWidth = parseInt(document.defaultView.getComputedStyle(mapContainer).getPropertyValue('width'));
+    } else {
+        const quadrant = e.target.previousElementSibling;
+        startHeight = parseInt(document.defaultView.getComputedStyle(quadrant).getPropertyValue('height'));
+        document.quadrant = quadrant;
+    }
+
+    // Add the appropriate touch move handler
+    if (e.target === resizerCol) {
+        document.addEventListener('touchmove', handleTouchMoveCol, { passive: false });
+        document.addEventListener('touchend', handleTouchEndCol);
+    } else if (e.target === resizerMap) {
+        document.addEventListener('touchmove', handleTouchMoveMap, { passive: false });
+        document.addEventListener('touchend', handleTouchEndMap);
+    } else {
+        document.addEventListener('touchmove', handleTouchMoveRow, { passive: false });
+        document.addEventListener('touchend', handleTouchEndRow);
+    }
+}
+
+function handleTouchMoveCol(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const leftSide = document.getElementById('left');
+    const rightSide = document.getElementById('right');
+    const containerWidth = content.offsetWidth;
+    const newWidth = Math.max(300, Math.min(containerWidth - 300, startWidth + (touch.clientX - startX)));
+    const leftPercentage = (newWidth / containerWidth) * 100;
+    
+    leftSide.style.flex = `0 0 ${newWidth}px`;
+    rightSide.style.flex = '1';
+}
+
+function handleTouchMoveRow(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const quadrant = document.quadrant;
+    const newHeight = startHeight + (touch.clientY - startY);
+    quadrant.style.height = `${newHeight}px`;
+
+    // Adjust the height of the quadrant below
+    const nextQuadrant = quadrant.nextElementSibling.nextElementSibling;
+    if (nextQuadrant && nextQuadrant.classList.contains('quadrant')) {
+        nextQuadrant.style.height = `calc(100vh - ${newHeight}px - .5vh)`;
+    }
+}
+
+function handleTouchMoveMap(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const newWidth = startWidth + (touch.clientX - startX);
+    mapContainer.style.width = `${newWidth}px`;
+    sceneartContainer.style.width = `calc(100% - ${newWidth}px - .5vh)`;
+}
+
+function handleTouchEndCol() {
+    document.removeEventListener('touchmove', handleTouchMoveCol);
+    document.removeEventListener('touchend', handleTouchEndCol);
+}
+
+function handleTouchEndRow() {
+    document.removeEventListener('touchmove', handleTouchMoveRow);
+    document.removeEventListener('touchend', handleTouchEndRow);
+    document.quadrant = null;
+}
+
+function handleTouchEndMap() {
+    document.removeEventListener('touchmove', handleTouchMoveMap);
+    document.removeEventListener('touchend', handleTouchEndMap);
+}
+
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.toggle('collapsed');

@@ -102,10 +102,10 @@ function loadDefaultSettings() {
     seed_variation: 0,
     // text generation API settings
     story_param: {
-      textAPI: "http://localhost:5001/api/v1/",
+      textAPI: "https://api.featherless.ai/v1/",
       textAPItype: "openai",
-      apiKey: "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",
-      model: "mistralai/mistral-small-24b-instruct-2501:free",
+      apiKey: "rc_7da126beca20c440a73eb148ea5199c986913ec139c83e259652e8a0012e4ffd",
+      model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 400,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -123,10 +123,10 @@ function loadDefaultSettings() {
       typical: 1
     },
     question_param: {
-      textAPI: "http://localhost:5001/api/v1/",
+      textAPI: "https://api.featherless.ai/v1/",
       textAPItype: "openai",
-      apiKey: "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",
-      model: "mistralai/mistral-small-24b-instruct-2501:free",
+      apiKey: "rc_7da126beca20c440a73eb148ea5199c986913ec139c83e259652e8a0012e4ffd",
+      model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 600,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -144,10 +144,10 @@ function loadDefaultSettings() {
       typical: 1
     },
     creative_question_param: {
-      textAPI: "http://localhost:5001/api/v1/",
+      textAPI: "https://api.featherless.ai/v1/",
       textAPItype: "openai",
-      apiKey: "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",
-      model: "mistralai/mistral-small-24b-instruct-2501:free",
+      apiKey: "rc_7da126beca20c440a73eb148ea5199c986913ec139c83e259652e8a0012e4ffd",
+      model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 600,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -165,10 +165,10 @@ function loadDefaultSettings() {
       typical: 1
     },
     summary_param: {
-      textAPI: "http://localhost:5001/api/v1/",
+      textAPI: "https://api.featherless.ai/v1/",
       textAPItype: "openai",
-      apiKey: "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",
-      model: "mistralai/mistral-small-24b-instruct-2501:free",
+      apiKey: "rc_7da126beca20c440a73eb148ea5199c986913ec139c83e259652e8a0012e4ffd",
+      model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 600,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
