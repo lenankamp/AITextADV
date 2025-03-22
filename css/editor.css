@@ -189,7 +189,7 @@ textarea.setting-item:focus,
     flex: 1;
  }
 .editor-section input[type="number"] {
-    width: 120px;
+    width: 42px;
     text-align: right;
     padding-right: 8px;
  }

@@ -61,4 +61,8 @@
         font-size: 0.9em;
         min-width: auto;
     }
+
+    #mobilemenuBtn.active {
+        background-color: #363636;
+    }
 }

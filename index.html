@@ -19,9 +19,20 @@
         <input type="file" id="fileInput" data-action="handleFileInput">
     </div>
     
-    <div id="mobile-nav" style="display: none;">
-        <button class="btn-secondary active" data-view="left">Info</button>
+    <div id="mobile-nav">
         <button class="btn-secondary" data-view="right">Adventure</button>
+        <button class="btn-secondary" id="mobilemenuBtn" data-action="toggleMobileMenu">Menu</button>
+        <button class="btn-secondary" data-view="left">Info</button>
+    </div>
+
+    <div id="mobile-menu" class="mobile-menu">
+        <button class="mobile-menu-btn" data-action="newGame">New Game</button>
+        <button class="mobile-menu-btn" data-action="saveGame">Save</button>
+        <button class="mobile-menu-btn" data-action="loadGame">Load</button>
+        <button class="mobile-menu-btn" data-action="openSettings">Settings</button>
+        <button class="mobile-menu-btn" data-action="editCharacter">Edit Character</button>
+        <button class="mobile-menu-btn" data-action="editWorld">Edit World</button>
+        <input type="file" id="mobileFileInput" data-action="handleFileInput">
     </div>
 
     <div class="content">

@@ -1606,11 +1606,49 @@ function startNewGame() {
 function initMobileLayout() {
     if (!isMobile) return;
     
-    // Set initial view state
-    document.getElementById('left').classList.add('active');
-    document.getElementById('right').classList.remove('active');
+    // Set initial view state to Adventure
+    document.getElementById('left').classList.remove('active');
+    document.getElementById('right').classList.add('active');
     mobileNav.style.display = 'flex';
     
+    // Set Adventure button as active by default
+    const adventureBtn = mobileNav.querySelector('[data-view="right"]');
+    adventureBtn.classList.add('active');
+    
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobilemenuBtn = document.getElementById('mobilemenuBtn');
+
+    // Mobile menu toggle handler
+    mobilemenuBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('show');
+        mobilemenuBtn.classList.toggle('active');
+    });
+
+    // Handle mobile menu actions
+    mobileMenu.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        if (action) {
+            // Prevent event from bubbling up to document handler
+            e.stopPropagation();
+            
+            // Close menu
+            mobileMenu.classList.remove('show');
+            mobilemenuBtn.classList.remove('active');
+            
+            // Handle file input separately since it needs direct click
+            if (action === 'handleFileInput') {
+                document.getElementById('fileInput').click();
+                return;
+            }
+            
+            // Find and click the original button to trigger the action
+            const originalBtn = document.querySelector(`#sidebar button[data-action="${action}"]`);
+            if (originalBtn) {
+                originalBtn.click();
+            }
+        }
+    });
+
     // Add touch event handlers for swipe detection
     let touchStartX = 0;
     let touchStartY = 0;
@@ -1634,7 +1672,7 @@ function initMobileLayout() {
                 buttons[0].click();
             } else {
                 // Swipe left - show right panel
-                buttons[1].click();
+                buttons[2].click();
             }
         }
     }, { passive: true });
