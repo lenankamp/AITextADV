@@ -1,19 +1,33 @@
-
 .btn-secondary {
     padding: 8px 20px;
     border-radius: 6px;
     font-size: 0.95em;
- }
+    background-color: #404040;
+    color: #e0e0e0;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
 .btn-secondary:hover {
     transform: translateY(-1px);
- }
+    background-color: #505050;
+}
+
+.btn-secondary.active {
+    background-color: #4a9eff;
+    color: #ffffff;
+}
+
 .toggle-btn:first-child {
     position: absolute;
     bottom: 20px; /* Fixed vertical position relative to the bottom */
- }
+}
+
 .tooltip-visible {
     display: block;
- }
+}
+
 .loader {
     width: 50px;  /* 50% larger */
     height: 50px;  /* 50% larger */
@@ -21,9 +35,30 @@
     background: url('../loader.webp') no-repeat center center;
     background-size: contain;
 }
+
 .btn-primary:active {
     transform: translateY(0);
- }
+}
+
 .btn-secondary:active {
     transform: translateY(0);
- }
+}
+
+@media screen and (max-width: 768px) {
+    .btn-secondary {
+        padding: 6px 15px;
+        font-size: 0.9em;
+    }
+
+    #mobile-nav .btn-secondary {
+        flex: 1;
+        text-align: center;
+        white-space: nowrap;
+    }
+    
+    .toggle-btn {
+        padding: 8px 12px;
+        font-size: 0.9em;
+        min-width: auto;
+    }
+}

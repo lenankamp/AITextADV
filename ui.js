@@ -5,6 +5,9 @@ const resizerMap = document.getElementById('resizer-map');
 const content = document.querySelector('.content');
 const mapContainer = document.querySelector('.map-container');
 const sceneartContainer = document.querySelector('.sceneart-container');
+const mobileNav = document.getElementById('mobile-nav');
+
+const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
 let startX, startY, startWidth, startHeight;
 
@@ -66,6 +69,25 @@ resizerCol.addEventListener('touchstart', handleTouchStart);
 resizerRow1.addEventListener('touchstart', handleTouchStart);
 resizerRow2.addEventListener('touchstart', handleTouchStart);
 resizerMap.addEventListener('touchstart', handleTouchStart);
+
+if (window.matchMedia('(max-width: 768px)').matches) {
+    mobileNav.style.display = 'flex';
+    document.getElementById('left').classList.add('active');
+    
+    // Handle mobile view switching
+    mobileNav.addEventListener('click', (e) => {
+        if (e.target.matches('[data-view]')) {
+            const view = e.target.dataset.view;
+            // Update active states
+            mobileNav.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            // Show selected view
+            document.getElementById('left').classList.toggle('active', view === 'left');
+            document.getElementById('right').classList.toggle('active', view === 'right');
+        }
+    });
+}
 
 function handleTouchStart(e) {
     e.preventDefault();
@@ -151,7 +173,19 @@ function handleTouchEndMap() {
 
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('collapsed');
+    if (window.matchMedia('(max-width: 768px)').matches) {
+        // For mobile
+        if (sidebar.classList.contains('expanded')) {
+            sidebar.classList.remove('expanded');
+            if (mobileNav) mobileNav.style.display = 'flex';
+        } else {
+            sidebar.classList.add('expanded');
+            if (mobileNav) mobileNav.style.display = 'none';
+        }
+    } else {
+        // For desktop
+        sidebar.classList.toggle('collapsed');
+    }
 }
 
 function handleKeyDown(event) {
@@ -1568,4 +1602,44 @@ function startNewGame() {
         openCharacterEditor(true);
     });
 }
+
+function initMobileLayout() {
+    if (!isMobile) return;
+    
+    // Set initial view state
+    document.getElementById('left').classList.add('active');
+    document.getElementById('right').classList.remove('active');
+    mobileNav.style.display = 'flex';
+    
+    // Add touch event handlers for swipe detection
+    let touchStartX = 0;
+    let touchStartY = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    document.addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        
+        // Only handle horizontal swipes that are greater than vertical movement
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+            const buttons = mobileNav.querySelectorAll('button');
+            if (deltaX > 0) {
+                // Swipe right - show left panel
+                buttons[0].click();
+            } else {
+                // Swipe left - show right panel
+                buttons[1].click();
+            }
+        }
+    }, { passive: true });
+}
+
+// Initialize mobile layout
+initMobileLayout();
 

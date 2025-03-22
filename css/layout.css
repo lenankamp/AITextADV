@@ -9,13 +9,13 @@
     transition: all 0.3s ease;
     position: relative;
     border-right: 1px solid #404040;
- }
+}
 .sidebar.collapsed .toggle-btn:not(:first-child) {
     display: none; /* Hide all buttons besides the first (menu) button when collapsed */
- }
+}
 .sidebar.collapsed {
     width: 50px;
- }
+}
 .sidebar.collapsed .toggle-btn {
     width: 100%;
     padding: 12px 5px;
@@ -24,7 +24,7 @@
     border-radius: 0;
     position: absolute;
     bottom: 0;
- }
+}
 .content {
     display: flex;
     flex: 1;
@@ -32,13 +32,13 @@
     gap: 0;
     position: relative;
     overflow: hidden;
- }
+}
 .side {
     height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
- }
+}
 .quadrant {
     background-color: #2d2d2d;
     align-items: center;
@@ -46,7 +46,7 @@
     border: 1px solid #404040;
     position: relative;
     overflow: hidden;
- }
+}
 .resizer {
     background-color: #404040;
     cursor: col-resize;
@@ -54,15 +54,15 @@
     height: 100%;
     transition: background-color 0.2s ease;
     flex-shrink: 0;
- }
+}
 .resizer.horizontal {
     cursor: row-resize;
     height: .5vh;
     width: 100%;
- }
+}
 .resizer:hover {
     background-color: #505050;
- }
+}
 .overlay {
     position: fixed;
     top: 0;
@@ -74,7 +74,7 @@
     justify-content: center;
     align-items: center;
     z-index: 1000; /* Increased z-index to ensure it's above other elements */
- }
+}
 #q3 {
     position: relative;  /* Positioning context */
     display: flex;      /* Keep the flex display */
@@ -85,26 +85,103 @@
 #left {
     min-width: 300px;
     flex: 0 0 auto;
- }
+}
 #right {
     min-width: 300px;
     flex: 1;
- }
+}
 #q1 {
     height: 65vh;
- }
+}
 #q2 {
     height: 40vh;
     display: flex;
     overflow: hidden;
- }
+}
 #q3 {
     height: 34vh;
- }
+}
 #q4 {
     height: 59vh;
     overflow: auto;
- }
+}
 .flex-visible {
     display: flex;
- }
+}
+
+@media screen and (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: 50px;
+        position: fixed;
+        bottom: 0;
+        flex-direction: row;
+        justify-content: space-around;
+        z-index: 100;
+        border-top: 1px solid #404040;
+        border-right: none;
+    }
+
+    .sidebar.expanded {
+        height: 100vh;
+        flex-direction: column;
+    }
+
+    .content {
+        height: calc(100vh - 50px);
+        padding-bottom: 50px;
+    }
+
+    #left, #right {
+        min-width: 100%;
+        width: 100%;
+        display: none;
+    }
+
+    #left.active, #right.active {
+        display: flex;
+    }
+
+    .resizer {
+        display: none;
+    }
+
+    .view-toggle {
+        display: flex;
+        gap: 10px;
+    }
+
+    .sidebar.collapsed {
+        width: 100%;
+    }
+
+    .sidebar.collapsed .toggle-btn {
+        position: static;
+        width: auto;
+        padding: 8px 15px;
+        margin: 0;
+    }
+
+    .sidebar.expanded .toggle-btn:not(:first-child) {
+        display: block;
+    }
+
+    #mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 50px;
+        left: 0;
+        right: 0;
+        background: #2d2d2d;
+        border-top: 1px solid #404040;
+        height: 40px;
+        justify-content: center;
+        gap: 10px;
+        padding: 5px;
+        z-index: 99;
+    }
+}
