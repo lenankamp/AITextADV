@@ -362,6 +362,7 @@ async function entityLeavesArea(name, text) {
         name: name,
         text: text
     }, settings.sampleQuestions);
+    console.log("Entity Leaves Area Response: ", response);
     //find the area referenced in response
     let targetArea = null;
     if(areas[response]) {
@@ -611,15 +612,15 @@ async function outputAutoCheck(text, context="") {
                     timeToAdvance = (31 - hours) * 3600 + (60 - minutes) * 60 - seconds;
                 }
                 // if player has mild consequence, remove the first in the array, else if moderate, check the first time in consquenceTimee.moderate, if it's been more than 7 days, remove it and the first moderate consequnce, if no moderate consequences, but a severe, check the first time in consquenceTimee.severe, if it's been more than 30 days, remove it and the first severe consequnce
-                if (settings.charsheet_fae.consequences.mild.length > 0) {
+                if (settings.charsheet_fae.consequences?.mild.length > 0) {
                     settings.charsheet_fae.consequences.mild.shift();
-                } else if (settings.charsheet_fae.consequences.moderate.length > 0) {
+                } else if (settings.charsheet_fae.consequences?.moderate.length > 0) {
                     const firstModerateTime = settings.charsheet_fae.consequenceTime.moderate[0];
                     if (timeDiff(firstModerateTime, settings.current_time) > 7*60*60*24) {
                         settings.charsheet_fae.consequences.moderate.shift();
                         settings.charsheet_fae.consequenceTime.moderate.shift();
                     }
-                } else if (settings.charsheet_fae.consequences.severe.length > 0) {
+                } else if (settings.charsheet_fae.consequences?.severe.length > 0) {
                     const firstSevereTime = settings.charsheet_fae.consequenceTime.severe[0];
                     if (timeDiff(firstSevereTime, settings.current_time) > 30*60*60*24) {
                         settings.charsheet_fae.consequences.severe.shift();
@@ -642,6 +643,7 @@ async function outputAutoCheck(text, context="") {
                 let severity = 0;
                 for(const consequenceTest of response.split('\n')) {
                     if (consequenceTest.startsWith('1.') && !consequenceTest.includes('n/a') && consequenceTest.trim() !== '1.') {
+                        // minutes answer is ignored as a consequence
                         const timeInjured = consequenceTest.replace("1. ", '').stripNonAlpha().toLowerCase().trim();
                         if (timeInjured.includes("hours") && severity === 0) {
                             severity = 1;
@@ -652,7 +654,6 @@ async function outputAutoCheck(text, context="") {
                         }
                     } else if (severity > 0 && consequenceTest.startsWith('2.') && !consequenceTest.includes('n/a') && consequenceTest.trim() !== '2.') {
                         const consequence = consequenceTest.replace("2. ", '').stripNonAlpha().trim();
-                        console.log("Adding consequence.",severity,consequence);
                         if(!settings.charsheet_fae.consequences) {
                             settings.charsheet_fae.consequences = { mild: [], moderate: [], severe: [] };
                         }
@@ -730,6 +731,7 @@ async function outputAutoCheck(text, context="") {
                     const changes = changeResponse.split('\n');
 
                     let affinityChange = 0;
+                    let recordMemory = false;
 
                     for (const change of changes) {
                         if (change.startsWith('1.')) {
@@ -741,18 +743,22 @@ async function outputAutoCheck(text, context="") {
                             if (change.toLowerCase().includes('yes')) {
                                 affinityChange = Math.max(1, affinityChange);
                             }
-                            continue;
                         } else if (change.startsWith('3.')) {
                             if (change.toLowerCase().includes('yes')) {
                                 affinityChange = Math.max(1, affinityChange);
                             }
-                            continue;
                         } else if (change.startsWith('4.')) {
                             if (change.toLowerCase().includes('yes')) {
-                                // no immediate removal of enmity
-                                // record memory
+                                recordMemory = true; // record memory as a new entry in memory array format currenttime - memory
+                                // record memory as a new entry in memory array format currenttime - memory
+                                
                             }
-                            continue;
+                        } else if (change.startsWith('5.') && recordMemory) {
+                            const memory = change.replace("5. ", '').stripNonAlpha().trim();
+                            if (!target.memory) {
+                                target.memory = [];
+                            }
+                            target.memory.unshift({ time: settings.current_time, memory: memory });
                         }
                     }                
                     target.affinity += affinityChange;
@@ -796,33 +802,37 @@ async function outputAutoCheck(text, context="") {
                     const changes = changeResponse.split('\n');
 
                     let affinityChange = 0;
+                    let recordMemory = false;
 
                     for (const change of changes) {
                         if (change.startsWith('1.')) {
                             if(change.toLowerCase().includes('yes')) {
                                 affinityChange = settings.affinity_threshold - (target.affinity % settings.affinity_threshold);
                                 if (affinityChange === 0) affinityChange = settings.affinity_threshold;
-                            } else continue;
+                            }
                         } else if (change.startsWith('2.')) {
                             if (change.toLowerCase().includes('yes')) {
                                 affinityChange = Math.max(1, affinityChange);
                             }
-                            continue;
                         } else if (change.startsWith('3.')) {
                             if (change.toLowerCase().includes('yes')) {
                                 affinityChange = Math.max(1, affinityChange);
                             }
-                            continue;
                         } else if (change.startsWith('4.')) {
                             if (change.toLowerCase().includes('yes')) {
                                 if (target.affinity > 0) {
                                     affinityChange = target.affinity;
                                 }
-                                // record memory
+                                recordMemory = true;
                             }
-                            continue;
+                        } else if (change.startsWith('5.') && recordMemory) {
+                            const memory = change.replace("5. ", '').stripNonAlpha().trim();
+                            if (!target.memory) {
+                                target.memory = [];
+                            }
+                            target.memory.unshift({ time: settings.current_time, memory: memory });
                         }
-                    }                
+                    }
                     target.affinity -= affinityChange;
                     if(target.affinity == 0) {
                         target.affinity = -1;
@@ -847,6 +857,43 @@ function getCreatureAffinity(affinity) {
     if (affinity < 0) return settings.negative_affinities[Math.min(Math.floor(-affinity / settings.affinity_threshold), settings.negative_creature_affinities.length - 1)];
 }
 
+function getMemoryForContext(entity) {
+    if (!entity.memory || entity.memory.length === 0) return '';
+    formattedMemory = entity.name + " remembers ";
+    for (let i = 0; i < entity.memory.length; i++) {
+        const memory = entity.memory[i];
+        const timeMemory = timeDiff(memory.time, settings.current_time);
+        if (i < entity.memory.length - 1) {
+            if(timeMemory < 60) {
+                formattedMemory += memory.memory + " moments ago, ";
+            } else if (timeMemory < 60*60*24) {
+                formattedMemory += memory.memory + " recently, ";
+            } else if (timeMemory < 60*60*24*7) {
+                formattedMemory += memory.memory + " this week, ";
+            } else if (timeMemory < 60*60*24*30) {
+                formattedMemory += memory.memory + " a while ago, ";
+            } else {
+                formattedMemory += memory.memory + " long ago, ";
+            }
+        } else {
+            if(i != 0) {
+                formattedMemory += "and ";
+            }
+            if(timeMemory < 60) {
+                formattedMemory += memory.memory + " moments ago.";
+            } else if (timeMemory < 60*60*24) {
+                formattedMemory += memory.memory + " recently.";
+            } else if (timeMemory < 60*60*24*7) {
+                formattedMemory += memory.memory + " this week.";
+            } else if (timeMemory < 60*60*24*30) {
+                formattedMemory += memory.memory + " a while ago.";
+            } else {
+                formattedMemory += memory.memory + " long ago.";
+            }
+        }
+    }
+    return formattedMemory;
+}
 
 function areaContext(areaPath) {
     let area = areas[areaPath];
@@ -864,6 +911,7 @@ function areaContext(areaPath) {
                     name: person.name, 
                     description: person.description,
                     affinity: "Disposition towards " + settings.player_name + ": " + getAffinity(person.affinity) + "\n",
+                    memory: person.memory ? getMemoryForContext(person) : ''
                 })
             ).join('');
         context += replaceVariables(settings.areaPeopleContext, { 
@@ -1394,11 +1442,6 @@ async function moveToArea(area, describe=0, text="") {
         targetArea = area;
     } else if (areas[currentArea].sublocations[area]) {
         targetArea = areas[currentArea].sublocations[area].path;
-        if(!areas[targetArea]) {
-            if(text === "")
-                await generateArea(targetArea, areas[currentArea].sublocations[area].description);
-            else await generateArea(targetArea, areas[currentArea].sublocations[area].description, contextDepth=3);
-        }
     } else if (area.includes('/')) {
         const [topArea, ...subPaths] = area.split('/');
         if (!areas[topArea]) {
@@ -1431,33 +1474,24 @@ async function moveToArea(area, describe=0, text="") {
         }
         targetArea = currentPath;
     } else if (!areas[area]) {
-        const areaList = Object.keys(areas).join(', ') + ', ' + Object.keys(areas[currentArea].sublocations).join(', ');
-        const proximityPrompt = replaceVariables(settings.moveToAreaProximityPrompt, {
-            newArea: area
-        });
-        
-        const response = await generateText(settings.question_param, settings.world_description + "\n\n\nPassage:\n" + text + "\nLocations: "+ areaList + "\n\n" + proximityPrompt, '', {
+        // arealist should be a comma seperateed list including the names of the current area, all its sublocations, and the name's in its path
+        const areaList = currentArea.split('/').slice(0, -1).concat(Object.keys(areas[currentArea].sublocations)).join(', ');
+        const response = await generateText(settings.question_param, settings.world_description + "\n\n\nPassage:\n" + text + "\nLocations: "+ areaList + "\n\n" + settings.moveToAreaProximityPrompt, '', {
             areaList: areaList,
             currentArea: currentArea,
             newArea: area,
             text: text
         }, settings.sampleQuestions);
+        console.log("Move to ", areaList, " Response:\n", response);
         
         if (response !== 'n/a') {
             const responseCleaned = response.stripNonAlpha();
-            const parentArea = Object.keys(areas).find(a => {
-                const isMatch = a === responseCleaned || Object.keys(areas[a].sublocations).includes(responseCleaned);
-                return isMatch;
-            });
-            if(text === "")
-                await generateArea(parentArea + "/" + area);
-            else await generateArea(parentArea + "/" + area, contextDepth=3);
-
-            if (!areas[parentArea].sublocations) {
-                areas[parentArea].sublocations = {};
+            if (areas[currentArea].sublocations[responseCleaned]) {
+                targetArea = areas[currentArea].sublocations[responseCleaned].path + '/' + area;
+            } else if (currentArea.includes(responseCleaned)) {
+                const parentArea = currentArea.substring(0, currentArea.indexOf(responseCleaned) + responseCleaned.length);
+                targetArea = parentArea + '/' + area;
             }
-            areas[parentArea].sublocations[area] = { path: parentArea + '/' + area, name: area, description: areas[parentArea + '/' + area].description };
-            targetArea = parentArea + '/' + area;
         }
     } 
     if(targetArea === null) {
@@ -1479,6 +1513,12 @@ async function moveToArea(area, describe=0, text="") {
         await generateArea(area, '', newX, newY, 3);
         targetArea = area;
     }
+    if(!areas[targetArea]) {
+        if(text === "")
+            await generateArea(targetArea, areas[currentArea].sublocations[area]?.description);
+        else await generateArea(targetArea, areas[currentArea].sublocations[area]?.description, contextDepth=3);
+    }
+
 
     if(text != "" && areas[currentArea].people && areas[currentArea].people.length > 0) {
         const peopleNames = areas[currentArea].people
@@ -1569,7 +1609,7 @@ async function moveToArea(area, describe=0, text="") {
             const followerNames = followers.map(follower => follower.name).join(', ');
             prompt += " along with " + followerNames;
         }
-        prompt += describe > 1 ? " and arrives at " : " and enters " + areas[targetArea].name + '.';
+        prompt += (describe > 1 ? " and arrives at " : " and enters ") + areas[targetArea].name + '.';
     }
     
     currentArea.lastVisted = settings.current_time;

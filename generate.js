@@ -22,11 +22,11 @@ function updateQueueStatus() {
     
     let status = 'Generating ';
     if (artCount > 0 && textCount > 0) {
-        status += `${artCount} Image${artCount > 1 ? 's' : ''} and ${textCount} Text`;
+        status += `${artCount} Image${artCount > 1 ? 's' : ''} and Text`;
     } else if (artCount > 0) {
         status += `${artCount} Image${artCount > 1 ? 's' : ''}`;
     } else if (textCount > 0) {
-        status += `${textCount} Text`;
+        status += `Text`;
     }
     
     queueStatusEl.textContent = status;
@@ -221,7 +221,6 @@ async function generateTextImpl(params, input, post = '', variables = {}, sample
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             const taskData = await response.json();
-            console.log("Task submitted:", taskData);
 
             // Poll for the result
             const taskId = taskData.id;
@@ -262,7 +261,6 @@ async function pollTextStatus(taskId, apiKey) {
         const statusData = await response.json();
 
         if (statusData.done) {
-            console.log("Generated text:", statusData.generations[0].text);
             completed = true;
         } else if (statusData.faulted) {
             throw new Error("Text generation failed");

@@ -50,20 +50,6 @@ function loadDefaultSettings() {
         'Pokémon Bond': "You get a +2 to create advantages when working with your Pokémon.",
         'Quick Reflexes': "You get a +2 to overcome obstacles when dodging attacks.",
         'Strategic Thinker': "You get a +2 to create advantages when planning your next move."
-      },
-      stress: {
-        1: false,
-        2: false,
-        3: false
-      },
-      consequences: {
-        mild: [],
-        moderate: [],
-        severe: []
-      },
-      consequenceTime: {
-        moderate: [],
-        severe: []
       }
     },
     // rules
@@ -209,7 +195,7 @@ function loadDefaultSettings() {
     areaPathsContext: "Paths or Exits may lead to:\n$paths",
     areaTimeContext: "Time: $timeOfDay of $dayOfWeek in $season\n",
     subLocationFormat: "$name: $description\n",
-    entityFormat: "$name: $description\n$affinity\n",
+    entityFormat: "$name: $description$affinity$memory\n",
     action_string: "Describe the player taking the action and then the resulting story.",
     affinityGainCheck:"[Answer the following questions in a numbered list format in regard to the passage and $name. If the question can not be answered just respond with 'n/a'. 1. Yes or no, did $player do something so amazing for $name that there's no possible way they wouldn't consider them a $newaffinity? 2. Yes or no, did $player do something for $name that only someone considered at least a $newaffinty might do? 3. Yes or no, did $name do something for $player that only someone considered at least a $newaffinty might do? 4. Yes or no, did $player do something so kind and wonderful for $name, that they will remember it as long as they live? 5. In 6 words only giving the completion of the sentence, complete the senstence '$name remembers that ___']",
     affinityLossCheck:"[Answer the following questions in a numbered list format in regard to the passage and $name. If the question can not be answered just respond with 'n/a'. 1. Yes or no, did $player do something so horrible to $name that there's no possible way they wouldn't consider them $newaffinity? 2. Yes or no, did $player do something to $name that someone considered $newaffinty might do? 3. Yes or no, did $name do something to $player that someone considered $newaffinty might do? 4. Yes or no, did $player do something that $name will never be able to forgive so long as they live? 5. In 6 words only giving the completion of the sentence, complete the senstence '$name remembers that ___']",
@@ -222,10 +208,10 @@ function loadDefaultSettings() {
     addCreatureDescriptionPrompt: "World Info: $world\nLocated in $areaName: $areaDescription\n\n[Write a description of '$name'. Write a 1-2 sentence physical description, and a 1-2 sentence description of attidue dispositon or apparent motivation. If there is not enough information in the context, be creative.]",
     outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If there are any $settings.setient_string$ in the scene besides %settings.player_name% and those listed in area, what is their name, or a simple two word description if name is not revealed? 2. If there are any $settings.creature_string$ in the scene besides $settings.player_name$ and those listed in area, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. Have any $settings.creature_string$ become $settings.sentient_string$, what is their name? 7. Have any $settings.sentient_string$ become $settings.creature_string$, what is their name? 8. If a new thing is in the scene, what is its name? 9. If a path to a location besides those lasted in context has been revealed, what is the location's name?]",
     outputAutoCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. If a question has multiple answers, answer the question multiple times preceeded by the question number on each line separated by new lines. 1. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest. 2. If a person, creature, or thing had a signficant change to their physical or emotional state, what is their name? 3. Name any person or creature that grew in appreciation for the player, %settings.player_name%. 4. Name any person or creature that grew in fear, enmity, or distrust of the player, %settings.player_name%.]",
-    consequencePrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. 1. If I, the player $player, suffered emotional or physical harm in the passage, how long would you estimate it would take to recover? Answer in terms of rest time choosing one of the following: hours, days, years, or longer. 2. If $player suffered emotional or physical harm, creatively describe the immediate and lingering effects in 6 words.]",
+    consequencePrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. 1. If I, the player $player, suffered emotional or physical harm in the passage, how long would you estimate it would take to recover? Answer in terms of rest time choosing one of the following: minutes, hours, days, years, or longer. 2. If $player suffered emotional or physical harm, creatively describe the immediate and lingering effects in 6 words.]",
     moveToAreaProximityPrompt: '[Depending on the distance traveled in the passage, would "$newArea" be best described as proximate to one of the previously listed locations? Specify the location and only the location name from the list if such is the case, otherwise answer n/a.]',
     moveToAreaPeoplePrompt: '[Answer the following question in a list format separate by \'\n\' in regard to the passage. If the question can not be answered just respond with \'n/a\' and no explanation. Among $peopleNames, who moved with the player?]',
-    entityLeavesAreaPrompt: '[In the passage, to which of the adjacent areas in the context did $name move to? If ambiguous be creative and give the most fitting among the options.]',
+    entityLeavesAreaPrompt: '[In the passage, to which of the adjacent areas in the context did $name move to? If ambiguous be creative and give the most fitting among the options. Only give the area name without any other text.]',
     generateNewDescription: '\nPrevious Description: $description\n\n[Generate a new description for $name reflecting any significant changes in the context. The previous description should remain relatively unchanged unless something from recent events contradicts or is significantly important. Only $name should be mentioned in the description output. Description should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks.]',
     // sample prompts
     sampleSublocations: [
