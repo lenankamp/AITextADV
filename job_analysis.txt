@@ -1,0 +1,1114 @@
+
+Archer
+======
+
+Description:
+-----------
+Skilled ranged combatants who excel at precision attacks from a distance. Masters of tactical positioning and battlefield control through various arrow types. In combat, they provide reliable single-target and area damage while maintaining safe distance.
+
+Base Stats:
+-----------
+HP: 95
+MP: 45
+PA: 9
+MA: 5
+SP: 9
+EV: 7
+
+Growth Rates:
+-------------
+HP: 30
+MP: 8
+PA: 0.4
+MA: 0.2
+SP: 0.4
+EV: 0.3
+
+Active Abilities:
+----------------
+CHARGE: Powerful charged shot (MP: 12) [JP: 100]
+RAPID_FIRE: Multiple quick shots (MP: 15) [JP: 200]
+ARROW_RAIN: Deals damage to all enemies in an area (MP: 20) [JP: 300]
+PRECISION_SHOT: High accuracy shot with increased critical rate (MP: 18) [JP: 400]
+SNIPER_SHOT: Long-range precision attack (MP: 25) [JP: 450]
+DISABLING_SHOT: Deals damage and slows the target (MP: 15) [JP: 250]
+WEAKNESS_SHOT: Reduces target defense while dealing damage (MP: 25) [JP: 450]
+PIERCING_ARROW: Arrow that pierces through defenses (MP: 28) [JP: 400]
+TAKEDOWN_SHOT: Powerful shot that knocks target back (MP: 32) [JP: 500]
+BARRAGE: Multiple shots hitting all enemies in area (MP: 35) [JP: 600]
+
+Reaction Abilities:
+------------------
+ARCHER_GUARD: Reduces damage from ranged attacks [JP: 200]
+COUNTER_SHOT: Chance to counter with a ranged attack [JP: 300]
+
+Support Abilities:
+-----------------
+CONCENTRATE: Increases accuracy of attacks [JP: 150]
+PRECISE_AIM: Improves critical hit chance [JP: 300]
+
+Requirements:
+------------
+SQUIRE level 2
+
+==================================================
+
+
+Bard
+====
+
+Description:
+-----------
+Musical specialists who empower allies and weaken foes through magical songs. Their varied repertoire includes defensive chants, restorative melodies, and disruptive harmonies. While their direct combat abilities are limited, their party-wide support capabilities and ability to inflict status effects make them invaluable strategists.
+
+Base Stats:
+-----------
+HP: 85
+MP: 85
+PA: 6
+MA: 9
+SP: 8
+EV: 6
+
+Growth Rates:
+-------------
+HP: 28
+MP: 25
+PA: 0.2
+MA: 0.45
+SP: 0.4
+EV: 0.3
+
+Active Abilities:
+----------------
+BATTLE_CHANT: Increase party defense through song (MP: 18) [JP: 200]
+LIFE_SONG: Grant regeneration to party (MP: 22) [JP: 250]
+MANA_PAEAN: Grant MP regeneration to party (MP: 25) [JP: 300]
+HERO_BALLAD: Major boost to party combat stats (MP: 35) [JP: 400]
+SILENCE_SONG: Silence all enemies in range (MP: 28) [JP: 350]
+CONFUSION_CAROL: Confuse enemies with discordant notes (MP: 30) [JP: 375]
+PEACEFUL_NOCTURNE: Put enemies to sleep with soothing melody (MP: 32) [JP: 400]
+NAMELESS_SONG: Grant random positive effects to party (MP: 20) [JP: 300]
+DISSONANT_WAVE: Damage enemies with sonic waves (MP: 32) [JP: 450]
+GRAND_FINALE: Powerful sonic attack that removes buffs (MP: 45) [JP: 500]
+
+Reaction Abilities:
+------------------
+PERFECT_PITCH: Counter attacks with random song effect [JP: 400]
+HARMONY_SHIELD: Reduce incoming magical damage [JP: 450]
+
+Support Abilities:
+-----------------
+SONG_MASTERY: Increase duration of song effects [JP: 500]
+RESONANCE: Increase potency of song effects [JP: 450]
+
+Requirements:
+------------
+WHITE_MAGE level 3
+ORACLE level 2
+DANCER level 2
+
+==================================================
+
+
+BlackMage
+=========
+
+Description:
+-----------
+Powerful spellcasters specializing in destructive elemental magic. Masters of offensive magic who can devastate enemies with fire, ice, and lightning. Their magical prowess allows them to break through enemy defenses and exploit elemental weaknesses. In dungeons, they excel at detecting and dispelling magical barriers, analyzing magical anomalies, and dealing with supernatural threats.
+
+Base Stats:
+-----------
+HP: 80
+MP: 100
+PA: 4
+MA: 12
+SP: 6
+EV: 5
+
+Growth Rates:
+-------------
+HP: 20
+MP: 25
+PA: 0.1
+MA: 0.6
+SP: 0.2
+EV: 0.2
+
+Active Abilities:
+----------------
+FIRE: magical ability power 1.8 (MP: 16) [JP: 200]
+FIRA: magical ability power 2.4 (MP: 24) [JP: 400]
+FIRAGA: magical ability power 3 (AoE) (MP: 48) [JP: 600]
+THUNDER: magical ability power 1.9 (MP: 18) [JP: 200]
+THUNDARA: magical ability power 2.5 (MP: 26) [JP: 400]
+THUNDAGA: magical ability power 3.1 (AoE) (MP: 50) [JP: 600]
+BLIZZARD: magical ability power 1.7 (MP: 14) [JP: 200]
+BLIZZARA: magical ability power 2.3 (MP: 22) [JP: 400]
+BLIZZAGA: magical ability power 2.9 (AoE) (MP: 46) [JP: 600]
+BREAK: status ability causing petrify (MP: 30) [JP: 450]
+DEATH: status ability causing instant_death (MP: 40) [JP: 750]
+FLARE: Ultimate single-target damage spell (MP: 60) [JP: 900]
+MAGICAL_BURST: Destroys magical barriers and enchantments (MP: 25) [JP: 300]
+ARCANE_DISRUPTION: Detect and dispel magical effects in an area (MP: 35) [JP: 450]
+ARCANE_EYE: Reveals magical traps and analyzes curses (MP: 15) [JP: 200]
+VOID_PULSE: Dispels magical fields in an area (MP: 35) [JP: 400]
+
+Reaction Abilities:
+------------------
+MAGIC_SHIELD: Chance to reduce incoming magical damage [JP: 400]
+SPELL_RETURN: Chance to reflect magical attacks [JP: 500]
+
+Support Abilities:
+-----------------
+MAGIC_BOOST: Increases magical damage [JP: 500]
+DUAL_CAST: Cast two spells in one turn [JP: 999]
+
+Requirements:
+------------
+CHEMIST level 2
+
+==================================================
+
+
+Calculator
+==========
+
+Description:
+-----------
+Tactical specialists who utilize mathematical principles to manipulate combat conditions. Their unique abilities allow them to target enemies based on numerical properties like height, level, and other statistical values. While complex to master, their ability to affect multiple targets simultaneously through mathematical calculations makes them powerful battlefield controllers.
+
+Base Stats:
+-----------
+HP: 85
+MP: 100
+PA: 6
+MA: 10
+SP: 5
+EV: 4
+
+Growth Rates:
+-------------
+HP: 28
+MP: 35
+PA: 0.2
+MA: 0.5
+SP: 0.2
+EV: 0.2
+
+Active Abilities:
+----------------
+CT_PRIME: Target units with prime CT values (MP: 25) [JP: 300]
+LEVEL_DIVIDE: Target units with divisible levels (MP: 28) [JP: 350]
+HEIGHT_FACTOR: Target units at specific height multiples (MP: 30) [JP: 400]
+MULTIPLY: Multiply spell effects on valid targets (MP: 35) [JP: 450]
+PRIME_STRIKE: Deal damage based on prime numbers (MP: 32) [JP: 500]
+NUMERICAL_FORCE: Deal damage based on numerical properties (MP: 30) [JP: 450]
+FACTOR_BARRIER: Create barrier based on mathematical factors (MP: 38) [JP: 550]
+DIVIDE_MP: Divide target's MP by a factor (MP: 20) [JP: 400]
+PERFECT_NUMBER: Optimize stats based on perfect numbers (MP: 45) [JP: 600]
+MODULO_MASTERY: Ultimate number-based attack (MP: 50) [JP: 700]
+
+Reaction Abilities:
+------------------
+ABSORB_MP: Chance to drain MP when hit [JP: 400]
+NUMERIC_GUARD: Reduce damage based on numerical properties [JP: 450]
+
+Support Abilities:
+-----------------
+ARCANE_MATH: Increase power of mathematical abilities [JP: 500]
+QUICK_CALCULATE: Reduce casting time of abilities [JP: 400]
+
+Requirements:
+------------
+BLACK_MAGE level 4
+TIME_MAGE level 3
+ORACLE level 3
+
+==================================================
+
+
+Chemist
+=======
+
+Description:
+-----------
+Masters of item manipulation and alchemy. Specializing in item usage, creation, and enhancement, they provide crucial support through potions and crafted goods. Their expertise allows them to identify, analyze, and mix items for maximum effectiveness.
+
+Base Stats:
+-----------
+HP: 90
+MP: 70
+PA: 6
+MA: 8
+SP: 7
+EV: 5
+
+Growth Rates:
+-------------
+HP: 25
+MP: 15
+PA: 0.2
+MA: 0.3
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+USE_POTION: Use healing items with increased effectiveness [JP: 100]
+THROW_ITEM: Throw items at increased range [JP: 200]
+MIX: Combine two items for unique effects (MP: 10) [JP: 400]
+ANALYZE: Reveal enemy stats and weaknesses (MP: 12) [JP: 250]
+BREW_POTION: Create basic healing potion (MP: 15) [JP: 300]
+ANTIDOTE_BREW: Create antidote for status effects (MP: 15) [JP: 300]
+SAMPLE: Extract useful components from monsters (MP: 20) [JP: 350]
+BOMB_CRAFT: Create explosive items from materials (MP: 25) [JP: 450]
+MEGA_POTION: Create powerful healing potion that affects area (MP: 35) [JP: 600]
+ELIXIR_CRAFT: Create powerful elixir that fully restores and buffs (MP: 50) [JP: 800]
+
+Reaction Abilities:
+------------------
+AUTO_POTION: Automatically use potion when damaged [JP: 400]
+QUICK_POCKET: Chance to use items without consuming them [JP: 450]
+
+Support Abilities:
+-----------------
+ITEM_BOOST: Increase effectiveness of used items [JP: 500]
+MEDICINE_LORE: Increase healing from items and abilities [JP: 400]
+
+==================================================
+
+
+Dancer
+======
+
+Description:
+-----------
+Agile performers who weave combat and artistry into mesmerizing techniques. Specialists in area-of-effect status conditions and party support through various dances. In combat, they excel at crowd control and debuffing multiple enemies simultaneously.
+
+Base Stats:
+-----------
+HP: 90
+MP: 75
+PA: 7
+MA: 8
+SP: 9
+EV: 7
+
+Growth Rates:
+-------------
+HP: 30
+MP: 20
+PA: 0.3
+MA: 0.4
+SP: 0.5
+EV: 0.4
+
+Active Abilities:
+----------------
+SLOW_DANCE: Reduce enemy speed through dance (MP: 16) [JP: 200]
+TEMPTING_WALTZ: Charm target with mesmerizing dance (MP: 24) [JP: 300]
+WAR_DANCE: Boost party attack through dance (MP: 20) [JP: 250]
+EXHAUSTING_POLKA: Drain enemy stamina and MP (MP: 28) [JP: 350]
+SIREN_DANCE: Confuse enemies with alluring dance (MP: 30) [JP: 400]
+BEWITCHING_DANCE: Put enemies to sleep with enchanting dance (MP: 35) [JP: 450]
+HEALING_WALTZ: Remove status effects with restorative dance (MP: 22) [JP: 280]
+FORBIDDEN_DANCE: Drain MP with dark dance (MP: 40) [JP: 500]
+TRANCE_DANCE: Enter powerful trance state (MP: 45) [JP: 600]
+LAST_WALTZ: Ultimate dance draining HP and MP (MP: 50) [JP: 800]
+
+Reaction Abilities:
+------------------
+RHYTHM_SENSE: Chance to dodge physical attacks [JP: 400]
+MOVING_GRACE: Counter attacks with dance effect [JP: 450]
+
+Support Abilities:
+-----------------
+DANCE_MASTERY: Improve success rate of dance abilities [JP: 500]
+PERFORMANCE_FOCUS: Enhances duration and effectiveness of dance abilities [JP: 450]
+
+Requirements:
+------------
+MONK level 3
+ORACLE level 3
+GEOMANCER level 2
+
+==================================================
+
+
+Dragoon
+=======
+
+Description:
+-----------
+Masters of aerial combat and verticality. Specializing in powerful jump attacks and mobility options, they excel at traversing difficult terrain and attacking from above. Their abilities to breach vertical barriers and scout from high vantage points make them invaluable for exploration.
+
+Base Stats:
+-----------
+HP: 115
+MP: 50
+PA: 10
+MA: 5
+SP: 9
+EV: 6
+
+Growth Rates:
+-------------
+HP: 38
+MP: 10
+PA: 0.5
+MA: 0.2
+SP: 0.4
+EV: 0.2
+
+Active Abilities:
+----------------
+JUMP: Basic jumping attack with height-based bonus (MP: 12) [JP: 200]
+LANCET: Drain HP and MP from target (MP: 8) [JP: 200]
+HIGH_JUMP: Powerful jump with longer charge time (MP: 20) [JP: 400]
+AERIAL_SURVEY: Scout high areas and upper floors (MP: 15) [JP: 300]
+BREACH: Break through weakened ceilings to new areas (MP: 28) [JP: 450]
+VERTICAL_PATH: Find paths between floor levels (MP: 22) [JP: 350]
+SWEEP_DIVE: Area-of-effect diving attack (MP: 25) [JP: 500]
+DRAGON_BREATH: Channel dragon energy in cone attack (MP: 16) [JP: 400]
+PIERCING_STRIKE: Ignore portion of enemy defense (MP: 22) [JP: 400]
+GEIRSKOGUL: Ultimate dragoon technique (MP: 45) [JP: 800]
+
+Reaction Abilities:
+------------------
+DRAGON_SPIRIT: Chance to nullify damage while airborne [JP: 400]
+AERIAL_RECOVERY: Chance to recover from falling damage [JP: 350]
+
+Support Abilities:
+-----------------
+DRAGON_MIGHT: Increase jump attack damage [JP: 500]
+SURE_LANDING: Always land safely from jumps [JP: 300]
+
+Requirements:
+------------
+THIEF level 3
+
+==================================================
+
+
+Geomancer
+=========
+
+Description:
+-----------
+Masters of terrain manipulation and natural forces. Their unique abilities allow them to draw power from and shape the environment around them. Experts at navigating and utilizing terrain features, they excel at area control and environmental manipulation while providing crucial exploration abilities.
+
+Base Stats:
+-----------
+HP: 100
+MP: 75
+PA: 7
+MA: 9
+SP: 8
+EV: 6
+
+Growth Rates:
+-------------
+HP: 35
+MP: 15
+PA: 0.3
+MA: 0.4
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+TERRAIN_POWER: Attack based on current terrain (MP: 25) [JP: 300]
+EARTH_RENDER: Powerful earth-based attack (MP: 30) [JP: 400]
+TERRA_PULSE: Area earth damage (MP: 35) [JP: 450]
+TERRAIN_SIGHT: Reveal detailed terrain layout and features (MP: 28) [JP: 350]
+EARTH_SENSE: Detect hidden paths and hazards in current area (MP: 20) [JP: 300]
+ROCK_PATH: Create temporary paths over gaps (MP: 32) [JP: 400]
+TERRAIN_SHIFT: Temporarily modify terrain properties (MP: 40) [JP: 500]
+SANDSTORM: Area damage with chance to blind (MP: 38) [JP: 450]
+NATURE_COMMUNION: Reveal environmental hazards and natural resources (MP: 45) [JP: 600]
+GAIA_FORCE: Ultimate earth-based attack (MP: 50) [JP: 700]
+
+Reaction Abilities:
+------------------
+EARTH_EMBRACE: Chance to heal when standing on natural terrain [JP: 400]
+NATURE_SHIELD: Reduces damage based on current terrain [JP: 450]
+
+Support Abilities:
+-----------------
+TERRAIN_MASTERY: Strengthens all terrain-based abilities [JP: 500]
+NATURE_STEP: Ignore negative terrain effects [JP: 400]
+
+Requirements:
+------------
+MONK level 3
+
+==================================================
+
+
+Knight
+======
+
+Description:
+-----------
+Elite warriors trained in the arts of sword and shield. Masters of defense who can protect allies and withstand powerful attacks. Their ability to cover for allies and maintain defensive formations makes them essential frontline fighters and protectors.
+
+Base Stats:
+-----------
+HP: 120
+MP: 40
+PA: 10
+MA: 4
+SP: 6
+EV: 4
+
+Growth Rates:
+-------------
+HP: 40
+MP: 5
+PA: 0.5
+MA: 0.1
+SP: 0.2
+EV: 0.1
+
+Active Abilities:
+----------------
+SLASH_BLADE: Basic powerful sword attack (MP: 15) [JP: 200]
+BREAK_ARMOR: Reduces target defense (MP: 18) [JP: 250]
+SHIELD_BASH: Shield attack that may stun target (MP: 20) [JP: 300]
+COVER: Take damage in place of an ally (MP: 25) [JP: 400]
+HOLY_BLADE: Holy-aspected sword attack (MP: 28) [JP: 450]
+SENTINEL: Greatly increase defense and draw attacks (MP: 30) [JP: 500]
+DEFENSIVE_STANCE: Become immobile but immune to physical damage (MP: 35) [JP: 600]
+MIGHTY_GUARD: Grant protective barriers to all allies (MP: 45) [JP: 700]
+SWORD_BREAK: Attack that may disarm the target (MP: 32) [JP: 550]
+DIVINE_GUARD: Ultimate defensive technique with regeneration (MP: 50) [JP: 800]
+
+Reaction Abilities:
+------------------
+PARRY: Chance to reduce physical damage [JP: 400]
+DEFENSE_BOOST: Chance to increase defense when hit [JP: 450]
+
+Support Abilities:
+-----------------
+EQUIP_SHIELD: Allows equipping of shields [JP: 300]
+DEFENSE_MASTERY: Passive increase to defense [JP: 400]
+STONESKIN: Reduces all damage taken [JP: 600]
+WEAPON_GUARD: Chance to block with equipped weapon [JP: 500]
+
+Requirements:
+------------
+SQUIRE level 2
+
+==================================================
+
+
+Mime
+====
+
+Description:
+-----------
+Unique specialists who can perfectly replicate the abilities of others. Through their mastery of mimicry, they can copy and enhance both ally and enemy techniques, making them incredibly versatile but demanding to master. Their ability to adapt and utilize multiple skill types simultaneously makes them powerful but requires deep understanding of various combat styles.
+
+Base Stats:
+-----------
+HP: 110
+MP: 90
+PA: 8
+MA: 8
+SP: 8
+EV: 7
+
+Growth Rates:
+-------------
+HP: 35
+MP: 28
+PA: 0.4
+MA: 0.4
+SP: 0.4
+EV: 0.35
+
+Active Abilities:
+----------------
+REPLICATE: Copies the last action performed by any character (MP: variable) [JP: 300]
+MIMIC_MASTERY: Enhanced version of basic mimicry with increased power (MP: variable) [JP: 450]
+PERFECT_COPY: Creates an exact replica of the copied ability (MP: original_cost) [JP: 600]
+MIME_SEQUENCE: Repeats a sequence of previously used actions (MP: 35) [JP: 500]
+BATTLE_MEMORY: Learn and store an enemy ability for later use (MP: 40) [JP: 550]
+TACTICAL_COPY: Copy an ability with enhanced tactical effects (MP: variable) [JP: 450]
+MIMIC_FORM: Temporarily copies enemy type and resistances (MP: 40) [JP: 550]
+ABILITY_SYNTHESIS: Combine two copied abilities into a new effect (MP: 45) [JP: 650]
+PERFECT_MIMICRY: Copy all actions from last round with enhanced power (MP: 50) [JP: 800]
+
+Reaction Abilities:
+------------------
+ADAPTIVE_FORM: Temporarily gains resistance to damage type received [JP: 500]
+
+Support Abilities:
+-----------------
+EXPERIENCED_MIMIC: Increases accuracy of mimicked abilities [JP: 450]
+
+Requirements:
+------------
+SAMURAI level 3
+CALCULATOR level 3
+DANCER level 2
+BARD level 2
+
+==================================================
+
+
+Monk
+====
+
+Description:
+-----------
+Disciplined martial artists who channel inner energy into powerful combat techniques. Masters of unarmed combat who combine physical prowess with spiritual power. Their meditation abilities and powerful strikes make them excellent frontline fighters who can sustain themselves through inner strength.
+
+Base Stats:
+-----------
+HP: 130
+MP: 40
+PA: 11
+MA: 5
+SP: 8
+EV: 7
+
+Growth Rates:
+-------------
+HP: 45
+MP: 8
+PA: 0.6
+MA: 0.2
+SP: 0.3
+EV: 0.3
+
+Active Abilities:
+----------------
+CHAKRA: Restore HP through meditation [JP: 200]
+PUMMEL: Strike multiple times with bare hands [JP: 300]
+EARTH_SLASH: Channel earth energy into an attack [JP: 400]
+INTERNAL_RELEASE: Release inner power to enhance abilities (MP: 15) [JP: 450]
+MEDITATION: Meditate to regenerate HP and MP over time (MP: 20) [JP: 350]
+PRESSURE_POINT: Strike vital points to paralyze target (MP: 18) [JP: 400]
+SPIRIT_BLADE: Infuse attacks with spiritual energy (MP: 25) [JP: 450]
+CHAKRA_BLAST: Release concentrated spiritual energy (MP: 30) [JP: 500]
+MANTRA: Project spiritual barrier around allies (MP: 35) [JP: 550]
+HUNDRED_FISTS: Ultimate martial arts technique (MP: 45) [JP: 800]
+
+Reaction Abilities:
+------------------
+COUNTER: Counter physical attacks [JP: 300]
+INNER_STRENGTH: Chance to restore HP when damaged [JP: 400]
+
+Support Abilities:
+-----------------
+BRAWLER: Increase unarmed combat damage [JP: 500]
+MARTIAL_MASTERY: Enhance all martial arts abilities [JP: 600]
+
+Requirements:
+------------
+KNIGHT level 2
+
+==================================================
+
+
+Ninja
+=====
+
+Description:
+-----------
+Highly skilled infiltrators and combat specialists who excel in stealth and agility. Masters of deception who can throw weapons, walk on walls, and create illusions. Their versatile skillset combines offensive capabilities with exceptional mobility and evasion, making them equally adept at combat and covert operations.
+
+Base Stats:
+-----------
+HP: 95
+MP: 60
+PA: 9
+MA: 7
+SP: 11
+EV: 8
+
+Growth Rates:
+-------------
+HP: 32
+MP: 12
+PA: 0.4
+MA: 0.3
+SP: 0.6
+EV: 0.4
+
+Active Abilities:
+----------------
+THROW: Throw any weapon as a projectile [JP: 200]
+SHADOW_WALK: Move silently through areas undetected (MP: 15) [JP: 300]
+WALL_WALK: Walk on walls to bypass obstacles (MP: 25) [JP: 400]
+SMOKE_BOMB: Create smoke screen that blinds enemies (MP: 12) [JP: 250]
+INFILTRATE: Sneak past enemy patrols undetected (MP: 20) [JP: 350]
+FLAME_VEIL: Fire-based ninjutsu attack (MP: 16) [JP: 300]
+WATER_VEIL: Water-based ninjutsu attack (MP: 20) [JP: 300]
+SHADOW_STITCH: Bind target's shadow to prevent movement (MP: 18) [JP: 350]
+MIRROR_IMAGE: Create illusory copies to evade attacks (MP: 28) [JP: 450]
+ASSASSINATE: Powerful strike with chance of instant death (MP: 45) [JP: 600]
+
+Reaction Abilities:
+------------------
+VANISH: Become temporarily invisible when hit [JP: 400]
+SHADOW_RETURN: Counter attacks with status effect [JP: 500]
+
+Support Abilities:
+-----------------
+DUAL_WIELD: Equip weapons in both hands [JP: 500]
+STEALTH: Improved stealth movement and detection avoidance [JP: 400]
+
+Requirements:
+------------
+ARCHER level 3
+THIEF level 4
+GEOMANCER level 2
+
+==================================================
+
+
+Oracle
+======
+
+Description:
+-----------
+Mystical seers who can predict and manipulate future events. Their foresight abilities allow them to anticipate enemy actions and discover hidden paths. In addition to combat support through prophecy, they excel at revealing secrets and preventing ambushes through their precognitive abilities.
+
+Base Stats:
+-----------
+HP: 85
+MP: 95
+PA: 4
+MA: 11
+SP: 7
+EV: 6
+
+Growth Rates:
+-------------
+HP: 25
+MP: 22
+PA: 0.1
+MA: 0.5
+SP: 0.2
+EV: 0.3
+
+Active Abilities:
+----------------
+DIVINE_SIGHT: Foresee upcoming enemy encounters and their patterns (MP: 18) [JP: 250]
+PREMONITION: See outcomes of actions before taking them (MP: 22) [JP: 300]
+PATTERN_VISION: Predict upcoming events and their consequences (MP: 20) [JP: 350]
+ENEMY_INSIGHT: Reveal enemy stats and predict next action (MP: 25) [JP: 400]
+FATE_MAP: Reveal locations of future events and treasures (MP: 30) [JP: 450]
+CONDEMN: Mark target for inevitable defeat (MP: 35) [JP: 500]
+STAR_SIGHT: Blind and silence target with starlight (MP: 38) [JP: 550]
+CALAMITY: Inflict multiple status effects (MP: 45) [JP: 650]
+FORTUNE_GUARD: Protect allies from critical hits (MP: 40) [JP: 600]
+PROPHECY_SHIELD: Use future sight to protect from incoming threats (MP: 50) [JP: 700]
+
+Reaction Abilities:
+------------------
+PRESCIENCE: Chance to survive fatal damage with 1 HP [JP: 400]
+FORTUNE_SHIELD: Chance to prevent status effects [JP: 450]
+
+Support Abilities:
+-----------------
+PROPHECY: Improves accuracy of prediction abilities [JP: 500]
+ASTRAL_SIGHT: Greatly improves all detection abilities [JP: 600]
+
+Requirements:
+------------
+WHITE_MAGE level 2
+
+==================================================
+
+
+Orator
+======
+
+Description:
+-----------
+Masters of persuasion and rhetoric who can influence both allies and enemies through speech. Their unique abilities allow them to negotiate with enemies, boost party morale, and even convince foes to retreat or join their cause.
+
+Base Stats:
+-----------
+HP: 88
+MP: 85
+PA: 5
+MA: 9
+SP: 8
+EV: 7
+
+Growth Rates:
+-------------
+HP: 28
+MP: 18
+PA: 0.2
+MA: 0.4
+SP: 0.3
+EV: 0.3
+
+Active Abilities:
+----------------
+PERSUADE: Convince enemy to temporarily join (MP: 25) [JP: 350]
+NEGOTIATE: Convince enemy to give up gil (MP: 15) [JP: 200]
+ENTHRALL: Confuse target with rhetoric (MP: 22) [JP: 300]
+PRAISE: Boost ally morale and stats (MP: 20) [JP: 250]
+CONDEMN: Lower enemy morale and stats (MP: 20) [JP: 250]
+PEACE_TALK: Attempt to end combat peacefully (MP: 30) [JP: 400]
+INTIMIDATE: Frighten enemy into retreat (MP: 28) [JP: 450]
+DIPLOMACY: Convince enemies to allow safe passage (MP: 35) [JP: 500]
+RALLYING_CRY: Powerful party-wide morale boost (MP: 45) [JP: 600]
+FINAL_ARGUMENT: Ultimate persuasion technique (MP: 50) [JP: 750]
+
+Reaction Abilities:
+------------------
+COUNTER_ARGUE: Chance to reflect status effects [JP: 400]
+DIPLOMATIC_IMMUNITY: Chance to avoid damage through negotiation [JP: 450]
+
+Support Abilities:
+-----------------
+NEGOTIATOR: Improve success rate of all speechcraft [JP: 500]
+SILVER_TONGUE: Reduce MP cost of speechcraft abilities [JP: 400]
+
+Requirements:
+------------
+ORACLE level 2
+TIME_MAGE level 2
+
+==================================================
+
+
+Samurai
+=======
+
+Description:
+-----------
+Elite warriors who combine martial prowess with spiritual techniques. Masters of the blade who excel at powerful single-target attacks and tactical positioning. Capable of drawing out a weapon's spiritual energy for devastating effects.
+
+Base Stats:
+-----------
+HP: 125
+MP: 70
+PA: 11
+MA: 7
+SP: 7
+EV: 6
+
+Growth Rates:
+-------------
+HP: 42
+MP: 15
+PA: 0.5
+MA: 0.3
+SP: 0.3
+EV: 0.3
+
+Active Abilities:
+----------------
+IAIDO: Quick-draw technique with high accuracy (MP: 20) [JP: 300]
+BLADE_SPIRIT: Area attack that releases sword energy (MP: 25) [JP: 400]
+STORM_EDGE: physical ability power 2.2 (MP: 22) [JP: 350]
+DEMON_SLICE: physical ability power 2.6 causing defense_down (MP: 28) [JP: 450]
+ZEN_SLASH: physical ability power 2.8 causing ignore_defense (MP: 35) [JP: 500]
+SOUL_BLADE: Sword technique that drains spiritual energy (MP: 32) [JP: 450]
+MEDITATION: Focus mind to enhance combat abilities (MP: 25) [JP: 400]
+BLADE_WARD: Create defensive barrier of spinning blades (MP: 30) [JP: 500]
+BINDING_BLADE: physical ability power 2 causing stop (MP: 30) [JP: 400]
+MASAMUNE: Ultimate sword technique with multiple effects (MP: 45) [JP: 600]
+
+Reaction Abilities:
+------------------
+THIRD_EYE: Chance to completely avoid next physical attack [JP: 450]
+RETRIBUTION: Counter physical attacks with increased power [JP: 500]
+
+Support Abilities:
+-----------------
+KATANA_MASTERY: causing katana_damage_up [JP: 500]
+INNER_PEACE: Allows wielding one-handed weapons in both hands for increased damage [JP: 600]
+
+Requirements:
+------------
+KNIGHT level 3
+MONK level 4
+DRAGOON level 2
+
+==================================================
+
+
+Squire
+======
+
+Description:
+-----------
+Entry-level warriors who form the foundation of military training. While their abilities may seem basic, they excel at fundamental combat techniques and basic battlefield support. Their versatile skill set includes basic healing, equipment maintenance, and tactical awareness, making them surprisingly adaptable in various situations.
+
+Base Stats:
+-----------
+HP: 100
+MP: 50
+PA: 8
+MA: 6
+SP: 8
+EV: 5
+
+Growth Rates:
+-------------
+HP: 30
+MP: 10
+PA: 0.4
+MA: 0.2
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+THROW_STONE: Basic ranged attack using stones [JP: 100]
+ACCUMULATE: Build up physical strength [JP: 150]
+DASH: Quick rushing attack [JP: 200]
+BASIC_MAINTENANCE: Basic repair of damaged equipment (MP: 10) [JP: 200]
+RALLY_CRY: Boost party morale, increasing stats slightly (MP: 15) [JP: 300]
+FIRST_AID: Basic healing technique (MP: 8) [JP: 250]
+FOCUS: Increase accuracy for next attack (MP: 5) [JP: 200]
+INSPECT: Analyze enemy or object for weaknesses (MP: 12) [JP: 250]
+BATTLE_TACTICS: Grant defensive bonus to nearby allies (MP: 18) [JP: 300]
+DETERMINATION: Chance to survive a fatal blow (MP: 25) [JP: 400]
+
+Reaction Abilities:
+------------------
+COUNTER_TACKLE: Counter physical attacks with a tackle [JP: 300]
+DEFENSIVE_STANCE: Chance to reduce incoming damage [JP: 250]
+
+Support Abilities:
+-----------------
+JP_BOOST: Increase JP gained from battles [JP: 300]
+MOVE_HP_UP: Recover HP while moving [JP: 250]
+
+==================================================
+
+
+Summoner
+========
+
+Description:
+-----------
+Masters of summoning magic who call forth powerful beings from other realms. Specialists in devastating area-of-effect damage and versatile elemental coverage through their various summons. Critical for dealing with powerful threats and providing strategic options through diverse summon effects.
+
+Base Stats:
+-----------
+HP: 90
+MP: 110
+PA: 6
+MA: 12
+SP: 6
+EV: 5
+
+Growth Rates:
+-------------
+HP: 30
+MP: 40
+PA: 0.2
+MA: 0.6
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+IFRIT: Summon fire elemental for massive damage (MP: 32) [JP: 400]
+SHIVA: Summon ice queen for damage and slow (MP: 30) [JP: 400]
+RAMUH: Summon thunder god for lightning assault (MP: 34) [JP: 400]
+BAHAMUT: Summon dragon king for ultimate destruction (MP: 45) [JP: 800]
+CARBUNCLE: Summon mystic beast for party reflection (MP: 28) [JP: 300]
+TITAN: Summon earth giant for ground-shaking attack (MP: 35) [JP: 450]
+LEVIATHAN: Summon sea serpent for tidal wave (MP: 40) [JP: 600]
+PHOENIX: Summon immortal bird for revival (MP: 50) [JP: 800]
+ODIN: Summon warrior king for devastating strike (MP: 45) [JP: 750]
+MOOGLE: Summon helpful moogle for party healing (MP: 22) [JP: 250]
+
+Reaction Abilities:
+------------------
+SUMMON_BOOST: Chance to enhance next summon's power [JP: 400]
+EIDOLON_SHIELD: Chance to summon protective barrier when hit [JP: 500]
+
+Support Abilities:
+-----------------
+SUMMON_MASTERY: Reduces MP cost of summons [JP: 600]
+EIDOLON_BOND: Strengthens summoned creatures [JP: 450]
+
+Requirements:
+------------
+BLACK_MAGE level 4
+TIME_MAGE level 3
+ORACLE level 2
+
+==================================================
+
+
+Thief
+=====
+
+Description:
+-----------
+Masters of stealth and acquisition who excel at obtaining resources through cunning. Their high speed and evasion make them difficult targets, while their stealing abilities provide crucial resources and strategic advantages. In dungeons, they are essential for disarming traps, picking locks, and finding hidden treasures, making them invaluable for exploration and resource gathering.
+
+Base Stats:
+-----------
+HP: 90
+MP: 45
+PA: 8
+MA: 5
+SP: 10
+EV: 9
+
+Growth Rates:
+-------------
+HP: 28
+MP: 10
+PA: 0.3
+MA: 0.2
+SP: 0.5
+EV: 0.4
+
+Active Abilities:
+----------------
+STEAL_GIL: steal ability causing steal_money [JP: 200]
+STEAL_ITEM: steal ability causing steal_consumable [JP: 300]
+STEAL_WEAPON: steal ability causing steal_equipment (MP: 10) [JP: 400]
+STEAL_HEART: status ability causing charm (MP: 18) [JP: 350]
+STEAL_EXP: special ability causing drain_experience (MP: 25) [JP: 450]
+MUG: physical ability power 1.5 causing damage_and_steal (MP: 15) [JP: 400]
+TRAPSMITH: Detect and safely disarm traps in the area (MP: 18) [JP: 350]
+LOCKPICK: Pick locks on doors and chests (MP: 10) [JP: 200]
+PILFER: Steals positive status effects from target (MP: 20) [JP: 500]
+
+Reaction Abilities:
+------------------
+VIGILANCE: Chance to detect and prevent surprise attacks [JP: 300]
+STICKY_FINGERS: Chance to steal items when hit [JP: 400]
+
+Support Abilities:
+-----------------
+TREASURE_HUNTER: Improves success rate of stealing abilities [JP: 400]
+TRAP_MASTERY: Enhances trap detection range and grants chance to auto-disarm [JP: 450]
+
+Requirements:
+------------
+ARCHER level 2
+
+==================================================
+
+
+TimeMage
+========
+
+Description:
+-----------
+Enigmatic spellcasters who manipulate the flow of time itself. Their mastery over temporal magic allows them to speed allies, slow enemies, and even stop time briefly. In combat, they excel at battlefield control through time manipulation. Their unique abilities to reset rooms and create temporal checkpoints make them invaluable for dungeon exploration and puzzle-solving.
+
+Base Stats:
+-----------
+HP: 82
+MP: 98
+PA: 4
+MA: 11
+SP: 7
+EV: 5
+
+Growth Rates:
+-------------
+HP: 22
+MP: 24
+PA: 0.1
+MA: 0.5
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+HASTE: Increase target's speed (MP: 24) [JP: 300]
+SLOW: Decrease target's speed (MP: 20) [JP: 300]
+STOP: Freeze target in time (MP: 30) [JP: 500]
+FLOAT: Allow target to float above ground (MP: 18) [JP: 200]
+GRAVITY: Deal damage based on target's max HP (MP: 32) [JP: 400]
+TIME_SLIP: Reset a room to its original state (MP: 35) [JP: 450]
+TEMPORAL_ANCHOR: Create a temporal checkpoint to return to (MP: 40) [JP: 500]
+QUICK: Grant an immediate extra turn (MP: 45) [JP: 800]
+METEOR: Call down devastating meteors (MP: 60) [JP: 900]
+
+Reaction Abilities:
+------------------
+TIME_WARD: Chance to resist time magic [JP: 400]
+TEMPORAL_SHIFT: Phase through time to avoid damage [JP: 500]
+
+Support Abilities:
+-----------------
+TIME_SENSE: Improve chance of acting first [JP: 300]
+TEMPORAL_MASTERY: Strengthen all time magic effects [JP: 600]
+
+Requirements:
+------------
+BLACK_MAGE level 2
+
+==================================================
+
+
+WhiteMage
+=========
+
+Description:
+-----------
+Primary healers and support specialists who wield holy magic. Masters of recovery magic, status ailment removal, and protective enchantments. Essential for party survival with powerful healing spells and defensive buffs. In dungeons, they excel at creating safe zones through purification magic and are particularly effective at dealing with undead threats and cursed areas.
+
+Base Stats:
+-----------
+HP: 85
+MP: 90
+PA: 4
+MA: 10
+SP: 6
+EV: 5
+
+Growth Rates:
+-------------
+HP: 25
+MP: 20
+PA: 0.1
+MA: 0.5
+SP: 0.2
+EV: 0.2
+
+Active Abilities:
+----------------
+CURE: healing ability power 1.8 (MP: 14) [JP: 200]
+CURA: healing ability power 2.4 (MP: 20) [JP: 400]
+CURAGA: healing ability power 3 (AoE) (MP: 40) [JP: 600]
+RAISE: healing ability causing revive (MP: 30) [JP: 500]
+RERAISE: support ability causing auto_revive (MP: 40) [JP: 800]
+ESUNA: healing ability causing remove_status (MP: 18) [JP: 300]
+PROTECT: support ability causing increase_defense (MP: 15) [JP: 250]
+SHELL: support ability causing increase_magic_defense (MP: 15) [JP: 250]
+HOLY: magical ability power 3.2 (MP: 56) [JP: 900]
+REGEN: support ability causing heal_over_time (MP: 22) [JP: 400]
+DISPEL: support ability causing remove_buffs (MP: 25) [JP: 350]
+SACRED_PURIFICATION: Creates a purified holy zone that cleanses and protects (MP: 38) [JP: 500]
+BANISH: Forces undead creatures to flee (MP: 30) [JP: 450]
+
+Reaction Abilities:
+------------------
+AUTO_REGEN: Chance to gain regen when damaged [JP: 400]
+DIVINE_GRACE: Chance to enhance healing received [JP: 450]
+
+Support Abilities:
+-----------------
+HEALING_BOOST: Increases healing power [JP: 500]
+MP_RECOVERY: Gradually restore MP while walking [JP: 600]
+
+Requirements:
+------------
+CHEMIST level 2
+
+==================================================
+
