@@ -21,11 +21,11 @@ function updateQueueStatus() {
     loaderEl.style.display = 'block';
     
     let status = 'Generating ';
-    if (artCount > 0 && textCount > 0) {
+    if ((artCount > 0 || isProcessingArt) && (textCount > 0 || isProcessingText)) {
         status += `${artCount} Image${artCount > 1 ? 's' : ''} and Text`;
-    } else if (artCount > 0) {
+    } else if (artCount > 0 || isProcessingArt) {
         status += `${artCount} Image${artCount > 1 ? 's' : ''}`;
-    } else if (textCount > 0) {
+    } else if (textCount > 0 || isProcessingText) {
         status += `Text`;
     }
     

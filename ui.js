@@ -146,10 +146,10 @@ resizerRow2.addEventListener('mousedown', initDragRow);
 resizerMap.addEventListener('mousedown', initDragMap);
 
 // Add touch event listeners
-resizerCol.addEventListener('touchstart', handleTouchStart);
-resizerRow1.addEventListener('touchstart', handleTouchStart);
-resizerRow2.addEventListener('touchstart', handleTouchStart);
-resizerMap.addEventListener('touchstart', handleTouchStart);
+resizerCol.addEventListener('touchstart', handleTouchStart, { passive: false });
+resizerRow1.addEventListener('touchstart', handleTouchStart, { passive: false });
+resizerRow2.addEventListener('touchstart', handleTouchStart, { passive: false });
+resizerMap.addEventListener('touchstart', handleTouchStart, { passive: false });
 
 if (window.matchMedia('(max-width: 768px)').matches) {
     mobileNav.style.display = 'flex';

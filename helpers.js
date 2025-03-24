@@ -75,15 +75,23 @@ function getSeason() {
 }
 
 function getDayOfWeek() {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const dateParts = settings.current_time.match(/(\d+)-(\d+)-(\d+)/).slice(1).map(Number);
-    const [year, month, day] = dateParts;
-    const date = new Date(year, month - 1, day); 
-    return days[date.getDay()];
+    try {
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const match = settings.current_time.match(/(\d+)-(\d+)-(\d+)/);
+        if (!match) return ""; // Return empty string if no valid date found
+        
+        const [_, year, month, day] = match;
+        const date = new Date(year, month - 1, day);
+        return days[date.getDay()];
+    } catch (error) {
+        console.warn("Error getting day of week:", error);
+        return ""; // Return empty string on error
+    }
 }
 
 function getPreciseTime() {
-    return settings.current_time.match(/\d+:\d+:\d+/);
+    const match = settings.current_time.match(/\d+:\d+:\d+/);
+    return match ? [match[0]] : ['00:00:00'];
 }
 
 function trimIncompleteSentences(text) {

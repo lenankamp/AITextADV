@@ -44,6 +44,25 @@ async function saveGame(saveFile = false) {
         }
     }
 
+    // Handle world map image
+    const mapImage = document.getElementById('mapImage');
+    let mapImageDataUrl = mapImage.src;
+    if (mapImage.src.startsWith('blob:')) {
+        try {
+            const response = await fetch(mapImage.src);
+            const blob = await response.blob();
+            mapImageDataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        } catch (error) {
+            console.error('Error converting map image:', error);
+            mapImageDataUrl = 'map.webp';
+        }
+    }
+
     const transaction = db.transaction(['data'], 'readwrite');
     const objectStore = transaction.objectStore('data');
     const data = {
@@ -55,7 +74,8 @@ async function saveGame(saveFile = false) {
             followers: followers,
             outputLog: document.getElementById('output').innerHTML,
             settings: settings,
-            playerImage: playerImageDataUrl
+            playerImage: playerImageDataUrl,
+            mapImage: mapImageDataUrl
         }
     };
     objectStore.put(data);
@@ -307,6 +327,22 @@ async function restoreGameState(data, images = null) {
                 document.getElementById('playerart').src = URL.createObjectURL(blob);
             } catch (error) {
                 console.error('Error loading player image:', error);
+            }
+        }
+    }
+
+    // Handle world map image
+    if (data.state.mapImage) {
+        const mapImage = document.getElementById('mapImage');
+        if (data.state.mapImage.startsWith('data:')) {
+            mapImage.src = data.state.mapImage;
+        } else if (!data.state.mapImage.startsWith('blob:')) {
+            try {
+                const blob = await fetchImage(data.state.mapImage);
+                mapImage.src = URL.createObjectURL(blob);
+            } catch (error) {
+                console.error('Error loading map image:', error);
+                mapImage.src = 'map.webp';
             }
         }
     }

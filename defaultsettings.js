@@ -23,6 +23,8 @@ function loadDefaultSettings() {
     starting_area_description: "A small, cluttered laboratory filled with books, equipment, and various Pokémon specimens. The air is filled with the scent of chemicals and the sound of bubbling beakers. A large desk is covered in papers and a computer, while shelves are lined with jars containing strange creatures.",
     current_time: "2025-06-12 08:00:00",
     climate: "temperate",
+    world_map_visual: "",
+    world_map_seed: 12345,
     // player details and character sheet
     player_name: "Young Trainer",
     player_description: "A young and eager Pokémon trainer, ready to embark on an adventure. They have a determined look in their eyes and a backpack slung over their shoulder. Their clothes are practical and comfortable, suitable for traveling through the wilderness.",

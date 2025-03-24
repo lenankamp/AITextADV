@@ -72,7 +72,7 @@ map.addEventListener('touchstart', (e) => {
             touch2.clientY - touch1.clientY
         );
     }
-});
+}, { passive: false });
 
 // Touch move handler
 map.addEventListener('touchmove', (e) => {
@@ -135,7 +135,7 @@ map.addEventListener('touchmove', (e) => {
         }
         lastTouchDistance = currentDistance;
     }
-});
+}, { passive: false });
 
 // Touch end handler
 map.addEventListener('touchend', (e) => {

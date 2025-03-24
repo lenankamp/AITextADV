@@ -431,11 +431,76 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
     container.classList.add('settings-container');
     container.style.maxWidth = '800px';
 
+    // Map preview section
+    const mapSection = document.createElement('div');
+    mapSection.className = 'editor-section preview-section';
+    mapSection.style.position = 'relative';
+    mapSection.style.minHeight = '300px';
+
+    const mapPreview = document.createElement('img');
+    mapPreview.className = 'editor-preview-image';
+    mapPreview.style.width = '300px';
+    mapPreview.style.height = '300px';
+    mapPreview.style.objectFit = 'fill';
+    mapPreview.src = document.getElementById('mapImage').src || 'map.webp';
+
+    // Map visual prompt input
+    const mapVisualGroup = document.createElement('div');
+    mapVisualGroup.style.position = 'relative';
+    const mapVisualLabel = document.createElement('label');
+    mapVisualLabel.textContent = 'Map Style:';
+    const mapVisualInput = document.createElement('textarea');
+    mapVisualInput.value = settings.world_map_visual || '';
+    mapVisualInput.style.height = '60px';
+    mapVisualInput.style.width = '100%';
+    mapVisualInput.placeholder = 'Enter a visual description for the map style';
+
+    // Map seed input
+    const mapSeedInput = document.createElement('input');
+    mapSeedInput.type = 'number';
+    mapSeedInput.value = settings.world_map_seed || Math.floor(Math.random() * 4294967295) + 1;
+    mapSeedInput.title = 'Seed';
+    mapSeedInput.className = 'seed-input';
+    mapSeedInput.style.width = '100px';
+    mapSeedInput.style.marginLeft = '10px';
+
+    const mapVisualHeader = document.createElement('div');
+    mapVisualHeader.style.display = 'flex';
+    mapVisualHeader.style.alignItems = 'center';
+    mapVisualHeader.appendChild(mapVisualLabel);
+    mapVisualHeader.appendChild(mapSeedInput);
+
+    // Add refresh button for map
+    const refreshMapBtn = document.createElement('button');
+    refreshMapBtn.className = 'refresh-button top-right';
+    refreshMapBtn.innerHTML = '🔄';
+    refreshMapBtn.title = 'Regenerate Map';
+    refreshMapBtn.onclick = async () => {
+        if (mapVisualInput.value) {
+            if(mapVisualInput.value === settings.world_map_visual && parseInt(mapSeedInput.value) === settings.world_map_seed)
+                mapSeedInput.value = Math.floor(Math.random() * 4294967295) + 1;
+            const artBlob = await generateArt(mapVisualInput.value, settings.thing_negprompt, parseInt(mapSeedInput.value));
+            if (artBlob instanceof Blob) {
+                mapPreview.src = URL.createObjectURL(artBlob);
+                settings.world_map_visual = mapVisualInput.value;
+                settings.world_map_seed = parseInt(mapSeedInput.value);
+                // Update the main map display
+                document.getElementById('mapImage').src = mapPreview.src;
+            }
+        }
+    };
+
+    mapSection.appendChild(mapPreview);
+    mapSection.appendChild(refreshMapBtn);
+    mapVisualGroup.appendChild(mapVisualHeader);
+    mapVisualGroup.appendChild(mapVisualInput);
+
     // Main editor section
     const editorSection = document.createElement('div');
     editorSection.className = 'editor-section';
     editorSection.style.display = 'flex';
     editorSection.style.flexDirection = 'column';
+    editorSection.style.overflowY = 'auto';
 
     // Theme input with generate button
     const themeGroup = document.createElement('div');
@@ -550,6 +615,8 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
     editorSection.appendChild(areaGroup);
     editorSection.appendChild(areaDescGroup);
     editorSection.appendChild(dateGroup);
+    editorSection.appendChild(mapSection);
+    editorSection.appendChild(mapVisualGroup);
 
     // Action buttons
     const actionButtons = document.createElement('div');
@@ -568,7 +635,9 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
                 world_description: worldDescInput.value,
                 starting_area: areaInput.value,
                 starting_area_description: areaDescInput.value,
-                current_time: dateInput.value
+                current_time: dateInput.value,
+                world_map_visual: mapVisualInput.value,
+                world_map_seed: parseInt(mapSeedInput.value),
             };
             // Save world settings
             Object.assign(settings, worldSettings);
@@ -582,6 +651,8 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
             settings.starting_area = areaInput.value;
             settings.starting_area_description = areaDescInput.value;
             settings.current_time = dateInput.value;
+            settings.world_map_visual = mapVisualInput.value;
+            settings.world_map_seed = parseInt(mapSeedInput.value);
             overlay.remove();
         };
     }

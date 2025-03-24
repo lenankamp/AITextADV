@@ -17,3 +17,16 @@ Review Move to Area for preferring sublocation generation....not very smart on w
 Memories are returning as "$name remembers <actual response>"
 
 Dismissed follower in different area lost image? Not recreated
+
+world map image generation
+    more or less done
+
+default affinity for area
+
+faction system
+
+area memory/events, possible happenings while gone
+
+add climate to world gen menu
+
+Have loader appear for entire time of initial world gen...

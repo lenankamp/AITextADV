@@ -13,7 +13,7 @@ function openSettings() {
         ],
       'World Generation': [
           'world_description', 'starting_area', 'starting_area_description', 
-          'current_time', 'climate'
+          'current_time', 'climate', 'world_map_visual', 'world_map_seed'
       ],
       'Player Details': [
           'player_name', 'player_description', 'player_visual', 'player_seed',
