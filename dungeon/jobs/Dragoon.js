@@ -1,9 +1,9 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Dragoon extends JobInterface {
     static getDescription() {
-        return "Masters of aerial combat and verticality. Specializing in powerful jump attacks and mobility options, they excel at traversing difficult terrain and attacking from above. Their abilities to breach vertical barriers and scout from high vantage points make them invaluable for exploration.";
+        return "Masters of aerial combat and verticality. Specializing in powerful jump attacks and mobility options, they excel at traversing difficult terrain and attacking from above.";
     }
 
     static getBaseStats() {
@@ -45,6 +45,7 @@ export class Dragoon extends JobInterface {
                     LANCET: {
                         name: 'Lancet',
                         type: 'drain',
+                        effect: ['mp_drain', 'hp_drain'],
                         power: 1.0,
                         mp: 8,
                         jpCost: 200,
@@ -58,30 +59,6 @@ export class Dragoon extends JobInterface {
                         mp: 20,
                         jpCost: 400,
                         description: 'Powerful jump with longer charge time'
-                    },
-                    AERIAL_SURVEY: {
-                        name: 'Aerial Survey',
-                        type: 'dungeon',
-                        effect: 'reveal_high_areas',
-                        mp: 15,
-                        jpCost: 300,
-                        description: 'Scout high areas and upper floors'
-                    },
-                    BREACH: {
-                        name: 'Breach',
-                        type: 'dungeon',
-                        effect: 'break_ceiling',
-                        mp: 28,
-                        jpCost: 450,
-                        description: 'Break through weakened ceilings to new areas'
-                    },
-                    VERTICAL_PATH: {
-                        name: 'Vertical Path',
-                        type: 'dungeon',
-                        effect: 'find_vertical_route',
-                        mp: 22,
-                        jpCost: 350,
-                        description: 'Find paths between floor levels'
                     },
                     SWEEP_DIVE: {
                         name: 'Sweep Dive',

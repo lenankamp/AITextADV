@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Archer extends JobInterface {
     static getDescription() {
@@ -74,7 +74,6 @@ export class Archer extends JobInterface {
                         name: 'Sniper Shot',
                         type: 'physical',
                         power: 2.2,
-                        range: 2,
                         mp: 25,
                         jpCost: 450,
                         description: 'Long-range precision attack'
@@ -101,7 +100,7 @@ export class Archer extends JobInterface {
                         name: 'Piercing Arrow',
                         type: 'physical',
                         power: 1.6,
-                        effect: 'ignore_defense',
+                        effect: 'armor_pierce',
                         mp: 28,
                         jpCost: 400,
                         description: 'Arrow that pierces through defenses'

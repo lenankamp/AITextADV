@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class WhiteMage extends JobInterface {
     static getDescription() {
@@ -71,15 +71,14 @@ export class WhiteMage extends JobInterface {
                     },
                     ESUNA: {
                         name: 'Esuna',
-                        type: 'healing',
-                        effect: 'remove_status',
+                        type: 'special',
                         mp: 18,
                         jpCost: 300
                     },
                     PROTECT: {
                         name: 'Protect',
                         type: 'support',
-                        effect: 'increase_defense',
+                        effect: 'protect',
                         mp: 15,
                         jpCost: 250
                     },
@@ -107,14 +106,13 @@ export class WhiteMage extends JobInterface {
                     },
                     DISPEL: {
                         name: 'Dispel',
-                        type: 'support',
-                        effect: 'remove_buffs',
+                        type: 'special',
                         mp: 25,
                         jpCost: 350
                     },
                     SACRED_PURIFICATION: {
                         name: 'Sacred Purification',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: ['purify_area', 'create_holy_barrier', 'cure_status'],
                         aoe: true,
                         mp: 38,
@@ -137,7 +135,7 @@ export class WhiteMage extends JobInterface {
                 AUTO_REGEN: {
                     name: 'Auto-Regen',
                     chance: 0.4,
-                    effect: 'self_regen',
+                    effect: 'regen',
                     jpCost: 400,
                     description: 'Chance to gain regen when damaged'
                 },

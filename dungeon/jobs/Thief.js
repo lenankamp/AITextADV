@@ -1,5 +1,6 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
+
 
 export class Thief extends JobInterface {
     static getDescription() {
@@ -34,22 +35,19 @@ export class Thief extends JobInterface {
                 abilities: {
                     STEAL_GIL: {
                         name: 'Steal Gil',
-                        type: 'steal',
-                        effect: 'steal_money',
+                        type: 'special',
                         mp: 0,
                         jpCost: 200
                     },
                     STEAL_ITEM: {
                         name: 'Steal Item',
-                        type: 'steal',
-                        effect: 'steal_consumable',
+                        type: 'special',
                         mp: 0,
                         jpCost: 300
                     },
                     STEAL_WEAPON: {
                         name: 'Steal Weapon',
-                        type: 'steal',
-                        effect: 'steal_equipment',
+                        type: 'special',
                         mp: 10,
                         jpCost: 400
                     },
@@ -63,7 +61,6 @@ export class Thief extends JobInterface {
                     STEAL_EXP: {
                         name: 'Steal EXP',
                         type: 'special',
-                        effect: 'drain_experience',
                         mp: 25,
                         jpCost: 450
                     },
@@ -77,7 +74,7 @@ export class Thief extends JobInterface {
                     },
                     TRAPSMITH: {
                         name: 'Trapsmith',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: ['detect_traps', 'disarm_trap', 'trap_analysis'],
                         mp: 18,
                         jpCost: 350,
@@ -85,7 +82,7 @@ export class Thief extends JobInterface {
                     },
                     LOCKPICK: {
                         name: 'Lockpick',
-                        type: 'utility',
+                        type: 'dungeon',
                         effect: 'unlock',
                         mp: 10,
                         jpCost: 200,
@@ -94,7 +91,6 @@ export class Thief extends JobInterface {
                     PILFER: {
                         name: 'Pilfer',
                         type: 'special',
-                        effect: 'steal_buffs',
                         mp: 20,
                         jpCost: 500,
                         description: 'Steals positive status effects from target'

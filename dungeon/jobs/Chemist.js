@@ -1,4 +1,5 @@
 import { JobInterface } from './JobInterface.js';
+import { JOBS } from './index.js';
 
 export class Chemist extends JobInterface {
     static getDescription() {
@@ -34,7 +35,7 @@ export class Chemist extends JobInterface {
                 abilities: {
                     USE_POTION: {
                         name: 'Use Potion',
-                        type: 'special',
+                        type: 'healing',
                         effect: 'enhance_item',
                         jpCost: 100,
                         description: 'Use healing items with increased effectiveness'
@@ -42,22 +43,20 @@ export class Chemist extends JobInterface {
                     THROW_ITEM: {
                         name: 'Throw Item',
                         type: 'special',
-                        effect: 'range_up',
+                        power: 'item_dependent',
                         jpCost: 200,
-                        description: 'Throw items at increased range'
+                        description: 'Throw items at enemies for various effects'
                     },
                     MIX: {
                         name: 'Mix',
                         type: 'special',
-                        effect: 'combine_items',
                         mp: 10,
                         jpCost: 400,
                         description: 'Combine two items for unique effects'
                     },
                     ANALYZE: {
                         name: 'Analyze',
-                        type: 'special',
-                        effect: 'reveal_stats',
+                        type: 'analyze',
                         mp: 12,
                         jpCost: 250,
                         description: 'Reveal enemy stats and weaknesses'
@@ -65,7 +64,6 @@ export class Chemist extends JobInterface {
                     BREW_POTION: {
                         name: 'Brew Potion',
                         type: 'special',
-                        effect: 'create_potion',
                         mp: 15,
                         jpCost: 300,
                         description: 'Create basic healing potion'
@@ -73,7 +71,6 @@ export class Chemist extends JobInterface {
                     ANTIDOTE_BREW: {
                         name: 'Antidote Brew',
                         type: 'special',
-                        effect: 'cure_status',
                         mp: 15,
                         jpCost: 300,
                         description: 'Create antidote for status effects'
@@ -81,7 +78,6 @@ export class Chemist extends JobInterface {
                     SAMPLE: {
                         name: 'Sample',
                         type: 'special',
-                        effect: 'extract_component',
                         mp: 20,
                         jpCost: 350,
                         description: 'Extract useful components from monsters'
@@ -89,26 +85,22 @@ export class Chemist extends JobInterface {
                     BOMB_CRAFT: {
                         name: 'Bomb Craft',
                         type: 'special',
-                        effect: 'create_explosive',
                         mp: 25,
                         jpCost: 450,
                         description: 'Create explosive items from materials'
                     },
                     MEGA_POTION: {
                         name: 'Mega Potion',
-                        type: 'special',
-                        effect: 'area_heal',
-                        mp: 35,
+                        type: 'healing',
+                        aoe: true,
                         jpCost: 600,
-                        description: 'Create powerful healing potion that affects area'
+                        description: 'Use powerful healing potion that affects area'
                     },
                     ELIXIR_CRAFT: {
                         name: 'Elixir Craft',
                         type: 'special',
-                        effect: ['full_restore', 'enhance_stats'],
-                        mp: 50,
                         jpCost: 800,
-                        description: 'Create powerful elixir that fully restores and buffs'
+                        description: 'Use powerful elixir that fully restores and buffs'
                     }
                 }
             },

@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Orator extends JobInterface {
     static getDescription() {
@@ -35,8 +35,8 @@ export class Orator extends JobInterface {
                 abilities: {
                     PERSUADE: {
                         name: 'Persuade',
-                        type: 'special',
-                        effect: 'temporary_ally',
+                        type: 'status',
+                        effect: 'charm',
                         mp: 25,
                         jpCost: 350,
                         description: 'Convince enemy to temporarily join'
@@ -44,7 +44,6 @@ export class Orator extends JobInterface {
                     NEGOTIATE: {
                         name: 'Negotiate',
                         type: 'special',
-                        effect: 'gain_gil',
                         mp: 15,
                         jpCost: 200,
                         description: 'Convince enemy to give up gil'
@@ -76,7 +75,6 @@ export class Orator extends JobInterface {
                     PEACE_TALK: {
                         name: 'Peace Talk',
                         type: 'special',
-                        effect: 'pacify_enemy',
                         mp: 30,
                         jpCost: 400,
                         description: 'Attempt to end combat peacefully'
@@ -89,18 +87,10 @@ export class Orator extends JobInterface {
                         jpCost: 450,
                         description: 'Frighten enemy into retreat'
                     },
-                    DIPLOMACY: {
-                        name: 'Diplomacy',
-                        type: 'special',
-                        effect: 'negotiate_passage',
-                        mp: 35,
-                        jpCost: 500,
-                        description: 'Convince enemies to allow safe passage'
-                    },
                     RALLYING_CRY: {
                         name: 'Rallying Cry',
                         type: 'support',
-                        effect: ['attack_up', 'defense_up', 'speed_up'],
+                        effect: ['attack_up', 'protect', 'haste'],
                         aoe: true,
                         mp: 45,
                         jpCost: 600,
@@ -110,7 +100,6 @@ export class Orator extends JobInterface {
                         name: 'Final Argument',
                         type: 'special',
                         power: 2.5,
-                        effect: 'overwhelming_presence',
                         mp: 50,
                         jpCost: 750,
                         description: 'Ultimate persuasion technique'

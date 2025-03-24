@@ -1,0 +1,707 @@
+=== Ability Analysis Report ===
+
+Summary:
+{
+  "totalEffects": 164,
+  "totalTypes": 9,
+  "totalElements": 10,
+  "totalTargetingTypes": 1
+}
+
+Ability Types (by frequency):
+physical: 38 uses
+magical: 37 uses
+support: 35 uses
+special: 28 uses
+status: 22 uses
+dungeon: 17 uses
+healing: 9 uses
+drain: 4 uses
+analyze: 2 uses
+
+Elements (by frequency):
+fire: 6 uses
+earth: 6 uses
+holy: 5 uses
+lightning: 4 uses
+ice: 4 uses
+non-elemental: 3 uses
+dragon: 2 uses
+water: 2 uses
+sonic: 1 uses
+wind: 1 uses
+
+All Effects (by frequency):
+protect: 10 uses
+slow: 6 uses
+attack_up: 6 uses
+shell: 6 uses
+mp_drain: 5 uses
+silence: 4 uses
+haste: 4 uses
+defense_down: 3 uses
+armor_pierce: 3 uses
+accuracy_up: 3 uses
+regen: 3 uses
+instant_death: 3 uses
+charm: 3 uses
+blind: 3 uses
+mp_regen: 2 uses
+sleep: 2 uses
+reflect: 2 uses
+confusion: 2 uses
+hp_drain: 2 uses
+detect_traps: 2 uses
+stun: 2 uses
+paralyze: 2 uses
+survive_fatal: 2 uses
+stop: 2 uses
+knockback: 1 uses
+ranged_defense_up: 1 uses
+increase_critical: 1 uses
+confuse: 1 uses
+random_buff: 1 uses
+counter_with_song: 1 uses
+extend_song_duration: 1 uses
+enhance_song_power: 1 uses
+petrify: 1 uses
+detect_magic: 1 uses
+dispel_field: 1 uses
+detect_magical_traps: 1 uses
+analyze_curses: 1 uses
+increase_magic_power: 1 uses
+cast_twice: 1 uses
+prime_target: 1 uses
+level_target: 1 uses
+height_target: 1 uses
+prime_damage: 1 uses
+number_based_damage: 1 uses
+numeric_shield: 1 uses
+perfect_stats: 1 uses
+remainder_damage: 1 uses
+number_defense: 1 uses
+enhance_math_magic: 1 uses
+reduce_cast_time: 1 uses
+enhance_item: 1 uses
+use_potion_when_hurt: 1 uses
+free_item_use: 1 uses
+improve_item_effect: 1 uses
+improve_healing: 1 uses
+fatigue: 1 uses
+magic_up: 1 uses
+evade_melee: 1 uses
+counter_with_dance: 1 uses
+increase_dance_success: 1 uses
+extend_dance_duration: 1 uses
+increase_dance_potency: 1 uses
+nullify_air_damage: 1 uses
+recover_fall: 1 uses
+jump_damage_up: 1 uses
+safe_landing: 1 uses
+reveal_terrain: 1 uses
+detect_passages: 1 uses
+create_path: 1 uses
+modify_terrain: 1 uses
+reveal_hazards: 1 uses
+detect_resources: 1 uses
+terrain_heal: 1 uses
+terrain_defense: 1 uses
+enhance_terrain_magic: 1 uses
+ignore_terrain: 1 uses
+protect_ally: 1 uses
+physical_immunity: 1 uses
+attack_down: 1 uses
+enable_shield: 1 uses
+damage_reduction: 1 uses
+weapon_block: 1 uses
+adapt_to_damage_type: 1 uses
+improve_copy_accuracy: 1 uses
+[object Object]: 1 uses
+hp_regen: 1 uses
+hp_restore: 1 uses
+unarmed_damage_up: 1 uses
+improve_martial_arts: 1 uses
+stealth_movement: 1 uses
+traverse_walls: 1 uses
+bypass_enemies: 1 uses
+immobilize: 1 uses
+create_decoy: 1 uses
+temporary_invisibility: 1 uses
+counter_with_status: 1 uses
+enable_dual_wielding: 1 uses
+improve_sneaking: 1 uses
+predict_encounters: 1 uses
+reveal_events: 1 uses
+reveal_treasure: 1 uses
+doom: 1 uses
+poison: 1 uses
+predict_critical: 1 uses
+predict_damage: 1 uses
+prevent_status: 1 uses
+enhance_prediction: 1 uses
+enhance_detection: 1 uses
+increase_stats: 1 uses
+decrease_stats: 1 uses
+fear: 1 uses
+retreat: 1 uses
+reflect_status: 1 uses
+avoid_damage: 1 uses
+improve_persuasion: 1 uses
+reduce_mp_cost: 1 uses
+spirit_drain: 1 uses
+blade_barrier: 1 uses
+critical_up: 1 uses
+anticipate_attack: 1 uses
+counter_with_power: 1 uses
+katana_damage_up: 1 uses
+enable_two_hand: 1 uses
+party_stats_up: 1 uses
+party_defense_up: 1 uses
+counter_attack: 1 uses
+reduce_damage: 1 uses
+increase_jp_gain: 1 uses
+heal_while_moving: 1 uses
+drown: 1 uses
+party_raise: 1 uses
+party_heal: 1 uses
+enhance_next_summon: 1 uses
+summon_barrier: 1 uses
+reduce_summon_mp_cost: 1 uses
+enhance_summons: 1 uses
+damage_and_steal: 1 uses
+disarm_trap: 1 uses
+trap_analysis: 1 uses
+unlock: 1 uses
+detect_ambush: 1 uses
+counter_steal: 1 uses
+increase_steal_rate: 1 uses
+extended_trap_detection: 1 uses
+auto_disarm: 1 uses
+levitate: 1 uses
+gravity_damage: 1 uses
+reset_room: 1 uses
+create_checkpoint: 1 uses
+resist_time_magic: 1 uses
+evade: 1 uses
+initiative_up: 1 uses
+enhance_time_magic: 1 uses
+revive: 1 uses
+auto_revive: 1 uses
+increase_magic_defense: 1 uses
+heal_over_time: 1 uses
+purify_area: 1 uses
+create_holy_barrier: 1 uses
+cure_status: 1 uses
+undead_repel: 1 uses
+enhance_healing: 1 uses
+increase_heal_power: 1 uses
+mp_regen_walking: 1 uses
+
+Targeting Types:
+[
+  "self"
+]
+
+Mechanics Usage:
+
+AOE (49 abilities):
+[
+  "Archer.active.ARROW_RAIN",
+  "Archer.active.BARRAGE",
+  "Bard.active.BATTLE_CHANT",
+  "Bard.active.LIFE_SONG",
+  "Bard.active.MANA_PAEAN",
+  "Bard.active.HERO_BALLAD",
+  "Bard.active.SILENCE_SONG",
+  "Bard.active.CONFUSION_CAROL",
+  "Bard.active.PEACEFUL_NOCTURNE",
+  "Bard.active.NAMELESS_SONG",
+  "Bard.active.DISSONANT_WAVE",
+  "Bard.active.GRAND_FINALE",
+  "BlackMage.active.FIRAGA",
+  "BlackMage.active.THUNDAGA",
+  "BlackMage.active.BLIZZAGA",
+  "BlackMage.active.ARCANE_DISRUPTION",
+  "Chemist.active.MEGA_POTION",
+  "Dancer.active.SLOW_DANCE",
+  "Dancer.active.WAR_DANCE",
+  "Dancer.active.EXHAUSTING_POLKA",
+  "Dancer.active.SIREN_DANCE",
+  "Dancer.active.BEWITCHING_DANCE",
+  "Dancer.active.HEALING_WALTZ",
+  "Dancer.active.FORBIDDEN_DANCE",
+  "Dancer.active.LAST_WALTZ",
+  "Dragoon.active.SWEEP_DIVE",
+  "Dragoon.active.GEIRSKOGUL",
+  "Geomancer.active.TERRA_PULSE",
+  "Geomancer.active.SANDSTORM",
+  "Geomancer.active.GAIA_FORCE",
+  "Knight.active.MIGHTY_GUARD",
+  "Monk.active.MANTRA",
+  "Ninja.active.SMOKE_BOMB",
+  "Oracle.active.FORTUNE_GUARD",
+  "Oracle.active.PROPHECY_SHIELD",
+  "Orator.active.RALLYING_CRY",
+  "Samurai.active.BLADE_SPIRIT",
+  "Summoner.active.IFRIT",
+  "Summoner.active.SHIVA",
+  "Summoner.active.RAMUH",
+  "Summoner.active.BAHAMUT",
+  "Summoner.active.CARBUNCLE",
+  "Summoner.active.TITAN",
+  "Summoner.active.LEVIATHAN",
+  "Summoner.active.PHOENIX",
+  "Summoner.active.MOOGLE",
+  "TimeMage.active.METEOR",
+  "WhiteMage.active.CURAGA",
+  "WhiteMage.active.SACRED_PURIFICATION"
+]
+
+CHARGE (3 abilities):
+[
+  "Archer.active.CHARGE",
+  "Dragoon.active.JUMP",
+  "Dragoon.active.HIGH_JUMP"
+]
+
+HITS (4 abilities):
+[
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.BARRAGE",
+  "Monk.active.PUMMEL",
+  "Monk.active.HUNDRED_FISTS"
+]
+
+Property Usage Analysis:
+
+name:
+Used 271 times
+Examples: [
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
+]
+
+type:
+Used 192 times
+Examples: [
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
+]
+
+power:
+Used 84 times
+Examples: [
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
+]
+
+mp:
+Used 187 times
+Examples: [
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
+]
+
+charge:
+Used 3 times
+Examples: [
+  "Archer.active.CHARGE",
+  "Dragoon.active.JUMP",
+  "Dragoon.active.HIGH_JUMP"
+]
+
+jpCost:
+Used 271 times
+Examples: [
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
+]
+
+description:
+Used 238 times
+Examples: [
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
+]
+
+hits:
+Used 4 times
+Examples: [
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.BARRAGE",
+  "Monk.active.PUMMEL"
+]
+
+aoe:
+Used 49 times
+Examples: [
+  "Archer.active.ARROW_RAIN",
+  "Archer.active.BARRAGE",
+  "Bard.active.BATTLE_CHANT"
+]
+
+accuracy:
+Used 1 times
+Examples: [
+  "Archer.active.PRECISION_SHOT"
+]
+
+critRate:
+Used 1 times
+Examples: [
+  "Archer.active.PRECISION_SHOT"
+]
+
+effect:
+Used 189 times
+Examples: [
+  "Archer.active.DISABLING_SHOT",
+  "Archer.active.WEAKNESS_SHOT",
+  "Archer.active.PIERCING_ARROW"
+]
+
+chance:
+Used 39 times
+Examples: [
+  "Archer.reaction.ARCHER_GUARD",
+  "Archer.reaction.COUNTER_SHOT",
+  "Bard.reaction.PERFECT_PITCH"
+]
+
+element:
+Used 34 times
+Examples: [
+  "Bard.active.DISSONANT_WAVE",
+  "BlackMage.active.FIRE",
+  "BlackMage.active.FIRA"
+]
+
+target:
+Used 3 times
+Examples: [
+  "Dancer.active.TRANCE_DANCE",
+  "Monk.active.CHAKRA",
+  "Monk.active.MEDITATION"
+]
+
+Per-Job Effect Analysis:
+
+Archer:
+Total effects: 7
+Effects: [
+  "slow",
+  "defense_down",
+  "armor_pierce",
+  "knockback",
+  "ranged_defense_up",
+  "accuracy_up",
+  "increase_critical"
+]
+
+Bard:
+Total effects: 12
+Effects: [
+  "protect",
+  "regen",
+  "mp_regen",
+  "attack_up",
+  "silence",
+  "confuse",
+  "sleep",
+  "random_buff",
+  "counter_with_song",
+  "shell",
+  "extend_song_duration",
+  "enhance_song_power"
+]
+
+BlackMage:
+Total effects: 10
+Effects: [
+  "petrify",
+  "instant_death",
+  "detect_magic",
+  "dispel_field",
+  "detect_magical_traps",
+  "analyze_curses",
+  "shell",
+  "reflect",
+  "increase_magic_power",
+  "cast_twice"
+]
+
+Calculator:
+Total effects: 12
+Effects: [
+  "prime_target",
+  "level_target",
+  "height_target",
+  "prime_damage",
+  "number_based_damage",
+  "numeric_shield",
+  "perfect_stats",
+  "remainder_damage",
+  "mp_drain",
+  "number_defense",
+  "enhance_math_magic",
+  "reduce_cast_time"
+]
+
+Chemist:
+Total effects: 5
+Effects: [
+  "enhance_item",
+  "use_potion_when_hurt",
+  "free_item_use",
+  "improve_item_effect",
+  "improve_healing"
+]
+
+Dancer:
+Total effects: 16
+Effects: [
+  "slow",
+  "charm",
+  "attack_up",
+  "fatigue",
+  "mp_drain",
+  "confusion",
+  "sleep",
+  "silence",
+  "magic_up",
+  "haste",
+  "hp_drain",
+  "evade_melee",
+  "counter_with_dance",
+  "increase_dance_success",
+  "extend_dance_duration",
+  "increase_dance_potency"
+]
+
+Dragoon:
+Total effects: 7
+Effects: [
+  "mp_drain",
+  "hp_drain",
+  "armor_pierce",
+  "nullify_air_damage",
+  "recover_fall",
+  "jump_damage_up",
+  "safe_landing"
+]
+
+Geomancer:
+Total effects: 12
+Effects: [
+  "reveal_terrain",
+  "detect_traps",
+  "detect_passages",
+  "create_path",
+  "modify_terrain",
+  "blind",
+  "reveal_hazards",
+  "detect_resources",
+  "terrain_heal",
+  "terrain_defense",
+  "enhance_terrain_magic",
+  "ignore_terrain"
+]
+
+Knight:
+Total effects: 12
+Effects: [
+  "defense_down",
+  "stun",
+  "protect_ally",
+  "physical_immunity",
+  "slow",
+  "protect",
+  "shell",
+  "attack_down",
+  "regen",
+  "enable_shield",
+  "damage_reduction",
+  "weapon_block"
+]
+
+Mime:
+Total effects: 2
+Effects: [
+  "adapt_to_damage_type",
+  "improve_copy_accuracy"
+]
+
+Monk:
+Total effects: 9
+Effects: [
+  {
+    "pa": 1.5,
+    "sp": 1.3
+  },
+  "hp_regen",
+  "mp_regen",
+  "paralyze",
+  "protect",
+  "shell",
+  "hp_restore",
+  "unarmed_damage_up",
+  "improve_martial_arts"
+]
+
+Ninja:
+Total effects: 11
+Effects: [
+  "stealth_movement",
+  "traverse_walls",
+  "blind",
+  "bypass_enemies",
+  "immobilize",
+  "create_decoy",
+  "instant_death",
+  "temporary_invisibility",
+  "counter_with_status",
+  "enable_dual_wielding",
+  "improve_sneaking"
+]
+
+Oracle:
+Total effects: 14
+Effects: [
+  "predict_encounters",
+  "reveal_events",
+  "reveal_treasure",
+  "doom",
+  "blind",
+  "silence",
+  "poison",
+  "slow",
+  "predict_critical",
+  "predict_damage",
+  "survive_fatal",
+  "prevent_status",
+  "enhance_prediction",
+  "enhance_detection"
+]
+
+Orator:
+Total effects: 13
+Effects: [
+  "charm",
+  "confusion",
+  "increase_stats",
+  "decrease_stats",
+  "fear",
+  "retreat",
+  "attack_up",
+  "protect",
+  "haste",
+  "reflect_status",
+  "avoid_damage",
+  "improve_persuasion",
+  "reduce_mp_cost"
+]
+
+Samurai:
+Total effects: 13
+Effects: [
+  "defense_down",
+  "armor_pierce",
+  "spirit_drain",
+  "attack_up",
+  "accuracy_up",
+  "blade_barrier",
+  "stop",
+  "critical_up",
+  "haste",
+  "anticipate_attack",
+  "counter_with_power",
+  "katana_damage_up",
+  "enable_two_hand"
+]
+
+Squire:
+Total effects: 9
+Effects: [
+  "attack_up",
+  "party_stats_up",
+  "accuracy_up",
+  "party_defense_up",
+  "survive_fatal",
+  "counter_attack",
+  "reduce_damage",
+  "increase_jp_gain",
+  "heal_while_moving"
+]
+
+Summoner:
+Total effects: 12
+Effects: [
+  "slow",
+  "paralyze",
+  "reflect",
+  "stun",
+  "drown",
+  "party_raise",
+  "instant_death",
+  "party_heal",
+  "enhance_next_summon",
+  "summon_barrier",
+  "reduce_summon_mp_cost",
+  "enhance_summons"
+]
+
+Thief:
+Total effects: 11
+Effects: [
+  "charm",
+  "damage_and_steal",
+  "detect_traps",
+  "disarm_trap",
+  "trap_analysis",
+  "unlock",
+  "detect_ambush",
+  "counter_steal",
+  "increase_steal_rate",
+  "extended_trap_detection",
+  "auto_disarm"
+]
+
+TimeMage:
+Total effects: 11
+Effects: [
+  "haste",
+  "slow",
+  "stop",
+  "levitate",
+  "gravity_damage",
+  "reset_room",
+  "create_checkpoint",
+  "resist_time_magic",
+  "evade",
+  "initiative_up",
+  "enhance_time_magic"
+]
+
+WhiteMage:
+Total effects: 13
+Effects: [
+  "revive",
+  "auto_revive",
+  "protect",
+  "increase_magic_defense",
+  "heal_over_time",
+  "purify_area",
+  "create_holy_barrier",
+  "cure_status",
+  "undead_repel",
+  "regen",
+  "enhance_healing",
+  "increase_heal_power",
+  "mp_regen_walking"
+]

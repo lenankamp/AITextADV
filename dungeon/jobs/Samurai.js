@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Samurai extends JobInterface {
     static getBaseStats() {
@@ -66,14 +66,14 @@ export class Samurai extends JobInterface {
                         name: 'Zen Slash',
                         type: 'physical',
                         power: 2.8,
-                        effect: 'ignore_defense',
+                        effect: 'armor_pierce',
                         mp: 35,
                         jpCost: 500
                     },
                     SOUL_BLADE: {
                         name: 'Soul Blade',
                         type: 'physical',
-                        element: 'spirit',
+                        element: 'holy',
                         power: 2.5,
                         effect: 'spirit_drain',
                         mp: 32,

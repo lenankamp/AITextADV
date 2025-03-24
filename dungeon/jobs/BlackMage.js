@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class BlackMage extends JobInterface {
     static getDescription() {
@@ -131,18 +131,10 @@ export class BlackMage extends JobInterface {
                         jpCost: 900,
                         description: 'Ultimate single-target damage spell'
                     },
-                    MAGICAL_BURST: {
-                        name: 'Magical Burst',
-                        type: 'special',
-                        effect: 'destroy_barrier',
-                        mp: 25,
-                        jpCost: 300,
-                        description: 'Destroys magical barriers and enchantments'
-                    },
                     ARCANE_DISRUPTION: {
                         name: 'Arcane Disruption',
-                        type: 'special',
-                        effect: ['detect_magic', 'dispel_field', 'break_enchantment'],
+                        type: 'dungeon',
+                        effect: ['detect_magic', 'dispel_field'],
                         aoe: true,
                         mp: 35,
                         jpCost: 450,
@@ -150,19 +142,11 @@ export class BlackMage extends JobInterface {
                     },
                     ARCANE_EYE: {
                         name: 'Arcane Eye',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: ['detect_magical_traps', 'analyze_curses'],
                         mp: 15,
                         jpCost: 200,
                         description: 'Reveals magical traps and analyzes curses'
-                    },
-                    VOID_PULSE: {
-                        name: 'Void Pulse',
-                        type: 'special',
-                        effect: 'dispel_field',
-                        mp: 35,
-                        jpCost: 400,
-                        description: 'Dispels magical fields in an area'
                     }
                 }
             },
@@ -170,14 +154,14 @@ export class BlackMage extends JobInterface {
                 MAGIC_SHIELD: {
                     name: 'Magic Shield',
                     chance: 0.3,
-                    effect: 'reduce_magic_damage',
+                    effect: 'shell',
                     jpCost: 400,
                     description: 'Chance to reduce incoming magical damage'
                 },
                 SPELL_RETURN: {
                     name: 'Spell Return',
                     chance: 0.2,
-                    effect: 'reflect_spell',
+                    effect: 'reflect',
                     jpCost: 500,
                     description: 'Chance to reflect magical attacks'
                 }

@@ -14,8 +14,28 @@ class Character {
         
         // Job system
         this.jobs = {
-            [JOBS.SQUIRE]: { level: 1, jp: 0, mastered: false },
-            [JOBS.CHEMIST]: { level: 1, jp: 0, mastered: false }
+            [JOBS.SQUIRE]: { 
+                level: 1, 
+                jp: 0, 
+                spentJp: 0,
+                mastered: false,
+                learnedAbilities: {
+                    active: {},
+                    reaction: {},
+                    support: {}
+                }
+            },
+            [JOBS.CHEMIST]: { 
+                level: 1, 
+                jp: 0, 
+                spentJp: 0,
+                mastered: false,
+                learnedAbilities: {
+                    active: {},
+                    reaction: {},
+                    support: {}
+                }
+            }
         };
         
         this.currentJob = JOBS.SQUIRE;
@@ -55,7 +75,17 @@ class Character {
         }
         this.currentJob = jobId;
         if (!this.jobs[jobId]) {
-            this.jobs[jobId] = { level: 1, jp: 0, mastered: false };
+            this.jobs[jobId] = { 
+                level: 1, 
+                jp: 0, 
+                spentJp: 0,
+                mastered: false,
+                learnedAbilities: {
+                    active: {},
+                    reaction: {},
+                    support: {}
+                }
+            };
         }
         return true;
     }
@@ -119,6 +149,83 @@ class Character {
         return false;
     }
 
+    // Ability Learning Methods
+    canLearnAbility(jobId, abilityType, abilityId) {
+        const jobData = this.jobs[jobId];
+        if (!jobData) return false;
+
+        const JobClass = JobInterface.getJobClass(jobId);
+        const abilities = JobClass.getAbilities();
+        const ability = abilities[abilityType]?.abilities?.[abilityId] || 
+                       abilities[abilityType]?.[abilityId];
+        
+        if (!ability) return false;
+
+        // Check if already learned
+        if (jobData.learnedAbilities[abilityType][abilityId]) return false;
+
+        // Check if we have enough available JP
+        const availableJP = jobData.jp + (jobData.spentJp || 0);
+        return availableJP >= ability.jpCost;
+    }
+
+    learnAbility(jobId, abilityType, abilityId) {
+        if (!this.canLearnAbility(jobId, abilityType, abilityId)) return false;
+
+        const jobData = this.jobs[jobId];
+        const JobClass = JobInterface.getJobClass(jobId);
+        const abilities = JobClass.getAbilities();
+        const ability = abilities[abilityType]?.abilities?.[abilityId] || 
+                       abilities[abilityType]?.[abilityId];
+
+        // Spend JP
+        const jpCost = ability.jpCost;
+        const availableJP = jobData.jp + jobData.spentJp;
+        
+        if (availableJP < jpCost) return false;
+
+        // If cost would exceed current JP, use from spent JP first
+        let remainingCost = jpCost;
+        if (remainingCost > jobData.jp) {
+            remainingCost -= jobData.jp;
+            jobData.jp = 0;
+            jobData.spentJp -= remainingCost;
+        } else {
+            jobData.jp -= remainingCost;
+        }
+        jobData.spentJp += jpCost;
+
+        // Mark ability as learned
+        jobData.learnedAbilities[abilityType][abilityId] = true;
+
+        // Check for job mastery
+        this.checkJobMastery(jobId);
+
+        return true;
+    }
+
+    checkJobMastery(jobId) {
+        const jobData = this.jobs[jobId];
+        if (!jobData || jobData.mastered) return false;
+
+        const JobClass = JobInterface.getJobClass(jobId);
+        const abilities = JobClass.getAbilities();
+
+        // Check if all abilities are learned
+        const isAllLearned = Object.entries(abilities).every(([type, typeData]) => {
+            const abilityList = typeData.abilities || typeData;
+            return Object.keys(abilityList).every(abilityId => 
+                jobData.learnedAbilities[type][abilityId]
+            );
+        });
+
+        if (isAllLearned) {
+            jobData.mastered = true;
+            return true;
+        }
+        return false;
+    }
+
     // Stat Calculations
     getMaxHP() {
         const baseGrowth = (this.level - 1) * 10;
@@ -176,6 +283,160 @@ class Character {
         return stats;
     }
 
+    _calculatePhysicalDamage(ability, target) {
+        const stats = this.getStats();
+        const targetStats = target.getStats();
+        
+        // Base damage calculation using physical attack and ability power
+        let damage = stats.pa * (ability.power || 1);
+        
+        // Apply variance (±10%)
+        const variance = 0.1;
+        const randomFactor = 1 + (Math.random() * variance * 2 - variance);
+        damage *= randomFactor;
+        
+        // Apply target defense unless ability is piercing
+        if (!ability.effect?.includes('armor_pierce')) {
+            const defenseRatio = 100 / (100 + targetStats.pa);
+            damage *= defenseRatio;
+        }
+        
+        return Math.floor(damage);
+    }
+
+    _calculateMagicalDamage(ability, target) {
+        const stats = this.getStats();
+        const targetStats = target.getStats();
+        
+        // Base damage calculation using magical attack and ability power
+        let damage = stats.ma * (ability.power || 1);
+        
+        // Apply variance (±15% for magical attacks)
+        const variance = 0.15;
+        const randomFactor = 1 + (Math.random() * variance * 2 - variance);
+        damage *= randomFactor;
+        
+        // Apply target magical defense
+        const defenseRatio = 100 / (100 + targetStats.ma);
+        damage *= defenseRatio;
+        
+        // Apply elemental modifiers if any
+        if (ability.element) {
+            const elementMultiplier = target.getElementalMultiplier?.(ability.element) || 1;
+            damage *= elementMultiplier;
+        }
+        
+        return Math.floor(damage);
+    }
+
+    _calculateHealing(ability) {
+        const stats = this.getStats();
+        
+        // Base healing calculation using magical attack and ability power
+        let healing = stats.ma * (ability.power || 1);
+        
+        // Apply variance (±5% for healing)
+        const variance = 0.05;
+        const randomFactor = 1 + (Math.random() * variance * 2 - variance);
+        healing *= randomFactor;
+        
+        // Apply any healing boost effects
+        const healingBoost = this.status.effects
+            .filter(effect => effect.name === 'enhance_healing')
+            .reduce((total, effect) => total + (effect.power || 0.2), 1);
+        
+        healing *= healingBoost;
+        
+        return Math.floor(healing);
+    }
+
+    getElementalMultiplier(element) {
+        // Check for elemental resistances or weaknesses from equipment and effects
+        let multiplier = 1;
+        
+        // Check equipment for resistances/weaknesses
+        ['weapon', 'armor', 'accessory'].forEach(slot => {
+            const item = this.equipment[slot];
+            if (item?.resistances?.includes(element)) {
+                multiplier *= 0.5;
+            }
+            if (item?.weaknesses?.includes(element)) {
+                multiplier *= 1.5;
+            }
+        });
+        
+        // Check status effects for temporary resistances/weaknesses
+        this.status.effects.forEach(effect => {
+            if (effect.name === `resist_${element}`) {
+                multiplier *= 0.5;
+            }
+            if (effect.name === `weak_${element}`) {
+                multiplier *= 1.5;
+            }
+        });
+        
+        return multiplier;
+    }
+
+    isImmuneToEffect(effectName) {
+        // Check if immune to this type of effect
+        const immuneEffects = this.status.effects
+            .filter(effect => effect.name === 'prevent_status')
+            .map(effect => effect.prevents || [])
+            .flat();
+        
+        if (immuneEffects.includes(effectName)) {
+            return true;
+        }
+        
+        // Check equipment for immunities
+        return ['weapon', 'armor', 'accessory'].some(slot => 
+            this.equipment[slot]?.immunities?.includes(effectName)
+        );
+    }
+
+    getWeaknesses() {
+        const weaknesses = new Set();
+        
+        // Check equipment for weaknesses
+        ['weapon', 'armor', 'accessory'].forEach(slot => {
+            const item = this.equipment[slot];
+            if (item?.weaknesses) {
+                item.weaknesses.forEach(w => weaknesses.add(w));
+            }
+        });
+        
+        // Add temporary weaknesses from status effects
+        this.status.effects.forEach(effect => {
+            if (effect.name.startsWith('weak_')) {
+                weaknesses.add(effect.name.replace('weak_', ''));
+            }
+        });
+        
+        return Array.from(weaknesses);
+    }
+
+    getResistances() {
+        const resistances = new Set();
+        
+        // Check equipment for resistances
+        ['weapon', 'armor', 'accessory'].forEach(slot => {
+            const item = this.equipment[slot];
+            if (item?.resistances) {
+                item.resistances.forEach(r => resistances.add(r));
+            }
+        });
+        
+        // Add temporary resistances from status effects
+        this.status.effects.forEach(effect => {
+            if (effect.name.startsWith('resist_')) {
+                resistances.add(effect.name.replace('resist_', ''));
+            }
+        });
+        
+        return Array.from(resistances);
+    }
+
     // Experience and Leveling
     gainExperience(amount) {
         this.experience += amount;
@@ -215,23 +476,46 @@ class Character {
         const secondaryAbilities = secondaryJobClass ? secondaryJobClass.getAbilities() : null;
 
         const abilities = {
-            active: { ...currentJobAbilities.active.abilities },
-            secondary: secondaryJobClass ? { ...secondaryAbilities.active.abilities } : {},
+            active: {},
+            secondary: {},
             reaction: null,
             support: []
         };
 
+        // Filter active abilities to only include learned ones
+        Object.entries(currentJobAbilities.active.abilities).forEach(([id, ability]) => {
+            if (this.jobs[this.currentJob].learnedAbilities.active[id]) {
+                abilities.active[id] = ability;
+            }
+        });
+
+        // Filter secondary abilities
+        if (secondaryJobClass && this.abilities.secondaryActive) {
+            Object.entries(secondaryAbilities.active.abilities).forEach(([id, ability]) => {
+                if (this.jobs[this.abilities.secondaryActive].learnedAbilities.active[id]) {
+                    abilities.secondary[id] = ability;
+                }
+            });
+        }
+
+        // Only include learned reaction ability
         if (this.abilities.reaction) {
             const reactionJobClass = JobInterface.getJobClass(this.abilities.reaction.jobId);
             const reactionAbilities = reactionJobClass.getAbilities();
-            abilities.reaction = reactionAbilities.reaction[this.abilities.reaction.abilityId];
+            if (this.jobs[this.abilities.reaction.jobId].learnedAbilities.reaction[this.abilities.reaction.abilityId]) {
+                abilities.reaction = reactionAbilities.reaction[this.abilities.reaction.abilityId];
+            }
         }
 
-        abilities.support = this.abilities.support.map(({ jobId, abilityId }) => {
-            const supportJobClass = JobInterface.getJobClass(jobId);
-            const supportAbilities = supportJobClass.getAbilities();
-            return supportAbilities.support[abilityId];
-        });
+        // Only include learned support abilities
+        abilities.support = this.abilities.support
+            .filter(({jobId, abilityId}) => 
+                this.jobs[jobId].learnedAbilities.support[abilityId])
+            .map(({jobId, abilityId}) => {
+                const supportJobClass = JobInterface.getJobClass(jobId);
+                const supportAbilities = supportJobClass.getAbilities();
+                return supportAbilities.support[abilityId];
+            });
 
         return abilities;
     }
@@ -254,40 +538,226 @@ class Character {
 
         switch (abilityData.type) {
             case 'physical':
-                result.damage = this._calculatePhysicalDamage(abilityData, target);
+                result = this._resolvePhysicalAbility(abilityData, target);
                 break;
             case 'magical':
-                result.damage = this._calculateMagicalDamage(abilityData, target);
+                result = this._resolveMagicalAbility(abilityData, target);
                 break;
             case 'healing':
-                result.healing = this._calculateHealing(abilityData);
+                result = this._resolveHealingAbility(abilityData, target);
                 break;
-            case 'buff':
-                result.effects.push({
-                    ...abilityData.effect,
-                    duration: abilityData.duration || 3
+            case 'support':
+                result = this._resolveSupportAbility(abilityData, target);
+                break;
+            case 'status':
+                result = this._resolveStatusAbility(abilityData, target);
+                break;
+            case 'drain':
+                result = this._resolveDrainAbility(abilityData, target);
+                break;
+            case 'analyze':
+                result = this._resolveAnalyzeAbility(abilityData, target);
+                break;
+            case 'special':
+                // Defer to job-specific implementation
+                const JobClass = JobInterface.getJobClass(this.currentJob);
+                result = JobClass.resolveSpecialAbility(abilityData, this, target);
+                break;
+            case 'dungeon':
+                result = { success: false, message: 'This ability cannot be used in combat' };
+                break;
+        }
+
+        // Apply any additional effects if the ability was successful
+        if (result.success && abilityData.effect) {
+            if (Array.isArray(abilityData.effect)) {
+                abilityData.effect.forEach(effect => {
+                    result.effects.push(this._applyEffect(effect, target));
                 });
-                break;
+            } else {
+                result.effects.push(this._applyEffect(abilityData.effect, target));
+            }
         }
 
         return result;
     }
 
-    _calculatePhysicalDamage(ability, target) {
-        const stats = this.getStats();
-        const baseDamage = stats.pa * ability.power;
-        return Math.floor(baseDamage * (1 - target.getStats().ev / 100));
+    _resolvePhysicalAbility(ability, target) {
+        const result = { success: true, effects: [] };
+        result.damage = this._calculatePhysicalDamage(ability, target);
+        
+        // Handle multi-hit abilities
+        if (ability.hits) {
+            result.damage *= ability.hits;
+            result.hits = ability.hits;
+        }
+
+        // Handle AoE abilities
+        if (ability.aoe) {
+            result.isAoe = true;
+        }
+
+        // Apply armor piercing if specified
+        if (ability.effect?.includes('armor_pierce')) {
+            result.isPiercing = true;
+        }
+
+        return result;
     }
 
-    _calculateMagicalDamage(ability, target) {
-        const stats = this.getStats();
-        const baseDamage = stats.ma * ability.power;
-        return Math.floor(baseDamage * (1 - target.getStats().ev / 100));
+    _resolveMagicalAbility(ability, target) {
+        const result = { success: true, effects: [] };
+        result.damage = this._calculateMagicalDamage(ability, target);
+
+        // Handle elemental aspects
+        if (ability.element) {
+            result.element = ability.element;
+            // Check for resistances/weaknesses
+            const elementMultiplier = target.getElementalMultiplier?.(ability.element) || 1;
+            result.damage = Math.floor(result.damage * elementMultiplier);
+        }
+
+        // Handle AoE abilities
+        if (ability.aoe) {
+            result.isAoe = true;
+        }
+
+        return result;
     }
 
-    _calculateHealing(ability) {
-        const stats = this.getStats();
-        return Math.floor(stats.ma * ability.power);
+    _resolveHealingAbility(ability, target) {
+        const result = { success: true, effects: [] };
+        result.healing = this._calculateHealing(ability);
+
+        // Handle AoE healing
+        if (ability.aoe) {
+            result.isAoe = true;
+        }
+
+        return result;
+    }
+
+    _resolveSupportAbility(ability, target) {
+        const result = { success: true, effects: [] };
+        
+        if (ability.effect) {
+            const effects = Array.isArray(ability.effect) ? ability.effect : [ability.effect];
+            effects.forEach(effect => {
+                result.effects.push({
+                    type: effect,
+                    duration: ability.duration || 3,
+                    power: ability.power || 1
+                });
+            });
+        }
+
+        if (ability.aoe) {
+            result.isAoe = true;
+        }
+
+        return result;
+    }
+
+    _resolveStatusAbility(ability, target) {
+        const result = { success: true, effects: [] };
+        
+        if (ability.effect) {
+            const effects = Array.isArray(ability.effect) ? ability.effect : [ability.effect];
+            effects.forEach(effect => {
+                // Check if status effect applies based on chance
+                const chance = ability.chance || 0.5; // Default 50% chance if not specified
+                if (Math.random() < chance) {
+                    result.effects.push({
+                        type: effect,
+                        duration: ability.duration || 3,
+                        power: ability.power || 1
+                    });
+                }
+            });
+        }
+
+        if (ability.aoe) {
+            result.isAoe = true;
+        }
+
+        return result;
+    }
+
+    _resolveDrainAbility(ability, target) {
+        const result = { success: true, effects: [] };
+        
+        // Calculate base damage
+        if (ability.type === 'physical') {
+            result.damage = this._calculatePhysicalDamage(ability, target);
+        } else {
+            result.damage = this._calculateMagicalDamage(ability, target);
+        }
+
+        // Calculate drain amount (usually a percentage of damage dealt)
+        const drainRatio = ability.drainRatio || 0.5; // Default to 50% if not specified
+        
+        if (ability.effect === 'hp_drain') {
+            result.healing = Math.floor(result.damage * drainRatio);
+            result.drainType = 'hp';
+        } else if (ability.effect === 'mp_drain') {
+            result.mpRestore = Math.floor(result.damage * drainRatio);
+            result.drainType = 'mp';
+        }
+
+        return result;
+    }
+
+    _resolveAnalyzeAbility(ability, target) {
+        const result = { success: true, effects: [] };
+        
+        result.analysis = {
+            stats: target.getStats(),
+            weaknesses: target.getWeaknesses?.() || [],
+            resistances: target.getResistances?.() || []
+        };
+
+        // Some analyze abilities might reveal specific information
+        if (ability.reveals) {
+            ability.reveals.forEach(info => {
+                switch (info) {
+                    case 'abilities':
+                        result.analysis.abilities = target.getAvailableAbilities();
+                        break;
+                    case 'status':
+                        result.analysis.status = target.status;
+                        break;
+                    case 'equipment':
+                        result.analysis.equipment = target.equipment;
+                        break;
+                }
+            });
+        }
+
+        return result;
+    }
+
+    _applyEffect(effect, target) {
+        const duration = 3; // Default duration if not specified
+        const effectResult = {
+            type: effect,
+            duration: duration,
+            success: true
+        };
+
+        // Check if target is immune to this effect
+        if (target.isImmuneToEffect?.(effect)) {
+            effectResult.success = false;
+            effectResult.message = 'Target is immune';
+            return effectResult;
+        }
+
+        target.addEffect({
+            name: effect,
+            duration: duration,
+            source: this.name
+        });
+
+        return effectResult;
     }
 
     // Status Effect Methods

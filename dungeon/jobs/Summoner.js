@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Summoner extends JobInterface {
     static getDescription() {
@@ -35,7 +35,7 @@ export class Summoner extends JobInterface {
                 abilities: {
                     IFRIT: {
                         name: 'Ifrit',
-                        type: 'summon',
+                        type: 'magical',
                         element: 'fire',
                         power: 2.8,
                         aoe: true,
@@ -45,7 +45,7 @@ export class Summoner extends JobInterface {
                     },
                     SHIVA: {
                         name: 'Shiva',
-                        type: 'summon',
+                        type: 'magical',
                         element: 'ice',
                         power: 2.6,
                         effect: 'slow',
@@ -56,7 +56,7 @@ export class Summoner extends JobInterface {
                     },
                     RAMUH: {
                         name: 'Ramuh',
-                        type: 'summon',
+                        type: 'magical',
                         element: 'lightning',
                         power: 2.7,
                         effect: 'paralyze',
@@ -67,7 +67,7 @@ export class Summoner extends JobInterface {
                     },
                     BAHAMUT: {
                         name: 'Bahamut',
-                        type: 'summon',
+                        type: 'magical',
                         element: 'non-elemental',
                         power: 3.2,
                         aoe: true,
@@ -77,9 +77,8 @@ export class Summoner extends JobInterface {
                     },
                     CARBUNCLE: {
                         name: 'Carbuncle',
-                        type: 'summon',
+                        type: 'support',
                         effect: 'reflect',
-                        target: 'allies',
                         aoe: true,
                         mp: 28,
                         jpCost: 300,
@@ -87,7 +86,7 @@ export class Summoner extends JobInterface {
                     },
                     TITAN: {
                         name: 'Titan',
-                        type: 'summon',
+                        type: 'magical',
                         element: 'earth',
                         power: 2.5,
                         effect: 'stun',
@@ -98,7 +97,7 @@ export class Summoner extends JobInterface {
                     },
                     LEVIATHAN: {
                         name: 'Leviathan',
-                        type: 'summon',
+                        type: 'magical',
                         element: 'water',
                         power: 3.0,
                         effect: 'drown',
@@ -109,7 +108,7 @@ export class Summoner extends JobInterface {
                     },
                     PHOENIX: {
                         name: 'Phoenix',
-                        type: 'summon',
+                        type: 'magical',
                         element: 'fire',
                         power: 2.4,
                         effect: 'party_raise',
@@ -120,7 +119,7 @@ export class Summoner extends JobInterface {
                     },
                     ODIN: {
                         name: 'Odin',
-                        type: 'summon',
+                        type: 'magical',
                         element: 'non-elemental',
                         power: 3.5,
                         effect: 'instant_death',
@@ -130,10 +129,9 @@ export class Summoner extends JobInterface {
                     },
                     MOOGLE: {
                         name: 'Moogle',
-                        type: 'summon',
+                        type: 'healing',
                         effect: 'party_heal',
                         power: 1.5,
-                        target: 'allies',
                         aoe: true,
                         mp: 22,
                         jpCost: 250,

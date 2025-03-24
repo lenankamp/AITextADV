@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Dancer extends JobInterface {
     static getDescription() {
@@ -36,7 +36,7 @@ export class Dancer extends JobInterface {
                     SLOW_DANCE: {
                         name: 'Slow Dance',
                         type: 'status',
-                        effect: 'speed_down',
+                        effect: 'slow',
                         aoe: true,
                         mp: 16,
                         jpCost: 200,
@@ -55,14 +55,13 @@ export class Dancer extends JobInterface {
                         type: 'support',
                         effect: 'attack_up',
                         aoe: true,
-                        target: 'allies',
                         mp: 20,
                         jpCost: 250,
                         description: 'Boost party attack through dance'
                     },
                     EXHAUSTING_POLKA: {
                         name: 'Exhausting Polka',
-                        type: 'status',
+                        type: 'drain',
                         effect: ['fatigue', 'mp_drain'],
                         aoe: true,
                         mp: 28,
@@ -89,19 +88,17 @@ export class Dancer extends JobInterface {
                     },
                     HEALING_WALTZ: {
                         name: 'Healing Waltz',
-                        type: 'healing',
-                        effect: 'remove_status_effects',
+                        type: 'special',
                         aoe: true,
-                        target: 'allies',
                         mp: 22,
                         jpCost: 280,
                         description: 'Remove status effects with restorative dance'
                     },
                     FORBIDDEN_DANCE: {
                         name: 'Forbidden Dance',
-                        type: 'magical',
+                        type: 'drain',
                         power: 2.2,
-                        effect: 'mp_damage',
+                        effect: 'mp_drain',
                         aoe: true,
                         mp: 40,
                         jpCost: 500,
@@ -110,7 +107,7 @@ export class Dancer extends JobInterface {
                     TRANCE_DANCE: {
                         name: 'Trance Dance',
                         type: 'support',
-                        effect: ['attack_up', 'magic_up', 'speed_up'],
+                        effect: ['attack_up', 'magic_up', 'haste'],
                         target: 'self',
                         mp: 45,
                         jpCost: 600,
@@ -118,7 +115,7 @@ export class Dancer extends JobInterface {
                     },
                     LAST_WALTZ: {
                         name: 'Last Waltz',
-                        type: 'magical',
+                        type: 'drain',
                         power: 3.0,
                         effect: ['mp_drain', 'hp_drain'],
                         aoe: true,

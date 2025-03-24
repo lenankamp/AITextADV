@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class TimeMage extends JobInterface {
     static getBaseStats() {
@@ -32,7 +32,7 @@ export class TimeMage extends JobInterface {
                     HASTE: {
                         name: 'Haste',
                         type: 'support',
-                        effect: 'speed_up',
+                        effect: 'haste',
                         mp: 24,
                         jpCost: 300,
                         description: 'Increase target\'s speed'
@@ -40,7 +40,7 @@ export class TimeMage extends JobInterface {
                     SLOW: {
                         name: 'Slow',
                         type: 'status',
-                        effect: 'speed_down',
+                        effect: 'slow',
                         mp: 20,
                         jpCost: 300,
                         description: 'Decrease target\'s speed'
@@ -87,8 +87,7 @@ export class TimeMage extends JobInterface {
                     },
                     QUICK: {
                         name: 'Quick',
-                        type: 'support',
-                        effect: 'extra_turn',
+                        type: 'special',
                         mp: 45,
                         jpCost: 800,
                         description: 'Grant an immediate extra turn'
@@ -115,7 +114,7 @@ export class TimeMage extends JobInterface {
                 TEMPORAL_SHIFT: {
                     name: 'Temporal Shift',
                     chance: 0.25,
-                    effect: 'phase_through_attack',
+                    effect: 'evade',
                     jpCost: 500,
                     description: 'Phase through time to avoid damage'
                 }

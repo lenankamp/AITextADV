@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Geomancer extends JobInterface {
     static getDescription() {
@@ -36,7 +36,6 @@ export class Geomancer extends JobInterface {
                     TERRAIN_POWER: {
                         name: 'Terrain Power',
                         type: 'special',
-                        effect: 'terrain_attack',
                         mp: 25,
                         jpCost: 300,
                         description: 'Attack based on current terrain'
@@ -62,7 +61,7 @@ export class Geomancer extends JobInterface {
                     },
                     TERRAIN_SIGHT: {
                         name: 'Terrain Sight',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: 'reveal_terrain',
                         mp: 28,
                         jpCost: 350,
@@ -70,7 +69,7 @@ export class Geomancer extends JobInterface {
                     },
                     EARTH_SENSE: {
                         name: 'Earth Sense',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: ['detect_traps', 'detect_passages'],
                         mp: 20,
                         jpCost: 300,
@@ -78,7 +77,7 @@ export class Geomancer extends JobInterface {
                     },
                     ROCK_PATH: {
                         name: 'Rock Path',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: 'create_path',
                         mp: 32,
                         jpCost: 400,
@@ -86,7 +85,7 @@ export class Geomancer extends JobInterface {
                     },
                     TERRAIN_SHIFT: {
                         name: 'Terrain Shift',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: 'modify_terrain',
                         mp: 40,
                         jpCost: 500,
@@ -105,7 +104,7 @@ export class Geomancer extends JobInterface {
                     },
                     NATURE_COMMUNION: {
                         name: 'Nature Communion',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: ['reveal_hazards', 'detect_resources'],
                         mp: 45,
                         jpCost: 600,

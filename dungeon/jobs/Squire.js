@@ -1,4 +1,5 @@
 import { JobInterface } from './JobInterface.js';
+import { JOBS } from './index.js';
 
 export class Squire extends JobInterface {
     static getDescription() {
@@ -56,14 +57,6 @@ export class Squire extends JobInterface {
                         jpCost: 200,
                         description: 'Quick rushing attack'
                     },
-                    BASIC_MAINTENANCE: {
-                        name: 'Basic Maintenance',
-                        type: 'special',
-                        effect: 'repair_equipment',
-                        mp: 10,
-                        jpCost: 200,
-                        description: 'Basic repair of damaged equipment'
-                    },
                     RALLY_CRY: {
                         name: 'Rally Cry',
                         type: 'support',
@@ -90,8 +83,7 @@ export class Squire extends JobInterface {
                     },
                     INSPECT: {
                         name: 'Inspect',
-                        type: 'special',
-                        effect: 'reveal_weakness',
+                        type: 'analyze',
                         mp: 12,
                         jpCost: 250,
                         description: 'Analyze enemy or object for weaknesses'

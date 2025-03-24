@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Oracle extends JobInterface {
     static getDescription() {
@@ -35,7 +35,7 @@ export class Oracle extends JobInterface {
                 abilities: {
                     DIVINE_SIGHT: {
                         name: 'Divine Sight',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: 'predict_encounters',
                         mp: 18,
                         jpCost: 250,
@@ -44,30 +44,20 @@ export class Oracle extends JobInterface {
                     PREMONITION: {
                         name: 'Premonition',
                         type: 'special',
-                        effect: 'predict_outcomes',
                         mp: 22,
                         jpCost: 300,
                         description: 'See outcomes of actions before taking them'
                     },
-                    PATTERN_VISION: {
-                        name: 'Pattern Vision',
-                        type: 'special',
-                        effect: 'predict_events',
-                        mp: 20,
-                        jpCost: 350,
-                        description: 'Predict upcoming events and their consequences'
-                    },
                     ENEMY_INSIGHT: {
                         name: 'Enemy Insight',
                         type: 'special',
-                        effect: ['reveal_stats', 'predict_action'],
                         mp: 25,
                         jpCost: 400,
                         description: 'Reveal enemy stats and predict next action'
                     },
                     FATE_MAP: {
                         name: 'Fate Map',
-                        type: 'special',
+                        type: 'dungeon',
                         effect: ['reveal_events', 'reveal_treasure'],
                         mp: 30,
                         jpCost: 450,
@@ -101,7 +91,7 @@ export class Oracle extends JobInterface {
                         name: 'Fortune Guard',
                         type: 'support',
                         effect: 'predict_critical',
-                        target: 'allies',
+                        aoe: true,
                         mp: 40,
                         jpCost: 600,
                         description: 'Protect allies from critical hits'
@@ -111,7 +101,6 @@ export class Oracle extends JobInterface {
                         type: 'support',
                         effect: 'predict_damage',
                         aoe: true,
-                        target: 'allies',
                         mp: 50,
                         jpCost: 700,
                         description: 'Use future sight to protect from incoming threats'

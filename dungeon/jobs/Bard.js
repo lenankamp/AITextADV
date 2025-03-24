@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Bard extends JobInterface {
     static getDescription() {
@@ -36,7 +36,7 @@ export class Bard extends JobInterface {
                     BATTLE_CHANT: {
                         name: 'Battle Chant',
                         type: 'support',
-                        effect: 'defense_up',
+                        effect: 'protect',
                         aoe: true,
                         mp: 18,
                         jpCost: 200,
@@ -44,7 +44,7 @@ export class Bard extends JobInterface {
                     },
                     LIFE_SONG: {
                         name: 'Life Song',
-                        type: 'healing',
+                        type: 'support',
                         effect: 'regen',
                         aoe: true,
                         mp: 22,
@@ -63,7 +63,7 @@ export class Bard extends JobInterface {
                     HERO_BALLAD: {
                         name: 'Hero Ballad',
                         type: 'support',
-                        effect: ['attack_up', 'defense_up'],
+                        effect: ['attack_up', 'protect'],
                         aoe: true,
                         mp: 35,
                         jpCost: 400,
@@ -117,9 +117,8 @@ export class Bard extends JobInterface {
                     },
                     GRAND_FINALE: {
                         name: 'Grand Finale',
-                        type: 'magical',
+                        type: 'special',
                         power: 2.5,
-                        effect: 'dispel_buffs',
                         aoe: true,
                         mp: 45,
                         jpCost: 500,
@@ -138,7 +137,7 @@ export class Bard extends JobInterface {
                 HARMONY_SHIELD: {
                     name: 'Harmony Shield',
                     chance: 0.35,
-                    effect: 'reduce_magic_damage',
+                    effect: 'shell',
                     jpCost: 450,
                     description: 'Reduce incoming magical damage'
                 }

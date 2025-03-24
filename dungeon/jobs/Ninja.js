@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Ninja extends JobInterface {
     static getDescription() {
@@ -37,7 +37,6 @@ export class Ninja extends JobInterface {
                         name: 'Throw',
                         type: 'physical',
                         power: 'weapon_dependent',
-                        ranged: true,
                         mp: 0,
                         jpCost: 200,
                         description: 'Throw any weapon as a projectile'

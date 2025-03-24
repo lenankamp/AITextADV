@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Knight extends JobInterface {
     static getDescription() {
@@ -78,8 +78,7 @@ export class Knight extends JobInterface {
                     },
                     SENTINEL: {
                         name: 'Sentinel',
-                        type: 'support',
-                        effect: ['defense_up', 'provoke'],
+                        type: 'special',
                         mp: 30,
                         jpCost: 500,
                         description: 'Greatly increase defense and draw attacks'
@@ -87,7 +86,7 @@ export class Knight extends JobInterface {
                     DEFENSIVE_STANCE: {
                         name: 'Defensive Stance',
                         type: 'support',
-                        effect: ['physical_immunity', 'move_down'],
+                        effect: ['physical_immunity', 'slow'],
                         mp: 35,
                         jpCost: 600,
                         description: 'Become immobile but immune to physical damage'
@@ -97,7 +96,6 @@ export class Knight extends JobInterface {
                         type: 'support',
                         effect: ['protect', 'shell'],
                         aoe: true,
-                        target: 'allies',
                         mp: 45,
                         jpCost: 700,
                         description: 'Grant protective barriers to all allies'
@@ -106,7 +104,7 @@ export class Knight extends JobInterface {
                         name: 'Sword Break',
                         type: 'physical',
                         power: 1.8,
-                        effect: 'disarm',
+                        effect: 'attack_down',
                         mp: 32,
                         jpCost: 550,
                         description: 'Attack that may disarm the target'
@@ -125,14 +123,14 @@ export class Knight extends JobInterface {
                 PARRY: {
                     name: 'Parry',
                     chance: 0.35,
-                    effect: 'reduce_physical_damage',
+                    effect: 'protect',
                     jpCost: 400,
                     description: 'Chance to reduce physical damage'
                 },
                 DEFENSE_BOOST: {
                     name: 'Defense Boost',
                     chance: 0.3,
-                    effect: 'increase_defense',
+                    effect: ['protect', 'shell'],
                     jpCost: 450,
                     description: 'Chance to increase defense when hit'
                 }
@@ -146,7 +144,7 @@ export class Knight extends JobInterface {
                 },
                 DEFENSE_MASTERY: {
                     name: 'Defense Mastery',
-                    effect: 'defense_up',
+                    effect: 'protect',
                     jpCost: 400,
                     description: 'Passive increase to defense'
                 },

@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Mime extends JobInterface {
     static getDescription() {
@@ -36,74 +36,16 @@ export class Mime extends JobInterface {
                     REPLICATE: {
                         name: 'Replicate',
                         type: 'special',
-                        effect: 'copy_last_action',
                         mp: 'variable',
                         jpCost: 300,
                         description: 'Copies the last action performed by any character'
                     },
-                    MIMIC_MASTERY: {
-                        name: 'Mimic Mastery',
-                        type: 'special',
-                        effect: 'improved_copy',
-                        mp: 'variable',
-                        jpCost: 450,
-                        description: 'Enhanced version of basic mimicry with increased power'
-                    },
-                    PERFECT_COPY: {
-                        name: 'Perfect Copy',
-                        type: 'special',
-                        effect: 'exact_copy',
-                        mp: 'original_cost',
-                        jpCost: 600,
-                        description: 'Creates an exact replica of the copied ability'
-                    },
-                    MIME_SEQUENCE: {
-                        name: 'Mime Sequence',
-                        type: 'special',
-                        effect: 'repeat_action_sequence',
-                        mp: 35,
-                        jpCost: 500,
-                        description: 'Repeats a sequence of previously used actions'
-                    },
                     BATTLE_MEMORY: {
                         name: 'Battle Memory',
                         type: 'special',
-                        effect: 'learn_enemy_skill',
                         mp: 40,
                         jpCost: 550,
                         description: 'Learn and store an enemy ability for later use'
-                    },
-                    TACTICAL_COPY: {
-                        name: 'Tactical Copy',
-                        type: 'special',
-                        effect: 'copy_with_bonus',
-                        mp: 'variable',
-                        jpCost: 450,
-                        description: 'Copy an ability with enhanced tactical effects'
-                    },
-                    MIMIC_FORM: {
-                        name: 'Mimic Form',
-                        type: 'special',
-                        effect: 'copy_enemy_type',
-                        mp: 40,
-                        jpCost: 550,
-                        description: 'Temporarily copies enemy type and resistances'
-                    },
-                    ABILITY_SYNTHESIS: {
-                        name: 'Ability Synthesis',
-                        type: 'special',
-                        effect: 'combine_abilities',
-                        mp: 45,
-                        jpCost: 650,
-                        description: 'Combine two copied abilities into a new effect'
-                    },
-                    PERFECT_MIMICRY: {
-                        name: 'Perfect Mimicry',
-                        type: 'special',
-                        effect: ['copy_all_actions', 'enhanced_power'],
-                        mp: 50,
-                        jpCost: 800,
-                        description: 'Copy all actions from last round with enhanced power'
                     }
                 }
             },

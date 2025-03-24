@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Calculator extends JobInterface {
     static getDescription() {
@@ -35,7 +35,7 @@ export class Calculator extends JobInterface {
                 abilities: {
                     CT_PRIME: {
                         name: 'CT Prime',
-                        type: 'special',
+                        type: 'magical',
                         effect: 'prime_target',
                         mp: 25,
                         jpCost: 300,
@@ -43,7 +43,7 @@ export class Calculator extends JobInterface {
                     },
                     LEVEL_DIVIDE: {
                         name: 'Level Divide',
-                        type: 'special',
+                        type: 'magical',
                         effect: 'level_target',
                         mp: 28,
                         jpCost: 350,
@@ -51,7 +51,7 @@ export class Calculator extends JobInterface {
                     },
                     HEIGHT_FACTOR: {
                         name: 'Height Factor',
-                        type: 'special',
+                        type: 'magical',
                         effect: 'height_target',
                         mp: 30,
                         jpCost: 400,
@@ -60,7 +60,6 @@ export class Calculator extends JobInterface {
                     MULTIPLY: {
                         name: 'Multiply',
                         type: 'special',
-                        effect: 'multiply_effects',
                         mp: 35,
                         jpCost: 450,
                         description: 'Multiply spell effects on valid targets'
@@ -94,7 +93,6 @@ export class Calculator extends JobInterface {
                     DIVIDE_MP: {
                         name: 'Divide MP',
                         type: 'special',
-                        effect: 'mp_division',
                         mp: 20,
                         jpCost: 400,
                         description: 'Divide target\'s MP by a factor'

@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from '../jobs.js';
+import { JOBS } from './index.js';
 
 export class Monk extends JobInterface {
     static getDescription() {
@@ -37,6 +37,7 @@ export class Monk extends JobInterface {
                         name: 'Chakra',
                         type: 'healing',
                         power: 1.5,
+                        target: 'self',
                         mp: 0,
                         jpCost: 200,
                         description: 'Restore HP through meditation'
@@ -61,7 +62,7 @@ export class Monk extends JobInterface {
                     },
                     INTERNAL_RELEASE: {
                         name: 'Internal Release',
-                        type: 'buff',
+                        type: 'support',
                         effect: { pa: 1.5, sp: 1.3 },
                         mp: 15,
                         jpCost: 450,
@@ -69,8 +70,9 @@ export class Monk extends JobInterface {
                     },
                     MEDITATION: {
                         name: 'Meditation',
-                        type: 'healing',
+                        type: 'support',
                         effect: ['hp_regen', 'mp_regen'],
+                        target: 'self',
                         mp: 20,
                         jpCost: 350,
                         description: 'Meditate to regenerate HP and MP over time'
@@ -87,7 +89,7 @@ export class Monk extends JobInterface {
                         name: 'Spirit Blade',
                         type: 'physical',
                         power: 2.2,
-                        element: 'spirit',
+                        element: 'holy',
                         mp: 25,
                         jpCost: 450,
                         description: 'Infuse attacks with spiritual energy'
