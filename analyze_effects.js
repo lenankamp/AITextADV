@@ -20,12 +20,15 @@ class AbilityAnalyzer {
     analyze() {
         // Analyze each job class
         Object.entries(Jobs).forEach(([jobName, JobClass]) => {
-            if (jobName === 'default' || jobName === 'JobInterface') return;
+            // Skip the JOBS constant and non-job exports
+            if (jobName === 'JOBS' || jobName.toLowerCase() === jobName) return;
             
+            // Get abilities using the static method
             const abilities = JobClass.getAbilities();
-            this.analyzeJobAbilities(jobName, abilities);
+            if (abilities) {
+                this.analyzeJobAbilities(jobName, abilities);
+            }
         });
-
         return this.generateReport();
     }
 
@@ -34,8 +37,11 @@ class AbilityAnalyzer {
 
         // Process each ability category (active, reaction, support)
         Object.entries(abilities).forEach(([category, categoryData]) => {
+            // For the active category, abilities are nested under abilities property
             const abilityList = category === 'active' ? categoryData.abilities : categoryData;
             
+            if (!abilityList) return; // Skip if category is empty
+
             Object.entries(abilityList).forEach(([abilityId, ability]) => {
                 // Track all property names used
                 Object.keys(ability).forEach(prop => {

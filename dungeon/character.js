@@ -208,6 +208,7 @@ class CHARACTER {
     getReactionAbility() {
         const { jobId, abilityId } = this.abilities.reaction;
         const JobClass = this.getJobClass(jobId);
+        if (!abilityId || !JobClass) return null;
         return JobClass.getAbilities().reaction[abilityId];
     }
 
@@ -428,8 +429,68 @@ class CHARACTER {
         return baseMP + jobMP + equipmentMP + levelGrowth;
     }
 
+    _effectAttackRelevant(effect, ability, target) {
+        // Check if the effect is relevant to the current attack
+        switch (effect) {
+            case 'attack_up':
+                if(ability.type !== 'magical') return true;
+                else return false;
+            case 'increase_magic_power':
+            case 'magic_up':
+                if(ability.type === 'magical') return true;
+                else return false;
+            case 'increase_dance_potency':
+                const dancerAbilities = this.jobs[JOBS.DANCER]?.learnedAbilities?.active;
+                if (dancerAbilities && dancerAbilities[ability]) return true;
+                else return false;
+            case 'jump_damage_up':
+                const dragoonAbilities = this.jobs[JOBS.DRAGOON]?.learnedAbilities?.active;
+                if (dragoonAbilities && dragoonAbilities[ability]) return true;
+                else return false;
+            case 'improve_martial_arts':
+                const monkAbilities = this.jobs[JOBS.MONK]?.learnedAbilities?.active;
+                if (monkAbilities && monkAbilities[ability]) return true;
+                else return false;
+            case 'enhance_next_summon':
+            case 'enhance_summons':
+                const summonerAbilities = this.jobs[JOBS.SUMMONER]?.learnedAbilities?.active;
+                if (summonerAbilities && summonerAbilities[ability]) return true;
+                else return false;
+            case 'unarmed_damage_up':
+                if (this.equipment.mainHand === null) return true;
+                else return false;
+            case 'katana_damage_up':
+                if (this.equipment.mainHand?.type === 'katana') return true;
+            case 'armor_pierce':
+                    return true;
+            default:
+                return false;
+        }
+    }
+
+    _effectDefenseRelevant(effect, ability, target) {
+        // Check if the effect is relevant to the current attack
+        switch (effect) {
+            case 'damage_reduction':
+            case 'predict_damage':
+                return true;
+            case 'protect':
+                if (ability.type !== 'magical') return true;
+                else return false;
+            case 'shell':
+                if (ability.type === 'magical') return true;
+                else return false;
+            case 'ranged_defense_up':
+                if (ability.type !== 'magical' && (ability.ranged || this.isRanged())) return true;
+                else return false;
+            default:
+                return false;
+        }
+    }
+
+
     // Combat Methods
-    _calculatePhysicalDamage(ability, target) {
+    _calculateDamage(ability, target) {
         const stats = this.getStats();
         const targetStats = target.getStats();
         
@@ -438,49 +499,120 @@ class CHARACTER {
         if (!ability || ability.name === 'Attack') {
             damage = this.calculateWeaponDamage();
         } else {
-            damage = stats.pa * (ability.power || 1);
+            if (ability.type === 'magical')
+                damage = stats.ma * (ability.power || 1);
+            else damage = stats.pa * (ability.power || 1);
         }
         
         // Apply variance (±10%)
         const variance = 0.1;
         const randomFactor = 1 + (Math.random() * variance * 2 - variance);
         damage *= randomFactor;
-        
-        // Apply target defense unless ability is piercing
-        if (!ability?.effect?.includes('armor_pierce')) {
-            // Allow armor to modify incoming damage
-            Object.values(target.equipment).forEach(item => {
-                if (item) {
-                    damage = item.modifyIncomingDamage(damage, 'physical');
-                }
-            });
-        }
-        
-        return Math.floor(damage);
-    }
 
-    _calculateMagicalDamage(ability, target) {
-        const stats = this.getStats();
-        const targetStats = target.getStats();
+        // Calculate attack bonuses
+        const attackBonusEffects = [];
+        const defenseBonusEffects = [];
         
-        // Base damage calculation using magical attack and ability power
-        let damage = stats.ma * (ability.power || 1);
+        // Check equipment effects
+        Object.values(this.equipment).forEach(item => {
+            if (!item) return;
+            if (item.effects) {
+                const relevantEffects = [
+                    'attack_up', 'armor_pierce', 'armor_pierce',
+                    'increase_magic_power', 'magic_up', 'increase_dance_potency',
+                    'jump_damage_up', 'unarmed_damage_up', 'improve_martial_arts',
+                    'katana_damage_up', 'enhance_next_summon', 'enhance_summons'
+                ];
+                relevantEffects.forEach(effect => {
+                    if (item.effects.includes(effect) && _effectAttackRelevant(effect, ability, target)) attackBonusEffects.push(effect);
+                });
+            }
+        });
+
+        // Check status effects
+        this.status.effects.forEach(effect => {
+            if ((effect.name === 'attack_up' && ability.type !== 'magical') || (effect.name === 'magic_up') && ability.type === 'magical') {
+                attackBonusEffects.push(effect.name);
+            }
+            // Special case for attack down which reduces damage
+            if (effect.name === 'attack_down' && ability.type !== 'magical') {
+                defenseBonusEffects.push('attack_down');
+            }
+        });
+
+        // Check support abilities
+        this.abilities.support.forEach(support => {
+            const relevantEffects = [
+                'attack_up', 'armor_pierce', 'armor_pierce',
+                'increase_magic_power', 'magic_up', 'increase_dance_potency',
+                'jump_damage_up', 'unarmed_damage_up', 'improve_martial_arts',
+                'katana_damage_up', 'enhance_next_summon', 'enhance_summons'
+        ];
+            if (relevantEffects.includes(support.effect) && _effectAttackRelevant(support.effect, ability, target)) {
+                attackBonusEffects.push(support.effect);
+            }
+        });
+
         
-        // Apply variance (±15% for magical attacks)
-        const variance = 0.15;
-        const randomFactor = 1 + (Math.random() * variance * 2 - variance);
-        damage *= randomFactor;
-        
-        // Apply target magical defense
-        const defenseRatio = 100 / (100 + targetStats.ma);
-        damage *= defenseRatio;
-        
-        // Apply elemental modifiers if any
-        if (ability.element) {
-            const elementMultiplier = target.getElementalMultiplier?.(ability.element) || 1;
-            damage *= elementMultiplier;
+        // Check target equipment effects
+        Object.values(target.equipment).forEach(item => {
+            if (!item) return;
+            if (item.effects) {
+                const relevantEffects = ['protect', 'shell', 'defense_down', 'damage_reduction', 'predict_damage', 'ranged_defense_up'];
+                relevantEffects.forEach(effect => {
+                    if (item.effects.includes(effect) && _effectDefenseRelevant(effect, ability, target)) defenseBonusEffects.push(effect);
+                });
+            }
+        });
+
+        // Check target status effects
+        target.status.effects.forEach(effect => {
+            const relevantEffects = ['protect', 'shell', 'defense_down', 'damage_reduction', 'predict_damage', 'ranged_defense_up'];
+            if (relevantEffects.includes(effect.name)) {
+                if (effect.name === 'defense_down') {
+                    attackBonusEffects.push('defense_down');
+                } else {
+                    defenseBonusEffects.push(effect.name);
+                }
+            }
+        });
+
+        // check target reaction ability
+        if (target.abilities.reaction) {
+            const reaction = target.getReactionAbility();
+            if (reaction) {
+                if(Math.random() < reaction.chance) {
+                    if (reaction.effect === 'protect' && ability.type !== 'magical') defenseBonusEffects.push('protect');
+                    if (reaction.effect === 'shell' && ability.type === 'magical') defenseBonusEffects.push('shell');
+                    if (reaction.effect === 'reduce_damage') defenseBonusEffects.push('ranged_defense_up');
+                    if (reaction.effect === 'summon_barrier') defenseBonusEffects.push('summon_barrier');
+                }
+            }
         }
-        
+
+        // Calculate net attack bonus with diminishing returns
+        let attackBonus = 0;
+        let defenseBonus = 0;
+        const positiveAttackEffects = attackBonusEffects.filter(effect => effect !== 'armor_pierce');
+        attackBonus = positiveAttackEffects.length;
+        defenseBonus = defenseBonusEffects.length;
+        if (attackBonusEffects.includes('armor_pierce')) {
+            const armorPierceCount = attackBonusEffects.filter(effect => effect === 'armor_pierce').length;
+            defenseBonus -= armorPierceCount*2;
+            if (defenseBonus < 0) defenseBonus = 0;
+        }
+        const netBonus = attackBonus - defenseBonus;
+        if (netBonus !== 0) {
+            let netEffect = 0;
+            for(let i = 0; i < Math.abs(netBonus); i++) {
+                netEffect += .5*(1-netEffect);
+            }
+            if (netBonus < 0) netEffect = 1 - netEffect;
+            damage *= netEffect;
+        }
+
+
+
         return Math.floor(damage);
     }
 
@@ -548,48 +680,6 @@ class CHARACTER {
         return ['weapon', 'armor', 'accessory'].some(slot => 
             this.equipment[slot]?.immunities?.includes(effectName)
         );
-    }
-
-    getWeaknesses() {
-        const weaknesses = new Set();
-        
-        // Check equipment for weaknesses
-        ['weapon', 'armor', 'accessory'].forEach(slot => {
-            const item = this.equipment[slot];
-            if (item?.weaknesses) {
-                item.weaknesses.forEach(w => weaknesses.add(w));
-            }
-        });
-        
-        // Add temporary weaknesses from status effects
-        this.status.effects.forEach(effect => {
-            if (effect.name.startsWith('weak_')) {
-                weaknesses.add(effect.name.replace('weak_', ''));
-            }
-        });
-        
-        return Array.from(weaknesses);
-    }
-
-    getResistances() {
-        const resistances = new Set();
-        
-        // Check equipment for resistances
-        ['weapon', 'armor', 'accessory'].forEach(slot => {
-            const item = this.equipment[slot];
-            if (item?.resistances) {
-                item.resistances.forEach(r => resistances.add(r));
-            }
-        });
-        
-        // Add temporary resistances from status effects
-        this.status.effects.forEach(effect => {
-            if (effect.name.startsWith('resist_')) {
-                resistances.add(effect.name.replace('resist_', ''));
-            }
-        });
-        
-        return Array.from(resistances);
     }
 
     // Experience and Leveling
@@ -767,7 +857,7 @@ class CHARACTER {
 
     _resolvePhysicalAbility(ability, target) {
         const stats = this.getStats();
-        const damage = Math.floor(stats.pa * (ability.power || 1));
+        const damage = this._calculateDamage(ability, target);
         target.status.hp = Math.max(0, target.status.hp - damage);
         return {
             success: true,
@@ -778,7 +868,7 @@ class CHARACTER {
 
     _resolveMagicalAbility(ability, target) {
         const stats = this.getStats();
-        const damage = Math.floor(stats.ma * (ability.power || 1));
+        const damage = this._calculateDamage(ability, target);
         target.status.hp = Math.max(0, target.status.hp - damage);
         return {
             success: true,
@@ -848,12 +938,7 @@ class CHARACTER {
     _resolveDrainAbility(ability, target) {
         const result = { success: true, effects: [] };
         
-        // Calculate base damage
-        if (ability.type === 'physical') {
-            result.damage = this._calculatePhysicalDamage(ability, target);
-        } else {
-            result.damage = this._calculateMagicalDamage(ability, target);
-        }
+        result.damage = this._calculateDamage(ability, target);
 
         // Calculate drain amount (usually a percentage of damage dealt)
         const drainRatio = ability.drainRatio || 0.5; // Default to 50% if not specified
@@ -873,9 +958,7 @@ class CHARACTER {
         const result = { success: true, effects: [] };
         
         result.analysis = {
-            stats: target.getStats(),
-            weaknesses: target.getWeaknesses?.() || [],
-            resistances: target.getResistances?.() || []
+            stats: target.getStats()
         };
 
         // Some analyze abilities might reveal specific information
@@ -948,6 +1031,13 @@ class CHARACTER {
         return true;
     }
     
+    switchPosition() {
+        if (this.position === 'front')
+            this.position = 'back';
+        else
+            this.position = 'front';
+    }
+
     getAIAction(enemies, allies = []) {
         const abilities = this.getAvailableAbilities();
         const activeAbilities = Object.entries(abilities.active || {});

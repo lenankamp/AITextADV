@@ -88,14 +88,6 @@ export class SAMURAI extends JOBINTERFACE {
                         jpCost: 400,
                         description: 'Focus mind to enhance combat abilities'
                     },
-                    BLADE_WARD: {
-                        name: 'Blade Ward',
-                        type: 'buff',
-                        effect: 'blade_barrier',
-                        mp: 30,
-                        jpCost: 500,
-                        description: 'Create defensive barrier of spinning blades'
-                    },
                     BINDING_BLADE: {
                         name: 'Binding Blade',
                         type: 'physical',

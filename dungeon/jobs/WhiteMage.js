@@ -85,7 +85,7 @@ export class WHITEMAGE extends JOBINTERFACE {
                     SHELL: {
                         name: 'Shell',
                         type: 'buff',
-                        effect: 'increase_magic_defense',
+                        effect: 'shell',
                         mp: 15,
                         jpCost: 250
                     },

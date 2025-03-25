@@ -142,23 +142,11 @@ export class KNIGHT extends JOBINTERFACE {
                     jpCost: 300,
                     description: 'Allows equipping of shields'
                 },
-                DEFENSE_MASTERY: {
-                    name: 'Defense Mastery',
-                    effect: 'protect',
-                    jpCost: 400,
-                    description: 'Passive increase to defense'
-                },
                 STONESKIN: {
                     name: 'Stoneskin',
                     effect: 'damage_reduction',
                     jpCost: 600,
                     description: 'Reduces all damage taken'
-                },
-                WEAPON_GUARD: {
-                    name: 'Weapon Guard',
-                    effect: 'weapon_block',
-                    jpCost: 500,
-                    description: 'Chance to block with equipped weapon'
                 }
             }
         };

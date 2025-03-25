@@ -89,7 +89,7 @@ const MonsterTemplates = {
                 name: 'Weaken',
                 type: 'status',
                 mp: 12,
-                effect: 'weakness',
+                effect: 'attack_down',
                 duration: 3,
                 description: 'Reduces target\'s physical attack'
             }
@@ -118,7 +118,7 @@ const MonsterTemplates = {
                 name: 'Battle Cry',
                 type: 'buff',
                 mp: 10,
-                effect: 'strengthen',
+                effect: 'attack_up',
                 duration: 3,
                 aoe: true,
                 description: 'Increases physical attack of all allies'

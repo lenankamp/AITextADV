@@ -87,6 +87,15 @@ class MONSTER extends CHARACTER {
         return false;
     }
 
+    getReactionAbility() {
+        return null;
+    }
+
+    getSupportAbility() {
+        return null;
+    }
+    
+
     // Override to return monster's predefined abilities
     getAvailableAbilities() {
         const monsterData = this._cachedJobData.get('monster');
