@@ -1,8 +1,5 @@
-// Remove old import
-// import { JOBS, JOB_REQUIREMENTS, JOB_STAT_GROWTH, JOB_BASE_STATS, ABILITY_TYPES, JOB_ABILITIES } from './jobs.js';
-// Add new imports
-import { JOBS } from './jobs/index.js';
-import { JobInterface } from './jobs/JobInterface.js';
+import { JOBS, JobInterface } from './jobs/index.js';
+import * as Jobs from './jobs/index.js';
 
 // Base character class
 class Character {
@@ -10,40 +7,27 @@ class Character {
         this.name = name;
         this.level = 1;
         this.experience = 0;
-        this.jp = 0; // Job Points
+        this.jp = 0;
+        this.position = 'front';
+        this.jobs = {};
+        this._cachedJobData = new Map();
         
-        // Job system
-        this.jobs = {
-            [JOBS.SQUIRE]: { 
-                level: 1, 
-                jp: 0, 
-                spentJp: 0,
-                mastered: false,
-                learnedAbilities: {
-                    active: {},
-                    reaction: {},
-                    support: {}
+        this.baseAbilities = {
+            active: {
+                ATTACK: {
+                    name: 'Attack',
+                    type: 'physical',
+                    power: 1,
+                    mp: 0,
+                    description: 'Basic physical attack'
                 }
             },
-            [JOBS.CHEMIST]: { 
-                level: 1, 
-                jp: 0, 
-                spentJp: 0,
-                mastered: false,
-                learnedAbilities: {
-                    active: {},
-                    reaction: {},
-                    support: {}
-                }
-            }
+            reaction: {},
+            support: {}
         };
         
-        this.currentJob = JOBS.SQUIRE;
-        this.abilities = {
-            secondaryActive: null,
-            reaction: null,
-            support: []
-        };
+        this.currentJob = null;
+        this.abilities = { ...this.baseAbilities };
         
         this.baseStats = {
             hp: 100,
@@ -55,12 +39,19 @@ class Character {
         };
         
         this.equipment = {
-            weapon: null,
-            armor: null,
+            mainHand: null,
+            offHand: null,
+            head: null,
+            body: null,
             accessory: null
         };
         
         this.inventory = [];
+        
+        // Initialize with Squire job - this will set up the cached data before status initialization
+        this.setJob(JOBS.SQUIRE);
+        
+        // Initialize status with base values after job is set
         this.status = {
             hp: this.getMaxHP(),
             mp: this.getMaxMP(),
@@ -70,9 +61,11 @@ class Character {
 
     // Job Management
     setJob(jobId) {
-        if (!this.canChangeToJob(jobId)) {
-            return false;
-        }
+        if (this.currentJob === jobId) return true;
+
+        const JobClass = this.getJobClass(jobId);
+        if (!JobClass) return false;
+
         this.currentJob = jobId;
         if (!this.jobs[jobId]) {
             this.jobs[jobId] = { 
@@ -87,18 +80,57 @@ class Character {
                 }
             };
         }
+
+        // Cache the job data including abilities
+        if (!this._cachedJobData.has(jobId)) {
+            this._cachedJobData.set(jobId, {
+                abilities: JobClass.getAbilities(),
+                baseStats: JobClass.getBaseStats()
+            });
+        }
+
         return true;
     }
 
+    getJobClass(jobId) {
+        switch (jobId) {
+            case JOBS.SQUIRE: return Jobs.Squire;
+            case JOBS.CHEMIST: return Jobs.Chemist;
+            case JOBS.KNIGHT: return Jobs.Knight;
+            case JOBS.ARCHER: return Jobs.Archer;
+            case JOBS.WHITE_MAGE: return Jobs.WhiteMage;
+            case JOBS.BLACK_MAGE: return Jobs.BlackMage;
+            case JOBS.MONK: return Jobs.Monk;
+            case JOBS.THIEF: return Jobs.Thief;
+            case JOBS.ORACLE: return Jobs.Oracle;
+            case JOBS.TIME_MAGE: return Jobs.TimeMage;
+            case JOBS.GEOMANCER: return Jobs.Geomancer;
+            case JOBS.DRAGOON: return Jobs.Dragoon;
+            case JOBS.SUMMONER: return Jobs.Summoner;
+            case JOBS.ORATOR: return Jobs.Orator;
+            case JOBS.SAMURAI: return Jobs.Samurai;
+            case JOBS.NINJA: return Jobs.Ninja;
+            case JOBS.CALCULATOR: return Jobs.Calculator;
+            case JOBS.DANCER: return Jobs.Dancer;
+            case JOBS.BARD: return Jobs.Bard;
+            case JOBS.MIME: return Jobs.Mime;
+            default: return null;
+        }
+    }
+
     canChangeToJob(jobId) {
-        const JobClass = JobInterface.getJobClass(jobId);
-        if (!JobClass) return false;
-        const requirements = JobClass.getRequirements();
-        if (!requirements) return true; // Base jobs have no requirements
-        
-        return Object.entries(requirements).every(([requiredJob, requiredLevel]) =>
-            this.jobs[requiredJob] && this.jobs[requiredJob].level >= requiredLevel
-        );
+        try {
+            const JobClass = this.getJobClass(jobId);
+            if (!JobClass) return false;
+            const requirements = JobClass.getRequirements();
+            if (!requirements) return true; // Base jobs have no requirements
+            
+            return Object.entries(requirements).every(([requiredJob, requiredLevel]) =>
+                this.jobs[requiredJob] && this.jobs[requiredJob].level >= requiredLevel
+            );
+        } catch (e) {
+            return false;
+        }
     }
 
     gainJP(amount) {
@@ -154,120 +186,123 @@ class Character {
         const jobData = this.jobs[jobId];
         if (!jobData) return false;
 
-        const JobClass = JobInterface.getJobClass(jobId);
-        const abilities = JobClass.getAbilities();
-        const ability = abilities[abilityType]?.abilities?.[abilityId] || 
-                       abilities[abilityType]?.[abilityId];
-        
-        if (!ability) return false;
+        try {
+            const JobClass = this.getJobClass(jobId);
+            const abilities = JobClass.getAbilities();
+            const ability = abilities[abilityType]?.abilities?.[abilityId] || 
+                          abilities[abilityType]?.[abilityId];
+            
+            if (!ability) return false;
 
-        // Check if already learned
-        if (jobData.learnedAbilities[abilityType][abilityId]) return false;
+            // Check if already learned
+            if (jobData.learnedAbilities[abilityType][abilityId]) return false;
 
-        // Check if we have enough available JP
-        const availableJP = jobData.jp + (jobData.spentJp || 0);
-        return availableJP >= ability.jpCost;
+            // Check if we have enough available JP
+            const availableJP = jobData.jp + (jobData.spentJp || 0);
+            return availableJP >= ability.jpCost;
+        } catch (e) {
+            return false;
+        }
     }
 
     learnAbility(jobId, abilityType, abilityId) {
         if (!this.canLearnAbility(jobId, abilityType, abilityId)) return false;
 
-        const jobData = this.jobs[jobId];
-        const JobClass = JobInterface.getJobClass(jobId);
-        const abilities = JobClass.getAbilities();
-        const ability = abilities[abilityType]?.abilities?.[abilityId] || 
-                       abilities[abilityType]?.[abilityId];
+        try {
+            const jobData = this.jobs[jobId];
+            const JobClass = this.getJobClass(jobId);
+            const abilities = JobClass.getAbilities();
+            const ability = abilities[abilityType]?.abilities?.[abilityId] || 
+                          abilities[abilityType]?.[abilityId];
 
-        // Spend JP
-        const jpCost = ability.jpCost;
-        const availableJP = jobData.jp + jobData.spentJp;
-        
-        if (availableJP < jpCost) return false;
+            // Spend JP
+            const jpCost = ability.jpCost;
+            const availableJP = jobData.jp + jobData.spentJp;
+            
+            if (availableJP < jpCost) return false;
 
-        // If cost would exceed current JP, use from spent JP first
-        let remainingCost = jpCost;
-        if (remainingCost > jobData.jp) {
-            remainingCost -= jobData.jp;
-            jobData.jp = 0;
-            jobData.spentJp -= remainingCost;
-        } else {
-            jobData.jp -= remainingCost;
+            // If cost would exceed current JP, use from spent JP first
+            let remainingCost = jpCost;
+            if (remainingCost > jobData.jp) {
+                remainingCost -= jobData.jp;
+                jobData.jp = 0;
+                jobData.spentJp -= remainingCost;
+            } else {
+                jobData.jp -= remainingCost;
+            }
+            jobData.spentJp += jpCost;
+
+            // Mark ability as learned
+            jobData.learnedAbilities[abilityType][abilityId] = true;
+
+            // Check for job mastery
+            this.checkJobMastery(jobId);
+
+            return true;
+        } catch (e) {
+            return false;
         }
-        jobData.spentJp += jpCost;
-
-        // Mark ability as learned
-        jobData.learnedAbilities[abilityType][abilityId] = true;
-
-        // Check for job mastery
-        this.checkJobMastery(jobId);
-
-        return true;
     }
 
     checkJobMastery(jobId) {
         const jobData = this.jobs[jobId];
         if (!jobData || jobData.mastered) return false;
 
-        const JobClass = JobInterface.getJobClass(jobId);
-        const abilities = JobClass.getAbilities();
+        try {
+            const JobClass = this.getJobClass(jobId);
+            const abilities = JobClass.getAbilities();
 
-        // Check if all abilities are learned
-        const isAllLearned = Object.entries(abilities).every(([type, typeData]) => {
-            const abilityList = typeData.abilities || typeData;
-            return Object.keys(abilityList).every(abilityId => 
-                jobData.learnedAbilities[type][abilityId]
-            );
-        });
+            // Check if all abilities are learned
+            const isAllLearned = Object.entries(abilities).every(([type, typeData]) => {
+                const abilityList = typeData.abilities || typeData;
+                return Object.keys(abilityList).every(abilityId => 
+                    jobData.learnedAbilities[type][abilityId]
+                );
+            });
 
-        if (isAllLearned) {
-            jobData.mastered = true;
-            return true;
+            if (isAllLearned) {
+                jobData.mastered = true;
+                return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
         }
-        return false;
     }
 
     // Stat Calculations
     getMaxHP() {
-        const baseGrowth = (this.level - 1) * 10;
-        const jobBonus = this._calculateJobStats().hp;
-        return this.baseStats.hp + baseGrowth + jobBonus;
+        const baseHP = this.baseStats.hp;
+        const jobBonus = this._cachedJobData.get(this.currentJob)?.baseStats?.hp || 0;
+        return Math.floor(baseHP + jobBonus);
     }
 
     getMaxMP() {
-        const baseGrowth = (this.level - 1) * 5;
-        const jobBonus = this._calculateJobStats().mp;
-        return this.baseStats.mp + baseGrowth + jobBonus;
+        const baseMP = this.baseStats.mp;
+        const jobBonus = this._cachedJobData.get(this.currentJob)?.baseStats?.mp || 0;
+        return Math.floor(baseMP + jobBonus);
     }
 
     getStats() {
-        const baseStats = { ...this.baseStats };
-        const jobStats = this._calculateJobStats();
-        const equipStats = this._calculateEquipmentStats();
+        const stats = { ...this.baseStats };
+        const jobStats = this._cachedJobData.get(this.currentJob)?.baseStats;
         
-        return {
-            hp: this.getMaxHP(),
-            mp: this.getMaxMP(),
-            pa: baseStats.pa + jobStats.pa + equipStats.pa,
-            ma: baseStats.ma + jobStats.ma + equipStats.ma,
-            sp: baseStats.sp + jobStats.sp + equipStats.sp,
-            ev: baseStats.ev + jobStats.ev + equipStats.ev
-        };
-    }
+        if (jobStats) {
+            Object.entries(jobStats).forEach(([stat, value]) => {
+                stats[stat] += value;
+            });
+        }
 
-    _calculateJobStats() {
-        const currentJobData = this.jobs[this.currentJob];
-        const JobClass = JobInterface.getJobClass(this.currentJob);
-        const jobGrowth = JobClass.getGrowthRates();
-        const jobBase = JobClass.getBaseStats();
-        
-        return {
-            hp: jobBase.hp + (jobGrowth.hp * (currentJobData.level - 1)),
-            mp: jobBase.mp + (jobGrowth.mp * (currentJobData.level - 1)),
-            pa: jobBase.pa + (jobGrowth.pa * (currentJobData.level - 1)),
-            ma: jobBase.ma + (jobGrowth.ma * (currentJobData.level - 1)),
-            sp: jobBase.sp + (jobGrowth.sp * (currentJobData.level - 1)),
-            ev: jobBase.ev + (jobGrowth.ev * (currentJobData.level - 1))
-        };
+        // Apply equipment bonuses
+        Object.values(this.equipment).forEach(item => {
+            if (item && item.stats) {
+                Object.entries(item.stats).forEach(([stat, value]) => {
+                    stats[stat] += value;
+                });
+            }
+        });
+
+        return stats;
     }
 
     _calculateEquipmentStats() {
@@ -470,171 +505,155 @@ class Character {
 
     // Combat Methods
     getAvailableAbilities() {
-        const currentJobClass = JobInterface.getJobClass(this.currentJob);
-        const currentJobAbilities = currentJobClass.getAbilities();
-        const secondaryJobClass = this.abilities.secondaryActive ? JobInterface.getJobClass(this.abilities.secondaryActive) : null;
-        const secondaryAbilities = secondaryJobClass ? secondaryJobClass.getAbilities() : null;
-
+        // Start with base abilities
         const abilities = {
-            active: {},
-            secondary: {},
-            reaction: null,
-            support: []
+            active: { ...this.baseAbilities.active },
+            reaction: { ...this.baseAbilities.reaction },
+            support: { ...this.baseAbilities.support }
         };
+        
+        // Add job abilities if we have a current job
+        if (this.currentJob) {
+            const jobData = this.jobs[this.currentJob];
+            if (!jobData) return abilities;
 
-        // Filter active abilities to only include learned ones
-        Object.entries(currentJobAbilities.active.abilities).forEach(([id, ability]) => {
-            if (this.jobs[this.currentJob].learnedAbilities.active[id]) {
-                abilities.active[id] = ability;
-            }
-        });
-
-        // Filter secondary abilities
-        if (secondaryJobClass && this.abilities.secondaryActive) {
-            Object.entries(secondaryAbilities.active.abilities).forEach(([id, ability]) => {
-                if (this.jobs[this.abilities.secondaryActive].learnedAbilities.active[id]) {
-                    abilities.secondary[id] = ability;
+            // Get cached job abilities or load them if not cached
+            if (!this._cachedJobData.has(this.currentJob)) {
+                const JobClass = this.getJobClass(this.currentJob);
+                if (JobClass) {
+                    this._cachedJobData.set(this.currentJob, {
+                        abilities: JobClass.getAbilities(),
+                        baseStats: JobClass.getBaseStats()
+                    });
                 }
-            });
-        }
+            }
 
-        // Only include learned reaction ability
-        if (this.abilities.reaction) {
-            const reactionJobClass = JobInterface.getJobClass(this.abilities.reaction.jobId);
-            const reactionAbilities = reactionJobClass.getAbilities();
-            if (this.jobs[this.abilities.reaction.jobId].learnedAbilities.reaction[this.abilities.reaction.abilityId]) {
-                abilities.reaction = reactionAbilities.reaction[this.abilities.reaction.abilityId];
+            const cachedData = this._cachedJobData.get(this.currentJob);
+            if (cachedData?.abilities) {
+                // Handle nested ability structure (for monsters) or flat structure (for characters)
+                if (cachedData.abilities.active?.abilities) {
+                    // Monster-style nested abilities
+                    Object.entries(cachedData.abilities.active.abilities).forEach(([id, ability]) => {
+                        abilities.active[id] = ability;
+                    });
+                } else if (cachedData.abilities.active) {
+                    // Character-style flat abilities
+                    Object.entries(cachedData.abilities.active).forEach(([id, ability]) => {
+                        if (jobData.learnedAbilities?.active?.[id]) {
+                            abilities.active[id] = ability;
+                        }
+                    });
+                }
+                
+                // Add reaction abilities
+                if (cachedData.abilities.reaction) {
+                    Object.entries(cachedData.abilities.reaction).forEach(([id, ability]) => {
+                        if (!jobData.learnedAbilities || jobData.learnedAbilities.reaction?.[id]) {
+                            abilities.reaction[id] = ability;
+                        }
+                    });
+                }
+                
+                // Add support abilities
+                if (cachedData.abilities.support) {
+                    Object.entries(cachedData.abilities.support).forEach(([id, ability]) => {
+                        if (!jobData.learnedAbilities || jobData.learnedAbilities.support?.[id]) {
+                            abilities.support[id] = ability;
+                        }
+                    });
+                }
             }
         }
-
-        // Only include learned support abilities
-        abilities.support = this.abilities.support
-            .filter(({jobId, abilityId}) => 
-                this.jobs[jobId].learnedAbilities.support[abilityId])
-            .map(({jobId, abilityId}) => {
-                const supportJobClass = JobInterface.getJobClass(jobId);
-                const supportAbilities = supportJobClass.getAbilities();
-                return supportAbilities.support[abilityId];
-            });
-
+        
         return abilities;
     }
 
-    useAbility(ability, target) {
+    useAbility(abilityId, target) {
         const abilities = this.getAvailableAbilities();
-        let abilityData = abilities.active[ability] || abilities.secondary[ability];
+        const ability = abilities.active[abilityId];
         
-        if (!abilityData) {
+        if (!ability) {
             return { success: false, message: 'Ability not found' };
         }
 
-        if (this.status.mp < abilityData.mp) {
+        // Handle position restrictions - only physical non-ranged abilities are restricted
+        if (this.position === 'back' && ability.type === 'physical' && !ability.ranged) {
+            return { success: false, message: 'Cannot use melee attack from back row' };
+        }
+
+        // Check MP cost
+        if (this.status.mp < (ability.mp || 0)) {
             return { success: false, message: 'Not enough MP' };
         }
 
-        // Apply ability effects
-        this.status.mp -= abilityData.mp;
-        let result = { success: true, effects: [] };
+        // Apply MP cost
+        this.status.mp -= (ability.mp || 0);
 
-        switch (abilityData.type) {
+        // Calculate and apply effects
+        let result;
+        switch (ability.type) {
             case 'physical':
-                result = this._resolvePhysicalAbility(abilityData, target);
+                result = this._resolvePhysicalAbility(ability, target);
                 break;
             case 'magical':
-                result = this._resolveMagicalAbility(abilityData, target);
+                result = this._resolveMagicalAbility(ability, target);
                 break;
             case 'healing':
-                result = this._resolveHealingAbility(abilityData, target);
+                result = this._resolveHealingAbility(ability, target);
                 break;
             case 'support':
-                result = this._resolveSupportAbility(abilityData, target);
+                result = this._resolveSupportAbility(ability, target);
                 break;
             case 'status':
-                result = this._resolveStatusAbility(abilityData, target);
+                result = this._resolveStatusAbility(ability, target);
                 break;
             case 'drain':
-                result = this._resolveDrainAbility(abilityData, target);
+                result = this._resolveDrainAbility(ability, target);
                 break;
-            case 'analyze':
-                result = this._resolveAnalyzeAbility(abilityData, target);
-                break;
-            case 'special':
-                // Defer to job-specific implementation
-                const JobClass = JobInterface.getJobClass(this.currentJob);
-                result = JobClass.resolveSpecialAbility(abilityData, this, target);
-                break;
-            case 'dungeon':
-                result = { success: false, message: 'This ability cannot be used in combat' };
-                break;
+            default:
+                result = { success: false, message: 'Invalid ability type' };
         }
 
-        // Apply any additional effects if the ability was successful
-        if (result.success && abilityData.effect) {
-            if (Array.isArray(abilityData.effect)) {
-                abilityData.effect.forEach(effect => {
-                    result.effects.push(this._applyEffect(effect, target));
-                });
-            } else {
-                result.effects.push(this._applyEffect(abilityData.effect, target));
-            }
+        // Apply back row damage reduction for physical attacks
+        if (target.position === 'back' && ability.type === 'physical' && result.damage) {
+            result.damage = Math.floor(result.damage * 0.5);
         }
 
         return result;
     }
 
     _resolvePhysicalAbility(ability, target) {
-        const result = { success: true, effects: [] };
-        result.damage = this._calculatePhysicalDamage(ability, target);
-        
-        // Handle multi-hit abilities
-        if (ability.hits) {
-            result.damage *= ability.hits;
-            result.hits = ability.hits;
-        }
-
-        // Handle AoE abilities
-        if (ability.aoe) {
-            result.isAoe = true;
-        }
-
-        // Apply armor piercing if specified
-        if (ability.effect?.includes('armor_pierce')) {
-            result.isPiercing = true;
-        }
-
-        return result;
+        const stats = this.getStats();
+        const damage = Math.floor(stats.pa * (ability.power || 1));
+        target.status.hp = Math.max(0, target.status.hp - damage);
+        return {
+            success: true,
+            damage,
+            effects: []
+        };
     }
 
     _resolveMagicalAbility(ability, target) {
-        const result = { success: true, effects: [] };
-        result.damage = this._calculateMagicalDamage(ability, target);
-
-        // Handle elemental aspects
-        if (ability.element) {
-            result.element = ability.element;
-            // Check for resistances/weaknesses
-            const elementMultiplier = target.getElementalMultiplier?.(ability.element) || 1;
-            result.damage = Math.floor(result.damage * elementMultiplier);
-        }
-
-        // Handle AoE abilities
-        if (ability.aoe) {
-            result.isAoe = true;
-        }
-
-        return result;
+        const stats = this.getStats();
+        const damage = Math.floor(stats.ma * (ability.power || 1));
+        target.status.hp = Math.max(0, target.status.hp - damage);
+        return {
+            success: true,
+            damage,
+            effects: []
+        };
     }
 
     _resolveHealingAbility(ability, target) {
-        const result = { success: true, effects: [] };
-        result.healing = this._calculateHealing(ability);
-
-        // Handle AoE healing
-        if (ability.aoe) {
-            result.isAoe = true;
-        }
-
-        return result;
+        const stats = this.getStats();
+        const healing = Math.floor(stats.ma * (ability.power || 1));
+        const maxHp = target.getMaxHP();
+        target.status.hp = Math.min(maxHp, target.status.hp + healing);
+        return {
+            success: true,
+            healing,
+            effects: []
+        };
     }
 
     _resolveSupportAbility(ability, target) {
@@ -718,7 +737,7 @@ class Character {
 
         // Some analyze abilities might reveal specific information
         if (ability.reveals) {
-            ability.reveals.forEach(info => {
+            for (const info of ability.reveals) {
                 switch (info) {
                     case 'abilities':
                         result.analysis.abilities = target.getAvailableAbilities();
@@ -730,7 +749,7 @@ class Character {
                         result.analysis.equipment = target.equipment;
                         break;
                 }
-            });
+            }
         }
 
         return result;
@@ -776,6 +795,14 @@ class Character {
                 duration: effect.duration - 1
             }))
             .filter(effect => effect.duration > 0);
+    }
+
+    setPosition(position) {
+        if (position !== 'front' && position !== 'back') {
+            return false;
+        }
+        this.position = position;
+        return true;
     }
 }
 

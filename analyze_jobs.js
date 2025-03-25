@@ -8,57 +8,17 @@ const __dirname = path.dirname(__filename);
 
 // Helper function to format ability description
 function formatAbility(name, ability) {
-    let parts = [];
-    
-    // Start with type and power
-    if (ability.type) {
-        parts.push(`${ability.type} ability`);
-    }
-    
-    if (ability.power) {
-        parts.push(`power ${ability.power}`);
-    }
-    
-    // Handle effects
-    if (ability.effect) {
-        const effectStr = Array.isArray(ability.effect) 
-            ? ability.effect.join(', ') 
-            : ability.effect;
-        parts.push(`causing ${effectStr}`);
-    }
-    
-    // Add area of effect indicator
-    if (ability.aoe) {
-        parts.push('(AoE)');
-    }
-    
-    // Add MP cost if present
-    if (ability.mp) {
-        parts.push(`(MP: ${ability.mp})`);
-    }
-    
-    // Add JP cost if present
-    if (ability.jpCost) {
-        parts.push(`[JP: ${ability.jpCost}]`);
-    }
-    
-    // Add description if available, otherwise use constructed description
-    const description = ability.description || parts.join(' ');
-    
-    // Always include MP and JP costs even if there's a custom description
-    const costs = [];
-    if (ability.mp && !description.includes('MP:')) {
-        costs.push(`(MP: ${ability.mp})`);
-    }
-    if (ability.jpCost && !description.includes('JP:')) {
-        costs.push(`[JP: ${ability.jpCost}]`);
-    }
-    
-    return `${name}: ${description} ${costs.join(' ')}`.trim();
+    let result = `${name}:\n`;
+    Object.entries(ability).forEach(([key, value]) => {
+        if (key !== 'name') { // Skip name since we already used it
+            result += `  ${key}: ${value}\n`;
+        }
+    });
+    return result;
 }
 
 // Main analysis function
-async function analyzeJobs() {
+function analyzeJobs() {
     const jobsDir = path.join(__dirname, 'dungeon', 'jobs');
     const outputFile = path.join(__dirname, 'job_analysis.txt');
     let output = '';
@@ -149,4 +109,4 @@ async function analyzeJobs() {
     }
 }
 
-analyzeJobs().catch(console.error);
+analyzeJobs();

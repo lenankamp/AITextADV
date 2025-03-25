@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from './index.js';
+import { JOBS } from './constants.js';
 
 export class Mime extends JobInterface {
     static getDescription() {

@@ -1,3 +1,4 @@
+export { JOBS } from './constants.js';
 export { JobInterface } from './JobInterface.js';
 
 // Base Jobs
@@ -31,37 +32,3 @@ export { Bard } from './Bard.js';
 
 // Special Job
 export { Mime } from './Mime.js';
-
-export const JOBS = {
-    // Base Jobs
-    SQUIRE: 'SQUIRE',
-    CHEMIST: 'CHEMIST',
-
-    // Tier 2 Jobs
-    KNIGHT: 'KNIGHT',
-    ARCHER: 'ARCHER',
-    WHITE_MAGE: 'WHITE_MAGE',
-    BLACK_MAGE: 'BLACK_MAGE',
-
-    // Tier 3 Jobs
-    MONK: 'MONK',
-    THIEF: 'THIEF',
-    ORACLE: 'ORACLE',
-    TIME_MAGE: 'TIME_MAGE',
-
-    // Tier 4 Jobs
-    GEOMANCER: 'GEOMANCER',
-    DRAGOON: 'DRAGOON',
-    SUMMONER: 'SUMMONER',
-    ORATOR: 'ORATOR',
-
-    // Advanced Jobs
-    SAMURAI: 'SAMURAI',
-    NINJA: 'NINJA',
-    CALCULATOR: 'CALCULATOR',
-    DANCER: 'DANCER',
-    BARD: 'BARD',
-
-    // Special Job
-    MIME: 'MIME'
-};

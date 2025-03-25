@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from './index.js';
+import { JOBS } from './constants.js';
 
 export class Squire extends JobInterface {
     static getDescription() {
@@ -36,6 +36,7 @@ export class Squire extends JobInterface {
                     THROW_STONE: {
                         name: 'Throw Stone',
                         type: 'physical',
+                        ranged: true,
                         power: 1.2,
                         mp: 0,
                         jpCost: 100,

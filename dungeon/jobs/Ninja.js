@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from './index.js';
+import { JOBS } from './constants.js';
 
 export class Ninja extends JobInterface {
     static getDescription() {
@@ -35,7 +35,7 @@ export class Ninja extends JobInterface {
                 abilities: {
                     THROW: {
                         name: 'Throw',
-                        type: 'physical',
+                        type: 'special',
                         power: 'weapon_dependent',
                         mp: 0,
                         jpCost: 200,

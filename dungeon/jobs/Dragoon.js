@@ -1,5 +1,5 @@
 import { JobInterface } from './JobInterface.js';
-import { JOBS } from './index.js';
+import { JOBS } from './constants.js';
 
 export class Dragoon extends JobInterface {
     static getDescription() {
@@ -38,6 +38,7 @@ export class Dragoon extends JobInterface {
                         type: 'physical',
                         power: 2.0,
                         charge: 1,
+                        ranged: true,
                         mp: 12,
                         jpCost: 200,
                         description: 'Basic jumping attack with height-based bonus'
@@ -55,6 +56,7 @@ export class Dragoon extends JobInterface {
                         name: 'High Jump',
                         type: 'physical',
                         power: 2.8,
+                        ranged: true,
                         charge: 2,
                         mp: 20,
                         jpCost: 400,
