@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/javascript">
+    <title>Dungeon Generator Test</title>
+    <style>
+        body {
+            background: #1e1e1e;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        .dungeon-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .dungeon-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .dungeon-controls input, .dungeon-controls select, .dungeon-controls button {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #666;
+            background: #363636;
+            color: #fff;
+        }
+        .dungeon-view {
+            display: grid;
+            gap: 1px;
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .dungeon-cell {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #fff;
+        }
+        .cell-wall { background: #404040; }
+        .cell-floor { background: #666666; }
+        .cell-entrance { background: #4a9eff; }
+        .cell-exit { background: #44ff44; }
+        .cell-door { background: #a86432; }
+        .cell-secret { background: #800080; }
+        .cell-chest { background: #ffd700; }
+        .cell-trap { background: #ff4444; }
+        .floor-info {
+            background: #363636;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .dungeon-legend {
+            display: grid;
+            grid-template-columns: repeat(4, auto);
+            gap: 10px;
+            padding: 10px;
+            background: #363636;
+            border-radius: 4px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dungeon-container">
+        <h1>Dungeon Generator Test</h1>
+        <div class="dungeon-controls">
+            <button id="generateBtn">Generate New Dungeon</button>
+            <input type="number" id="floorWidth" value="50" min="20" max="100" placeholder="Width">
+            <input type="number" id="floorHeight" value="50" min="20" max="100" placeholder="Height">
+            <input type="number" id="numFloors" value="5" min="1" max="10" placeholder="Floors">
+            <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="normal" selected>Normal</option>
+                <option value="hard">Hard</option>
+            </select>
+            <button id="prevFloor">Previous Floor</button>
+            <button id="nextFloor">Next Floor</button>
+        </div>
+        <div class="floor-info">
+            <h3>Current Floor: <span id="floorNum">0</span></h3>
+            <p>Rooms: <span id="roomCount">0</span></p>
+            <p>Features: <span id="featureCount">0</span></p>
+        </div>
+        <div id="dungeonView" class="dungeon-view"></div>
+        <div class="dungeon-legend">
+            <div class="legend-item">
+                <div class="legend-color cell-wall"></div>
+                <span>Wall</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color cell-floor"></div>
+                <span>Floor</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color cell-entrance"></div>
+                <span>Entrance</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color cell-exit"></div>
+                <span>Exit</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color cell-door"></div>
+                <span>Door</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color cell-secret"></div>
+                <span>Secret Door</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color cell-chest"></div>
+                <span>Chest</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color cell-trap"></div>
+                <span>Trap</span>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" crossorigin="anonymous">
+        import { DUNGEON, TILE_TYPES } from './dungeon.js';
+        console.log('Module loaded successfully');
+        console.log('Available TILE_TYPES:', TILE_TYPES);
+        
+        let currentDungeon = null;
+        let currentFloor = 0;
+        
+        function renderDungeon(floor) {
+            console.log('Rendering floor:', floor);
+            const dungeonView = document.getElementById('dungeonView');
+            dungeonView.innerHTML = '';
+            dungeonView.style.gridTemplateColumns = `repeat(${floor.width}, 20px)`;
+            
+            for (let y = 0; y < floor.height; y++) {
+                for (let x = 0; x < floor.width; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'dungeon-cell';
+                    
+                    const tileType = floor.getTile(x, y);
+                    switch (tileType) {
+                        case TILE_TYPES.WALL:
+                            cell.classList.add('cell-wall');
+                            break;
+                        case TILE_TYPES.FLOOR:
+                            cell.classList.add('cell-floor');
+                            break;
+                        case TILE_TYPES.ENTRANCE:
+                            cell.classList.add('cell-entrance');
+                            cell.textContent = 'E';
+                            break;
+                        case TILE_TYPES.EXIT:
+                            cell.classList.add('cell-exit');
+                            cell.textContent = 'X';
+                            break;
+                        case TILE_TYPES.DOOR:
+                            cell.classList.add('cell-door');
+                            cell.textContent = 'D';
+                            break;
+                        case TILE_TYPES.SECRET_DOOR:
+                            cell.classList.add('cell-secret');
+                            cell.textContent = 'S';
+                            break;
+                        case TILE_TYPES.CHEST:
+                            cell.classList.add('cell-chest');
+                            cell.textContent = 'C';
+                            break;
+                        case TILE_TYPES.TRAP:
+                            cell.classList.add('cell-trap');
+                            cell.textContent = 'T';
+                            break;
+                    }
+                    
+                    dungeonView.appendChild(cell);
+                }
+            }
+            
+            // Update floor info
+            document.getElementById('floorNum').textContent = floor.floorNumber + 1;
+            document.getElementById('roomCount').textContent = floor.rooms.length;
+            document.getElementById('featureCount').textContent = floor.rooms.reduce((count, room) => 
+                count + (room.features ? room.features.length : 0), 0);
+        }
+        
+        function generateDungeon() {
+            try {
+                console.log('Starting dungeon generation with parameters:', {
+                    width: parseInt(document.getElementById('floorWidth').value),
+                    height: parseInt(document.getElementById('floorHeight').value),
+                    floors: parseInt(document.getElementById('numFloors').value),
+                    difficulty: document.getElementById('difficulty').value
+                });
+
+                const width = parseInt(document.getElementById('floorWidth').value);
+                const height = parseInt(document.getElementById('floorHeight').value);
+                const floors = parseInt(document.getElementById('numFloors').value);
+                const difficulty = document.getElementById('difficulty').value;
+                
+                currentDungeon = new DUNGEON({
+                    width,
+                    height,
+                    floors,
+                    difficulty,
+                    minRoomSize: 5,
+                    maxRoomSize: 15,
+                    roomAttempts: 50
+                });
+                
+                console.log('Dungeon instance created:', currentDungeon);
+                currentDungeon.generate();
+                currentFloor = 0;
+                console.log('Generated dungeon:', currentDungeon);
+                renderDungeon(currentDungeon.floors[currentFloor]);
+            } catch (error) {
+                console.error('Error generating dungeon:', error);
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('generateBtn').addEventListener('click', generateDungeon);
+        
+        document.getElementById('prevFloor').addEventListener('click', () => {
+            if (currentDungeon && currentFloor > 0) {
+                currentFloor--;
+                renderDungeon(currentDungeon.floors[currentFloor]);
+            }
+        });
+        
+        document.getElementById('nextFloor').addEventListener('click', () => {
+            if (currentDungeon && currentFloor < currentDungeon.floors.length - 1) {
+                currentFloor++;
+                renderDungeon(currentDungeon.floors[currentFloor]);
+            }
+        });
+        
+        // Generate initial dungeon
+        generateDungeon();
+    </script>
+</body>
+</html>

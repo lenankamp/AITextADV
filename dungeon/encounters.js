@@ -253,8 +253,8 @@ class TREASUREMANAGER {
 class ENCOUNTERMANAGER {
     constructor(level = 1) {
         this.level = level;
-        this.trapManager = new TrapManager(level);
-        this.treasureManager = new TreasureManager(level);
+        this.trapManager = new TRAPMANAGER(level);
+        this.treasureManager = new TREASUREMANAGER(level);
     }
 
     generateRoomEncounters(room, difficulty = 'normal') {
@@ -340,7 +340,7 @@ class ENCOUNTERMANAGER {
 export {
     TRAP_TYPES,
     TREASURE_TYPES,
-    TrapManager,
-    TreasureManager,
-    EncounterManager
+    TRAPMANAGER,
+    TREASUREMANAGER,
+    ENCOUNTERMANAGER
 };

@@ -1,5 +1,5 @@
-import { MonsterFactory } from './combat.js';
-import { EncounterManager } from './encounters.js';
+import { MONSTER, MONSTERFACTORY } from './monsters/index.js';
+import { ENCOUNTERMANAGER } from './encounters.js';
 
 // Constants for dungeon generation
 const TILE_TYPES = {
@@ -114,6 +114,14 @@ class ROOM {
                this.y < other.y + other.height &&
                this.y + this.height > other.y;
     }
+
+    isCriticalPath() {
+        // Entrance, exit, and boss rooms are always on the critical path
+        return this.type === ROOM_TYPES.ENTRANCE ||
+               this.type === ROOM_TYPES.EXIT ||
+               this.type === ROOM_TYPES.BOSS ||
+               this.type === ROOM_TYPES.NORMAL; // Normal rooms are considered critical path for better connectivity
+    }
 }
 
 // Main Dungeon class
@@ -129,21 +137,31 @@ class DUNGEON {
             difficulty: config.difficulty || 'normal',
             ...config
         };
+        console.log('Initializing dungeon with config:', this.config);
         this.floors = [];
         this.currentFloor = 0;
-        this.monsterFactory = new MonsterFactory();
-        this.encounterManager = new EncounterManager();
-    }
-
-    generate() {
-        for (let i = 0; i < this.config.floors; i++) {
-            const floor = this._generateFloor(i);
-            this.floors.push(floor);
+        
+        try {
+            this.encounterManager = new ENCOUNTERMANAGER();
+            console.log('Successfully initialized EncounterManager');
+        } catch (error) {
+            console.error('Error initializing dungeon systems:', error);
+            throw error;
         }
     }
 
+    generate() {
+        console.log('Starting dungeon generation with config:', this.config);
+        for (let i = 0; i < this.config.floors; i++) {
+            console.log('Generating floor', i);
+            const floor = this._generateFloor(i);
+            this.floors.push(floor);
+        }
+        console.log('Dungeon generation complete. Total floors:', this.floors.length);
+    }
+
     _generateFloor(floorNumber) {
-        const floor = new DungeonFloor(this.config.width, this.config.height, floorNumber);
+        const floor = new DUNGEONFLOOR(this.config.width, this.config.height, floorNumber);
         
         // Generate rooms
         this._generateRooms(floor);
@@ -161,13 +179,14 @@ class DUNGEON {
     }
 
     _generateRooms(floor) {
+        console.log('Generating rooms for floor', floor.floorNumber);
         for (let i = 0; i < this.config.roomAttempts; i++) {
             const width = Math.floor(Math.random() * (this.config.maxRoomSize - this.config.minRoomSize + 1)) + this.config.minRoomSize;
             const height = Math.floor(Math.random() * (this.config.maxRoomSize - this.config.minRoomSize + 1)) + this.config.minRoomSize;
             const x = Math.floor(Math.random() * (floor.width - width - 2)) + 1;
             const y = Math.floor(Math.random() * (floor.height - height - 2)) + 1;
 
-            const newRoom = new Room(x, y, width, height);
+            const newRoom = new ROOM(x, y, width, height);
 
             // Check if the room overlaps with any existing rooms
             let overlaps = false;
@@ -179,6 +198,7 @@ class DUNGEON {
             }
 
             if (!overlaps) {
+                console.log('Created room:', { x, y, width, height, attempt: i });
                 // Determine room type and difficulty
                 if (floor.rooms.length === 0) {
                     newRoom.type = ROOM_TYPES.ENTRANCE;
@@ -204,6 +224,7 @@ class DUNGEON {
                 floor.rooms.push(newRoom);
             }
         }
+        console.log('Finished generating rooms. Total rooms:', floor.rooms.length);
     }
 
     _determineRoomType() {
@@ -242,7 +263,7 @@ class DUNGEON {
 
     _generateRoomEncounters(room, floorLevel) {
         // Set the encounter manager to the current floor level
-        this.encounterManager = new EncounterManager(floorLevel);
+        this.encounterManager = new ENCOUNTERMANAGER(floorLevel);
 
         // Generate encounters based on room type and difficulty
         const encounters = this.encounterManager.generateRoomEncounters(room, room.difficulty);
@@ -257,12 +278,75 @@ class DUNGEON {
 
     _generateMonsters(count, floorLevel, difficulty) {
         const monsters = [];
-        const availableTypes = ['goblin', 'orc']; // Add more monster types as needed
+        const monsterTemplates = {
+            goblin: {
+                name: 'Goblin',
+                stats: {
+                    hp: 50,
+                    mp: 20,
+                    pa: 8,
+                    ma: 4,
+                    sp: 6,
+                    ev: 5
+                },
+                abilities: {
+                    ATTACK: {
+                        name: 'Attack',
+                        type: 'physical',
+                        power: 1,
+                        description: 'Basic attack'
+                    }
+                },
+                position: 'front'
+            },
+            orc: {
+                name: 'Orc',
+                stats: {
+                    hp: 75,
+                    mp: 15,
+                    pa: 10,
+                    ma: 3,
+                    sp: 4,
+                    ev: 3
+                },
+                abilities: {
+                    ATTACK: {
+                        name: 'Attack',
+                        type: 'physical',
+                        power: 1.2,
+                        description: 'Strong melee attack'
+                    }
+                },
+                position: 'front'
+            }
+        };
 
         for (let i = 0; i < count; i++) {
-            const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+            const type = Object.keys(monsterTemplates)[Math.floor(Math.random() * Object.keys(monsterTemplates).length)];
+            const template = monsterTemplates[type];
             const levelBonus = difficulty === 'boss' ? 2 : difficulty === 'hard' ? 1 : 0;
-            const monster = this.monsterFactory.createMonster(type, floorLevel + levelBonus);
+            
+            // Scale stats based on level
+            const leveledTemplate = {
+                ...template,
+                level: floorLevel + levelBonus,
+                stats: { ...template.stats }
+            };
+
+            // Scale stats based on level and difficulty
+            const levelScaling = (leveledTemplate.level - 1) * 0.1; // 10% per level
+            const difficultyScaling = difficulty === 'boss' ? 2 : 
+                                    difficulty === 'hard' ? 1.5 : 1;
+
+            Object.keys(leveledTemplate.stats).forEach(stat => {
+                leveledTemplate.stats[stat] = Math.floor(
+                    leveledTemplate.stats[stat] * 
+                    (1 + levelScaling) * 
+                    difficultyScaling
+                );
+            });
+
+            const monster = new MONSTER(leveledTemplate);
             monsters.push(monster);
         }
 
@@ -368,29 +452,77 @@ class DUNGEON {
     }
 
     _addDoorsToRoom(floor, room) {
+        // Create a map of critical path rooms for quick lookup
+        const criticalPathRooms = new Set(floor.rooms.filter(r => r.isCriticalPath()));
+        
+        // Helper function to check if a position is part of any other room
+        const isInOtherRoom = (x, y) => {
+            return floor.rooms.some(otherRoom => 
+                otherRoom !== room && 
+                otherRoom.contains(x, y)
+            );
+        };
+
+        // Helper function to check if a door position would block critical path
+        const wouldBlockCriticalPath = (x, y, isSecret) => {
+            if (!isSecret) return false; // Regular doors don't block critical path
+            
+            // Check if this door connects two critical path rooms
+            const adjacentRooms = floor.rooms.filter(r => 
+                r !== room && 
+                (Math.abs(r.x - x) <= 1 || Math.abs(r.x + r.width - x) <= 1) &&
+                (Math.abs(r.y - y) <= 1 || Math.abs(r.y + r.height - y) <= 1)
+            );
+            
+            return adjacentRooms.some(r => criticalPathRooms.has(r) && criticalPathRooms.has(room));
+        };
+
         // Add doors at room boundaries where corridors meet
+        // Check horizontal walls (top and bottom)
         for (let x = room.x; x < room.x + room.width; x++) {
+            // Check top wall
             if (floor.getTile(x, room.y - 1) === TILE_TYPES.FLOOR) {
-                const isSecret = Math.random() < 0.2; // 20% chance for secret door
-                floor.setTile(x, room.y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
-                room.addDoor(x, room.y, isSecret);
+                if (!isInOtherRoom(x, room.y)) {
+                    const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
+                    if (!wouldBlockCriticalPath(x, room.y, isSecret)) {
+                        floor.setTile(x, room.y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
+                        room.addDoor(x, room.y, isSecret);
+                    }
+                }
             }
+            // Check bottom wall
             if (floor.getTile(x, room.y + room.height) === TILE_TYPES.FLOOR) {
-                const isSecret = Math.random() < 0.2;
-                floor.setTile(x, room.y + room.height - 1, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
-                room.addDoor(x, room.y + room.height - 1, isSecret);
+                if (!isInOtherRoom(x, room.y + room.height - 1)) {
+                    const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
+                    if (!wouldBlockCriticalPath(x, room.y + room.height - 1, isSecret)) {
+                        floor.setTile(x, room.y + room.height - 1, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
+                        room.addDoor(x, room.y + room.height - 1, isSecret);
+                    }
+                }
             }
         }
+
+        // Check vertical walls (left and right)
         for (let y = room.y; y < room.y + room.height; y++) {
+            // Check left wall
             if (floor.getTile(room.x - 1, y) === TILE_TYPES.FLOOR) {
-                const isSecret = Math.random() < 0.2;
-                floor.setTile(room.x, y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
-                room.addDoor(room.x, y, isSecret);
+                if (!isInOtherRoom(room.x, y)) {
+                    const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
+                    if (!wouldBlockCriticalPath(room.x, y, isSecret)) {
+                        floor.setTile(room.x, y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
+                        room.addDoor(room.x, y, isSecret);
+                    }
+                }
             }
+            // Check right wall
             if (floor.getTile(room.x + room.width, y) === TILE_TYPES.FLOOR) {
-                const isSecret = Math.random() < 0.2;
-                floor.setTile(room.x + room.width - 1, y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
-                room.addDoor(room.x + room.width - 1, y, isSecret);
+                if (!isInOtherRoom(room.x + room.width - 1, y)) {
+                    const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
+                    if (!wouldBlockCriticalPath(room.x + room.width - 1, y, isSecret)) {
+                        floor.setTile(room.x + room.width - 1, y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
+                        room.addDoor(room.x + room.width - 1, y, isSecret);
+                    }
+                }
             }
         }
     }
@@ -401,8 +533,8 @@ export {
     TILE_TYPES,
     DUNGEON_FEATURES,
     ROOM_TYPES,
-    Entity,
-    DungeonFloor,
-    Room,
-    Dungeon
+    ENTITY,
+    DUNGEONFLOOR,
+    ROOM,
+    DUNGEON
 };
