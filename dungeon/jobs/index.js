@@ -1,5 +1,4 @@
 export { JOBS } from './constants.js';
-export { JobInterface } from './JobInterface.js';
 
 // Base Jobs
 export { Squire } from './Squire.js';

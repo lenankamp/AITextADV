@@ -1,4 +1,5 @@
-import { JOBS, JobInterface } from './jobs/index.js';
+import { JOBS } from './jobs/index.js';
+import { EQUIPMENT } from './equipment/index.js';
 import * as Jobs from './jobs/index.js';
 
 // Base character class
@@ -270,19 +271,83 @@ class Character {
         }
     }
 
-    // Stat Calculations
-    getMaxHP() {
-        const baseHP = this.baseStats.hp;
-        const jobBonus = this._cachedJobData.get(this.currentJob)?.baseStats?.hp || 0;
-        return Math.floor(baseHP + jobBonus);
+    // Equipment Methods
+    equipItem(item, slot) {
+        // Check if item can be equipped by this character
+        if (!item.canBeEquippedBy(this)) {
+            return { success: false, message: 'Cannot equip this item' };
+        }
+
+        // Check if the slot is valid for this item
+        if (!item.isValidForSlot(slot, this)) {
+            return { success: false, message: 'Invalid slot for this item' };
+        }
+
+        // Handle two-handed weapons
+        if (item.isTwoHanded && slot === 'mainHand') {
+            if (this.equipment.offHand) {
+                return { success: false, message: 'Cannot equip two-handed weapon with item in off-hand' };
+            }
+        }
+
+        // Handle off-hand items when a two-handed weapon is equipped
+        if (slot === 'offHand' && this.equipment.mainHand?.isTwoHanded) {
+            return { success: false, message: 'Cannot equip off-hand item with two-handed weapon' };
+        }
+
+        // Store the current item for potential return to inventory
+        const previousItem = this.equipment[slot];
+
+        // Equip the new item
+        this.equipment[slot] = item;
+
+        return { 
+            success: true, 
+            message: 'Item equipped successfully', 
+            previousItem 
+        };
     }
 
-    getMaxMP() {
-        const baseMP = this.baseStats.mp;
-        const jobBonus = this._cachedJobData.get(this.currentJob)?.baseStats?.mp || 0;
-        return Math.floor(baseMP + jobBonus);
+    unequipItem(slot) {
+        const item = this.equipment[slot];
+        if (!item) {
+            return { success: false, message: 'No item equipped in this slot' };
+        }
+
+        // Special handling for two-handed weapons
+        if (slot === 'mainHand' && item.isTwoHanded) {
+            this.equipment.offHand = null;
+        }
+
+        this.equipment[slot] = null;
+        return { success: true, message: 'Item unequipped successfully', item };
     }
 
+    calculateWeaponDamage() {
+        const mainWeapon = this.equipment.mainHand;
+        const offWeapon = this.equipment.offHand;
+        const stats = this.getStats();
+        
+        let damage = 0;
+
+        if (mainWeapon) {
+            damage += mainWeapon.calculateDamage(stats);
+        }
+
+        // Add off-hand weapon damage if dual wielding
+        if (offWeapon && offWeapon.type === 'weapon') {
+            // Off-hand weapons typically deal reduced damage
+            damage += Math.floor(offWeapon.calculateDamage(stats) * 0.6);
+        }
+
+        return damage;
+    }
+
+    isRanged() {
+        return this.equipment.mainHand?.isRanged || false;
+    }
+
+    // Update stat calculation to include equipment
     getStats() {
         const stats = { ...this.baseStats };
         const jobStats = this._cachedJobData.get(this.currentJob)?.baseStats;
@@ -295,35 +360,29 @@ class Character {
 
         // Apply equipment bonuses
         Object.values(this.equipment).forEach(item => {
-            if (item && item.stats) {
-                Object.entries(item.stats).forEach(([stat, value]) => {
-                    stats[stat] += value;
-                });
-            }
-        });
-
-        return stats;
-    }
-
-    _calculateEquipmentStats() {
-        const stats = { pa: 0, ma: 0, sp: 0, ev: 0 };
-        ['weapon', 'armor', 'accessory'].forEach(slot => {
-            const item = this.equipment[slot];
             if (item) {
-                Object.keys(stats).forEach(stat => {
-                    stats[stat] += item[stat] || 0;
+                const modifiers = item.getStatModifiers();
+                Object.entries(modifiers).forEach(([stat, value]) => {
+                    stats[stat] = (stats[stat] || 0) + value;
                 });
             }
         });
+
         return stats;
     }
 
+    // Combat Methods
     _calculatePhysicalDamage(ability, target) {
         const stats = this.getStats();
         const targetStats = target.getStats();
         
-        // Base damage calculation using physical attack and ability power
-        let damage = stats.pa * (ability.power || 1);
+        // Use weapon damage formula if it's a basic attack
+        let damage;
+        if (!ability || ability.name === 'Attack') {
+            damage = this.calculateWeaponDamage();
+        } else {
+            damage = stats.pa * (ability.power || 1);
+        }
         
         // Apply variance (±10%)
         const variance = 0.1;
@@ -331,9 +390,13 @@ class Character {
         damage *= randomFactor;
         
         // Apply target defense unless ability is piercing
-        if (!ability.effect?.includes('armor_pierce')) {
-            const defenseRatio = 100 / (100 + targetStats.pa);
-            damage *= defenseRatio;
+        if (!ability?.effect?.includes('armor_pierce')) {
+            // Allow armor to modify incoming damage
+            Object.values(target.equipment).forEach(item => {
+                if (item) {
+                    damage = item.modifyIncomingDamage(damage, 'physical');
+                }
+            });
         }
         
         return Math.floor(damage);
@@ -530,34 +593,30 @@ class Character {
 
             const cachedData = this._cachedJobData.get(this.currentJob);
             if (cachedData?.abilities) {
-                // Handle nested ability structure (for monsters) or flat structure (for characters)
-                if (cachedData.abilities.active?.abilities) {
-                    // Monster-style nested abilities
-                    Object.entries(cachedData.abilities.active.abilities).forEach(([id, ability]) => {
-                        abilities.active[id] = ability;
-                    });
-                } else if (cachedData.abilities.active) {
-                    // Character-style flat abilities
-                    Object.entries(cachedData.abilities.active).forEach(([id, ability]) => {
-                        if (jobData.learnedAbilities?.active?.[id]) {
+                // Handle different ability types
+                if (cachedData.abilities.active) {
+                    const activeAbilities = cachedData.abilities.active.abilities || cachedData.abilities.active;
+                    Object.entries(activeAbilities).forEach(([id, ability]) => {
+                        // Only add if it's a monster or the ability is learned
+                        if (this.currentJob === 'monster' || jobData.learnedAbilities.active[id]) {
                             abilities.active[id] = ability;
                         }
                     });
                 }
                 
-                // Add reaction abilities
+                // Add reaction abilities that have been learned
                 if (cachedData.abilities.reaction) {
                     Object.entries(cachedData.abilities.reaction).forEach(([id, ability]) => {
-                        if (!jobData.learnedAbilities || jobData.learnedAbilities.reaction?.[id]) {
+                        if (this.currentJob === 'monster' || jobData.learnedAbilities.reaction[id]) {
                             abilities.reaction[id] = ability;
                         }
                     });
                 }
                 
-                // Add support abilities
+                // Add support abilities that have been learned
                 if (cachedData.abilities.support) {
                     Object.entries(cachedData.abilities.support).forEach(([id, ability]) => {
-                        if (!jobData.learnedAbilities || jobData.learnedAbilities.support?.[id]) {
+                        if (this.currentJob === 'monster' || jobData.learnedAbilities.support[id]) {
                             abilities.support[id] = ability;
                         }
                     });
@@ -803,6 +862,99 @@ class Character {
         }
         this.position = position;
         return true;
+    }
+    
+    getAIAction(targets) {
+        const abilities = this.getAvailableAbilities();
+        const activeAbilities = Object.entries(abilities.active || {});
+        
+        if (activeAbilities.length === 0) return null;
+
+        // Filter abilities based on MP cost and position
+        const usableAbilities = activeAbilities.filter(([, ability]) => {
+            if (this.status.mp < (ability.mp || 0)) return false;
+            if (ability.type === 'dungeon') return false;
+            if (this.position === 'back' && ability.type === 'physical' && !ability.ranged) return false;
+            return true;
+        });
+
+        if (usableAbilities.length === 0) return null;
+
+        // Sort abilities by priority
+        const prioritizedAbilities = this._prioritizeAbilities(usableAbilities, targets);
+        if (prioritizedAbilities.length === 0) return null;
+
+        const [chosenAbilityId, chosenAbility] = prioritizedAbilities[0];
+        const validTargets = this._getValidTargetsForAbility(chosenAbility, targets);
+        
+        if (!validTargets || validTargets.length === 0) return null;
+
+        const target = this._selectBestTarget(chosenAbility, validTargets);
+        if (!target) return null;
+
+        return {
+            type: 'ability',
+            ability: chosenAbilityId,
+            target: target
+        };
+    }
+
+    _getValidTargetsForAbility(ability, targets) {
+        // For healing/support, target self or other monsters
+        if (ability.type === 'healing' || ability.type === 'support') {
+            return [this];  // For now monsters only heal/buff themselves
+        }
+
+        // For physical attacks, handle ranged vs melee
+        if (ability.type === 'physical' && !ability.ranged) {
+            return targets.filter(t => 
+                t.status.hp > 0 && 
+                (t.position === 'front' || this.position === 'front')
+            );
+        }
+
+        // For all other ability types (magical, status, etc.)
+        return targets.filter(t => t.status.hp > 0);
+    }
+
+    _selectBestTarget(ability, targets) {
+        if (targets.length === 0) return null;
+        
+        switch (ability.type) {
+            case 'healing':
+                return targets.reduce((lowest, current) => 
+                    (current.status.hp / current.getMaxHP()) < (lowest.status.hp / lowest.getMaxHP())
+                        ? current : lowest
+                );
+            case 'drain':
+                if (ability.effect === 'mp_drain') {
+                    return targets.reduce((highest, current) => 
+                        current.status.mp > highest.status.mp ? current : highest
+                    );
+                }
+                return targets.reduce((highest, current) => 
+                    current.status.hp > highest.status.hp ? current : highest
+                );
+            case 'status':
+                return targets.find(t => !t.status.effects.some(e => e.type === ability.effect)) || 
+                       targets[Math.floor(Math.random() * targets.length)];
+            case 'physical':
+                const frontRowTargets = targets.filter(t => t.position === 'front');
+                if (frontRowTargets.length > 0 && !ability.ranged) {
+                    return frontRowTargets[Math.floor(Math.random() * frontRowTargets.length)];
+                }
+            default:
+                const totalWeight = targets.reduce((sum, t) => 
+                    sum + (1 - t.status.hp / t.getMaxHP()), 0);
+                let random = Math.random() * totalWeight;
+                
+                for (const target of targets) {
+                    const weight = 1 - target.status.hp / target.getMaxHP();
+                    if (random <= weight) return target;
+                    random -= weight;
+                }
+                return targets[0];
+        }
     }
 }
 

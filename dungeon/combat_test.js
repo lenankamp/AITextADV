@@ -230,21 +230,10 @@ function runCombatTest() {
         const result = combat.processAction(action);
         console.log('Action result:', result);
 
-        // Log combat state
-        combatLog.push({
-            turn: state.turn,
-            currentActor: currentActor.entity.name,
-            action,
-            result,
-            partyStatus: state.partyStatus,
-            monsterStatus: state.monsterStatus
-        });
-
         turnCount++;
     }
 
     console.log('\nCombat finished!');
-    console.log('Final state:', combat.getCombatState());
     console.log(`Total turns: ${turnCount}`);
 
     // Write final combat log

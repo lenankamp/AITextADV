@@ -226,19 +226,40 @@ class CombatManager {
     }
 
     getValidTargets(actor) {
-        const possibleTargets = actor.type === 'party' ? this.monsters : this.party.members;
+        const abilities = actor.entity.getAvailableAbilities();
+        const currentAbility = abilities?.active?.[actor.ability];
         
-        // For physical attacks from back row, only return front row targets unless ranged
-        if (actor.entity.position === 'back') {
-            const abilities = actor.entity.getAvailableAbilities();
-            const currentAbility = abilities?.active?.[actor.ability];
-            
-            if (currentAbility?.type === 'physical' && !currentAbility.ranged) {
-                return possibleTargets.filter(t => t.position === 'front' && t.status.hp > 0);
+        // Determine targets based on ability type first
+        if (currentAbility) {
+            switch (currentAbility.type) {
+                case 'healing':
+                case 'support':
+                    // Healing and support abilities target own party
+                    return actor.type === 'party' ? 
+                        this.party.members.filter(m => m.status.hp > 0) : 
+                        this.monsters.filter(m => m.status.hp > 0);
+                    
+                case 'physical':
+                    // Handle physical attacks based on position and ranged property
+                    const opposingTargets = actor.type === 'party' ? this.monsters : this.party.members;
+                    if (actor.entity.position === 'back' && !currentAbility.ranged) {
+                        return opposingTargets.filter(t => t.position === 'front' && t.status.hp > 0);
+                    }
+                    return opposingTargets.filter(t => t.status.hp > 0);
+                    
+                default:
+                    // Magical and other ability types can target anyone in range
+                    return (actor.type === 'party' ? this.monsters : this.party.members)
+                        .filter(t => t.status.hp > 0);
             }
         }
         
-        return possibleTargets.filter(t => t.status.hp > 0);
+        // Default targeting behavior for basic attacks
+        const opposingTargets = actor.type === 'party' ? this.monsters : this.party.members;
+        if (actor.entity.position === 'back') {
+            return opposingTargets.filter(t => t.position === 'front' && t.status.hp > 0);
+        }
+        return opposingTargets.filter(t => t.status.hp > 0);
     }
 
     _processPartyAction(action, actor) {
@@ -285,16 +306,9 @@ class CombatManager {
         }
 
         const abilities = actor.getAvailableAbilities();
-        const ability = abilities?.active?.[abilityId] || abilities?.ATTACK;
+        const ability = abilities?.active?.[abilityId];
         
         if (!ability) {
-            // Try getting ability from monster's active abilities if it's a monster
-            if (actor instanceof Monster) {
-                const monsterAbility = actor.abilities?.active?.[abilityId];
-                if (monsterAbility) {
-                    return this._processMonsterAbility(actor, monsterAbility, target);
-                }
-            }
             return { success: false, message: 'Ability not found' };
         }
 
@@ -325,123 +339,20 @@ class CombatManager {
         return actor.useAbility(abilityId, target);
     }
 
-    _processMonsterAbility(monster, ability, target) {
-        // Handle monster-specific ability processing
-        if (ability.aoe) {
-            const targets = this.party.members;
-            const results = targets.map(t => ({
-                success: true,
-                damage: this._calculateAbilityDamage(monster, ability, t),
-                effects: ability.effect ? [ability.effect] : []
-            }));
-            
-            // Apply results to targets
-            results.forEach((result, i) => {
-                const target = targets[i];
-                if (result.damage) {
-                    target.status.hp = Math.max(0, target.status.hp - result.damage);
-                }
-                if (result.effects) {
-                    result.effects.forEach(effect => target.addEffect(effect));
-                }
-            });
-
-            return {
-                success: true,
-                damage: results.reduce((sum, r) => sum + (r.damage || 0), 0),
-                effects: results.flatMap(r => r.effects),
-                targets: targets.map((t, i) => ({ target: t, result: results[i] })),
-                isAoe: true
-            };
-        }
-
-        // Single target ability
-        const damage = this._calculateAbilityDamage(monster, ability, target);
-        target.status.hp = Math.max(0, target.status.hp - damage);
-        
-        const result = {
-            success: true,
-            damage,
-            effects: []
-        };
-
-        if (ability.effect) {
-            const effects = Array.isArray(ability.effect) ? ability.effect : [ability.effect];
-            effects.forEach(effect => target.addEffect(effect));
-            result.effects = effects;
-        }
-
-        return result;
-    }
-
-    _calculateAbilityDamage(actor, ability, target) {
-        const stats = actor.getStats();
-        let damage = 0;
-
-        if (ability.type === 'physical') {
-            damage = Math.floor(stats.pa * (ability.power || 1));
-            // Apply back row damage reduction
-            if (target.position === 'back' && !ability.ranged) {
-                damage = Math.floor(damage * 0.5);
-            }
-        } else if (ability.type === 'magical') {
-            damage = Math.floor(stats.ma * (ability.power || 1));
-        }
-
-        return damage;
-    }
-
-    _useItem(actor, item, target) {
-        // Check if actor has item
-        const itemIndex = actor.inventory.indexOf(item);
-        if (itemIndex === -1) {
-            return { success: false, message: 'Item not found' };
-        }
-
-        // Apply item effects
-        const result = item.use(target);
-        if (result.success) {
-            actor.inventory.splice(itemIndex, 1);
-        }
-
-        return result;
-    }
-
-    _attemptFlee(actor) {
-        // Base 30% chance to flee, modified by level difference and speed
-        const stats = actor.getStats();
-        const averageMonsterLevel = this.monsters.reduce((sum, m) => sum + m.level, 0) / this.monsters.length;
-        const levelDiff = actor.level - averageMonsterLevel;
-        const speedBonus = stats.sp / 100;
-        
-        const fleeChance = 0.3 + (levelDiff * 0.05) + speedBonus;
-        const success = Math.random() < fleeChance;
-
-        if (success) {
-            this.state = COMBAT_STATES.FINISHED;
-            this.result = COMBAT_RESULTS.FLEE;
-        }
-
-        return {
-            success,
-            message: success ? 'Successfully fled from combat!' : 'Failed to flee!'
-        };
-    }
-
     _checkCombatEnd() {
-        if (this.party.isWiped()) {
+        if (this.party.members.every(m => m.status.hp <= 0)) {
             this.state = COMBAT_STATES.FINISHED;
             this.result = COMBAT_RESULTS.DEFEAT;
             return true;
-        } 
+        }
         
-        if (this.monsters.every(monster => monster.status.hp <= 0)) {
+        if (this.monsters.every(m => m.status.hp <= 0)) {
             this.state = COMBAT_STATES.FINISHED;
             this.result = COMBAT_RESULTS.VICTORY;
             this._distributeExperienceAndLoot();
             return true;
         }
-
+        
         return false;
     }
 
@@ -496,21 +407,8 @@ class CombatManager {
             result: this.result,
             turn: this.turn,
             currentActor: this.getCurrentActor(),
-            partyStatus: this.party.members.map(member => ({
-                name: member.name,
-                hp: member.status.hp,
-                mp: member.status.mp,
-                position: member.position,
-                effects: member.status.effects
-            })),
-            monsterStatus: this.monsters.map(monster => ({
-                name: monster.name,
-                hp: monster.status.hp,
-                mp: monster.status.mp,
-                position: monster.position,
-                effects: monster.status.effects
-            })),
-            log: this.log
+            partyStatus: this.party.members.map(member => ({name: member.name,hp: member.status.hp,mp: member.status.mp,position: member.position,effects: member.status.effects})),
+            monsterStatus: this.monsters.map(monster => ({name: monster.name,hp: monster.status.hp,mp: monster.status.mp,position: monster.position,effects: monster.status.effects}))
         };
     }
 }
