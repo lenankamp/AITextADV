@@ -65,14 +65,6 @@ export class ARMOR extends EQUIPMENT {
     modifyIncomingDamage(damage, damageType) {
         let modifiedDamage = damage;
         
-        // Apply armor-specific damage reduction
-        if (this.stats.defense && damageType === 'physical') {
-            modifiedDamage = Math.max(0, modifiedDamage - this.stats.defense);
-        }
-        if (this.stats.magicDefense && damageType === 'magical') {
-            modifiedDamage = Math.max(0, modifiedDamage - this.stats.magicDefense);
-        }
-
         // Apply special effects that modify incoming damage
         this.effects.forEach(effect => {
             if (effect.type === 'damage_reduction') {

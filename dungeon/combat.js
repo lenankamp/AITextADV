@@ -72,79 +72,41 @@ class PARTY {
     getRow(position) {
         return position === 'front' ? this.frontRow : this.backRow;
     }
-
-    recruitMonster(monster) {
-        if (this.members.length >= this.maxSize) return false;
-        if (!(monster instanceof MONSTER)) return false;
-
-        // Convert monster to character
-        const character = new Character(monster.name);
-        character.baseStats = { ...monster.baseStats };
-        character.status = { ...monster.status };
-        
-        // Add to party in same position
-        return this.addMember(character, monster.position);
-    }
 }
 
 class COMBATMANAGER {
-    constructor(party, monsters) {
-        this.party = party;
-        this.monsters = monsters;
+    constructor(partyA, partyB) {
+        this.partyA = partyA; // The player's party
+        this.partyB = partyB; // The opposing party
         this.state = COMBAT_STATES.ACTIVE;
         this.turn = 0;
         this.turnOrder = [];
         this.timeUnits = 0;
-        this.actionsThisTurn = new Map(); // Track who has acted this turn
+        this.actionsThisTurn = new Map();
         this.log = [];
         
-        // Initialize turn order
         this._initializeTurnOrder();
     }
 
     _initializeTurnOrder() {
-        // Reset turn order
         this.turnOrder = [];
         
-        // Combine party members and monsters with their initial wait time
-        [...this.party.members, ...this.monsters].forEach(entity => {
+        // Combine all combatants with their initial wait time
+        [...this.partyA.members, ...this.partyB.members].forEach(entity => {
             const stats = entity.getStats();
             this.turnOrder.push({
-                type: entity instanceof CHARACTER ? 'party' : 'monster',
+                party: this.partyA.members.includes(entity) ? 'A' : 'B',
                 entity: entity,
-                waitTime: 100 + Math.floor(Math.random() * 20), // Start with enough wait time to act
+                waitTime: 100 + Math.floor(Math.random() * 20),
                 baseSpeed: stats.sp
             });
         });
     }
 
-    _updateTurnOrder() {
-        // Update wait times based on speed
-        for (const actor of this.turnOrder) {
-            if (actor.entity.status.hp > 0) { // Only update living actors
-                const stats = actor.entity.getStats();
-                let currentSpeed = stats.sp;
-                
-                // Apply speed modifiers from status effects
-                actor.entity.status.effects.forEach(effect => {
-                    if (effect.type === 'haste') currentSpeed *= 1.5;
-                    if (effect.type === 'slow') currentSpeed *= 0.5;
-                });
-                
-                actor.waitTime += Math.max(1, currentSpeed); // Ensure minimum speed of 1
-                actor.baseSpeed = currentSpeed;
-            }
-        }
-
-        // Sort by wait time, highest first
-        this.turnOrder.sort((a, b) => b.waitTime - a.waitTime);
-    }
-
     getCurrentActor() {
-        // Get the actor with the highest wait time that hasn't acted yet
         return this.turnOrder.find(actor => 
             !this.actionsThisTurn.has(actor.entity.name) &&
-            actor.entity.status.hp > 0 // Only return living actors
+            actor.entity.status.hp > 0
         );
     }
 
@@ -156,203 +118,177 @@ class COMBATMANAGER {
         }
 
         let result;
-        if (currentActor.type === 'party') {
-            result = this._processPartyAction(action, currentActor.entity);
+        if (action.type === 'skip') {
+            result = { success: true, message: 'Turn skipped' };
         } else {
-            result = this._processMonsterAction(currentActor.entity);
+            result = this._processAbility(currentActor.entity, action.ability, action.target);
         }
 
-        // Mark actor as having acted, regardless of action success
         this.actionsThisTurn.set(currentActor.entity.name, true);
         currentActor.waitTime -= 100;
 
         if (result) {
             this._logAction(currentActor.entity, action, result);
-        } else {
-            // Log skipped turn if no action could be taken
-            this._logAction(currentActor.entity, { type: 'skip' }, { 
-                success: false, 
-                message: 'No valid action available' 
-            });
         }
 
         this._advanceTurn();
         return result;
     }
 
+    _processAbility(actor, abilityId, target) {
+        if (!abilityId || !target) {
+            return { success: false, message: 'Invalid ability or target' };
+        }
+
+        // Get the actual ability object from the actor
+        const abilities = actor.getAvailableAbilities();
+        const ability = abilities.active[abilityId];
+        
+        if (!ability) {
+            return { success: false, message: `Ability ${abilityId} not found` };
+        }
+
+        // Check if target is valid based on ability type and positions
+        const validTargets = this._getValidTargetsForAbility(actor, ability);
+        if (!validTargets.includes(target)) {
+            return { success: false, message: 'Invalid target for this ability' };
+        }
+
+        // Process the ability use
+        const result = actor.useAbility(abilityId, target);
+        result.target = target;
+
+        // Check for combat end after each action
+        this._checkCombatEnd();
+
+        return result;
+    }
+
     _advanceTurn() {
-        // Check if all actors have acted or can't act
-        const allActed = this.turnOrder.every(actor => {
-            const hasActed = this.actionsThisTurn.has(actor.entity.name);
-            const isAlive = actor.entity.status.hp > 0;
-            return !isAlive || hasActed;
+        // Update time units for all combatants
+        this.turnOrder.forEach(actor => {
+            if (actor.entity.status.hp > 0) {
+                const stats = actor.entity.getStats();
+                actor.waitTime -= stats.sp;
+            }
         });
 
+        // Sort by wait time ascending (lower = acts sooner)
+        this.turnOrder.sort((a, b) => a.waitTime - b.waitTime);
+
+        // Check if a new turn begins
+        const allActed = this.turnOrder.every(actor => 
+            actor.entity.status.hp <= 0 || 
+            this.actionsThisTurn.has(actor.entity.name)
+        );
+
         if (allActed) {
-            // Start new turn
             this.turn++;
             this.actionsThisTurn.clear();
             
-            // Reset and update wait times for all actors
-            this.turnOrder.forEach(actor => {
-                if (actor.entity.status.hp > 0) {
-                    const stats = actor.entity.getStats();
-                    let currentSpeed = stats.sp;
-                    
-                    // Apply speed modifiers from status effects
-                    actor.entity.status.effects.forEach(effect => {
-                        if (effect.type === 'haste') currentSpeed *= 1.5;
-                        if (effect.type === 'slow') currentSpeed *= 0.5;
-                    });
-                    
-                    actor.waitTime += Math.max(1, currentSpeed);
-                    actor.baseSpeed = currentSpeed;
+            // Update all combatants
+            [...this.partyA.members, ...this.partyB.members].forEach(entity => {
+                if (entity.status.hp > 0) {
+                    entity.updateEffects();
                 }
             });
+        }
+    }
 
-            // Sort by wait time, highest first
-            this.turnOrder.sort((a, b) => b.waitTime - a.waitTime);
-            
-            // Update status effects
-            this.turnOrder.forEach(actor => {
-                if (actor.entity.status.hp > 0) {
-                    actor.entity.updateEffects();
+    _getValidTargetsForAbility(actor, ability) {
+        const actorParty = this.partyA.members.includes(actor) ? this.partyA : this.partyB;
+        const opposingParty = actorParty === this.partyA ? this.partyB : this.partyA;
+
+        // If we got an ability ID instead of an ability object, look it up
+        if (typeof ability === 'string') {
+            const abilities = actor.getAvailableAbilities();
+            ability = abilities.active[ability];
+            if (!ability) {
+                return [];
+            }
+        }
+
+        // Handle targeting based on ability type
+        switch (ability.type) {
+            case 'healing':
+            case 'buff':
+                return actorParty.members.filter(m => m.status.hp > 0);
+
+            case 'physical':
+                if (actor.position === 'back' && !ability.ranged && !actor.isRanged()) {
+                    // Back row can only target front row with melee attacks
+                    return opposingParty.members.filter(t => t.position === 'front' && t.status.hp > 0);
                 }
-            });
+                // Otherwise can target any living enemy
+                return opposingParty.members.filter(t => t.status.hp > 0);
 
-            // Check combat end conditions after updating
-            this._checkCombatEnd();
+            case 'magical':
+            case 'status':
+            case 'drain':
+                // Can target any living enemy regardless of position
+                return opposingParty.members.filter(t => t.status.hp > 0);
+
+            default:
+                return opposingParty.members.filter(t => t.status.hp > 0);
         }
     }
 
     getValidTargets(actor) {
-        // Get targets based on party membership rather than entity type
-        const opposingTargets = actor.type === 'party' ? this.monsters : this.party.members;
-        const allyTargets = actor.type === 'party' ? this.party.members : this.monsters;
-
-        // Get the actor's current abilities
+        const actorParty = this.partyA.members.includes(actor.entity) ? this.partyA : this.partyB;
+        const opposingParty = actorParty === this.partyA ? this.partyB : this.partyA;
+        
         const abilities = actor.entity.getAvailableAbilities();
         if (!abilities) return [];
 
-        // Get the ability being used (default to ATTACK if none specified)
-        const currentAbility = abilities.active.ATTACK;
-        
-        if (currentAbility) {
-            switch (currentAbility.type) {
+        // If a specific ability was requested, use that ability's targeting rules
+        if (actor.ability) {
+            switch (actor.ability.type) {
                 case 'healing':
                 case 'buff':
-                    // Healing and buff abilities target allies
-                    return allyTargets.filter(m => m.status.hp > 0);
+                    return actorParty.members.filter(m => m.status.hp > 0);
                     
                 case 'physical':
-                    // Check both ability and weapon range
-                    const hasRangedWeapon = actor.entity.isRanged();
-                    const isRangedAbility = currentAbility.ranged;
-                    if (actor.entity.position === 'back' && !isRangedAbility && !hasRangedWeapon) {
-                        // Back row can only target front row with non-ranged attacks and weapons
-                        return opposingTargets.filter(t => t.position === 'front' && t.status.hp > 0);
+                    if (actor.entity.position === 'back' && !actor.ability.ranged && !actor.entity.isRanged()) {
+                        // Back row can only target front row with melee attacks
+                        return opposingParty.members.filter(t => t.position === 'front' && t.status.hp > 0);
                     }
-                    // Front row or ranged attacks/weapons can target anyone
-                    return opposingTargets.filter(t => t.status.hp > 0);
+                    // Otherwise can target any living enemy
+                    return opposingParty.members.filter(t => t.status.hp > 0);
                 
+                case 'magical':
+                case 'status':
+                case 'drain':
+                    // Can target any living enemy regardless of position
+                    return opposingParty.members.filter(t => t.status.hp > 0);
+
                 default:
-                    // Magical and other ability types can target anyone
-                    return opposingTargets.filter(t => t.status.hp > 0);
+                    return opposingParty.members.filter(t => t.status.hp > 0);
             }
         }
-        
-        // If no ability is found, use default targeting based on position and weapon
+
+        // For AI decision making, return all possible targets
+        if (actor.entity.type === 'monster') {
+            return [
+                ...opposingParty.members.filter(t => t.status.hp > 0),
+                ...actorParty.members.filter(t => t.status.hp > 0)
+            ];
+        }
+
+        // Otherwise use basic attack targeting
         if (actor.entity.position === 'back' && !actor.entity.isRanged()) {
-            return opposingTargets.filter(t => t.position === 'front' && t.status.hp > 0);
+            return opposingParty.members.filter(t => t.position === 'front' && t.status.hp > 0);
         }
-        return opposingTargets.filter(t => t.status.hp > 0);
-    }
-
-    _processPartyAction(action, actor) {
-        if (!action) {
-            return { success: false, message: 'No action provided' };
-        }
-
-        switch (action.type) {
-            case 'ability':
-                if (!action.ability || !action.target) {
-                    return { success: false, message: 'Invalid ability action' };
-                }
-                return this._processAbility(actor, action.ability, action.target);
-            case 'item':
-                if (!action.item || !action.target) {
-                    return { success: false, message: 'Invalid item action' };
-                }
-                return this._useItem(actor, action.item, action.target);
-            case 'flee':
-                return this._attemptFlee(actor);
-            case 'skip':
-                return { success: true, message: 'Turn skipped' };
-            default:
-                return { success: false, message: 'Invalid action type' };
-        }
-    }
-
-    _processMonsterAction(monster) {
-        const action = monster.getAIAction(this.party.members);
-        if (!action) {
-            return { success: false, message: 'No action available' };
-        }
-
-        if (action.type === 'skip') {
-            return { success: true, message: 'Turn skipped' };
-        }
-
-        return this._processAbility(monster, action.ability, action.target);
-    }
-
-    _processAbility(actor, abilityId, target) {
-        if (!actor || !actor.getAvailableAbilities) {
-            return { success: false, message: 'Invalid actor' };
-        }
-
-        const abilities = actor.getAvailableAbilities();
-        const ability = abilities?.active?.[abilityId];
-        
-        if (!ability) {
-            return { success: false, message: 'Ability not found' };
-        }
-
-        // Handle AoE abilities
-        if (ability.aoe) {
-            const targets = actor instanceof CHARACTER ? this.monsters : this.party.members;
-            const results = targets.map(t => actor.useAbility(abilityId, t));
-            
-            // Combine all results into one
-            const combinedResult = {
-                success: results.some(r => r.success),
-                damage: results.reduce((sum, r) => sum + (r.damage || 0), 0),
-                healing: results.reduce((sum, r) => sum + (r.healing || 0), 0),
-                effects: results.flatMap(r => r.effects || []),
-                targets: targets.map((t, i) => ({ target: t, result: results[i] })),
-                isAoe: true
-            };
-
-            return combinedResult;
-        }
-
-        // Check position restrictions for physical attacks
-        if (actor.position === 'back' && ability.type === 'physical' && !ability.ranged && !actor.isRanged()) {
-            return { success: false, message: 'Cannot use melee attack from back row' };
-        }
-
-        // Single target ability
-        return actor.useAbility(abilityId, target);
+        return opposingParty.members.filter(t => t.status.hp > 0);
     }
 
     _checkCombatEnd() {
-        if (this.party.members.every(m => m.status.hp <= 0)) {
+        if (this.partyA.isWiped()) {
             this.state = COMBAT_STATES.FINISHED;
             this.result = COMBAT_RESULTS.DEFEAT;
             return true;
         }
         
-        if (this.monsters.every(m => m.status.hp <= 0)) {
+        if (this.partyB.isWiped()) {
             this.state = COMBAT_STATES.FINISHED;
             this.result = COMBAT_RESULTS.VICTORY;
             this._distributeExperienceAndLoot();
@@ -363,17 +299,17 @@ class COMBATMANAGER {
     }
 
     _distributeExperienceAndLoot() {
-        // Calculate total experience
-        const totalExp = this.monsters.reduce((sum, monster) => sum + monster.experience, 0);
-        const expPerMember = Math.floor(totalExp / this.party.members.length);
+        // Calculate total experience from defeated party
+        const totalExp = this.partyB.members.reduce((sum, member) => sum + (member.experience || 0), 0);
+        const expPerMember = Math.floor(totalExp / this.partyA.members.length);
 
-        // Distribute experience
-        this.party.members.forEach(member => {
+        // Distribute experience to winning party
+        this.partyA.members.forEach(member => {
             member.gainExperience(expPerMember);
         });
 
         // Collect all loot
-        const loot = this.monsters.reduce((items, monster) => [...items, ...monster.loot], []);
+        const loot = this.partyB.members.reduce((items, member) => [...items, ...(member.loot || [])], []);
         return {
             experience: expPerMember,
             loot: loot
@@ -447,8 +383,22 @@ class COMBATMANAGER {
             result: this.result,
             turn: this.turn,
             currentActor: this.getCurrentActor(),
-            partyStatus: this.party.members.map(member => ({name: member.name,hp: member.status.hp,mp: member.status.mp,position: member.position,effects: member.status.effects})),
-            monsterStatus: this.monsters.map(monster => ({name: monster.name,hp: monster.status.hp,mp: monster.status.mp,position: monster.position,effects: monster.status.effects}))
+            parties: {
+                A: this.partyA.members.map(member => ({
+                    name: member.name,
+                    hp: member.status.hp,
+                    mp: member.status.mp,
+                    position: member.position,
+                    effects: member.status.effects
+                })),
+                B: this.partyB.members.map(member => ({
+                    name: member.name,
+                    hp: member.status.hp,
+                    mp: member.status.mp,
+                    position: member.position,
+                    effects: member.status.effects
+                }))
+            }
         };
     }
 }

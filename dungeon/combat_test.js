@@ -19,7 +19,7 @@ function createBasicEquipment() {
         woodenStaff: new WEAPON({
             name: 'Wooden Staff',
             weaponType: WEAPON_TYPES.STAFF,
-            stats: { pa: 2, ma: 3 },
+            stats: { pa: 1, ma: 3 },
             requirements: { jobs: ['Black Mage', 'White Mage'] }
         }),
         shortBow: new WEAPON({
@@ -33,35 +33,35 @@ function createBasicEquipment() {
         bronzeArmor: new ARMOR({
             name: 'Bronze Armor',
             armorType: ARMOR_TYPES.HEAVY_ARMOR,
-            stats: { defense: 3 },
+            stats: { hp: 20 },
             requirements: { jobs: ['Knight'] }
         }),
         leatherVest: new ARMOR({
             name: 'Leather Vest',
             armorType: ARMOR_TYPES.LIGHT_ARMOR,
-            stats: { defense: 2, ev: 1 }
+            stats: { hp: 10 }
         }),
         clothRobe: new ARMOR({
             name: 'Cloth Robe',
             armorType: ARMOR_TYPES.ROBE,
-            stats: { defense: 1, magicDefense: 2 },
+            stats: { hp: 5, mp: 10 },
             requirements: { jobs: ['Black Mage', 'White Mage'] }
         }),
         bronzeShield: new ARMOR({
             name: 'Bronze Shield',
             armorType: ARMOR_TYPES.SHIELD,
-            stats: { defense: 2 },
+            stats: { hp: 20 },
             requirements: { jobs: ['Knight'] }
         }),
         leatherCap: new ARMOR({
             name: 'Leather Cap',
             armorType: ARMOR_TYPES.HAT,
-            stats: { defense: 1 }
+            stats: { hp: 10 }
         }),
         bronzeHelm: new ARMOR({
             name: 'Bronze Helm',
             armorType: ARMOR_TYPES.HELM,
-            stats: { defense: 2 },
+            stats: { hp: 20 },
             requirements: { jobs: ['Knight'] }
         })
     };
@@ -167,15 +167,15 @@ function formatHP(current, max) {
 function printCombatStatus(state, combat) {
     console.log('\n=== Combat Status ===');
     console.log('Party:');
-    state.partyStatus.forEach(member => {
-        const maxHp = combat.party.members.find(m => m.name === member.name).getMaxHP();
+    state.parties.A.forEach(member => {
+        const maxHp = combat.partyA.members.find(m => m.name === member.name).getMaxHP();
         console.log(`  ${member.name.padEnd(10)} [${member.position.padEnd(5)}] HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}`);
     });
 
-    console.log('\nMonsters:');
-    state.monsterStatus.forEach(monster => {
-        const maxHp = combat.monsters.find(m => m.name === monster.name).getMaxHP();
-        console.log(`  ${monster.name.padEnd(15)} [${monster.position.padEnd(5)}] HP: ${formatHP(monster.hp, maxHp).padEnd(20)} MP: ${monster.mp}`);
+    console.log('\nOpposing Forces:');
+    state.parties.B.forEach(member => {
+        const maxHp = combat.partyB.members.find(m => m.name === member.name).getMaxHP();
+        console.log(`  ${member.name.padEnd(15)} [${member.position.padEnd(5)}] HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}`);
     });
     console.log('==================\n');
 }
@@ -213,26 +213,33 @@ function runCombatTest() {
     console.log('=== Starting Combat Test ===\n');
 
     // Create party and monsters
-    const party = new PARTY();
+    const playerParty = new PARTY();
+    const monsterParty = new PARTY();
+    
+    // Create monsters
     const monsters = [
         MONSTERFACTORY.createMonster('goblin'),
         MONSTERFACTORY.createMonster('archer_goblin', 2),
         MONSTERFACTORY.createMonster('dark_mage', 2),
         MONSTERFACTORY.createMonster('orc', 3)
     ];
-    
-    // Move these to the outer scope so they can be accessed by printCombatStatus
+
+    // Add monsters to their party with appropriate positions
+    monsters.forEach((monster, i) => {
+        const position = i === 0 || i === 3 ? 'front' : 'back';  // Goblin and Orc in front, others in back
+        monsterParty.addMember(monster, position);
+    });
     
     // Initialize party members
     ['Roland', 'Vivi', 'Rosa', 'Maria'].forEach((name, i) => {
         const job = [JOBS.KNIGHT, JOBS.BLACK_MAGE, JOBS.WHITE_MAGE, JOBS.ARCHER][i];
         const position = i === 0 ? 'front' : 'back';
         const char = createTestCharacter(name, job, position);
-        party.addMember(char, position);
+        playerParty.addMember(char, position);
     });
 
     // Initialize combat
-    const combat = new COMBATMANAGER(party, monsters);
+    const combat = new COMBATMANAGER(playerParty, monsterParty);
     const combatLog = [];
     let turnCount = 0;
     const MAX_TURNS = 10;
@@ -251,116 +258,128 @@ function runCombatTest() {
         }
 
         let action;
-        if (currentActor.type === 'party') {
-            // Party member's turn
-            const abilities = currentActor.entity.getAvailableAbilities();
-            const validTargets = combat.getValidTargets(currentActor);
+        const abilities = currentActor.entity.getAvailableAbilities();
+        const validTargets = combat.getValidTargets(currentActor);
 
-            if (validTargets.length === 0) {
-                action = { type: 'skip' };
-            } else {
-                // Choose appropriate ability based on job
-                switch (currentActor.entity.currentJob) {
-                    case JOBS.KNIGHT:
-                        // Knights use BREAK for damage, or PROTECT for defense
-                        if (abilities.active.BREAK) {
-                            action = {
-                                type: 'ability',
-                                ability: 'BREAK',
-                                target: validTargets[0]
-                            };
-                        } else {
-                            action = {
-                                type: 'ability',
-                                ability: 'ATTACK',
-                                target: validTargets[0]
-                            };
-                        }
-                        break;
-                    case JOBS.BLACK_MAGE:
-                        // Black Mages prefer FIRE for damage
-                        if (abilities.active.FIRE) {
-                            action = {
-                                type: 'ability',
-                                ability: 'FIRE',
-                                target: validTargets[0]
-                            };
-                        } else if (abilities.active.THUNDER) {
-                            action = {
-                                type: 'ability',
-                                ability: 'THUNDER',
-                                target: validTargets[0]
-                            };
-                        } else {
-                            action = {
-                                type: 'ability',
-                                ability: 'ATTACK',
-                                target: validTargets[0]
-                            };
-                        }
-                        break;
-                    case JOBS.WHITE_MAGE:
-                        // Find wounded ally
-                        const woundedAlly = party.members.find(m => m.status.hp < m.getMaxHP());
-                        if (woundedAlly && abilities.active.CURE) {
-                            action = {
-                                type: 'ability',
-                                ability: 'CURE',
-                                target: woundedAlly
-                            };
-                        } else if (abilities.active.PROTECT) {
-                            // Cast PROTECT on front line if no healing needed
-                            const frontLine = party.members.find(m => m.position === 'front');
-                            if (frontLine) {
-                                action = {
-                                    type: 'ability',
-                                    ability: 'PROTECT',
-                                    target: frontLine
-                                };
-                            }
-                        } else {
-                            action = {
-                                type: 'ability',
-                                ability: 'ATTACK',
-                                target: validTargets[0]
-                            };
-                        }
-                        break;
-                    case JOBS.ARCHER:
-                        // Archers prefer RAPID_FIRE for consistent damage
-                        if (abilities.active.RAPID_FIRE) {
-                            action = {
-                                type: 'ability',
-                                ability: 'RAPID_FIRE',
-                                target: validTargets[0]
-                            };
-                        } else if (abilities.active.AIM) {
-                            action = {
-                                type: 'ability',
-                                ability: 'AIM',
-                                target: validTargets[0]
-                            };
-                        } else {
-                            action = {
-                                type: 'ability',
-                                ability: 'ATTACK',
-                                target: validTargets[0]
-                            };
-                        }
-                        break;
-                    default:
+        if (validTargets.length === 0) {
+            console.log('No valid targets available, skipping turn');
+            action = { type: 'skip' };
+        } else {
+            // Choose appropriate ability based on job
+            switch (currentActor.entity.currentJob) {
+                case JOBS.KNIGHT:
+                    // Knights use BREAK for damage, or PROTECT for defense
+                    if (abilities.active.BREAK_ARMOR) {
+                        action = {
+                            type: 'ability',
+                            ability: 'BREAK_ARMOR',
+                            target: validTargets[0]
+                        };
+                    } else {
                         action = {
                             type: 'ability',
                             ability: 'ATTACK',
                             target: validTargets[0]
                         };
-                }
-            }
-        } else {
-            // Monster's turn
-            action = currentActor.entity.getAIAction(party.members);
-            if (!action) {
-                action = { type: 'skip' };
+                    }
+                    break;
+                case JOBS.BLACK_MAGE:
+                    // Black Mages prefer FIRE for damage
+                    if (abilities.active.FIRE) {
+                        action = {
+                            type: 'ability',
+                            ability: 'FIRE',
+                            target: validTargets[0]
+                        };
+                    } else if (abilities.active.THUNDER) {
+                        action = {
+                            type: 'ability',
+                            ability: 'THUNDER',
+                            target: validTargets[0]
+                        };
+                    } else {
+                        action = {
+                            type: 'ability',
+                            ability: 'ATTACK',
+                            target: validTargets[0]
+                        };
+                    }
+                    break;
+                case JOBS.WHITE_MAGE:
+                    // Find wounded ally
+                    const healTargets = combat.getValidTargets({
+                        entity: currentActor.entity,
+                        ability: abilities.active.CURE || abilities.active.PROTECT
+                    });
+                    const woundedAlly = healTargets.find(m => m.status.hp < m.getMaxHP());
+                    if (woundedAlly && abilities.active.CURE) {
+                        console.log('White Mage choosing CURE targeting:', woundedAlly.name);
+                        action = {
+                            type: 'ability',
+                            ability: 'CURE',
+                            target: woundedAlly
+                        };
+                    } else if (abilities.active.PROTECT) {
+                        // Cast PROTECT on front line if no healing needed
+                        const frontLine = healTargets.find(m => m.position === 'front');
+                        if (frontLine) {
+                            console.log('White Mage choosing PROTECT targeting:', frontLine.name);
+                            action = {
+                                type: 'ability',
+                                ability: 'PROTECT',
+                                target: frontLine
+                            };
+                        } else {
+                            console.log('White Mage choosing ATTACK targeting:', validTargets[0].name);
+                            action = {
+                                type: 'ability',
+                                ability: 'ATTACK',
+                                target: validTargets[0]
+                            };
+                        }
+                    } else {
+                        console.log('White Mage choosing ATTACK targeting:', validTargets[0].name);
+                        action = {
+                            type: 'ability',
+                            ability: 'ATTACK',
+                            target: validTargets[0]
+                        };
+                    }
+                    break;
+                case JOBS.ARCHER:
+                    // Archers prefer RAPID_FIRE for consistent damage
+                    if (abilities.active.RAPID_FIRE) {
+                        action = {
+                            type: 'ability',
+                            ability: 'RAPID_FIRE',
+                            target: validTargets[0]
+                        };
+                    } else {
+                        action = {
+                            type: 'ability',
+                            ability: 'ATTACK',
+                            target: validTargets[0]
+                        };
+                    }
+                    break;
+                case 'monster':
+                    // Monster's turn - use AI decision making
+                    const monsterPartyMembers = combat.partyB.members;
+                    const playerPartyMembers = combat.partyA.members;
+                    action = currentActor.entity.getAIAction(playerPartyMembers, monsterPartyMembers);
+                    if (action) {
+                        console.log(`Monster choosing ${action.ability} targeting:`, action.target.name);
+                    } else {
+                        console.log('Monster has no valid action');
+                    }
+                    break;
+                default:
+                    console.log('Default action: ATTACK targeting:', validTargets[0].name);
+                    action = {
+                        type: 'ability',
+                        ability: 'ATTACK',
+                        target: validTargets[0]
+                    };
             }
         }
 

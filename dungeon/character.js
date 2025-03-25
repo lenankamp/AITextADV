@@ -948,7 +948,7 @@ class CHARACTER {
         return true;
     }
     
-    getAIAction(targets) {
+    getAIAction(enemies, allies = []) {
         const abilities = this.getAvailableAbilities();
         const activeAbilities = Object.entries(abilities.active || {});
         
@@ -964,13 +964,20 @@ class CHARACTER {
         if (usableAbilities.length === 0) return null;
 
         // Sort abilities by priority
-        const prioritizedAbilities = this._prioritizeAbilities(usableAbilities, targets);
+        const prioritizedAbilities = this._prioritizeAbilities(usableAbilities, enemies);
         if (prioritizedAbilities.length === 0) return null;
 
         const [chosenAbilityId, chosenAbility] = prioritizedAbilities[0];
         
-        // The targets are already filtered by the combat manager, just pick the best one
-        const target = this._selectBestTarget(chosenAbility, targets);
+        // Select appropriate targets based on ability type
+        let validTargets;
+        if (chosenAbility.type === 'healing' || chosenAbility.type === 'buff') {
+            validTargets = this._getValidTargetsForAbility(chosenAbility, allies);
+        } else {
+            validTargets = this._getValidTargetsForAbility(chosenAbility, enemies);
+        }
+
+        const target = this._selectBestTarget(chosenAbility, validTargets);
         if (!target) return null;
 
         return {
@@ -1002,6 +1009,10 @@ class CHARACTER {
         
         switch (ability.type) {
             case 'buff':
+                return targets.reduce((highest, current) => 
+                    (current.status.hp / current.getMaxHP()) > (highest.status.hp / highest.getMaxHP())
+                        ? current : highest
+                );
             case 'healing':
                 return targets.reduce((lowest, current) => 
                     (current.status.hp / current.getMaxHP()) < (lowest.status.hp / lowest.getMaxHP())
@@ -1036,6 +1047,37 @@ class CHARACTER {
                 }
                 return targets[0];
         }
+    }
+
+    _prioritizeAbilities(abilities, targets) {
+        // Score each ability based on the situation
+        const scoredAbilities = abilities.map(([id, ability]) => {
+            let score = 0;
+
+            // Base score on ability power
+            if (ability.power) {
+                score += ability.power * 10;
+            }
+
+            // Bonus for AoE abilities when multiple targets
+            if (ability.aoe && targets.length > 1) {
+                score += 5;
+            }
+
+            // Bonus for status effects
+            if (ability.effect) {
+                score += 5;
+            }
+
+            // Penalty for MP cost
+            score -= (ability.mp || 0) * 0.1;
+
+            return { id, ability, score };
+        });
+
+        // Sort by score and return array of [id, ability] pairs
+        scoredAbilities.sort((a, b) => b.score - a.score);
+        return scoredAbilities.map(({ id, ability }) => [id, ability]);
     }
 }
 
