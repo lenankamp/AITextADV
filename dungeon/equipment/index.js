@@ -79,6 +79,6 @@ export const WEAPON_DAMAGE_FORMULAS = {
 };
 
 // Equipment class exports
-export { Equipment } from './Equipment.js';
-export { Weapon } from './Weapon.js';
-export { Armor } from './Armor.js';
+export { EQUIPMENT } from './Equipment.js';
+export { WEAPON } from './Weapon.js';
+export { ARMOR } from './Armor.js';

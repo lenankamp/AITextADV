@@ -1,7 +1,7 @@
-import { JobInterface } from './JobInterface.js';
+import { JOBINTERFACE } from './JobInterface.js';
 import { JOBS } from './constants.js';
 
-export class Ninja extends JobInterface {
+export class NINJA extends JOBINTERFACE {
     static getDescription() {
         return "Highly skilled infiltrators and combat specialists who excel in stealth and agility. Masters of deception who can throw weapons, walk on walls, and create illusions. Their versatile skillset combines offensive capabilities with exceptional mobility and evasion, making them equally adept at combat and covert operations.";
     }

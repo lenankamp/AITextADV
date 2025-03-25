@@ -1,8 +1,8 @@
-import { JobInterface } from './JobInterface.js';
+import { JOBINTERFACE } from './JobInterface.js';
 import { JOBS } from './constants.js';
 
 
-export class Thief extends JobInterface {
+export class THIEF extends JOBINTERFACE {
     static getDescription() {
         return "Masters of stealth and acquisition who excel at obtaining resources through cunning. Their high speed and evasion make them difficult targets, while their stealing abilities provide crucial resources and strategic advantages. In dungeons, they are essential for disarming traps, picking locks, and finding hidden treasures, making them invaluable for exploration and resource gathering.";
     }

@@ -33,7 +33,7 @@ const ROOM_TYPES = {
 };
 
 // Base class for all entities in the dungeon
-class Entity {
+class ENTITY {
     constructor(x, y, type) {
         this.x = x;
         this.y = y;
@@ -42,7 +42,7 @@ class Entity {
 }
 
 // Class representing a dungeon floor
-class DungeonFloor {
+class DUNGEONFLOOR {
     constructor(width, height, floorNumber) {
         this.width = width;
         this.height = height;
@@ -83,7 +83,7 @@ class DungeonFloor {
 }
 
 // Class representing a room in the dungeon
-class Room {
+class ROOM {
     constructor(x, y, width, height) {
         this.x = x;
         this.y = y;
@@ -117,7 +117,7 @@ class Room {
 }
 
 // Main Dungeon class
-class Dungeon {
+class DUNGEON {
     constructor(config = {}) {
         this.config = {
             width: config.width || 50,

@@ -1,7 +1,7 @@
-import { JobInterface } from './JobInterface.js';
+import { JOBINTERFACE } from './JobInterface.js';
 import { JOBS } from './constants.js';
 
-export class Geomancer extends JobInterface {
+export class GEOMANCER extends JOBINTERFACE {
     static getDescription() {
         return "Masters of terrain manipulation and natural forces. Their unique abilities allow them to draw power from and shape the environment around them. Experts at navigating and utilizing terrain features, they excel at area control and environmental manipulation while providing crucial exploration abilities.";
     }

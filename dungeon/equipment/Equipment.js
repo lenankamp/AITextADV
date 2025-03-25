@@ -1,6 +1,6 @@
 import { EQUIPMENT_TYPES } from './index.js';
 
-export class Equipment {
+export class EQUIPMENT {
     constructor(config) {
         this.name = config.name;
         this.type = config.type;
@@ -18,9 +18,17 @@ export class Equipment {
 
     canBeEquippedBy(character) {
         // Check job requirements
-        if (this.requirements.jobs && 
-            !this.requirements.jobs.includes(character.currentJob)) {
-            return false;
+        if (this.requirements.jobs) {
+            // Convert job ID to display name for comparison
+            const jobClass = character.getJobClass(character.currentJob);
+            if (!jobClass) return false;
+
+            const currentJobName = jobClass.name.replace('JOBINTERFACE', '');
+            if (!this.requirements.jobs.some(job => 
+                job.toLowerCase() === currentJobName.toLowerCase()
+            )) {
+                return false;
+            }
         }
 
         // Check level requirements

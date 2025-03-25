@@ -1,7 +1,7 @@
-import { JobInterface } from './JobInterface.js';
+import { JOBINTERFACE } from './JobInterface.js';
 import { JOBS } from './constants.js';
 
-export class BlackMage extends JobInterface {
+export class BLACKMAGE extends JOBINTERFACE {
     static getDescription() {
         return "Powerful spellcasters specializing in destructive elemental magic. Masters of offensive magic who can devastate enemies with fire, ice, and lightning. Their magical prowess allows them to break through enemy defenses and exploit elemental weaknesses. In dungeons, they excel at detecting and dispelling magical barriers, analyzing magical anomalies, and dealing with supernatural threats.";
     }

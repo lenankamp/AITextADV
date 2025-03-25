@@ -1,5 +1,5 @@
-import { Character } from './character.js';
-import { Monster } from './monsters/Monster.js';
+import { CHARACTER } from './character.js';
+import { MONSTER } from './monsters/Monster.js';
 
 const COMBAT_STATES = {
     ACTIVE: 'active',
@@ -12,7 +12,7 @@ const COMBAT_RESULTS = {
     FLEE: 'flee'
 };
 
-class Party {
+class PARTY {
     constructor() {
         this.members = [];
         this.frontRow = [];
@@ -75,7 +75,7 @@ class Party {
 
     recruitMonster(monster) {
         if (this.members.length >= this.maxSize) return false;
-        if (!(monster instanceof Monster)) return false;
+        if (!(monster instanceof MONSTER)) return false;
 
         // Convert monster to character
         const character = new Character(monster.name);
@@ -87,7 +87,7 @@ class Party {
     }
 }
 
-class CombatManager {
+class COMBATMANAGER {
     constructor(party, monsters) {
         this.party = party;
         this.monsters = monsters;
@@ -110,7 +110,7 @@ class CombatManager {
         [...this.party.members, ...this.monsters].forEach(entity => {
             const stats = entity.getStats();
             this.turnOrder.push({
-                type: entity instanceof Character ? 'party' : 'monster',
+                type: entity instanceof CHARACTER ? 'party' : 'monster',
                 entity: entity,
                 waitTime: 100 + Math.floor(Math.random() * 20), // Start with enough wait time to act
                 baseSpeed: stats.sp
@@ -314,7 +314,7 @@ class CombatManager {
 
         // Handle AoE abilities
         if (ability.aoe) {
-            const targets = actor instanceof Character ? this.monsters : this.party.members;
+            const targets = actor instanceof CHARACTER ? this.monsters : this.party.members;
             const results = targets.map(t => actor.useAbility(abilityId, t));
             
             // Combine all results into one
@@ -416,6 +416,6 @@ class CombatManager {
 export {
     COMBAT_STATES,
     COMBAT_RESULTS,
-    CombatManager,
-    Party
+    COMBATMANAGER,
+    PARTY
 };

@@ -1,8 +1,9 @@
-import { Character } from '../character.js';
+import { CHARACTER } from '../character.js';
 
-class Monster extends Character {
+class MONSTER extends CHARACTER {
     constructor(template) {
         super(template.name);
+        this.type = 'monster'; // Override type
         this.level = template.level || 1;
         this.baseStats = template.stats;
         this.currentJob = 'monster';
@@ -19,6 +20,7 @@ class Monster extends Character {
             });
         }
 
+        // Initialize monster-specific job data
         this.jobs = {
             monster: {
                 level: this.level,
@@ -40,8 +42,42 @@ class Monster extends Character {
             mp: this.getMaxMP(),
             effects: []
         };
+
+        // Cache monster abilities
+        this._cachedJobData.set('monster', {
+            abilities: {
+                active: structuredAbilities,
+                reaction: {},
+                support: {}
+            },
+            baseStats: template.stats
+        });
     }
 
+    // Override to disable secondary abilities for monsters
+    setSecondaryActive() {
+        return false;
+    }
+
+    // Override to disable reaction abilities for monsters
+    setReactionAbility() {
+        return false;
+    }
+
+    // Override to disable support abilities for monsters
+    setSupportAbility() {
+        return false;
+    }
+
+    // Override to return only monster's core abilities
+    getAvailableAbilities() {
+        const monsterData = this._cachedJobData.get('monster');
+        return {
+            active: monsterData?.abilities?.active || {},
+            reaction: {},
+            support: []
+        };
+    }
 }
 
-export { Monster };
+export { MONSTER };

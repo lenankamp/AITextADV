@@ -1,14 +1,17 @@
-import { Character } from './character.js';
-import { MonsterFactory } from './monsters/MonsterFactory.js';
-import { CombatManager, Party } from './combat.js';
+import { CHARACTER } from './character.js';
+import { MONSTERFACTORY } from './monsters/MonsterFactory.js';
+import { COMBATMANAGER, PARTY } from './combat.js';
 import { JOBS } from './jobs/index.js';
 import fs from 'fs';
 
 // Helper to create a basic character with a job
 function createTestCharacter(name, job, position = 'front') {
     console.log(`Creating character ${name} with job ${job}...`);
-    const char = new Character(name);
+    const char = new CHARACTER(name);
     char.setPosition(position);
+    char.gainJP(4000); // Give enough JP to change jobs
+    char.setJob(JOBS.CHEMIST);
+    char.gainJP(4000); // Give enough JP to change jobs
     
     // Initialize job data and set current job
     char.setJob(job);
@@ -17,7 +20,7 @@ function createTestCharacter(name, job, position = 'front') {
     const jobData = char.jobs[job];
     if (!jobData) return char;
 
-    jobData.jp = 1000; // Give enough JP to learn abilities
+    jobData.jp = 2000; // Give enough JP to learn abilities
     
     // Learn job-specific abilities
     switch (job) {
@@ -63,7 +66,7 @@ function runCombatTest() {
     console.log('Initializing combat test...');
 
     // Create party
-    const party = new Party();
+    const party = new PARTY();
     
     // Initialize Knight (front row physical attacker)
     const knight = createTestCharacter('Roland', JOBS.KNIGHT, 'front');
@@ -83,14 +86,14 @@ function runCombatTest() {
 
     // Create monster party
     const monsters = [
-        MonsterFactory.createMonster('goblin'),
-        MonsterFactory.createMonster('archer_goblin', 2),
-        MonsterFactory.createMonster('dark_mage', 2),
-        MonsterFactory.createMonster('orc', 3)
+        MONSTERFACTORY.createMonster('goblin'),
+        MONSTERFACTORY.createMonster('archer_goblin', 2),
+        MONSTERFACTORY.createMonster('dark_mage', 2),
+        MONSTERFACTORY.createMonster('orc', 3)
     ];
 
     // Initialize combat
-    const combat = new CombatManager(party, monsters);
+    const combat = new COMBATMANAGER(party, monsters);
     console.log('Combat initialized');
 
     // Run combat simulation

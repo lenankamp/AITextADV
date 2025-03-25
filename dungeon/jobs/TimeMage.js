@@ -1,7 +1,7 @@
-import { JobInterface } from './JobInterface.js';
+import { JOBINTERFACE } from './JobInterface.js';
 import { JOBS } from './constants.js';
 
-export class TimeMage extends JobInterface {
+export class TIMEMAGE extends JOBINTERFACE {
     static getBaseStats() {
         return {
             hp: 82,

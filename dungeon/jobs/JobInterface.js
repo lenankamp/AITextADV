@@ -1,5 +1,5 @@
 // Base interface for all jobs
-export class JobInterface {
+export class JOBINTERFACE {
     static getBaseStats() {
         return {
             hp: 0,

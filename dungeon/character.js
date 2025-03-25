@@ -1,11 +1,12 @@
-import { JOBS } from './jobs/index.js';
-import { EQUIPMENT } from './equipment/index.js';
+import { JOBS } from './jobs/constants.js';
+import { EQUIPMENT_SLOTS } from './equipment/index.js';
 import * as Jobs from './jobs/index.js';
 
 // Base character class
-class Character {
+class CHARACTER {
     constructor(name) {
         this.name = name;
+        this.type = 'person'; // Base class is for people, monsters override this
         this.level = 1;
         this.experience = 0;
         this.jp = 0;
@@ -24,11 +25,17 @@ class Character {
                 }
             },
             reaction: {},
-            support: {}
+            support: []
         };
         
         this.currentJob = null;
-        this.abilities = { ...this.baseAbilities };
+        this.abilities = {
+            ...this.baseAbilities,
+            secondaryActive: null, // job ID for secondary active abilities
+            secondaryActiveAbilities: {}, // Cached abilities from secondary job
+            equippedReaction: null, // { jobId, abilityId } for equipped reaction
+            equippedSupport: [] // Array of { jobId, abilityId } for equipped support abilities (max 2)
+        };
         
         this.baseStats = {
             hp: 100,
@@ -49,30 +56,51 @@ class Character {
         
         this.inventory = [];
         
-        // Initialize with Squire job - this will set up the cached data before status initialization
-        this.setJob(JOBS.SQUIRE);
-        
-        // Initialize status with base values after job is set
         this.status = {
-            hp: this.getMaxHP(),
-            mp: this.getMaxMP(),
+            hp: this.baseStats.hp,
+            mp: this.baseStats.mp,
             effects: []
         };
+
+        // Initialize job system before setting initial job
+        this.jobs[JOBS.SQUIRE] = { 
+            level: 1, 
+            jp: 0, 
+            spentJp: 0,
+            mastered: false,
+            learnedAbilities: {
+                active: {},
+                reaction: {},
+                support: {}
+            }
+        };
+
+        // Initialize with Squire job
+        this.setJob(JOBS.SQUIRE);
+        
+        // Update HP/MP to include job bonuses
+        this.status.hp = this.getMaxHP();
+        this.status.mp = this.getMaxMP();
     }
 
     // Job Management
     setJob(jobId) {
+        // Don't change if it's the same job
         if (this.currentJob === jobId) return true;
 
+        // Get the job class and validate it exists
         const JobClass = this.getJobClass(jobId);
         if (!JobClass) return false;
 
-        this.currentJob = jobId;
+        // Check if we meet requirements to change to this job
+        if (!this.canChangeToJob(jobId)) return false;
+
+        // Initialize job data if we haven't used this job before
         if (!this.jobs[jobId]) {
             this.jobs[jobId] = { 
                 level: 1, 
-                jp: 0, 
-                spentJp: 0,
+                jp: 0,        // Total JP earned for this job
+                spentJp: 0,   // JP spent on learned abilities
                 mastered: false,
                 learnedAbilities: {
                     active: {},
@@ -82,6 +110,9 @@ class Character {
             };
         }
 
+        // Store the job ID and update cached data
+        this.currentJob = jobId;
+        
         // Cache the job data including abilities
         if (!this._cachedJobData.has(jobId)) {
             this._cachedJobData.set(jobId, {
@@ -93,28 +124,50 @@ class Character {
         return true;
     }
 
+    gainJP(amount) {
+        if (!this.currentJob || amount <= 0) return false;
+        
+        const currentJobData = this.jobs[this.currentJob];
+        if (!currentJobData) return false;
+        
+        currentJobData.jp += amount;
+        
+        let leveled = false;
+        while (true) {
+            const jpNeeded = this.getJPNeededForNextLevel(currentJobData.level);
+            if (currentJobData.jp >= jpNeeded * currentJobData.level) {
+                currentJobData.level++;
+                leveled = true;
+            } else {
+                break;
+            }
+        }
+        
+        return leveled;
+    }
+
     getJobClass(jobId) {
         switch (jobId) {
-            case JOBS.SQUIRE: return Jobs.Squire;
-            case JOBS.CHEMIST: return Jobs.Chemist;
-            case JOBS.KNIGHT: return Jobs.Knight;
-            case JOBS.ARCHER: return Jobs.Archer;
-            case JOBS.WHITE_MAGE: return Jobs.WhiteMage;
-            case JOBS.BLACK_MAGE: return Jobs.BlackMage;
-            case JOBS.MONK: return Jobs.Monk;
-            case JOBS.THIEF: return Jobs.Thief;
-            case JOBS.ORACLE: return Jobs.Oracle;
-            case JOBS.TIME_MAGE: return Jobs.TimeMage;
-            case JOBS.GEOMANCER: return Jobs.Geomancer;
-            case JOBS.DRAGOON: return Jobs.Dragoon;
-            case JOBS.SUMMONER: return Jobs.Summoner;
-            case JOBS.ORATOR: return Jobs.Orator;
-            case JOBS.SAMURAI: return Jobs.Samurai;
-            case JOBS.NINJA: return Jobs.Ninja;
-            case JOBS.CALCULATOR: return Jobs.Calculator;
-            case JOBS.DANCER: return Jobs.Dancer;
-            case JOBS.BARD: return Jobs.Bard;
-            case JOBS.MIME: return Jobs.Mime;
+            case JOBS.SQUIRE: return Jobs.SQUIRE;
+            case JOBS.CHEMIST: return Jobs.CHEMIST;
+            case JOBS.KNIGHT: return Jobs.KNIGHT;
+            case JOBS.ARCHER: return Jobs.ARCHER;
+            case JOBS.WHITE_MAGE: return Jobs.WHITEMAGE;
+            case JOBS.BLACK_MAGE: return Jobs.BLACKMAGE;
+            case JOBS.MONK: return Jobs.MONK;
+            case JOBS.THIEF: return Jobs.THIEF;
+            case JOBS.ORACLE: return Jobs.ORACLE;
+            case JOBS.TIME_MAGE: return Jobs.TIMEMAGE;
+            case JOBS.GEOMANCER: return Jobs.GEOMANCER;
+            case JOBS.DRAGOON: return Jobs.DRAGOON;
+            case JOBS.SUMMONER: return Jobs.SUMMONER;
+            case JOBS.ORATOR: return Jobs.ORATOR;
+            case JOBS.SAMURAI: return Jobs.SAMURAI;
+            case JOBS.NINJA: return Jobs.NINJA;
+            case JOBS.CALCULATOR: return Jobs.CALCULATOR;
+            case JOBS.DANCER: return Jobs.DANCER;
+            case JOBS.BARD: return Jobs.BARD;
+            case JOBS.MIME: return Jobs.MIME;
             default: return null;
         }
     }
@@ -134,21 +187,6 @@ class Character {
         }
     }
 
-    gainJP(amount) {
-        this.jp += amount;
-        const currentJobData = this.jobs[this.currentJob];
-        currentJobData.jp += amount;
-        
-        // Check for job level up
-        const jpNeeded = this.getJPNeededForNextLevel(currentJobData.level);
-        if (currentJobData.jp >= jpNeeded) {
-            currentJobData.jp -= jpNeeded;
-            currentJobData.level++;
-            return true;
-        }
-        return false;
-    }
-
     getJPNeededForNextLevel(currentLevel) {
         return Math.floor(100 * Math.pow(1.1, currentLevel - 1));
     }
@@ -161,25 +199,32 @@ class Character {
     }
 
     setReactionAbility(jobId, abilityId) {
-        if (!this.jobs[jobId] || !JOB_ABILITIES[jobId].reaction[abilityId]) return false;
+        const JobClass = this.getJobClass(jobId);
+        if (!JobClass || !JobClass.getAbilities().reaction[abilityId]) return false;
         this.abilities.reaction = { jobId, abilityId };
         return true;
     }
 
+    getReactionAbility() {
+        const { jobId, abilityId } = this.abilities.reaction;
+        const JobClass = this.getJobClass(jobId);
+        return JobClass.getAbilities().reaction[abilityId];
+    }
+
     setSupportAbility(jobId, abilityId) {
-        if (!this.jobs[jobId] || !JOB_ABILITIES[jobId].support[abilityId]) return false;
+        const JobClass = this.getJobClass(jobId);
+        if (!JobClass || !JobClass.getAbilities().support[abilityId]) return false;
         if (this.abilities.support.length >= 2) return false;
         
         this.abilities.support.push({ jobId, abilityId });
         return true;
     }
 
-    removeSupport(index) {
-        if (index >= 0 && index < this.abilities.support.length) {
-            this.abilities.support.splice(index, 1);
-            return true;
-        }
-        return false;
+    getSupportAbilities() {
+        return this.abilities.support.map(({ jobId, abilityId }) => {
+            const JobClass = this.getJobClass(jobId);
+            return JobClass.getAbilities().support[abilityId];
+        });
     }
 
     // Ability Learning Methods
@@ -199,8 +244,7 @@ class Character {
             if (jobData.learnedAbilities[abilityType][abilityId]) return false;
 
             // Check if we have enough available JP
-            const availableJP = jobData.jp + (jobData.spentJp || 0);
-            return availableJP >= ability.jpCost;
+            return (jobData.jp - jobData.spentJp) >= ability.jpCost;
         } catch (e) {
             return false;
         }
@@ -216,21 +260,8 @@ class Character {
             const ability = abilities[abilityType]?.abilities?.[abilityId] || 
                           abilities[abilityType]?.[abilityId];
 
-            // Spend JP
+            // Deduct JP cost from available JP
             const jpCost = ability.jpCost;
-            const availableJP = jobData.jp + jobData.spentJp;
-            
-            if (availableJP < jpCost) return false;
-
-            // If cost would exceed current JP, use from spent JP first
-            let remainingCost = jpCost;
-            if (remainingCost > jobData.jp) {
-                remainingCost -= jobData.jp;
-                jobData.jp = 0;
-                jobData.spentJp -= remainingCost;
-            } else {
-                jobData.jp -= remainingCost;
-            }
             jobData.spentJp += jpCost;
 
             // Mark ability as learned
@@ -241,6 +272,7 @@ class Character {
 
             return true;
         } catch (e) {
+            console.error('Error in learnAbility:', e);
             return false;
         }
     }
@@ -284,14 +316,12 @@ class Character {
         }
 
         // Handle two-handed weapons
-        if (item.isTwoHanded && slot === 'mainHand') {
-            if (this.equipment.offHand) {
-                return { success: false, message: 'Cannot equip two-handed weapon with item in off-hand' };
-            }
+        if (item.isTwoHanded && slot === EQUIPMENT_SLOTS.MAIN_HAND) {
+            this.equipment[EQUIPMENT_SLOTS.OFF_HAND] = null;
         }
 
         // Handle off-hand items when a two-handed weapon is equipped
-        if (slot === 'offHand' && this.equipment.mainHand?.isTwoHanded) {
+        if (slot === EQUIPMENT_SLOTS.OFF_HAND && this.equipment[EQUIPMENT_SLOTS.MAIN_HAND]?.isTwoHanded) {
             return { success: false, message: 'Cannot equip off-hand item with two-handed weapon' };
         }
 
@@ -308,39 +338,26 @@ class Character {
         };
     }
 
-    unequipItem(slot) {
-        const item = this.equipment[slot];
-        if (!item) {
-            return { success: false, message: 'No item equipped in this slot' };
-        }
-
-        // Special handling for two-handed weapons
-        if (slot === 'mainHand' && item.isTwoHanded) {
-            this.equipment.offHand = null;
-        }
-
-        this.equipment[slot] = null;
-        return { success: true, message: 'Item unequipped successfully', item };
-    }
-
     calculateWeaponDamage() {
-        const mainWeapon = this.equipment.mainHand;
-        const offWeapon = this.equipment.offHand;
         const stats = this.getStats();
+        const mainWeapon = this.equipment[EQUIPMENT_SLOTS.MAIN_HAND];
         
-        let damage = 0;
-
-        if (mainWeapon) {
-            damage += mainWeapon.calculateDamage(stats);
+        if (!mainWeapon) {
+            return stats.pa; // Base physical attack if no weapon
         }
 
-        // Add off-hand weapon damage if dual wielding
-        if (offWeapon && offWeapon.type === 'weapon') {
-            // Off-hand weapons typically deal reduced damage
-            damage += Math.floor(offWeapon.calculateDamage(stats) * 0.6);
+        let damage = mainWeapon.calculateDamage(stats);
+
+        // Apply weapon effects that modify damage
+        if (mainWeapon.effects) {
+            mainWeapon.effects.forEach(effect => {
+                if (effect === 'critical_up') {
+                    damage *= 1.5;
+                }
+            });
         }
 
-        return damage;
+        return Math.floor(damage);
     }
 
     isRanged() {
@@ -369,6 +386,46 @@ class Character {
         });
 
         return stats;
+    }
+
+    getMaxHP() {
+        const baseHP = this.baseStats.hp;
+        const jobStats = this._cachedJobData.get(this.currentJob)?.baseStats || {};
+        const jobHP = jobStats.hp || 0;
+        
+        // Get HP bonuses from equipment
+        const equipmentHP = Object.values(this.equipment)
+            .filter(item => item)
+            .reduce((total, item) => {
+                const stats = item.getStatModifiers();
+                return total + (stats.hp || 0);
+            }, 0);
+
+        // Calculate growth from level
+        const jobGrowth = this.getJobClass(this.currentJob)?.getGrowthRates()?.hp || 0;
+        const levelGrowth = Math.floor(jobGrowth * (this.level - 1));
+
+        return baseHP + jobHP + equipmentHP + levelGrowth;
+    }
+
+    getMaxMP() {
+        const baseMP = this.baseStats.mp;
+        const jobStats = this._cachedJobData.get(this.currentJob)?.baseStats || {};
+        const jobMP = jobStats.mp || 0;
+        
+        // Get MP bonuses from equipment
+        const equipmentMP = Object.values(this.equipment)
+            .filter(item => item)
+            .reduce((total, item) => {
+                const stats = item.getStatModifiers();
+                return total + (stats.mp || 0);
+            }, 0);
+
+        // Calculate growth from level
+        const jobGrowth = this.getJobClass(this.currentJob)?.getGrowthRates()?.mp || 0;
+        const levelGrowth = Math.floor(jobGrowth * (this.level - 1));
+
+        return baseMP + jobMP + equipmentMP + levelGrowth;
     }
 
     // Combat Methods
@@ -572,52 +629,78 @@ class Character {
         const abilities = {
             active: { ...this.baseAbilities.active },
             reaction: { ...this.baseAbilities.reaction },
-            support: { ...this.baseAbilities.support }
+            support: []  // Array for support abilities
         };
         
-        // Add job abilities if we have a current job
+        // Add primary job abilities
         if (this.currentJob) {
             const jobData = this.jobs[this.currentJob];
-            if (!jobData) return abilities;
+            if (jobData) {
+                // Get cached job abilities or load them
+                if (!this._cachedJobData.has(this.currentJob)) {
+                    const JobClass = this.getJobClass(this.currentJob);
+                    if (JobClass) {
+                        this._cachedJobData.set(this.currentJob, {
+                            abilities: JobClass.getAbilities(),
+                            baseStats: JobClass.getBaseStats()
+                        });
+                    }
+                }
 
-            // Get cached job abilities or load them if not cached
-            if (!this._cachedJobData.has(this.currentJob)) {
-                const JobClass = this.getJobClass(this.currentJob);
-                if (JobClass) {
-                    this._cachedJobData.set(this.currentJob, {
-                        abilities: JobClass.getAbilities(),
-                        baseStats: JobClass.getBaseStats()
-                    });
+                const cachedData = this._cachedJobData.get(this.currentJob);
+                if (cachedData?.abilities) {
+                    // Add active abilities from current job
+                    if (cachedData.abilities.active) {
+                        const activeAbilities = cachedData.abilities.active.abilities || cachedData.abilities.active;
+                        Object.entries(activeAbilities).forEach(([id, ability]) => {
+                            if (jobData.learnedAbilities.active[id]) {
+                                abilities.active[id] = ability;
+                            }
+                        });
+                    }
+                    
+                    // Add reaction abilities
+                    if (cachedData.abilities.reaction) {
+                        Object.entries(cachedData.abilities.reaction).forEach(([id, ability]) => {
+                            if (jobData.learnedAbilities.reaction[id]) {
+                                abilities.reaction[id] = ability;
+                            }
+                        });
+                    }
+                    
+                    // Add support abilities
+                    if (cachedData.abilities.support) {
+                        Object.entries(cachedData.abilities.support).forEach(([id, ability]) => {
+                            if (jobData.learnedAbilities.support[id]) {
+                                abilities.support.push({ jobId: this.currentJob, abilityId: id, ...ability });
+                            }
+                        });
+                    }
                 }
             }
+        }
+        
+        // Add secondary job's active abilities
+        if (this.abilities.secondaryActive) {
+            const secondaryJobData = this.jobs[this.abilities.secondaryActive];
+            if (secondaryJobData) {
+                // Get cached job abilities or load them
+                if (!this._cachedJobData.has(this.abilities.secondaryActive)) {
+                    const JobClass = this.getJobClass(this.abilities.secondaryActive);
+                    if (JobClass) {
+                        this._cachedJobData.set(this.abilities.secondaryActive, {
+                            abilities: JobClass.getAbilities(),
+                            baseStats: JobClass.getBaseStats()
+                        });
+                    }
+                }
 
-            const cachedData = this._cachedJobData.get(this.currentJob);
-            if (cachedData?.abilities) {
-                // Handle different ability types
-                if (cachedData.abilities.active) {
+                const cachedData = this._cachedJobData.get(this.abilities.secondaryActive);
+                if (cachedData?.abilities?.active) {
                     const activeAbilities = cachedData.abilities.active.abilities || cachedData.abilities.active;
                     Object.entries(activeAbilities).forEach(([id, ability]) => {
-                        // Only add if it's a monster or the ability is learned
-                        if (this.currentJob === 'monster' || jobData.learnedAbilities.active[id]) {
+                        if (secondaryJobData.learnedAbilities.active[id]) {
                             abilities.active[id] = ability;
-                        }
-                    });
-                }
-                
-                // Add reaction abilities that have been learned
-                if (cachedData.abilities.reaction) {
-                    Object.entries(cachedData.abilities.reaction).forEach(([id, ability]) => {
-                        if (this.currentJob === 'monster' || jobData.learnedAbilities.reaction[id]) {
-                            abilities.reaction[id] = ability;
-                        }
-                    });
-                }
-                
-                // Add support abilities that have been learned
-                if (cachedData.abilities.support) {
-                    Object.entries(cachedData.abilities.support).forEach(([id, ability]) => {
-                        if (this.currentJob === 'monster' || jobData.learnedAbilities.support[id]) {
-                            abilities.support[id] = ability;
                         }
                     });
                 }
@@ -959,5 +1042,5 @@ class Character {
 }
 
 export {
-    Character
+    CHARACTER
 };

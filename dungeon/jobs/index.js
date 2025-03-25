@@ -1,33 +1,33 @@
 export { JOBS } from './constants.js';
 
 // Base Jobs
-export { Squire } from './Squire.js';
-export { Chemist } from './Chemist.js';
+export { SQUIRE } from './Squire.js';
+export { CHEMIST } from './Chemist.js';
 
 // Tier 2 Jobs
-export { Knight } from './Knight.js';
-export { Archer } from './Archer.js';
-export { WhiteMage } from './WhiteMage.js';
-export { BlackMage } from './BlackMage.js';
+export { KNIGHT } from './Knight.js';
+export { ARCHER } from './Archer.js';
+export { WHITEMAGE } from './WhiteMage.js';
+export { BLACKMAGE } from './BlackMage.js';
 
 // Tier 3 Jobs
-export { Monk } from './Monk.js';
-export { Thief } from './Thief.js';
-export { Oracle } from './Oracle.js';
-export { TimeMage } from './TimeMage.js';
+export { MONK } from './Monk.js';
+export { THIEF } from './Thief.js';
+export { ORACLE } from './Oracle.js';
+export { TIMEMAGE } from './TimeMage.js';
 
 // Tier 4 Jobs
-export { Geomancer } from './Geomancer.js';
-export { Dragoon } from './Dragoon.js';
-export { Summoner } from './Summoner.js';
-export { Orator } from './Orator.js';
+export { GEOMANCER } from './Geomancer.js';
+export { DRAGOON } from './Dragoon.js';
+export { SUMMONER } from './Summoner.js';
+export { ORATOR } from './Orator.js';
 
 // Advanced Jobs
-export { Samurai } from './Samurai.js';
-export { Ninja } from './Ninja.js';
-export { Calculator } from './Calculator.js';
-export { Dancer } from './Dancer.js';
-export { Bard } from './Bard.js';
+export { SAMURAI } from './Samurai.js';
+export { NINJA } from './Ninja.js';
+export { CALCULATOR } from './Calculator.js';
+export { DANCER } from './Dancer.js';
+export { BARD } from './Bard.js';
 
 // Special Job
-export { Mime } from './Mime.js';
+export { MIME } from './Mime.js';

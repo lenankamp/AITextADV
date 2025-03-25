@@ -1,7 +1,7 @@
-import { JobInterface } from './JobInterface.js';
+import { JOBINTERFACE } from './JobInterface.js';
 import { JOBS } from './constants.js';
 
-export class Archer extends JobInterface {
+export class ARCHER extends JOBINTERFACE {
     static getDescription() {
         return "Skilled ranged combatants who excel at precision attacks from a distance. Masters of tactical positioning and battlefield control through various arrow types. In combat, they provide reliable single-target and area damage while maintaining safe distance.";
     }

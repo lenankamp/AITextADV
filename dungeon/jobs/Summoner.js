@@ -1,7 +1,7 @@
-import { JobInterface } from './JobInterface.js';
+import { JOBINTERFACE } from './JobInterface.js';
 import { JOBS } from './constants.js';
 
-export class Summoner extends JobInterface {
+export class SUMMONER extends JOBINTERFACE {
     static getDescription() {
         return "Masters of summoning magic who call forth powerful beings from other realms. Specialists in devastating area-of-effect damage and versatile elemental coverage through their various summons. Critical for dealing with powerful threats and providing strategic options through diverse summon effects.";
     }

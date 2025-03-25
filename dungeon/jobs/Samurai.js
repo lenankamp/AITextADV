@@ -1,7 +1,7 @@
-import { JobInterface } from './JobInterface.js';
+import { JOBINTERFACE } from './JobInterface.js';
 import { JOBS } from './constants.js';
 
-export class Samurai extends JobInterface {
+export class SAMURAI extends JOBINTERFACE {
     static getBaseStats() {
         return {
             hp: 125,

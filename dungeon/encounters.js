@@ -76,7 +76,7 @@ const TREASURE_TYPES = {
 };
 
 // Class to handle trap mechanics
-class TrapManager {
+class TRAPMANAGER {
     constructor(level = 1) {
         this.level = level;
     }
@@ -160,7 +160,7 @@ class TrapManager {
 }
 
 // Class to handle treasure generation
-class TreasureManager {
+class TREASUREMANAGER {
     constructor(level = 1) {
         this.level = level;
     }
@@ -250,7 +250,7 @@ class TreasureManager {
 }
 
 // Encounter manager to handle both traps and treasures
-class EncounterManager {
+class ENCOUNTERMANAGER {
     constructor(level = 1) {
         this.level = level;
         this.trapManager = new TrapManager(level);

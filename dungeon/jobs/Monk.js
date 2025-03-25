@@ -1,7 +1,7 @@
-import { JobInterface } from './JobInterface.js';
+import { JOBINTERFACE } from './JobInterface.js';
 import { JOBS } from './constants.js';
 
-export class Monk extends JobInterface {
+export class MONK extends JOBINTERFACE {
     static getDescription() {
         return "Disciplined martial artists who channel inner energy into powerful combat techniques. Masters of unarmed combat who combine physical prowess with spiritual power. Their meditation abilities and powerful strikes make them excellent frontline fighters who can sustain themselves through inner strength.";
     }
