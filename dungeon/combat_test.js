@@ -2,18 +2,78 @@ import { CHARACTER } from './character.js';
 import { MONSTERFACTORY } from './monsters/MonsterFactory.js';
 import { COMBATMANAGER, PARTY } from './combat.js';
 import { JOBS } from './jobs/index.js';
+import { WEAPON, ARMOR } from './equipment/index.js';
+import { EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES } from './equipment/index.js';
 import fs from 'fs';
+
+// Create basic equipment
+function createBasicEquipment() {
+    return {
+        // Weapons
+        bronzeSword: new WEAPON({
+            name: 'Bronze Sword',
+            weaponType: WEAPON_TYPES.SWORD,
+            stats: { pa: 4 },
+            requirements: { jobs: ['Squire', 'Knight'] }
+        }),
+        woodenStaff: new WEAPON({
+            name: 'Wooden Staff',
+            weaponType: WEAPON_TYPES.STAFF,
+            stats: { pa: 2, ma: 3 },
+            requirements: { jobs: ['Black Mage', 'White Mage'] }
+        }),
+        shortBow: new WEAPON({
+            name: 'Short Bow',
+            weaponType: WEAPON_TYPES.BOW,
+            stats: { pa: 3, sp: 1 },
+            requirements: { jobs: ['Archer'] }
+        }),
+        
+        // Armor
+        bronzeArmor: new ARMOR({
+            name: 'Bronze Armor',
+            armorType: ARMOR_TYPES.HEAVY_ARMOR,
+            stats: { defense: 3 },
+            requirements: { jobs: ['Knight'] }
+        }),
+        leatherVest: new ARMOR({
+            name: 'Leather Vest',
+            armorType: ARMOR_TYPES.LIGHT_ARMOR,
+            stats: { defense: 2, ev: 1 }
+        }),
+        clothRobe: new ARMOR({
+            name: 'Cloth Robe',
+            armorType: ARMOR_TYPES.ROBE,
+            stats: { defense: 1, magicDefense: 2 },
+            requirements: { jobs: ['Black Mage', 'White Mage'] }
+        }),
+        bronzeShield: new ARMOR({
+            name: 'Bronze Shield',
+            armorType: ARMOR_TYPES.SHIELD,
+            stats: { defense: 2 },
+            requirements: { jobs: ['Knight'] }
+        }),
+        leatherCap: new ARMOR({
+            name: 'Leather Cap',
+            armorType: ARMOR_TYPES.HAT,
+            stats: { defense: 1 }
+        }),
+        bronzeHelm: new ARMOR({
+            name: 'Bronze Helm',
+            armorType: ARMOR_TYPES.HELM,
+            stats: { defense: 2 },
+            requirements: { jobs: ['Knight'] }
+        })
+    };
+}
 
 // Helper to create a basic character with a job
 function createTestCharacter(name, job, position = 'front') {
-    console.log(`Creating character ${name} with job ${job}...`);
     const char = new CHARACTER(name);
     char.setPosition(position);
     char.gainJP(4000); // Give enough JP to change jobs
     char.setJob(JOBS.CHEMIST);
     char.gainJP(4000); // Give enough JP to change jobs
-    
-    // Initialize job data and set current job
     char.setJob(job);
     
     // Initialize job-specific abilities and give JP
@@ -52,61 +112,138 @@ function createTestCharacter(name, job, position = 'front') {
             break;
     }
     
-    // Show character stats after initialization
-    const abilities = char.getAvailableAbilities();
-    console.log(`${name}'s abilities:`, abilities);
+    // Equip appropriate gear
+    const equipment = createBasicEquipment();
+    switch (job) {
+        case JOBS.KNIGHT:
+            char.equipItem(equipment.bronzeSword, EQUIPMENT_SLOTS.MAIN_HAND);
+            char.equipItem(equipment.bronzeShield, EQUIPMENT_SLOTS.OFF_HAND);
+            char.equipItem(equipment.bronzeHelm, EQUIPMENT_SLOTS.HEAD);
+            char.equipItem(equipment.bronzeArmor, EQUIPMENT_SLOTS.BODY);
+            break;
+        case JOBS.BLACK_MAGE:
+            char.equipItem(equipment.woodenStaff, EQUIPMENT_SLOTS.MAIN_HAND);
+            char.equipItem(equipment.leatherCap, EQUIPMENT_SLOTS.HEAD);
+            char.equipItem(equipment.clothRobe, EQUIPMENT_SLOTS.BODY);
+            break;
+        case JOBS.WHITE_MAGE:
+            char.equipItem(equipment.woodenStaff, EQUIPMENT_SLOTS.MAIN_HAND);
+            char.equipItem(equipment.leatherCap, EQUIPMENT_SLOTS.HEAD);
+            char.equipItem(equipment.clothRobe, EQUIPMENT_SLOTS.BODY);
+            break;
+        case JOBS.ARCHER:
+            char.equipItem(equipment.shortBow, EQUIPMENT_SLOTS.MAIN_HAND);
+            char.equipItem(equipment.leatherCap, EQUIPMENT_SLOTS.HEAD);
+            char.equipItem(equipment.leatherVest, EQUIPMENT_SLOTS.BODY);
+            break;
+    }
     
-    const stats = char.getStats();
-    console.log(`${name} created with stats:`, stats);
+    // Show character stats and equipment after initialization
+    console.log(`\n=== ${name}'s Setup ===`);
+    console.log('Equipment:');
+    Object.entries(char.equipment).forEach(([slot, item]) => {
+        if (item) console.log(`${slot}: ${item.name}`);
+    });
+    
+    console.log('\nAbilities:');
+    const abilities = char.getAvailableAbilities();
+    console.log('Active:', Object.keys(abilities.active));
+    console.log('Reaction:', Object.keys(abilities.reaction));
+    console.log('Support:', abilities.support.map(a => a.name));
+    
+    console.log('\nStats:', char.getStats());
+    console.log('==================\n');
+    
     return char;
+}
+
+// Helper to format HP display
+function formatHP(current, max) {
+    const percentage = (current / max) * 100;
+    return `${current}/${max} (${percentage.toFixed(1)}%)`;
+}
+
+// Helper to print combat status
+function printCombatStatus(state, combat) {
+    console.log('\n=== Combat Status ===');
+    console.log('Party:');
+    state.partyStatus.forEach(member => {
+        const maxHp = combat.party.members.find(m => m.name === member.name).getMaxHP();
+        console.log(`  ${member.name.padEnd(10)} [${member.position.padEnd(5)}] HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}`);
+    });
+
+    console.log('\nMonsters:');
+    state.monsterStatus.forEach(monster => {
+        const maxHp = combat.monsters.find(m => m.name === monster.name).getMaxHP();
+        console.log(`  ${monster.name.padEnd(15)} [${monster.position.padEnd(5)}] HP: ${formatHP(monster.hp, maxHp).padEnd(20)} MP: ${monster.mp}`);
+    });
+    console.log('==================\n');
+}
+
+// Helper to print action result
+function printActionResult(actor, action, result) {
+    let message = `${actor.name} `;
+    
+    if (action.type === 'ability') {
+        message += `uses ${action.ability}`;
+        if (result.damage) {
+            const targetName = result.target?.name || action.target?.name || 'target';
+            message += ` → ${targetName} takes ${result.damage} damage`;
+        }
+        if (result.healing) {
+            const targetName = result.target?.name || action.target?.name || 'target';
+            message += ` → ${targetName} recovers ${result.healing} HP`;
+        }
+        if (result.effects?.length > 0) {
+            message += ` (${result.effects.map(e => e.type).join(', ')})`;
+        }
+    } else if (action.type === 'skip') {
+        message += 'skips their turn';
+    }
+    
+    if (result.message && !message.includes(result.message)) {
+        message += ` (${result.message})`;
+    }
+    
+    console.log(message);
 }
 
 // Main test function
 function runCombatTest() {
-    console.log('Initializing combat test...');
+    console.log('=== Starting Combat Test ===\n');
 
-    // Create party
+    // Create party and monsters
     const party = new PARTY();
-    
-    // Initialize Knight (front row physical attacker)
-    const knight = createTestCharacter('Roland', JOBS.KNIGHT, 'front');
-    party.addMember(knight, 'front');
-
-    // Initialize Black Mage (back row magical attacker)
-    const blackMage = createTestCharacter('Vivi', JOBS.BLACK_MAGE, 'back');
-    party.addMember(blackMage, 'back');
-
-    // Initialize White Mage (back row healer)
-    const whiteMage = createTestCharacter('Rosa', JOBS.WHITE_MAGE, 'back');
-    party.addMember(whiteMage, 'back');
-
-    // Initialize Archer (back row ranged attacker)
-    const archer = createTestCharacter('Maria', JOBS.ARCHER, 'back');
-    party.addMember(archer, 'back');
-
-    // Create monster party
     const monsters = [
         MONSTERFACTORY.createMonster('goblin'),
         MONSTERFACTORY.createMonster('archer_goblin', 2),
         MONSTERFACTORY.createMonster('dark_mage', 2),
         MONSTERFACTORY.createMonster('orc', 3)
     ];
+    
+    // Move these to the outer scope so they can be accessed by printCombatStatus
+    
+    // Initialize party members
+    ['Roland', 'Vivi', 'Rosa', 'Maria'].forEach((name, i) => {
+        const job = [JOBS.KNIGHT, JOBS.BLACK_MAGE, JOBS.WHITE_MAGE, JOBS.ARCHER][i];
+        const position = i === 0 ? 'front' : 'back';
+        const char = createTestCharacter(name, job, position);
+        party.addMember(char, position);
+    });
 
     // Initialize combat
     const combat = new COMBATMANAGER(party, monsters);
-    console.log('Combat initialized');
-
-    // Run combat simulation
     const combatLog = [];
     let turnCount = 0;
-    const MAX_TURNS = 10; // Prevent infinite loops during testing
+    const MAX_TURNS = 10;
+
+    // Print initial state
+    console.log('Initial Setup:');
+    printCombatStatus(combat.getCombatState(), combat);
 
     while (combat.state === 'active' && turnCount < MAX_TURNS) {
-        const state = combat.getCombatState();
-        console.log(`\nTurn ${state.turn}:`);
-        console.log('Party Status:', state.partyStatus);
-        console.log('Monster Status:', state.monsterStatus);
-
+        console.log(`\n=== Turn ${turnCount + 1} ===`);
+        
         const currentActor = combat.getCurrentActor();
         if (!currentActor) {
             console.log('No valid actor found');
@@ -117,10 +254,7 @@ function runCombatTest() {
         if (currentActor.type === 'party') {
             // Party member's turn
             const abilities = currentActor.entity.getAvailableAbilities();
-            console.log(`${currentActor.entity.name}'s available abilities:`, abilities);
-            
             const validTargets = combat.getValidTargets(currentActor);
-            console.log(`Valid targets for ${currentActor.entity.name}:`, validTargets.map(t => t.name));
 
             if (validTargets.length === 0) {
                 action = { type: 'skip' };
@@ -231,14 +365,20 @@ function runCombatTest() {
         }
 
         const result = combat.processAction(action);
-        console.log('Action result:', result);
+        printActionResult(currentActor.entity, action, result);
+        
+        // Print updated status if significant changes occurred
+        if (result.damage || result.healing) {
+            printCombatStatus(combat.getCombatState(), combat);
+        }
 
         turnCount++;
     }
 
-    console.log('\nCombat finished!');
+    console.log('\n=== Combat Finished ===');
+    console.log(`Result: ${combat.state.toUpperCase()}`);
     console.log(`Total turns: ${turnCount}`);
-
+    
     // Write final combat log
     fs.writeFileSync('combat_test_log.json', JSON.stringify(combatLog, null, 2));
     console.log('Combat simulation complete. Results written to combat_test_log.json');

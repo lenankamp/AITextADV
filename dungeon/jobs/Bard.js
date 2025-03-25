@@ -35,7 +35,7 @@ export class BARD extends JOBINTERFACE {
                 abilities: {
                     BATTLE_CHANT: {
                         name: 'Battle Chant',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'protect',
                         aoe: true,
                         mp: 18,
@@ -44,7 +44,7 @@ export class BARD extends JOBINTERFACE {
                     },
                     LIFE_SONG: {
                         name: 'Life Song',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'regen',
                         aoe: true,
                         mp: 22,
@@ -53,7 +53,7 @@ export class BARD extends JOBINTERFACE {
                     },
                     MANA_PAEAN: {
                         name: 'Mana Paean',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'mp_regen',
                         aoe: true,
                         mp: 25,
@@ -62,7 +62,7 @@ export class BARD extends JOBINTERFACE {
                     },
                     HERO_BALLAD: {
                         name: 'Hero Ballad',
-                        type: 'support',
+                        type: 'buff',
                         effect: ['attack_up', 'protect'],
                         aoe: true,
                         mp: 35,
@@ -98,7 +98,7 @@ export class BARD extends JOBINTERFACE {
                     },
                     NAMELESS_SONG: {
                         name: 'Nameless Song',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'random_buff',
                         aoe: true,
                         mp: 20,

@@ -226,37 +226,43 @@ class COMBATMANAGER {
     }
 
     getValidTargets(actor) {
+        // Get targets based on party membership rather than entity type
+        const opposingTargets = actor.type === 'party' ? this.monsters : this.party.members;
+        const allyTargets = actor.type === 'party' ? this.party.members : this.monsters;
+
+        // Get the actor's current abilities
         const abilities = actor.entity.getAvailableAbilities();
-        const currentAbility = abilities?.active?.[actor.ability];
+        if (!abilities) return [];
+
+        // Get the ability being used (default to ATTACK if none specified)
+        const currentAbility = abilities.active.ATTACK;
         
-        // Determine targets based on ability type first
         if (currentAbility) {
             switch (currentAbility.type) {
                 case 'healing':
-                case 'support':
-                    // Healing and support abilities target own party
-                    return actor.type === 'party' ? 
-                        this.party.members.filter(m => m.status.hp > 0) : 
-                        this.monsters.filter(m => m.status.hp > 0);
+                case 'buff':
+                    // Healing and buff abilities target allies
+                    return allyTargets.filter(m => m.status.hp > 0);
                     
                 case 'physical':
-                    // Handle physical attacks based on position and ranged property
-                    const opposingTargets = actor.type === 'party' ? this.monsters : this.party.members;
-                    if (actor.entity.position === 'back' && !currentAbility.ranged) {
+                    // Check both ability and weapon range
+                    const hasRangedWeapon = actor.entity.isRanged();
+                    const isRangedAbility = currentAbility.ranged;
+                    if (actor.entity.position === 'back' && !isRangedAbility && !hasRangedWeapon) {
+                        // Back row can only target front row with non-ranged attacks and weapons
                         return opposingTargets.filter(t => t.position === 'front' && t.status.hp > 0);
                     }
+                    // Front row or ranged attacks/weapons can target anyone
                     return opposingTargets.filter(t => t.status.hp > 0);
-                    
+                
                 default:
-                    // Magical and other ability types can target anyone in range
-                    return (actor.type === 'party' ? this.monsters : this.party.members)
-                        .filter(t => t.status.hp > 0);
+                    // Magical and other ability types can target anyone
+                    return opposingTargets.filter(t => t.status.hp > 0);
             }
         }
         
-        // Default targeting behavior for basic attacks
-        const opposingTargets = actor.type === 'party' ? this.monsters : this.party.members;
-        if (actor.entity.position === 'back') {
+        // If no ability is found, use default targeting based on position and weapon
+        if (actor.entity.position === 'back' && !actor.entity.isRanged()) {
             return opposingTargets.filter(t => t.position === 'front' && t.status.hp > 0);
         }
         return opposingTargets.filter(t => t.status.hp > 0);
@@ -331,7 +337,7 @@ class COMBATMANAGER {
         }
 
         // Check position restrictions for physical attacks
-        if (actor.position === 'back' && ability.type === 'physical' && !ability.ranged) {
+        if (actor.position === 'back' && ability.type === 'physical' && !ability.ranged && !actor.isRanged()) {
             return { success: false, message: 'Cannot use melee attack from back row' };
         }
 
@@ -377,27 +383,61 @@ class COMBATMANAGER {
     _logAction(actor, action, result) {
         // Enhanced logging for AoE abilities
         if (result.isAoe && result.targets) {
-            this.log.push({
+            const logEntry = {
                 turn: this.turn,
                 actor: actor.name,
+                position: actor.position,
+                stats: actor.getStats(),
+                equipment: Object.fromEntries(
+                    Object.entries(actor.equipment)
+                        .filter(([_, item]) => item)
+                        .map(([slot, item]) => [slot, {
+                            name: item.name,
+                            stats: item.getStatModifiers()
+                        }])
+                ),
                 action: action,
                 result: {
                     ...result,
                     targets: result.targets.map(t => ({
                         name: t.target.name,
+                        position: t.target.position,
                         damage: t.result.damage,
                         healing: t.result.healing,
-                        effects: t.result.effects
+                        effects: t.result.effects,
+                        remainingHp: t.target.status.hp,
+                        maxHp: t.target.getMaxHP()
                     }))
                 }
-            });
+            };
+            this.log.push(logEntry);
         } else {
-            this.log.push({
+            // Single target or non-attack action
+            const logEntry = {
                 turn: this.turn,
                 actor: actor.name,
+                position: actor.position,
+                stats: actor.getStats(),
+                equipment: Object.fromEntries(
+                    Object.entries(actor.equipment)
+                        .filter(([_, item]) => item)
+                        .map(([slot, item]) => [slot, {
+                            name: item.name,
+                            stats: item.getStatModifiers()
+                        }])
+                ),
                 action: action,
-                result: result
-            });
+                result: {
+                    ...result,
+                    target: result.target ? {
+                        name: result.target.name,
+                        position: result.target.position,
+                        remainingHp: result.target.status.hp,
+                        maxHp: result.target.getMaxHP()
+                    } : undefined
+                }
+            };
+            this.log.push(logEntry);
         }
     }
 

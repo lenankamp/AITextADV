@@ -102,7 +102,7 @@ export class NINJA extends JOBINTERFACE {
                     },
                     MIRROR_IMAGE: {
                         name: 'Mirror Image',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'create_decoy',
                         mp: 28,
                         jpCost: 450,

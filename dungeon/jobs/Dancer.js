@@ -52,7 +52,7 @@ export class DANCER extends JOBINTERFACE {
                     },
                     WAR_DANCE: {
                         name: 'War Dance',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'attack_up',
                         aoe: true,
                         mp: 20,
@@ -106,7 +106,7 @@ export class DANCER extends JOBINTERFACE {
                     },
                     TRANCE_DANCE: {
                         name: 'Trance Dance',
-                        type: 'support',
+                        type: 'buff',
                         effect: ['attack_up', 'magic_up', 'haste'],
                         target: 'self',
                         mp: 45,

@@ -84,7 +84,7 @@ export class CALCULATOR extends JOBINTERFACE {
                     },
                     FACTOR_BARRIER: {
                         name: 'Factor Barrier',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'numeric_shield',
                         mp: 38,
                         jpCost: 550,
@@ -99,7 +99,7 @@ export class CALCULATOR extends JOBINTERFACE {
                     },
                     PERFECT_NUMBER: {
                         name: 'Perfect Number',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'perfect_stats',
                         mp: 45,
                         jpCost: 600,

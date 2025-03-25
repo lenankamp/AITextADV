@@ -58,7 +58,7 @@ export class ORATOR extends JOBINTERFACE {
                     },
                     PRAISE: {
                         name: 'Praise',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'increase_stats',
                         mp: 20,
                         jpCost: 250,
@@ -89,7 +89,7 @@ export class ORATOR extends JOBINTERFACE {
                     },
                     RALLYING_CRY: {
                         name: 'Rallying Cry',
-                        type: 'support',
+                        type: 'buff',
                         effect: ['attack_up', 'protect', 'haste'],
                         aoe: true,
                         mp: 45,

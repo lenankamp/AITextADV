@@ -628,8 +628,8 @@ class CHARACTER {
         // Start with base abilities
         const abilities = {
             active: { ...this.baseAbilities.active },
-            reaction: { ...this.baseAbilities.reaction },
-            support: []  // Array for support abilities
+            reaction: {},  // Only equipped reaction
+            support: []    // Only equipped support abilities
         };
         
         // Add primary job abilities
@@ -649,7 +649,7 @@ class CHARACTER {
 
                 const cachedData = this._cachedJobData.get(this.currentJob);
                 if (cachedData?.abilities) {
-                    // Add active abilities from current job
+                    // Add active abilities from current job that have been learned
                     if (cachedData.abilities.active) {
                         const activeAbilities = cachedData.abilities.active.abilities || cachedData.abilities.active;
                         Object.entries(activeAbilities).forEach(([id, ability]) => {
@@ -658,29 +658,11 @@ class CHARACTER {
                             }
                         });
                     }
-                    
-                    // Add reaction abilities
-                    if (cachedData.abilities.reaction) {
-                        Object.entries(cachedData.abilities.reaction).forEach(([id, ability]) => {
-                            if (jobData.learnedAbilities.reaction[id]) {
-                                abilities.reaction[id] = ability;
-                            }
-                        });
-                    }
-                    
-                    // Add support abilities
-                    if (cachedData.abilities.support) {
-                        Object.entries(cachedData.abilities.support).forEach(([id, ability]) => {
-                            if (jobData.learnedAbilities.support[id]) {
-                                abilities.support.push({ jobId: this.currentJob, abilityId: id, ...ability });
-                            }
-                        });
-                    }
                 }
             }
         }
         
-        // Add secondary job's active abilities
+        // Add secondary job's active abilities if set
         if (this.abilities.secondaryActive) {
             const secondaryJobData = this.jobs[this.abilities.secondaryActive];
             if (secondaryJobData) {
@@ -706,6 +688,25 @@ class CHARACTER {
                 }
             }
         }
+
+        // Add equipped reaction ability if set
+        if (this.abilities.equippedReaction) {
+            const { jobId, abilityId } = this.abilities.equippedReaction;
+            const cachedData = this._cachedJobData.get(jobId);
+            if (cachedData?.abilities?.reaction?.[abilityId]) {
+                abilities.reaction[abilityId] = cachedData.abilities.reaction[abilityId];
+            }
+        }
+
+        // Add equipped support abilities (max 2)
+        if (this.abilities.equippedSupport) {
+            this.abilities.equippedSupport.forEach(({ jobId, abilityId }) => {
+                const cachedData = this._cachedJobData.get(jobId);
+                if (cachedData?.abilities?.support?.[abilityId]) {
+                    abilities.support.push(cachedData.abilities.support[abilityId]);
+                }
+            });
+        }
         
         return abilities;
     }
@@ -719,7 +720,7 @@ class CHARACTER {
         }
 
         // Handle position restrictions - only physical non-ranged abilities are restricted
-        if (this.position === 'back' && ability.type === 'physical' && !ability.ranged) {
+        if (this.position === 'back' && ability.type === 'physical' && !ability.ranged && !this.isRanged()) {
             return { success: false, message: 'Cannot use melee attack from back row' };
         }
 
@@ -743,7 +744,7 @@ class CHARACTER {
             case 'healing':
                 result = this._resolveHealingAbility(ability, target);
                 break;
-            case 'support':
+            case 'buff':
                 result = this._resolveSupportAbility(ability, target);
                 break;
             case 'status':
@@ -953,11 +954,10 @@ class CHARACTER {
         
         if (activeAbilities.length === 0) return null;
 
-        // Filter abilities based on MP cost and position
+        // Filter abilities based on MP cost
         const usableAbilities = activeAbilities.filter(([, ability]) => {
             if (this.status.mp < (ability.mp || 0)) return false;
             if (ability.type === 'dungeon') return false;
-            if (this.position === 'back' && ability.type === 'physical' && !ability.ranged) return false;
             return true;
         });
 
@@ -968,11 +968,9 @@ class CHARACTER {
         if (prioritizedAbilities.length === 0) return null;
 
         const [chosenAbilityId, chosenAbility] = prioritizedAbilities[0];
-        const validTargets = this._getValidTargetsForAbility(chosenAbility, targets);
         
-        if (!validTargets || validTargets.length === 0) return null;
-
-        const target = this._selectBestTarget(chosenAbility, validTargets);
+        // The targets are already filtered by the combat manager, just pick the best one
+        const target = this._selectBestTarget(chosenAbility, targets);
         if (!target) return null;
 
         return {
@@ -983,27 +981,27 @@ class CHARACTER {
     }
 
     _getValidTargetsForAbility(ability, targets) {
-        // For healing/support, target self or other monsters
-        if (ability.type === 'healing' || ability.type === 'support') {
-            return [this];  // For now monsters only heal/buff themselves
+        // For healing/buff, target allies
+        if (ability.type === 'healing' || ability.type === 'buff') {
+            return targets;  // The combat manager already filters for correct targets
         }
 
-        // For physical attacks, handle ranged vs melee
-        if (ability.type === 'physical' && !ability.ranged) {
+        // For physical attacks, handle ranged vs melee based on positions and weapon
+        if (ability.type === 'physical' && !ability.ranged && !this.isRanged()) {
             return targets.filter(t => 
-                t.status.hp > 0 && 
-                (t.position === 'front' || this.position === 'front')
+                t.position === 'front' || this.position === 'front'
             );
         }
 
-        // For all other ability types (magical, status, etc.)
-        return targets.filter(t => t.status.hp > 0);
+        // For all other ability types (magical, status, etc.) or ranged physical attacks/weapons
+        return targets;
     }
 
     _selectBestTarget(ability, targets) {
         if (targets.length === 0) return null;
         
         switch (ability.type) {
+            case 'buff':
             case 'healing':
                 return targets.reduce((lowest, current) => 
                     (current.status.hp / current.getMaxHP()) < (lowest.status.hp / lowest.getMaxHP())
@@ -1023,7 +1021,7 @@ class CHARACTER {
                        targets[Math.floor(Math.random() * targets.length)];
             case 'physical':
                 const frontRowTargets = targets.filter(t => t.position === 'front');
-                if (frontRowTargets.length > 0 && !ability.ranged) {
+                if (frontRowTargets.length > 0 && !ability.ranged && !this.isRanged()) {
                     return frontRowTargets[Math.floor(Math.random() * frontRowTargets.length)];
                 }
             default:

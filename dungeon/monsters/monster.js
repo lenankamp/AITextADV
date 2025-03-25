@@ -3,20 +3,46 @@ import { CHARACTER } from '../character.js';
 class MONSTER extends CHARACTER {
     constructor(template) {
         super(template.name);
-        this.type = 'monster'; // Override type
+        this.type = 'monster';
         this.level = template.level || 1;
         this.baseStats = template.stats;
         this.currentJob = 'monster';
         this.position = template.position || 'front';
 
-        // Structure abilities to match Character class format
-        const structuredAbilities = {};
+        // Structure abilities to match Character class format with proper categorization
+        const monsterAbilities = {
+            active: {},
+            reaction: {},
+            support: {}
+        };
+
+        // Also track which abilities should be learned
+        const learnedAbilities = {
+            active: {},
+            reaction: {},
+            support: {}
+        };
+
         if (template.abilities) {
             Object.entries(template.abilities).forEach(([id, ability]) => {
-                structuredAbilities[id] = {
+                const abilityType = ability.type || 'active';
+                const category = 
+                    (abilityType === 'physical' || abilityType === 'magical' || 
+                     abilityType === 'healing' || abilityType === 'drain' || abilityType === 'buff') ? 'active' :
+                    (abilityType === 'reaction') ? 'reaction' :
+                    (abilityType === 'support') ? 'support' : 'active';
+
+                monsterAbilities[category][id] = {
                     ...ability,
-                    id
+                    id,
+                    type: abilityType,
+                    power: ability.power || 1,
+                    mp: ability.mp || 0,
+                    ranged: ability.ranged || false
                 };
+
+                // Mark this ability as learned
+                learnedAbilities[category][id] = true;
             });
         }
 
@@ -27,11 +53,7 @@ class MONSTER extends CHARACTER {
                 jp: 0,
                 spentJp: 0,
                 mastered: false,
-                learnedAbilities: {
-                    active: structuredAbilities,
-                    reaction: {},
-                    support: {}
-                }
+                learnedAbilities: learnedAbilities
             }
         };
 
@@ -45,38 +67,63 @@ class MONSTER extends CHARACTER {
 
         // Cache monster abilities
         this._cachedJobData.set('monster', {
-            abilities: {
-                active: structuredAbilities,
-                reaction: {},
-                support: {}
-            },
+            abilities: monsterAbilities,
             baseStats: template.stats
         });
     }
 
-    // Override to disable secondary abilities for monsters
+    // Override to disable setting new secondary abilities for monsters
     setSecondaryActive() {
         return false;
     }
 
-    // Override to disable reaction abilities for monsters
+    // Override to disable setting new reaction abilities for monsters
     setReactionAbility() {
         return false;
     }
 
-    // Override to disable support abilities for monsters
+    // Override to disable setting new support abilities for monsters
     setSupportAbility() {
         return false;
     }
 
-    // Override to return only monster's core abilities
+    // Override to return monster's predefined abilities
     getAvailableAbilities() {
         const monsterData = this._cachedJobData.get('monster');
-        return {
-            active: monsterData?.abilities?.active || {},
+        const jobData = this.jobs.monster;
+
+        // Start with base abilities
+        const abilities = {
+            active: { ...this.baseAbilities.active },
             reaction: {},
             support: []
         };
+
+        // Add monster's learned abilities
+        if (monsterData?.abilities && jobData?.learnedAbilities) {
+            // Add active abilities
+            Object.entries(monsterData.abilities.active).forEach(([id, ability]) => {
+                if (jobData.learnedAbilities.active[id]) {
+                    abilities.active[id] = ability;
+                }
+            });
+
+            // Add reaction abilities
+            Object.entries(monsterData.abilities.reaction).forEach(([id, ability]) => {
+                if (jobData.learnedAbilities.reaction[id]) {
+                    abilities.reaction[id] = ability;
+                }
+            });
+
+            // Add support abilities
+            Object.entries(monsterData.abilities.support).forEach(([id, ability]) => {
+                if (jobData.learnedAbilities.support[id]) {
+                    abilities.support.push(ability);
+                }
+            });
+        }
+
+        return abilities;
     }
 }
 

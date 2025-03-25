@@ -116,7 +116,7 @@ const MonsterTemplates = {
             },
             BATTLE_CRY: {
                 name: 'Battle Cry',
-                type: 'support',
+                type: 'buff',
                 mp: 10,
                 effect: 'strengthen',
                 duration: 3,
@@ -140,12 +140,12 @@ class MONSTERFACTORY {
         const monsterTemplate = {
             ...template,
             level,
-            stats: { ...template.stats },
-            abilities: {}
+            stats: { ...template.stats }
         };
 
-        // Structure abilities with proper metadata
+        // Deep clone abilities and ensure proper structure
         if (template.abilities) {
+            monsterTemplate.abilities = {};
             Object.entries(template.abilities).forEach(([id, ability]) => {
                 monsterTemplate.abilities[id] = {
                     ...ability,

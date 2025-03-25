@@ -82,7 +82,7 @@ export class SAMURAI extends JOBINTERFACE {
                     },
                     MEDITATION: {
                         name: 'Meditation',
-                        type: 'support',
+                        type: 'buff',
                         effect: ['attack_up', 'accuracy_up'],
                         mp: 25,
                         jpCost: 400,
@@ -90,7 +90,7 @@ export class SAMURAI extends JOBINTERFACE {
                     },
                     BLADE_WARD: {
                         name: 'Blade Ward',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'blade_barrier',
                         mp: 30,
                         jpCost: 500,

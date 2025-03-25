@@ -44,8 +44,9 @@ export class SQUIRE extends JOBINTERFACE {
                     },
                     ACCUMULATE: {
                         name: 'Accumulate',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'attack_up',
+                        target: 'self',
                         mp: 0,
                         jpCost: 150,
                         description: 'Build up physical strength'
@@ -60,7 +61,7 @@ export class SQUIRE extends JOBINTERFACE {
                     },
                     RALLY_CRY: {
                         name: 'Rally Cry',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'party_stats_up',
                         mp: 15,
                         jpCost: 300,
@@ -76,7 +77,7 @@ export class SQUIRE extends JOBINTERFACE {
                     },
                     FOCUS: {
                         name: 'Focus',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'accuracy_up',
                         mp: 5,
                         jpCost: 200,
@@ -91,7 +92,7 @@ export class SQUIRE extends JOBINTERFACE {
                     },
                     BATTLE_TACTICS: {
                         name: 'Battle Tactics',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'party_defense_up',
                         mp: 18,
                         jpCost: 300,
@@ -99,7 +100,7 @@ export class SQUIRE extends JOBINTERFACE {
                     },
                     DETERMINATION: {
                         name: 'Determination',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'survive_fatal',
                         mp: 25,
                         jpCost: 400,

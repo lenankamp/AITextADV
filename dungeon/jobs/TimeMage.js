@@ -31,7 +31,7 @@ export class TIMEMAGE extends JOBINTERFACE {
                 abilities: {
                     HASTE: {
                         name: 'Haste',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'haste',
                         mp: 24,
                         jpCost: 300,
@@ -55,7 +55,7 @@ export class TIMEMAGE extends JOBINTERFACE {
                     },
                     FLOAT: {
                         name: 'Float',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'levitate',
                         mp: 18,
                         jpCost: 200,

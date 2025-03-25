@@ -64,7 +64,7 @@ export class WHITEMAGE extends JOBINTERFACE {
                     },
                     RERAISE: {
                         name: 'Reraise',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'auto_revive',
                         mp: 40,
                         jpCost: 800
@@ -77,14 +77,14 @@ export class WHITEMAGE extends JOBINTERFACE {
                     },
                     PROTECT: {
                         name: 'Protect',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'protect',
                         mp: 15,
                         jpCost: 250
                     },
                     SHELL: {
                         name: 'Shell',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'increase_magic_defense',
                         mp: 15,
                         jpCost: 250
@@ -99,7 +99,7 @@ export class WHITEMAGE extends JOBINTERFACE {
                     },
                     REGEN: {
                         name: 'Regen',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'heal_over_time',
                         mp: 22,
                         jpCost: 400

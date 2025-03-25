@@ -89,7 +89,7 @@ export class ORACLE extends JOBINTERFACE {
                     },
                     FORTUNE_GUARD: {
                         name: 'Fortune Guard',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'predict_critical',
                         aoe: true,
                         mp: 40,
@@ -98,7 +98,7 @@ export class ORACLE extends JOBINTERFACE {
                     },
                     PROPHECY_SHIELD: {
                         name: 'Prophecy Shield',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'predict_damage',
                         aoe: true,
                         mp: 50,

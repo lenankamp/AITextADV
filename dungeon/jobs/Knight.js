@@ -61,7 +61,7 @@ export class KNIGHT extends JOBINTERFACE {
                     },
                     COVER: {
                         name: 'Cover',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'protect_ally',
                         mp: 25,
                         jpCost: 400,
@@ -85,7 +85,7 @@ export class KNIGHT extends JOBINTERFACE {
                     },
                     DEFENSIVE_STANCE: {
                         name: 'Defensive Stance',
-                        type: 'support',
+                        type: 'buff',
                         effect: ['physical_immunity', 'slow'],
                         mp: 35,
                         jpCost: 600,
@@ -93,7 +93,7 @@ export class KNIGHT extends JOBINTERFACE {
                     },
                     MIGHTY_GUARD: {
                         name: 'Mighty Guard',
-                        type: 'support',
+                        type: 'buff',
                         effect: ['protect', 'shell'],
                         aoe: true,
                         mp: 45,
@@ -111,7 +111,7 @@ export class KNIGHT extends JOBINTERFACE {
                     },
                     DIVINE_GUARD: {
                         name: 'Divine Guard',
-                        type: 'support',
+                        type: 'buff',
                         effect: ['regen', 'protect', 'shell'],
                         mp: 50,
                         jpCost: 800,

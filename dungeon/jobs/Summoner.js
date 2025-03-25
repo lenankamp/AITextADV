@@ -77,7 +77,7 @@ export class SUMMONER extends JOBINTERFACE {
                     },
                     CARBUNCLE: {
                         name: 'Carbuncle',
-                        type: 'support',
+                        type: 'buff',
                         effect: 'reflect',
                         aoe: true,
                         mp: 28,

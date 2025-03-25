@@ -62,7 +62,7 @@ export class MONK extends JOBINTERFACE {
                     },
                     INTERNAL_RELEASE: {
                         name: 'Internal Release',
-                        type: 'support',
+                        type: 'buff',
                         effect: { pa: 1.5, sp: 1.3 },
                         mp: 15,
                         jpCost: 450,
@@ -70,7 +70,7 @@ export class MONK extends JOBINTERFACE {
                     },
                     MEDITATION: {
                         name: 'Meditation',
-                        type: 'support',
+                        type: 'buff',
                         effect: ['hp_regen', 'mp_regen'],
                         target: 'self',
                         mp: 20,
@@ -104,7 +104,7 @@ export class MONK extends JOBINTERFACE {
                     },
                     MANTRA: {
                         name: 'Mantra',
-                        type: 'support',
+                        type: 'buff',
                         effect: ['protect', 'shell'],
                         aoe: true,
                         mp: 35,
