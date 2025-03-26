@@ -261,7 +261,7 @@ class EncounterManager {
         const encounters = [];
         
         // Determine number of encounters based on room size and difficulty
-        const maxEncounters = Math.floor((room.width * room.height) / 25); // One encounter per 25 squares
+        const maxEncounters = Math.floor((room.width * room.height) / 6); // One encounter per 25 squares
         const numEncounters = Math.floor(Math.random() * maxEncounters) + 1;
 
         for (let i = 0; i < numEncounters; i++) {
@@ -304,9 +304,9 @@ class EncounterManager {
 
     _getTrapChance(difficulty) {
         switch (difficulty) {
-            case 'easy': return 0.4;
-            case 'normal': return 0.5;
-            case 'hard': return 0.7;
+            case 'easy': return 0.8;
+            case 'normal': return 0.7;
+            case 'hard': return 0.6;
             case 'boss': return 0.3; // Boss rooms favor treasure
             default: return 0.5;
         }

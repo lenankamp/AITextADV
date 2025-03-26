@@ -70,7 +70,7 @@ const ROOM_TYPES = {
     EXIT: 'exit',
     NORMAL: 'normal',
     TREASURE: 'treasure',
-    Monster: 'monster',
+    MONSTER: 'monster',
     BOSS: 'boss',
     SECRET: 'secret'
 };
@@ -149,6 +149,14 @@ class DungeonFloor {
         return this.elevationMap[y][x];
     }
 
+    /**
+     * Adds an environmental effect to a specific tile coordinate
+     * This is the primary method for applying effects to the dungeon floor grid
+     * @param {number} x - The x coordinate
+     * @param {number} y - The y coordinate
+     * @param {string} effect - The effect from ENVIRONMENTAL_EFFECTS enum
+     * @param {number} duration - How long the effect lasts (default: Infinity)
+     */
     addEnvironmentalEffect(x, y, effect, duration = Infinity) {
         const key = `${x},${y}`;
         if (!this.environmentalEffects.has(key)) {
@@ -389,6 +397,12 @@ class Room {
         this.doors = [];
         this.terrain = TERRAIN_TYPES.PLAINS;
         this.elevation = ELEVATION_LEVELS.GROUND;
+        /**
+         * Array storing environmental effects associated with this room
+         * NOTE: This array only tracks which effects are present in the room
+         * To actually apply effects to tiles, use DungeonFloor.addEnvironmentalEffect()
+         * @type {Array<string>} Array of ENVIRONMENTAL_EFFECTS values
+         */
         this.environmentalEffects = [];
         this.terrainFeatures = new Map();
         this.magicalProperties = new Map();
@@ -429,19 +443,23 @@ class Room {
         // Update room features based on terrain
         switch (type) {
             case TERRAIN_TYPES.WATER:
-                this.addTerrainFeature('depth', Math.floor(Math.random() * 3) + 1);
+                this.addTerrainFeature('water_depth', Math.floor(Math.random() * 3) + 1);
+                this.addTerrainFeature('swimming_required', this.terrainFeatures.get('water_depth') > 2);
                 break;
             case TERRAIN_TYPES.MOUNTAIN:
-                this.elevation = ELEVATION_LEVELS.HIGH;
+                // Set elevation when terrain is mountain
+                this.elevation = Math.floor(Math.random() * 3) + 1; // Random elevation 1-3
+                this.addTerrainFeature('climbing_required', this.elevation > 2);
                 break;
         }
         
-        // Set terrain for all floor tiles in the room if floor is provided
+        // Set terrain and elevation for all floor tiles in the room if floor is provided
         if (floor) {
             for (let y = this.y; y < this.y + this.height; y++) {
                 for (let x = this.x; x < this.x + this.width; x++) {
                     if (floor.getTile(x, y) === TILE_TYPES.FLOOR) {
                         floor.setTerrain(x, y, type);
+                        floor.setElevation(x, y, this.elevation);
                     }
                 }
             }
@@ -563,8 +581,6 @@ class Dungeon {
                     }
                 }
 
-                // Generate encounters for the room
-                this._generateRoomEncounters(newRoom, floor.floorNumber);
                 floor.rooms.push(newRoom);
             }
         }
@@ -578,7 +594,7 @@ class Dungeon {
         const roll = Math.random();
         if (roll > 0.95) return ROOM_TYPES.SECRET;
         if (roll > 0.85) return ROOM_TYPES.TREASURE;
-        if (roll > 0.65) return ROOM_TYPES.Monster;
+        if (roll > 0.65) return ROOM_TYPES.MONSTER;
         return ROOM_TYPES.NORMAL;
     }
 
@@ -592,7 +608,7 @@ class Dungeon {
                 return 'boss';
             case ROOM_TYPES.TREASURE:
                 return Math.random() > 0.5 ? 'hard' : 'normal';
-            case ROOM_TYPES.Monster:
+            case ROOM_TYPES.MONSTER:
                 return Math.random() > 0.7 ? 'hard' : 'normal';
             case ROOM_TYPES.SECRET:
                 return 'hard';
@@ -605,21 +621,6 @@ class Dungeon {
                     return roll > 0.8 ? 'hard' : 'normal';
                 }
                 return roll > 0.9 ? 'normal' : 'easy';
-        }
-    }
-
-    _generateRoomEncounters(room, floorLevel) {
-        // Set the encounter manager to the current floor level
-        this.encounterManager = new EncounterManager(floorLevel);
-
-        // Generate encounters based on room type and difficulty
-        const encounters = this.encounterManager.generateRoomEncounters(room, room.difficulty);
-        room.encounters = encounters;
-
-        // Add monsters based on room type
-        if (room.type === ROOM_TYPES.Monster || room.type === ROOM_TYPES.BOSS) {
-            const monsterCount = room.type === ROOM_TYPES.BOSS ? 1 : Math.floor(Math.random() * 3) + 1;
-            room.monsters = this._generateMonsters(monsterCount, floorLevel, room.difficulty);
         }
     }
 
@@ -701,19 +702,99 @@ class Dungeon {
     }
 
     _connectRooms(floor) {
-        // Implement pathfinding to connect rooms
-        for (let i = 0; i < floor.rooms.length - 1; i++) {
-            const roomA = floor.rooms[i];
-            const roomB = floor.rooms[i + 1];
+        // Track which rooms are already connected
+        const connections = new Set();
+        
+        // Track connected room groups using a Union-Find data structure
+        const roomGroups = new Map();
+        
+        // Initialize each room in its own group
+        for (const room of floor.rooms) {
+            roomGroups.set(room, room);
+        }
+        
+        // Helper function to find the group leader
+        const findGroup = (room) => {
+            if (roomGroups.get(room) === room) return room;
+            const leader = findGroup(roomGroups.get(room));
+            roomGroups.set(room, leader); // Path compression
+            return leader;
+        };
+        
+        // Helper function to merge groups
+        const mergeGroups = (roomA, roomB) => {
+            const leaderA = findGroup(roomA);
+            const leaderB = findGroup(roomB);
+            if (leaderA !== leaderB) {
+                roomGroups.set(leaderB, leaderA);
+                return true; // Groups were merged
+            }
+            return false; // Rooms were already in same group
+        };
+    
+        // Calculate all possible connections between rooms
+        let allConnections = [];
+        for (let i = 0; i < floor.rooms.length; i++) {
+            for (let j = i + 1; j < floor.rooms.length; j++) {
+                const roomA = floor.rooms[i];
+                const roomB = floor.rooms[j];
+    
+                // Don't connect directly adjacent rooms
+                const isAdjacent = 
+                    (roomA.x + roomA.width === roomB.x || roomB.x + roomB.width === roomA.x) &&
+                    !(roomA.y >= roomB.y + roomB.height || roomB.y >= roomA.y + roomA.height) ||
+                    (roomA.y + roomA.height === roomB.y || roomB.y + roomB.height === roomA.y) &&
+                    !(roomA.x >= roomB.x + roomB.width || roomB.x >= roomA.x + roomA.width);
+    
+                if (!isAdjacent) {
+                    // Calculate distance between room centers
+                    const distance = Math.sqrt(
+                        Math.pow((roomA.x + roomA.width/2) - (roomB.x + roomB.width/2), 2) +
+                        Math.pow((roomA.y + roomA.height/2) - (roomB.y + roomB.height/2), 2)
+                    );
+                    allConnections.push({ roomA, roomB, distance });
+                }
+            }
+        }
+    
+        // Sort connections by distance
+        allConnections.sort((a, b) => a.distance - b.distance);
+    
+        // Create minimum spanning tree using Kruskal's algorithm
+        for (const { roomA, roomB, distance } of allConnections) {
+            if (mergeGroups(roomA, roomB)) {
+                // Connect these rooms with a corridor
+                const startX = Math.floor(roomA.x + roomA.width/2);
+                const startY = Math.floor(roomA.y + roomA.height/2);
+                const endX = Math.floor(roomB.x + roomB.width/2);
+                const endY = Math.floor(roomB.y + roomB.height/2);
+    
+                this._createCorridor(floor, startX, startY, endX, endY);
+    
+                // Mark connection
+                const connectionKey = `${Math.min(roomA.x, roomB.x)},${Math.min(roomA.y, roomB.y)}-${Math.max(roomA.x, roomB.x)},${Math.max(roomA.y, roomB.y)}`;
+                connections.add(connectionKey);
+            }
+        }
+    
+        // Add a few additional connections for loops (10-20% more connections)
+        const extraConnections = Math.floor(floor.rooms.length * (Math.random() * 0.1 + 0.1));
+        let addedExtras = 0;
+    
+        for (const { roomA, roomB, distance } of allConnections) {
+            if (addedExtras >= extraConnections) break;
             
-            // Get center points of rooms
-            const startX = Math.floor(roomA.x + roomA.width / 2);
-            const startY = Math.floor(roomA.y + roomA.height / 2);
-            const endX = Math.floor(roomB.x + roomB.width / 2);
-            const endY = Math.floor(roomB.y + roomB.height / 2);
-
-            // Create L-shaped corridor
-            this._createCorridor(floor, startX, startY, endX, endY);
+            const connectionKey = `${Math.min(roomA.x, roomB.x)},${Math.min(roomA.y, roomB.y)}-${Math.max(roomA.x, roomB.x)},${Math.max(roomA.y, roomB.y)}`;
+            if (!connections.has(connectionKey)) {
+                const startX = Math.floor(roomA.x + roomA.width/2);
+                const startY = Math.floor(roomA.y + roomA.height/2);
+                const endX = Math.floor(roomB.x + roomB.width/2);
+                const endY = Math.floor(roomB.y + roomB.height/2);
+    
+                this._createCorridor(floor, startX, startY, endX, endY);
+                connections.add(connectionKey);
+                addedExtras++;
+            }
         }
     }
 
@@ -770,9 +851,15 @@ class Dungeon {
             }
 
             // Add random features to the room
-            const featureCount = Math.floor(Math.random() * 3) + 1; // 1-3 features per room
+            const featureCount = Math.floor(Math.random() * Math.floor(room.width*room.height/6)) + 1;
             for (let i = 0; i < featureCount; i++) {
-                const featureType = this._getRandomFeature();
+                let featureType = DUNGEON_FEATURES.TRAP;
+                if(room.type === ROOM_TYPES.TREASURE && Math.random() < 0.25)
+                    featureType = DUNGEON_FEATURES.TREASURE;
+                else if(room.type === ROOM_TYPES.BOSS && Math.random() < 0.7)
+                    featureType = DUNGEON_FEATURES.TREASURE;
+                else if(room.type !== ROOM_TYPES.TRAP)
+                    featureType = this._getRandomFeature();
                 const x = Math.floor(Math.random() * (room.width - 2)) + room.x + 1;
                 const y = Math.floor(Math.random() * (room.height - 2)) + room.y + 1;
                 room.addFeature({ type: featureType, x, y });
@@ -1008,7 +1095,7 @@ class Dungeon {
             }
         }
 
-        // Apply terrain only within room boundaries
+        // Apply terrain to rooms based on which chunk they're in
         for (const room of floor.rooms) {
             const centerX = room.x + room.width / 2;
             const centerY = room.y + room.height / 2;
@@ -1020,20 +1107,34 @@ class Dungeon {
             );
 
             if (chunk) {
-                // Apply terrain only to floor tiles within the room
+                // Set room's terrain type
+                room.terrain = chunk.terrain;
+                
+                // Apply terrain features including elevation
+                if (chunk.terrain === TERRAIN_TYPES.MOUNTAIN) {
+                    const height = Math.floor(Math.random() * 3) + 1;
+                    room.elevation = height;
+                    room.addTerrainFeature('climbing_required', height > 2);
+                }
+
+                // Apply terrain and elevation to floor tiles for this room
                 for (let y = room.y; y < room.y + room.height; y++) {
                     for (let x = room.x; x < room.x + room.width; x++) {
                         if (floor.getTile(x, y) === TILE_TYPES.FLOOR) {
-                            floor.setTerrain(x, y, chunk.terrain);
+                            floor.setTerrain(x, y, room.terrain);
+                            floor.setElevation(x, y, room.elevation || ELEVATION_LEVELS.GROUND);
                         }
                     }
                 }
+                
+                // Apply any other terrain-specific features
                 this._applyTerrainFeatures(room, floor);
             }
         }
 
         // Add environmental effects
         this._addEnvironmentalEffects(floor);
+        
         // Propagate terrain to create natural transitions
         this._propagateTerrain(floor);
     }
@@ -1055,6 +1156,13 @@ class Dungeon {
         return availableTerrains[Math.floor(Math.random() * availableTerrains.length)];
     }
 
+    /**
+     * Apply terrain features to a room including environmental effects
+     * NOTE: Environmental effects must be applied to floor tiles using _applyEnvironmentalEffectToRoom()
+     * Do NOT call addEnvironmentalEffect directly on the room object
+     * @param {Room} room - The room to apply features to
+     * @param {DungeonFloor} floor - The floor containing the room
+     */
     _applyTerrainFeatures(room, floor) {
         switch (room.terrain) {
             case TERRAIN_TYPES.WATER:
@@ -1067,12 +1175,13 @@ class Dungeon {
                 room.addTerrainFeature('climbing_required', height > 2);
                 break;
             case TERRAIN_TYPES.VOLCANO:
-                room.addEnvironmentalEffect(ENVIRONMENTAL_EFFECTS.BURNING);
+                room.environmentalEffects.push(ENVIRONMENTAL_EFFECTS.BURNING);
+                this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.BURNING);
                 room.addTerrainFeature('lava_pools', Math.random() > 0.5);
                 break;
-            case TERRAIN_TYPES.SWAMP:
+                case TERRAIN_TYPES.SWAMP:
                 room.addTerrainFeature('quicksand', Math.random() > 0.7);
-                room.addEnvironmentalEffect(ENVIRONMENTAL_EFFECTS.POISONED);
+                this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.POISONED);
                 break;
         }
     }
@@ -1404,7 +1513,12 @@ class Dungeon {
             for (let y = room.y; y < room.y + room.height; y++) {
                 for (let x = room.x; x < room.x + room.width; x++) {
                     if (floor.getTile(x, y) === TILE_TYPES.FLOOR && floor.getTerrain(x, y)) {
-                        queue.push({ x, y, terrain: floor.getTerrain(x, y) });
+                        queue.push({ 
+                            x, y, 
+                            terrain: floor.getTerrain(x, y),
+                            elevation: floor.getElevation(x, y),
+                            distance: 0
+                        });
                         visited.add(`${x},${y}`);
                     }
                 }
@@ -1419,7 +1533,7 @@ class Dungeon {
             {x: 1, y: -1}, {x: 1, y: 1}
         ];
 
-        // Propagate terrain
+        // Propagate terrain and elevation
         while (queue.length > 0) {
             const current = queue.shift();
             
@@ -1442,9 +1556,29 @@ class Dungeon {
                     });
 
                     if (hasAdjacentFloor) {
-                        // Apply terrain and add to queue
+                        // Calculate new elevation based on distance from source
+                        let newElevation = current.elevation;
+                        const newDistance = current.distance + 1;
+                        
+                        // Only decrease elevation for mountain terrain
+                        if (current.terrain === TERRAIN_TYPES.MOUNTAIN && newDistance > 0) {
+                            // Decrease elevation by 1 every 2 tiles from source
+                            newElevation = Math.max(
+                                ELEVATION_LEVELS.GROUND,
+                                current.elevation - Math.floor(newDistance / 2)
+                            );
+                        }
+
+                        // Apply terrain and elevation, then add to queue
                         floor.setTerrain(newX, newY, current.terrain);
-                        queue.push({ x: newX, y: newY, terrain: current.terrain });
+                        floor.setElevation(newX, newY, newElevation);
+                        queue.push({ 
+                            x: newX, 
+                            y: newY, 
+                            terrain: current.terrain,
+                            elevation: newElevation,
+                            distance: newDistance
+                        });
                         visited.add(key);
                     }
                 }

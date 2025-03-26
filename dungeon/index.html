@@ -105,7 +105,31 @@
 
         /* Base tile types */
         .wall { background-color: #444 !important; }
-        .floor { background-color: #666 !important; }
+        .floor { 
+            background-color: #666;
+            position: relative;
+        }
+
+        /* Simple height-based background brightness */
+        .floor[data-elevation="3"] { background-color: #888; }  /* PEAK - brightest */
+        .floor[data-elevation="2"] { background-color: #808080; }  /* HIGH */
+        .floor[data-elevation="1"] { background-color: #777; }  /* RAISED */
+        .floor[data-elevation="0"] { background-color: #666; }  /* GROUND - baseline */
+        .floor[data-elevation="-1"] { background-color: #555; }  /* BASEMENT */
+        .floor[data-elevation="-2"] { background-color: #444; }  /* DEPTHS - darkest */
+
+        /* Optional: Show elevation number */
+        .floor::after {
+            content: attr(data-elevation);
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 8px;
+            color: white;
+            text-shadow: 1px 1px 1px black;
+            z-index: 3;
+        }
+
         .entrance { background-color: #4a9eff !important; }
         .exit { background-color: #ff4a4a !important; }
         .door { background-color: #8b4513 !important; }
@@ -709,6 +733,25 @@
         .legend .effect {
             animation: none !important;
         }
+
+        /* Base floor style with height variations */
+        .floor { 
+            background-color: #666;
+            position: relative;
+        }
+
+        /* Height variations using only brightness */
+        .floor[data-elevation="3"] { filter: brightness(1.4); }  /* PEAK */
+        .floor[data-elevation="2"] { filter: brightness(1.25); } /* HIGH */
+        .floor[data-elevation="1"] { filter: brightness(1.1); }  /* RAISED */
+        .floor[data-elevation="0"] { filter: brightness(1.0); }  /* GROUND */
+        .floor[data-elevation="-1"] { filter: brightness(0.9); } /* BASEMENT */
+        .floor[data-elevation="-2"] { filter: brightness(0.8); } /* DEPTHS */
+
+        /* Remove elevation number display */
+        .floor::after {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -914,19 +957,16 @@
                     const tileType = floor.getTile(x, y);
                     tile.className = `tile ${getTileClass(tileType)}`;
 
-                    // Add terrain overlay if it's a floor tile
+                    // Always set elevation data for floor tiles
                     if (tileType === TILE_TYPES.FLOOR) {
+                        const elevation = floor.getElevation(x, y);
+                        tile.setAttribute('data-elevation', elevation);
+
+                        // Add terrain overlay if present
                         const terrain = floor.getTerrain(x, y);
                         if (terrain) {
                             tile.classList.add(terrain);
                         }
-                    }
-
-                    // Add elevation indicator
-                    const elevation = floor.getElevation(x, y);
-                    if (elevation !== ELEVATION_LEVELS.GROUND) {
-                        tile.classList.add('elevation');
-                        tile.setAttribute('data-elevation', elevation);
                     }
 
                     // Add environmental effects
