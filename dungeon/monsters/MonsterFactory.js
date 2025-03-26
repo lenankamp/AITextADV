@@ -1,4 +1,4 @@
-import { MONSTER } from './Monster.js';
+import { Monster } from './Monster.js';
 
 // Monster template definitions
 const MonsterTemplates = {
@@ -129,7 +129,7 @@ const MonsterTemplates = {
 };
 
 // Monster template factory
-class MONSTERFACTORY {
+class MonsterFactory {
     static createMonster(type, level = 1) {
         const template = MonsterTemplates[type];
         if (!template) {
@@ -166,8 +166,8 @@ class MONSTERFACTORY {
             });
         }
 
-        return new MONSTER(monsterTemplate);
+        return new Monster(monsterTemplate);
     }
 }
 
-export { MONSTERFACTORY, MonsterTemplates };
+export { MonsterFactory, MonsterTemplates };

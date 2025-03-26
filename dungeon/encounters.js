@@ -250,7 +250,7 @@ class TREASUREMANAGER {
 }
 
 // Encounter manager to handle both traps and treasures
-class ENCOUNTERMANAGER {
+class EncounterManager {
     constructor(level = 1) {
         this.level = level;
         this.trapManager = new TRAPMANAGER(level);
@@ -342,5 +342,5 @@ export {
     TREASURE_TYPES,
     TRAPMANAGER,
     TREASUREMANAGER,
-    ENCOUNTERMANAGER
+    EncounterManager
 };

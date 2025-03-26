@@ -137,7 +137,7 @@
     </div>
     
     <script type="module" crossorigin="anonymous">
-        import { DUNGEON, TILE_TYPES } from './dungeon.js';
+        import { Dungeon, TILE_TYPES } from './dungeon.js';
         console.log('Module loaded successfully');
         console.log('Available TILE_TYPES:', TILE_TYPES);
         
@@ -214,14 +214,11 @@
                 const floors = parseInt(document.getElementById('numFloors').value);
                 const difficulty = document.getElementById('difficulty').value;
                 
-                currentDungeon = new DUNGEON({
+                currentDungeon = new Dungeon({
                     width,
                     height,
                     floors,
-                    difficulty,
-                    minRoomSize: 5,
-                    maxRoomSize: 15,
-                    roomAttempts: 50
+                    difficulty
                 });
                 
                 console.log('Dungeon instance created:', currentDungeon);

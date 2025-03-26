@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class SQUIRE extends JOBINTERFACE {
+export class Squire extends JobInterface {
     static getDescription() {
         return "Entry-level warriors who form the foundation of military training. While their abilities may seem basic, they excel at fundamental combat techniques and basic battlefield support. Their versatile skill set includes basic healing, equipment maintenance, and tactical awareness, making them surprisingly adaptable in various situations.";
     }

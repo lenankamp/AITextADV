@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class BARD extends JOBINTERFACE {
+export class Bard extends JobInterface {
     static getDescription() {
         return "Musical specialists who empower allies and weaken foes through magical songs. Their varied repertoire includes defensive chants, restorative melodies, and disruptive harmonies. While their direct combat abilities are limited, their party-wide support capabilities and ability to inflict status effects make them invaluable strategists.";
     }
@@ -161,9 +160,9 @@ export class BARD extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.WHITE_MAGE]: 3,
-            [JOBS.ORACLE]: 2,
-            [JOBS.DANCER]: 2
+            [JOBS.WhiteMage]: 3,
+            [JOBS.Oracle]: 2,
+            [JOBS.Dancer]: 2
         };
     }
 }

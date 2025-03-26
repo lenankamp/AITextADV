@@ -30,3 +30,5 @@ area memory/events, possible happenings while gone
 add climate to world gen menu
 
 Have loader appear for entire time of initial world gen...
+
+__default__, (final fantasy tactics costume,({black mage, rod, wizard hat and black robe|white mage, hood, hooded white robe, wooden staff|Time Mage, silly hat, purple robe|Summoner, pointy hat, green robe|Oracle, prophet, yellow robe, fancy jewelery|squire, sword, leather armor|knight, heavy armor, sword|purple dragon armor, spear, lancer, helmet|red samurai armor, banded genji, katana|martial artist, pugilist, fists|chemist, potions, medic|archer, bow and quiver|Thief, bandanna, dagger, leather shorts|Ninja, scarf, blades|bard, musical instrument|glasses, scientist, blue robe, abacus|Dancer, scarf, ruffled dress|Geomancer, brown poncho|Mime, mask, face paint, vibrant colors|diplomat, goofy hat, long pink dress})), blonde twin tails, dark elf tanned, arm tattoo, amethyst eyes, clothes, black background, standing, facing viewer,

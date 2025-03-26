@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class ORATOR extends JOBINTERFACE {
+export class Orator extends JobInterface {
     static getDescription() {
         return "Masters of persuasion and rhetoric who can influence both allies and enemies through speech. Their unique abilities allow them to negotiate with enemies, boost party morale, and even convince foes to retreat or join their cause.";
     }
@@ -141,8 +140,8 @@ export class ORATOR extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.ORACLE]: 2,
-            [JOBS.TIME_MAGE]: 2
+            [JOBS.Oracle]: 2,
+            [JOBS.TimeMage]: 2
         };
     }
 }

@@ -1,4 +1,4 @@
-export { MONSTERFACTORY } from './MonsterFactory.js';
+export { MonsterFactory } from './MonsterFactory.js';
 
 // Base Jobs
-export { MONSTER } from './Monster.js';
+export { Monster } from './Monster.js';

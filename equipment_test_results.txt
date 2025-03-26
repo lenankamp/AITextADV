@@ -1,9 +1,9 @@
 
 === Test Character Creation and Basic Job Setup ===
 Initial character state:
-Current job ID: SQUIRE
+Current job ID: Squire
 Initial jobs data: {
-  "SQUIRE": {
+  "Squire": {
     "level": 1,
     "jp": 0,
     "spentJp": 0,
@@ -16,26 +16,26 @@ Initial jobs data: {
   }
 }
 Available JOBS: {
-  "SQUIRE": "SQUIRE",
-  "CHEMIST": "CHEMIST",
-  "KNIGHT": "KNIGHT",
-  "ARCHER": "ARCHER",
-  "WHITE_MAGE": "WHITE_MAGE",
-  "BLACK_MAGE": "BLACK_MAGE",
-  "MONK": "MONK",
-  "THIEF": "THIEF",
-  "ORACLE": "ORACLE",
-  "TIME_MAGE": "TIME_MAGE",
-  "GEOMANCER": "GEOMANCER",
-  "DRAGOON": "DRAGOON",
-  "SUMMONER": "SUMMONER",
-  "ORATOR": "ORATOR",
-  "SAMURAI": "SAMURAI",
-  "NINJA": "NINJA",
-  "CALCULATOR": "CALCULATOR",
-  "DANCER": "DANCER",
-  "BARD": "BARD",
-  "MIME": "MIME"
+  "Squire": "Squire",
+  "Chemist": "Chemist",
+  "Knight": "Knight",
+  "Archer": "Archer",
+  "WhiteMage": "WhiteMage",
+  "BlackMage": "BlackMage",
+  "Monk": "Monk",
+  "Thief": "Thief",
+  "Oracle": "Oracle",
+  "TimeMage": "TimeMage",
+  "Geomancer": "Geomancer",
+  "Dragoon": "Dragoon",
+  "Summoner": "Summoner",
+  "Orator": "Orator",
+  "Samurai": "Samurai",
+  "Ninja": "Ninja",
+  "Calculator": "Calculator",
+  "Dancer": "Dancer",
+  "Bard": "Bard",
+  "Mime": "Mime"
 }
 ✓ Character starts as Squire
 
@@ -80,7 +80,7 @@ Available Squire abilities: {
   },
   "support": [
     {
-      "jobId": "SQUIRE",
+      "jobId": "Squire",
       "abilityId": "JP_BOOST",
       "name": "JP Boost",
       "effect": "increase_jp_gain",
@@ -153,7 +153,7 @@ Final available abilities: {
   },
   "support": [
     {
-      "jobId": "KNIGHT",
+      "jobId": "Knight",
       "abilityId": "EQUIP_SHIELD",
       "name": "Equip Shield",
       "effect": "enable_shield",

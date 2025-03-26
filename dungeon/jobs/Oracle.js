@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class ORACLE extends JOBINTERFACE {
+export class Oracle extends JobInterface {
     static getDescription() {
         return "Mystical seers who can predict and manipulate future events. Their foresight abilities allow them to anticipate enemy actions and discover hidden paths. In addition to combat support through prophecy, they excel at revealing secrets and preventing ambushes through their precognitive abilities.";
     }
@@ -142,7 +141,7 @@ export class ORACLE extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.WHITE_MAGE]: 2
+            [JOBS.WhiteMage]: 2
         };
     }
 }

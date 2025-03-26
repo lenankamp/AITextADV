@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class MIME extends JOBINTERFACE {
+export class Mime extends JobInterface {
     static getDescription() {
         return "Unique specialists who can perfectly replicate the abilities of others. Through their mastery of mimicry, they can copy and enhance both ally and enemy techniques, making them incredibly versatile but demanding to master. Their ability to adapt and utilize multiple skill types simultaneously makes them powerful but requires deep understanding of various combat styles.";
     }
@@ -71,10 +70,10 @@ export class MIME extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.SAMURAI]: 3,
-            [JOBS.CALCULATOR]: 3,
-            [JOBS.DANCER]: 2,
-            [JOBS.BARD]: 2
+            [JOBS.Samurai]: 3,
+            [JOBS.Calculator]: 3,
+            [JOBS.Dancer]: 2,
+            [JOBS.Bard]: 2
         };
     }
 }

@@ -2,7 +2,7 @@
 
 Summary:
 {
-  "totalEffects": 164,
+  "totalEffects": 161,
   "totalTypes": 9,
   "totalElements": 10,
   "totalTargetingTypes": 1
@@ -11,7 +11,7 @@ Summary:
 Ability Types (by frequency):
 physical: 37 uses
 magical: 37 uses
-buff: 35 uses
+buff: 34 uses
 special: 29 uses
 status: 22 uses
 dungeon: 17 uses
@@ -32,10 +32,10 @@ sonic: 1 uses
 wind: 1 uses
 
 All Effects (by frequency):
-protect: 10 uses
+protect: 9 uses
+shell: 7 uses
 slow: 6 uses
 attack_up: 6 uses
-shell: 6 uses
 mp_drain: 5 uses
 silence: 4 uses
 haste: 4 uses
@@ -113,7 +113,6 @@ physical_immunity: 1 uses
 attack_down: 1 uses
 enable_shield: 1 uses
 damage_reduction: 1 uses
-weapon_block: 1 uses
 adapt_to_damage_type: 1 uses
 improve_copy_accuracy: 1 uses
 [object Object]: 1 uses
@@ -149,7 +148,6 @@ avoid_damage: 1 uses
 improve_persuasion: 1 uses
 reduce_mp_cost: 1 uses
 spirit_drain: 1 uses
-blade_barrier: 1 uses
 critical_up: 1 uses
 anticipate_attack: 1 uses
 counter_with_power: 1 uses
@@ -187,7 +185,6 @@ initiative_up: 1 uses
 enhance_time_magic: 1 uses
 revive: 1 uses
 auto_revive: 1 uses
-increase_magic_defense: 1 uses
 heal_over_time: 1 uses
 purify_area: 1 uses
 create_holy_barrier: 1 uses
@@ -206,201 +203,201 @@ Mechanics Usage:
 
 AOE (49 abilities):
 [
-  "ARCHER.active.ARROW_RAIN",
-  "ARCHER.active.BARRAGE",
-  "BARD.active.BATTLE_CHANT",
-  "BARD.active.LIFE_SONG",
-  "BARD.active.MANA_PAEAN",
-  "BARD.active.HERO_BALLAD",
-  "BARD.active.SILENCE_SONG",
-  "BARD.active.CONFUSION_CAROL",
-  "BARD.active.PEACEFUL_NOCTURNE",
-  "BARD.active.NAMELESS_SONG",
-  "BARD.active.DISSONANT_WAVE",
-  "BARD.active.GRAND_FINALE",
-  "BLACKMAGE.active.FIRAGA",
-  "BLACKMAGE.active.THUNDAGA",
-  "BLACKMAGE.active.BLIZZAGA",
-  "BLACKMAGE.active.ARCANE_DISRUPTION",
-  "CHEMIST.active.MEGA_POTION",
-  "DANCER.active.SLOW_DANCE",
-  "DANCER.active.WAR_DANCE",
-  "DANCER.active.EXHAUSTING_POLKA",
-  "DANCER.active.SIREN_DANCE",
-  "DANCER.active.BEWITCHING_DANCE",
-  "DANCER.active.HEALING_WALTZ",
-  "DANCER.active.FORBIDDEN_DANCE",
-  "DANCER.active.LAST_WALTZ",
-  "DRAGOON.active.SWEEP_DIVE",
-  "DRAGOON.active.GEIRSKOGUL",
-  "GEOMANCER.active.TERRA_PULSE",
-  "GEOMANCER.active.SANDSTORM",
-  "GEOMANCER.active.GAIA_FORCE",
-  "KNIGHT.active.MIGHTY_GUARD",
-  "MONK.active.MANTRA",
-  "NINJA.active.SMOKE_BOMB",
-  "ORACLE.active.FORTUNE_GUARD",
-  "ORACLE.active.PROPHECY_SHIELD",
-  "ORATOR.active.RALLYING_CRY",
-  "SAMURAI.active.BLADE_SPIRIT",
-  "SUMMONER.active.IFRIT",
-  "SUMMONER.active.SHIVA",
-  "SUMMONER.active.RAMUH",
-  "SUMMONER.active.BAHAMUT",
-  "SUMMONER.active.CARBUNCLE",
-  "SUMMONER.active.TITAN",
-  "SUMMONER.active.LEVIATHAN",
-  "SUMMONER.active.PHOENIX",
-  "SUMMONER.active.MOOGLE",
-  "TIMEMAGE.active.METEOR",
-  "WHITEMAGE.active.CURAGA",
-  "WHITEMAGE.active.SACRED_PURIFICATION"
+  "Archer.active.ARROW_RAIN",
+  "Archer.active.BARRAGE",
+  "Bard.active.BATTLE_CHANT",
+  "Bard.active.LIFE_SONG",
+  "Bard.active.MANA_PAEAN",
+  "Bard.active.HERO_BALLAD",
+  "Bard.active.SILENCE_SONG",
+  "Bard.active.CONFUSION_CAROL",
+  "Bard.active.PEACEFUL_NOCTURNE",
+  "Bard.active.NAMELESS_SONG",
+  "Bard.active.DISSONANT_WAVE",
+  "Bard.active.GRAND_FINALE",
+  "BlackMage.active.FIRAGA",
+  "BlackMage.active.THUNDAGA",
+  "BlackMage.active.BLIZZAGA",
+  "BlackMage.active.ARCANE_DISRUPTION",
+  "Chemist.active.MEGA_POTION",
+  "Dancer.active.SLOW_DANCE",
+  "Dancer.active.WAR_DANCE",
+  "Dancer.active.EXHAUSTING_POLKA",
+  "Dancer.active.SIREN_DANCE",
+  "Dancer.active.BEWITCHING_DANCE",
+  "Dancer.active.HEALING_WALTZ",
+  "Dancer.active.FORBIDDEN_DANCE",
+  "Dancer.active.LAST_WALTZ",
+  "Dragoon.active.SWEEP_DIVE",
+  "Dragoon.active.GEIRSKOGUL",
+  "Geomancer.active.TERRA_PULSE",
+  "Geomancer.active.SANDSTORM",
+  "Geomancer.active.GAIA_FORCE",
+  "Knight.active.MIGHTY_GUARD",
+  "Monk.active.MANTRA",
+  "Ninja.active.SMOKE_BOMB",
+  "Oracle.active.FORTUNE_GUARD",
+  "Oracle.active.PROPHECY_SHIELD",
+  "Orator.active.RALLYING_CRY",
+  "Samurai.active.BLADE_SPIRIT",
+  "Summoner.active.IFRIT",
+  "Summoner.active.SHIVA",
+  "Summoner.active.RAMUH",
+  "Summoner.active.BAHAMUT",
+  "Summoner.active.CARBUNCLE",
+  "Summoner.active.TITAN",
+  "Summoner.active.LEVIATHAN",
+  "Summoner.active.PHOENIX",
+  "Summoner.active.MOOGLE",
+  "TimeMage.active.METEOR",
+  "WhiteMage.active.CURAGA",
+  "WhiteMage.active.SACRED_PURIFICATION"
 ]
 
 CHARGE (3 abilities):
 [
-  "ARCHER.active.CHARGE",
-  "DRAGOON.active.JUMP",
-  "DRAGOON.active.HIGH_JUMP"
+  "Archer.active.CHARGE",
+  "Dragoon.active.JUMP",
+  "Dragoon.active.HIGH_JUMP"
 ]
 
 HITS (4 abilities):
 [
-  "ARCHER.active.RAPID_FIRE",
-  "ARCHER.active.BARRAGE",
-  "MONK.active.PUMMEL",
-  "MONK.active.HUNDRED_FISTS"
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.BARRAGE",
+  "Monk.active.PUMMEL",
+  "Monk.active.HUNDRED_FISTS"
 ]
 
 Property Usage Analysis:
 
 name:
-Used 271 times
+Used 270 times
 Examples: [
-  "ARCHER.active.CHARGE",
-  "ARCHER.active.RAPID_FIRE",
-  "ARCHER.active.ARROW_RAIN"
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
 ]
 
 type:
-Used 192 times
+Used 191 times
 Examples: [
-  "ARCHER.active.CHARGE",
-  "ARCHER.active.RAPID_FIRE",
-  "ARCHER.active.ARROW_RAIN"
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
 ]
 
 power:
 Used 84 times
 Examples: [
-  "ARCHER.active.CHARGE",
-  "ARCHER.active.RAPID_FIRE",
-  "ARCHER.active.ARROW_RAIN"
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
 ]
 
 mp:
-Used 187 times
+Used 186 times
 Examples: [
-  "ARCHER.active.CHARGE",
-  "ARCHER.active.RAPID_FIRE",
-  "ARCHER.active.ARROW_RAIN"
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
 ]
 
 charge:
 Used 3 times
 Examples: [
-  "ARCHER.active.CHARGE",
-  "DRAGOON.active.JUMP",
-  "DRAGOON.active.HIGH_JUMP"
+  "Archer.active.CHARGE",
+  "Dragoon.active.JUMP",
+  "Dragoon.active.HIGH_JUMP"
 ]
 
 jpCost:
-Used 271 times
+Used 270 times
 Examples: [
-  "ARCHER.active.CHARGE",
-  "ARCHER.active.RAPID_FIRE",
-  "ARCHER.active.ARROW_RAIN"
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
 ]
 
 description:
-Used 238 times
+Used 237 times
 Examples: [
-  "ARCHER.active.CHARGE",
-  "ARCHER.active.RAPID_FIRE",
-  "ARCHER.active.ARROW_RAIN"
+  "Archer.active.CHARGE",
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.ARROW_RAIN"
 ]
 
 hits:
 Used 4 times
 Examples: [
-  "ARCHER.active.RAPID_FIRE",
-  "ARCHER.active.BARRAGE",
-  "MONK.active.PUMMEL"
+  "Archer.active.RAPID_FIRE",
+  "Archer.active.BARRAGE",
+  "Monk.active.PUMMEL"
 ]
 
 aoe:
 Used 49 times
 Examples: [
-  "ARCHER.active.ARROW_RAIN",
-  "ARCHER.active.BARRAGE",
-  "BARD.active.BATTLE_CHANT"
+  "Archer.active.ARROW_RAIN",
+  "Archer.active.BARRAGE",
+  "Bard.active.BATTLE_CHANT"
 ]
 
 accuracy:
 Used 1 times
 Examples: [
-  "ARCHER.active.PRECISION_SHOT"
+  "Archer.active.PRECISION_SHOT"
 ]
 
 critRate:
 Used 1 times
 Examples: [
-  "ARCHER.active.PRECISION_SHOT"
+  "Archer.active.PRECISION_SHOT"
 ]
 
 effect:
-Used 189 times
+Used 188 times
 Examples: [
-  "ARCHER.active.DISABLING_SHOT",
-  "ARCHER.active.WEAKNESS_SHOT",
-  "ARCHER.active.PIERCING_ARROW"
+  "Archer.active.DISABLING_SHOT",
+  "Archer.active.WEAKNESS_SHOT",
+  "Archer.active.PIERCING_ARROW"
 ]
 
 chance:
-Used 39 times
+Used 40 times
 Examples: [
-  "ARCHER.reaction.ARCHER_GUARD",
-  "ARCHER.reaction.COUNTER_SHOT",
-  "BARD.reaction.PERFECT_PITCH"
+  "Archer.reaction.Archer_GUARD",
+  "Archer.reaction.COUNTER_SHOT",
+  "Bard.reaction.PERFECT_PITCH"
 ]
 
 element:
 Used 34 times
 Examples: [
-  "BARD.active.DISSONANT_WAVE",
-  "BLACKMAGE.active.FIRE",
-  "BLACKMAGE.active.FIRA"
+  "Bard.active.DISSONANT_WAVE",
+  "BlackMage.active.FIRE",
+  "BlackMage.active.FIRA"
 ]
 
 target:
 Used 4 times
 Examples: [
-  "DANCER.active.TRANCE_DANCE",
-  "MONK.active.CHAKRA",
-  "MONK.active.MEDITATION"
+  "Dancer.active.TRANCE_DANCE",
+  "Monk.active.CHAKRA",
+  "Monk.active.MEDITATION"
 ]
 
 ranged:
 Used 3 times
 Examples: [
-  "DRAGOON.active.JUMP",
-  "DRAGOON.active.HIGH_JUMP",
-  "SQUIRE.active.THROW_STONE"
+  "Dragoon.active.JUMP",
+  "Dragoon.active.HIGH_JUMP",
+  "Squire.active.THROW_STONE"
 ]
 
 Per-Job Effect Analysis:
 
-ARCHER:
+Archer:
 Total effects: 7
 Effects: [
   "slow",
@@ -412,7 +409,7 @@ Effects: [
   "increase_critical"
 ]
 
-BARD:
+Bard:
 Total effects: 12
 Effects: [
   "protect",
@@ -429,7 +426,7 @@ Effects: [
   "enhance_song_power"
 ]
 
-BLACKMAGE:
+BlackMage:
 Total effects: 10
 Effects: [
   "petrify",
@@ -444,7 +441,7 @@ Effects: [
   "cast_twice"
 ]
 
-CALCULATOR:
+Calculator:
 Total effects: 12
 Effects: [
   "prime_target",
@@ -461,7 +458,7 @@ Effects: [
   "reduce_cast_time"
 ]
 
-CHEMIST:
+Chemist:
 Total effects: 5
 Effects: [
   "enhance_item",
@@ -471,7 +468,7 @@ Effects: [
   "improve_healing"
 ]
 
-DANCER:
+Dancer:
 Total effects: 16
 Effects: [
   "slow",
@@ -492,7 +489,7 @@ Effects: [
   "increase_dance_potency"
 ]
 
-DRAGOON:
+Dragoon:
 Total effects: 7
 Effects: [
   "mp_drain",
@@ -504,7 +501,7 @@ Effects: [
   "safe_landing"
 ]
 
-GEOMANCER:
+Geomancer:
 Total effects: 12
 Effects: [
   "reveal_terrain",
@@ -521,8 +518,12 @@ Effects: [
   "ignore_terrain"
 ]
 
-KNIGHT:
-Total effects: 12
+JobInterface:
+Total effects: 0
+Effects: []
+
+Knight:
+Total effects: 11
 Effects: [
   "defense_down",
   "stun",
@@ -534,18 +535,17 @@ Effects: [
   "attack_down",
   "regen",
   "enable_shield",
-  "damage_reduction",
-  "weapon_block"
+  "damage_reduction"
 ]
 
-MIME:
+Mime:
 Total effects: 2
 Effects: [
   "adapt_to_damage_type",
   "improve_copy_accuracy"
 ]
 
-MONK:
+Monk:
 Total effects: 9
 Effects: [
   {
@@ -562,7 +562,7 @@ Effects: [
   "improve_martial_arts"
 ]
 
-NINJA:
+Ninja:
 Total effects: 11
 Effects: [
   "stealth_movement",
@@ -578,7 +578,7 @@ Effects: [
   "improve_sneaking"
 ]
 
-ORACLE:
+Oracle:
 Total effects: 14
 Effects: [
   "predict_encounters",
@@ -597,7 +597,7 @@ Effects: [
   "enhance_detection"
 ]
 
-ORATOR:
+Orator:
 Total effects: 13
 Effects: [
   "charm",
@@ -615,15 +615,14 @@ Effects: [
   "reduce_mp_cost"
 ]
 
-SAMURAI:
-Total effects: 13
+Samurai:
+Total effects: 12
 Effects: [
   "defense_down",
   "armor_pierce",
   "spirit_drain",
   "attack_up",
   "accuracy_up",
-  "blade_barrier",
   "stop",
   "critical_up",
   "haste",
@@ -633,7 +632,7 @@ Effects: [
   "enable_two_hand"
 ]
 
-SQUIRE:
+Squire:
 Total effects: 9
 Effects: [
   "attack_up",
@@ -647,7 +646,7 @@ Effects: [
   "heal_while_moving"
 ]
 
-SUMMONER:
+Summoner:
 Total effects: 12
 Effects: [
   "slow",
@@ -664,7 +663,7 @@ Effects: [
   "enhance_summons"
 ]
 
-THIEF:
+Thief:
 Total effects: 11
 Effects: [
   "charm",
@@ -680,7 +679,7 @@ Effects: [
   "auto_disarm"
 ]
 
-TIMEMAGE:
+TimeMage:
 Total effects: 11
 Effects: [
   "haste",
@@ -696,13 +695,13 @@ Effects: [
   "enhance_time_magic"
 ]
 
-WHITEMAGE:
+WhiteMage:
 Total effects: 13
 Effects: [
   "revive",
   "auto_revive",
   "protect",
-  "increase_magic_defense",
+  "shell",
   "heal_over_time",
   "purify_area",
   "create_holy_barrier",

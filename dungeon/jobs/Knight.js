@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class KNIGHT extends JOBINTERFACE {
+export class Knight extends JobInterface {
     static getDescription() {
         return "Elite warriors trained in the arts of sword and shield. Masters of defense who can protect allies and withstand powerful attacks. Their ability to cover for allies and maintain defensive formations makes them essential frontline fighters and protectors.";
     }
@@ -154,7 +153,7 @@ export class KNIGHT extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.SQUIRE]: 2
+            [JOBS.Squire]: 2
         };
     }
 }

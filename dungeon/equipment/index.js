@@ -16,7 +16,7 @@ export const WEAPON_TYPES = {
     KNIFE: 'knife',
     STAFF: 'staff',
     POLEARM: 'polearm',
-    NINJA_BLADE: 'ninjaBlade',
+    Ninja_BLADE: 'ninjaBlade',
     FLAIL: 'flail',
     POLE: 'pole',
     SWORD: 'sword',
@@ -63,7 +63,7 @@ export const WEAPON_DAMAGE_FORMULAS = {
     [WEAPON_TYPES.KNIFE]: (stats) => stats.pa + Math.floor(stats.sp / 2),
     [WEAPON_TYPES.STAFF]: (stats) => stats.ma,
     [WEAPON_TYPES.POLEARM]: (stats) => stats.pa,
-    [WEAPON_TYPES.NINJA_BLADE]: (stats) => stats.pa + Math.floor(stats.sp / 2),
+    [WEAPON_TYPES.Ninja_BLADE]: (stats) => stats.pa + Math.floor(stats.sp / 2),
     [WEAPON_TYPES.FLAIL]: (stats) => stats.pa,
     [WEAPON_TYPES.POLE]: (stats) => stats.pa,
     [WEAPON_TYPES.SWORD]: (stats) => stats.pa,
@@ -79,6 +79,6 @@ export const WEAPON_DAMAGE_FORMULAS = {
 };
 
 // Equipment class exports
-export { EQUIPMENT } from './Equipment.js';
-export { WEAPON } from './Weapon.js';
-export { ARMOR } from './Armor.js';
+export { Equipment } from './Equipment.js';
+export { Weapon } from './Weapon.js';
+export { Armor } from './Armor.js';

@@ -1,5 +1,5 @@
-import { MONSTER, MONSTERFACTORY } from './monsters/index.js';
-import { ENCOUNTERMANAGER } from './encounters.js';
+import { Monster, MonsterFactory } from './monsters/index.js';
+import { EncounterManager } from './encounters.js';
 
 // Constants for dungeon generation
 const TILE_TYPES = {
@@ -14,7 +14,7 @@ const TILE_TYPES = {
 };
 
 const DUNGEON_FEATURES = {
-    MONSTER: 'monster',
+    Monster: 'monster',
     TRAP: 'trap',
     TREASURE: 'treasure',
     LORE: 'lore',
@@ -27,13 +27,13 @@ const ROOM_TYPES = {
     EXIT: 'exit',
     NORMAL: 'normal',
     TREASURE: 'treasure',
-    MONSTER: 'monster',
+    Monster: 'monster',
     BOSS: 'boss',
     SECRET: 'secret'
 };
 
 // Base class for all entities in the dungeon
-class ENTITY {
+class Entity {
     constructor(x, y, type) {
         this.x = x;
         this.y = y;
@@ -42,7 +42,7 @@ class ENTITY {
 }
 
 // Class representing a dungeon floor
-class DUNGEONFLOOR {
+class DungeonFloor {
     constructor(width, height, floorNumber) {
         this.width = width;
         this.height = height;
@@ -83,7 +83,7 @@ class DUNGEONFLOOR {
 }
 
 // Class representing a room in the dungeon
-class ROOM {
+class Room {
     constructor(x, y, width, height) {
         this.x = x;
         this.y = y;
@@ -125,15 +125,15 @@ class ROOM {
 }
 
 // Main Dungeon class
-class DUNGEON {
+class Dungeon {
     constructor(config = {}) {
         this.config = {
             width: config.width || 50,
             height: config.height || 50,
             floors: config.floors || 5,
-            minRoomSize: config.minRoomSize || 5,
-            maxRoomSize: config.maxRoomSize || 15,
-            roomAttempts: config.roomAttempts || 50,
+            minRoomSize: config.minRoomSize || 3, // Reduced from 5
+            maxRoomSize: config.maxRoomSize || 8, // Reduced from 15
+            roomAttempts: config.roomAttempts || 80, // Increased from 50
             difficulty: config.difficulty || 'normal',
             ...config
         };
@@ -142,7 +142,7 @@ class DUNGEON {
         this.currentFloor = 0;
         
         try {
-            this.encounterManager = new ENCOUNTERMANAGER();
+            this.encounterManager = new EncounterManager();
             console.log('Successfully initialized EncounterManager');
         } catch (error) {
             console.error('Error initializing dungeon systems:', error);
@@ -161,7 +161,7 @@ class DUNGEON {
     }
 
     _generateFloor(floorNumber) {
-        const floor = new DUNGEONFLOOR(this.config.width, this.config.height, floorNumber);
+        const floor = new DungeonFloor(this.config.width, this.config.height, floorNumber);
         
         // Generate rooms
         this._generateRooms(floor);
@@ -186,19 +186,18 @@ class DUNGEON {
             const x = Math.floor(Math.random() * (floor.width - width - 2)) + 1;
             const y = Math.floor(Math.random() * (floor.height - height - 2)) + 1;
 
-            const newRoom = new ROOM(x, y, width, height);
+            const newRoom = new Room(x, y, width, height);
 
-            // Check if the room overlaps with any existing rooms
-            let overlaps = false;
-            for (const room of floor.rooms) {
-                if (newRoom.overlaps(room)) {
-                    overlaps = true;
-                    break;
+            // Find overlapping rooms
+            let overlappingRooms = [];
+            
+            for (const existingRoom of floor.rooms) {
+                if (newRoom.overlaps(existingRoom)) {
+                    overlappingRooms.push(existingRoom);
                 }
             }
 
-            if (!overlaps) {
-                console.log('Created room:', { x, y, width, height, attempt: i });
+            if (overlappingRooms.length === 0) {
                 // Determine room type and difficulty
                 if (floor.rooms.length === 0) {
                     newRoom.type = ROOM_TYPES.ENTRANCE;
@@ -220,18 +219,20 @@ class DUNGEON {
 
                 // Generate encounters for the room
                 this._generateRoomEncounters(newRoom, floor.floorNumber);
-
                 floor.rooms.push(newRoom);
             }
         }
         console.log('Finished generating rooms. Total rooms:', floor.rooms.length);
+        // Add doors after all rooms and corridors are generated
+        this._addDoorsToAllRooms(floor);
+        this._cleanupDoors(floor);
     }
 
     _determineRoomType() {
         const roll = Math.random();
         if (roll > 0.95) return ROOM_TYPES.SECRET;
         if (roll > 0.85) return ROOM_TYPES.TREASURE;
-        if (roll > 0.65) return ROOM_TYPES.MONSTER;
+        if (roll > 0.65) return ROOM_TYPES.Monster;
         return ROOM_TYPES.NORMAL;
     }
 
@@ -245,7 +246,7 @@ class DUNGEON {
                 return 'boss';
             case ROOM_TYPES.TREASURE:
                 return Math.random() > 0.5 ? 'hard' : 'normal';
-            case ROOM_TYPES.MONSTER:
+            case ROOM_TYPES.Monster:
                 return Math.random() > 0.7 ? 'hard' : 'normal';
             case ROOM_TYPES.SECRET:
                 return 'hard';
@@ -263,14 +264,14 @@ class DUNGEON {
 
     _generateRoomEncounters(room, floorLevel) {
         // Set the encounter manager to the current floor level
-        this.encounterManager = new ENCOUNTERMANAGER(floorLevel);
+        this.encounterManager = new EncounterManager(floorLevel);
 
         // Generate encounters based on room type and difficulty
         const encounters = this.encounterManager.generateRoomEncounters(room, room.difficulty);
         room.encounters = encounters;
 
         // Add monsters based on room type
-        if (room.type === ROOM_TYPES.MONSTER || room.type === ROOM_TYPES.BOSS) {
+        if (room.type === ROOM_TYPES.Monster || room.type === ROOM_TYPES.BOSS) {
             const monsterCount = room.type === ROOM_TYPES.BOSS ? 1 : Math.floor(Math.random() * 3) + 1;
             room.monsters = this._generateMonsters(monsterCount, floorLevel, room.difficulty);
         }
@@ -346,7 +347,7 @@ class DUNGEON {
                 );
             });
 
-            const monster = new MONSTER(leveledTemplate);
+            const monster = new Monster(leveledTemplate);
             monsters.push(monster);
         }
 
@@ -452,78 +453,197 @@ class DUNGEON {
     }
 
     _addDoorsToRoom(floor, room) {
-        // Create a map of critical path rooms for quick lookup
-        const criticalPathRooms = new Set(floor.rooms.filter(r => r.isCriticalPath()));
-        
-        // Helper function to check if a position is part of any other room
-        const isInOtherRoom = (x, y) => {
-            return floor.rooms.some(otherRoom => 
-                otherRoom !== room && 
-                otherRoom.contains(x, y)
+        const doorPositions = new Set();
+
+        // Helper to check if a position is a hallway (FLOOR tile not part of any room)
+        const isHallway = (x, y) => {
+            const tile = floor.getTile(x, y);
+            if (tile !== TILE_TYPES.FLOOR) return false;
+            
+            // Check if this position is part of any room
+            return !floor.rooms.some(r => 
+                r.contains(x, y)
             );
         };
 
-        // Helper function to check if a door position would block critical path
-        const wouldBlockCriticalPath = (x, y, isSecret) => {
-            if (!isSecret) return false; // Regular doors don't block critical path
-            
-            // Check if this door connects two critical path rooms
-            const adjacentRooms = floor.rooms.filter(r => 
-                r !== room && 
-                (Math.abs(r.x - x) <= 1 || Math.abs(r.x + r.width - x) <= 1) &&
-                (Math.abs(r.y - y) <= 1 || Math.abs(r.y + r.height - y) <= 1)
-            );
-            
-            return adjacentRooms.some(r => criticalPathRooms.has(r) && criticalPathRooms.has(room));
+        // Helper to check if a hallway position is suitable for a door
+        // (has walls on both sides, making it a proper corridor)
+        const isProperCorridor = (x, y) => {
+            // Check if it has walls on both sides (either horizontally or vertically)
+            const hasHorizWalls = floor.getTile(x - 1, y) === TILE_TYPES.WALL && 
+                                floor.getTile(x + 1, y) === TILE_TYPES.WALL;
+            const hasVertWalls = floor.getTile(x, y - 1) === TILE_TYPES.WALL && 
+                                floor.getTile(x, y + 1) === TILE_TYPES.WALL;
+            return hasHorizWalls || hasVertWalls;
         };
 
-        // Add doors at room boundaries where corridors meet
-        // Check horizontal walls (top and bottom)
-        for (let x = room.x; x < room.x + room.width; x++) {
-            // Check top wall
-            if (floor.getTile(x, room.y - 1) === TILE_TYPES.FLOOR) {
-                if (!isInOtherRoom(x, room.y)) {
-                    const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
-                    if (!wouldBlockCriticalPath(x, room.y, isSecret)) {
-                        floor.setTile(x, room.y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
-                        room.addDoor(x, room.y, isSecret);
+        // Helper to check if a position has a nearby door
+        const hasNearbyDoor = (x, y, minDistance = 2) => {
+            for (let dx = -minDistance; dx <= minDistance; dx++) {
+                for (let dy = -minDistance; dy <= minDistance; dy++) {
+                    const checkX = x + dx;
+                    const checkY = y + dy;
+                    const key = `${checkX},${checkY}`;
+                    if (doorPositions.has(key)) {
+                        return true;
                     }
                 }
             }
-            // Check bottom wall
-            if (floor.getTile(x, room.y + room.height) === TILE_TYPES.FLOOR) {
-                if (!isInOtherRoom(x, room.y + room.height - 1)) {
+            return false;
+        };
+
+        // Check for suitable door positions around room perimeter
+        // Check horizontal walls (top and bottom)
+        for (let x = room.x; x < room.x + room.width; x++) {
+            // Check hallway above top wall
+            if (isHallway(x, room.y - 1) && isProperCorridor(x, room.y - 1)) {
+                if (!hasNearbyDoor(x, room.y - 1)) {
                     const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
-                    if (!wouldBlockCriticalPath(x, room.y + room.height - 1, isSecret)) {
-                        floor.setTile(x, room.y + room.height - 1, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
-                        room.addDoor(x, room.y + room.height - 1, isSecret);
-                    }
+                    floor.setTile(x, room.y - 1, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
+                    room.addDoor(x, room.y - 1, isSecret);
+                    doorPositions.add(`${x},${room.y - 1}`);
+                }
+            }
+            // Check hallway below bottom wall
+            if (isHallway(x, room.y + room.height) && isProperCorridor(x, room.y + room.height)) {
+                if (!hasNearbyDoor(x, room.y + room.height)) {
+                    const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
+                    floor.setTile(x, room.y + room.height, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
+                    room.addDoor(x, room.y + room.height, isSecret);
+                    doorPositions.add(`${x},${room.y + room.height}`);
                 }
             }
         }
 
         // Check vertical walls (left and right)
         for (let y = room.y; y < room.y + room.height; y++) {
-            // Check left wall
-            if (floor.getTile(room.x - 1, y) === TILE_TYPES.FLOOR) {
-                if (!isInOtherRoom(room.x, y)) {
+            // Check hallway left of left wall
+            if (isHallway(room.x - 1, y) && isProperCorridor(room.x - 1, y)) {
+                if (!hasNearbyDoor(room.x - 1, y)) {
                     const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
-                    if (!wouldBlockCriticalPath(room.x, y, isSecret)) {
-                        floor.setTile(room.x, y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
-                        room.addDoor(room.x, y, isSecret);
+                    floor.setTile(room.x - 1, y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
+                    room.addDoor(room.x - 1, y, isSecret);
+                    doorPositions.add(`${room.x - 1},${y}`);
+                }
+            }
+            // Check hallway right of right wall
+            if (isHallway(room.x + room.width, y) && isProperCorridor(room.x + room.width, y)) {
+                if (!hasNearbyDoor(room.x + room.width, y)) {
+                    const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
+                    floor.setTile(room.x + room.width, y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
+                    room.addDoor(room.x + room.width, y, isSecret);
+                    doorPositions.add(`${room.x + room.width},${y}`);
+                }
+            }
+        }
+    }
+
+    _cleanupDoors(floor) {
+        // Helper to check if a position is in a proper corridor
+        const isProperCorridor = (x, y) => {
+            const hasHorizWalls = floor.getTile(x - 1, y) === TILE_TYPES.WALL && 
+                                floor.getTile(x + 1, y) === TILE_TYPES.WALL;
+            const hasVertWalls = floor.getTile(x, y - 1) === TILE_TYPES.WALL && 
+                                floor.getTile(x, y + 1) === TILE_TYPES.WALL;
+            return hasHorizWalls || hasVertWalls;
+        };
+
+        // Helper to check if there's a secret door nearby
+        const hasNearbySecretDoor = (x, y, distance = 2) => {
+            for (let dx = -distance; dx <= distance; dx++) {
+                for (let dy = -distance; dy <= distance; dy++) {
+                    const checkX = x + dx;
+                    const checkY = y + dy;
+                    if (floor.isWithinBounds(checkX, checkY) &&
+                        floor.getTile(checkX, checkY) === TILE_TYPES.SECRET_DOOR) {
+                        return true;
                     }
                 }
             }
-            // Check right wall
-            if (floor.getTile(room.x + room.width, y) === TILE_TYPES.FLOOR) {
-                if (!isInOtherRoom(room.x + room.width - 1, y)) {
-                    const isSecret = !room.isCriticalPath() && Math.random() < 0.2;
-                    if (!wouldBlockCriticalPath(room.x + room.width - 1, y, isSecret)) {
-                        floor.setTile(room.x + room.width - 1, y, isSecret ? TILE_TYPES.SECRET_DOOR : TILE_TYPES.DOOR);
-                        room.addDoor(room.x + room.width - 1, y, isSecret);
+            return false;
+        };
+
+        // Check each tile in the floor
+        for (let y = 0; y < floor.height; y++) {
+            for (let x = 0; x < floor.width; x++) {
+                const tile = floor.getTile(x, y);
+                if (tile === TILE_TYPES.DOOR || tile === TILE_TYPES.SECRET_DOOR) {
+                    // Remove doors that aren't in proper corridors
+                    if (!isProperCorridor(x, y)) {
+                        floor.setTile(x, y, TILE_TYPES.FLOOR);
+                        // Remove door from room's door list
+                        floor.rooms.forEach(room => {
+                            room.doors = room.doors.filter(door => door.x !== x || door.y !== y);
+                        });
+                        continue;
+                    }
+
+                    // Remove regular doors that are too close to secret doors
+                    if (tile === TILE_TYPES.DOOR && hasNearbySecretDoor(x, y)) {
+                        floor.setTile(x, y, TILE_TYPES.FLOOR);
+                        // Remove door from room's door list
+                        floor.rooms.forEach(room => {
+                            room.doors = room.doors.filter(door => door.x !== x || door.y !== y);
+                        });
                     }
                 }
             }
+        }
+    }
+
+    _areRoomsAdjacent(roomA, roomB) {
+        // Check if rooms share any borders
+        const horizontallyAdjacent = 
+            (roomA.x + roomA.width === roomB.x || roomB.x + roomB.width === roomA.x) &&
+            !(roomA.y >= roomB.y + roomB.height || roomB.y >= roomA.y + roomA.height);
+            
+        const verticallyAdjacent = 
+            (roomA.y + roomA.height === roomB.y || roomB.y + roomB.height === roomA.y) &&
+            !(roomA.x >= roomB.x + roomB.width || roomB.x >= roomA.x + roomA.width);
+            
+        return horizontallyAdjacent || verticallyAdjacent;
+    }
+
+    _findSharedWallCenter(roomA, roomB) {
+        if (roomA.x + roomA.width === roomB.x) {
+            // RoomA is to the left of RoomB
+            const sharedY = Math.max(roomA.y, roomB.y);
+            const sharedHeight = Math.min(roomA.y + roomA.height, roomB.y + roomB.height) - sharedY;
+            return {
+                x: roomA.x + roomA.width,
+                y: Math.floor(sharedY + sharedHeight / 2)
+            };
+        } else if (roomB.x + roomB.width === roomA.x) {
+            // RoomB is to the left of RoomA
+            const sharedY = Math.max(roomA.y, roomB.y);
+            const sharedHeight = Math.min(roomA.y + roomA.height, roomB.y + roomB.height) - sharedY;
+            return {
+                x: roomB.x + roomB.width,
+                y: Math.floor(sharedY + sharedHeight / 2)
+            };
+        } else if (roomA.y + roomA.height === roomB.y) {
+            // RoomA is above RoomB
+            const sharedX = Math.max(roomA.x, roomB.x);
+            const sharedWidth = Math.min(roomA.x + roomA.width, roomB.x + roomB.width) - sharedX;
+            return {
+                x: Math.floor(sharedX + sharedWidth / 2),
+                y: roomA.y + roomA.height
+            };
+        } else {
+            // RoomB is above RoomA
+            const sharedX = Math.max(roomA.x, roomB.x);
+            const sharedWidth = Math.min(roomA.x + roomA.width, roomB.x + roomB.width) - sharedX;
+            return {
+                x: Math.floor(sharedX + sharedWidth / 2),
+                y: roomB.y + roomB.height
+            };
+        }
+    }
+
+    _addDoorsToAllRooms(floor) {
+        // First add doors for all rooms
+        for (const room of floor.rooms) {
+            this._addDoorsToRoom(floor, room);
         }
     }
 }
@@ -533,8 +653,8 @@ export {
     TILE_TYPES,
     DUNGEON_FEATURES,
     ROOM_TYPES,
-    ENTITY,
-    DUNGEONFLOOR,
-    ROOM,
-    DUNGEON
+    Entity,
+    DungeonFloor,
+    Room,
+    Dungeon
 };

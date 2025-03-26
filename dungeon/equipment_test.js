@@ -1,7 +1,7 @@
-import { CHARACTER } from './character.js';
-import { JOBS } from './jobs/constants.js';
+import { Character } from './character.js';
+import { JOBS } from './jobs/index.js';
 import { EQUIPMENT_TYPES, WEAPON_TYPES, ARMOR_TYPES, EQUIPMENT_SLOTS } from './equipment/index.js';
-import { WEAPON } from './equipment/Weapon.js';
+import { Weapon } from './equipment/Weapon.js';
 import fs from 'fs';
 
 // Capture console output
@@ -37,13 +37,13 @@ export function runEquipmentTests() {
     testOutput = '';
 
     console.log('\n=== Test Character Creation and Basic Job Setup ===');
-    const char = new CHARACTER('Test');
+    const char = new Character('Test');
     
     console.log('Initial character state:');
     console.log('Current job ID:', char.currentJob);
     console.log('Initial jobs data:', JSON.stringify(char.jobs, null, 2));
     console.log('Available JOBS:', JSON.stringify(JOBS, null, 2));
-    assert(char.currentJob === JOBS.SQUIRE, 'Character starts as Squire');
+    assert(char.currentJob === JOBS.Squire, 'Character starts as Squire');
 
     // Give JP for ability learning
     console.log('\nLearning Squire abilities:');
@@ -51,10 +51,10 @@ export function runEquipmentTests() {
 
     // Learn some Squire abilities
     const squireLearnResults = [
-        char.learnAbility(JOBS.SQUIRE, 'active', 'THROW_STONE'),
-        char.learnAbility(JOBS.SQUIRE, 'active', 'ACCUMULATE'),
-        char.learnAbility(JOBS.SQUIRE, 'reaction', 'COUNTER_TACKLE'),
-        char.learnAbility(JOBS.SQUIRE, 'support', 'JP_BOOST')
+        char.learnAbility(JOBS.Squire, 'active', 'THROW_STONE'),
+        char.learnAbility(JOBS.Squire, 'active', 'ACCUMULATE'),
+        char.learnAbility(JOBS.Squire, 'reaction', 'COUNTER_TACKLE'),
+        char.learnAbility(JOBS.Squire, 'support', 'JP_BOOST')
     ];
     
     console.log(`Squire abilities learned: ${squireLearnResults.join(', ')}`);
@@ -71,17 +71,17 @@ export function runEquipmentTests() {
 
     // Change to Knight and learn some Knight abilities
     console.log('\nChanging to Knight and learning abilities:');
-    const knightChangeResult = char.setJob(JOBS.KNIGHT);
+    const knightChangeResult = char.setJob(JOBS.Knight);
     assert(knightChangeResult, 'Successfully changed to Knight job');
     
     char.gainJP(2000); // Give JP for Knight abilities
     
     // Learn Knight abilities
     const knightLearnResults = [
-        char.learnAbility(JOBS.KNIGHT, 'active', 'SLASH_BLADE'),
-        char.learnAbility(JOBS.KNIGHT, 'active', 'BREAK_ARMOR'),
-        char.learnAbility(JOBS.KNIGHT, 'reaction', 'PARRY'),
-        char.learnAbility(JOBS.KNIGHT, 'support', 'EQUIP_SHIELD')
+        char.learnAbility(JOBS.Knight, 'active', 'SLASH_BLADE'),
+        char.learnAbility(JOBS.Knight, 'active', 'BREAK_ARMOR'),
+        char.learnAbility(JOBS.Knight, 'reaction', 'PARRY'),
+        char.learnAbility(JOBS.Knight, 'support', 'EQUIP_SHIELD')
     ];
     
     console.log(`Knight abilities learned: ${knightLearnResults.join(', ')}`);
@@ -89,7 +89,7 @@ export function runEquipmentTests() {
 
     // Set Squire as secondary ability set
     console.log('\nSetting Squire as secondary ability set:');
-    const setSecondaryResult = char.setSecondaryActive(JOBS.SQUIRE);
+    const setSecondaryResult = char.setSecondaryActive(JOBS.Squire);
     assert(setSecondaryResult, 'Successfully set Squire as secondary job');
 
     // Get available abilities and verify both Knight and Squire abilities are present
@@ -103,7 +103,7 @@ export function runEquipmentTests() {
 
     // Equipment tests
     console.log('\n=== Basic Equipment Test ===');
-    const sword = new WEAPON({
+    const sword = new Weapon({
         name: 'Broadsword',
         type: EQUIPMENT_TYPES.WEAPON,
         weaponType: WEAPON_TYPES.SWORD,

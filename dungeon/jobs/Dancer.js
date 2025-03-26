@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class DANCER extends JOBINTERFACE {
+export class Dancer extends JobInterface {
     static getDescription() {
         return "Agile performers who weave combat and artistry into mesmerizing techniques. Specialists in area-of-effect status conditions and party support through various dances. In combat, they excel at crowd control and debuffing multiple enemies simultaneously.";
     }
@@ -160,9 +159,9 @@ export class DANCER extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.MONK]: 3,
-            [JOBS.ORACLE]: 3,
-            [JOBS.GEOMANCER]: 2
+            [JOBS.Monk]: 3,
+            [JOBS.Oracle]: 3,
+            [JOBS.Geomancer]: 2
         };
     }
 }

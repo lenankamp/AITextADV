@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class NINJA extends JOBINTERFACE {
+export class Ninja extends JobInterface {
     static getDescription() {
         return "Highly skilled infiltrators and combat specialists who excel in stealth and agility. Masters of deception who can throw weapons, walk on walls, and create illusions. Their versatile skillset combines offensive capabilities with exceptional mobility and evasion, making them equally adept at combat and covert operations.";
     }
@@ -154,9 +153,9 @@ export class NINJA extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.ARCHER]: 3,
-            [JOBS.THIEF]: 4,
-            [JOBS.GEOMANCER]: 2
+            [JOBS.Archer]: 3,
+            [JOBS.Thief]: 4,
+            [JOBS.Geomancer]: 2
         };
     }
 }

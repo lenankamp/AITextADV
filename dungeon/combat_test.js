@@ -1,8 +1,8 @@
-import { CHARACTER } from './character.js';
-import { MONSTERFACTORY } from './monsters/MonsterFactory.js';
-import { COMBATMANAGER, PARTY } from './combat.js';
+import { Character } from './character.js';
+import { MonsterFactory } from './monsters/MonsterFactory.js';
+import { CombatManager, Party } from './combat.js';
 import { JOBS } from './jobs/index.js';
-import { WEAPON, ARMOR } from './equipment/index.js';
+import { Weapon, Armor } from './equipment/index.js';
 import { EQUIPMENT_SLOTS, WEAPON_TYPES, ARMOR_TYPES } from './equipment/index.js';
 import fs from 'fs';
 
@@ -10,19 +10,19 @@ import fs from 'fs';
 function createBasicEquipment() {
     return {
         // Weapons
-        bronzeSword: new WEAPON({
+        bronzeSword: new Weapon({
             name: 'Bronze Sword',
             weaponType: WEAPON_TYPES.SWORD,
             stats: { pa: 4 },
             requirements: { jobs: ['Squire', 'Knight'] }
         }),
-        woodenStaff: new WEAPON({
+        woodenStaff: new Weapon({
             name: 'Wooden Staff',
             weaponType: WEAPON_TYPES.STAFF,
             stats: { pa: 1, ma: 3 },
             requirements: { jobs: ['Black Mage', 'White Mage'] }
         }),
-        shortBow: new WEAPON({
+        shortBow: new Weapon({
             name: 'Short Bow',
             weaponType: WEAPON_TYPES.BOW,
             stats: { pa: 3, sp: 1 },
@@ -30,35 +30,35 @@ function createBasicEquipment() {
         }),
         
         // Armor
-        bronzeArmor: new ARMOR({
+        bronzeArmor: new Armor({
             name: 'Bronze Armor',
             armorType: ARMOR_TYPES.HEAVY_ARMOR,
             stats: { hp: 20 },
             requirements: { jobs: ['Knight'] }
         }),
-        leatherVest: new ARMOR({
+        leatherVest: new Armor({
             name: 'Leather Vest',
             armorType: ARMOR_TYPES.LIGHT_ARMOR,
             stats: { hp: 10 }
         }),
-        clothRobe: new ARMOR({
+        clothRobe: new Armor({
             name: 'Cloth Robe',
             armorType: ARMOR_TYPES.ROBE,
             stats: { hp: 5, mp: 10 },
             requirements: { jobs: ['Black Mage', 'White Mage'] }
         }),
-        bronzeShield: new ARMOR({
+        bronzeShield: new Armor({
             name: 'Bronze Shield',
             armorType: ARMOR_TYPES.SHIELD,
             stats: { hp: 20 },
             requirements: { jobs: ['Knight'] }
         }),
-        leatherCap: new ARMOR({
+        leatherCap: new Armor({
             name: 'Leather Cap',
             armorType: ARMOR_TYPES.HAT,
             stats: { hp: 10 }
         }),
-        bronzeHelm: new ARMOR({
+        bronzeHelm: new Armor({
             name: 'Bronze Helm',
             armorType: ARMOR_TYPES.HELM,
             stats: { hp: 20 },
@@ -69,10 +69,10 @@ function createBasicEquipment() {
 
 // Helper to create a basic character with a job
 function createTestCharacter(name, job, position = 'front') {
-    const char = new CHARACTER(name);
+    const char = new Character(name);
     char.setPosition(position);
     char.gainJP(4000); // Give enough JP to change jobs
-    char.setJob(JOBS.CHEMIST);
+    char.setJob(JOBS.Chemist);
     char.gainJP(4000); // Give enough JP to change jobs
     char.setJob(job);
     
@@ -84,7 +84,7 @@ function createTestCharacter(name, job, position = 'front') {
     
     // Learn job-specific abilities
     switch (job) {
-        case JOBS.KNIGHT:
+        case JOBS.Knight:
             char.learnAbility(job, 'active', 'SLASH_BLADE');
             char.learnAbility(job, 'active', 'BREAK_ARMOR');
             char.learnAbility(job, 'active', 'SHIELD_BASH');
@@ -92,19 +92,19 @@ function createTestCharacter(name, job, position = 'front') {
             char.learnAbility(job, 'reaction', 'PARRY');
             char.learnAbility(job, 'support', 'EQUIP_SHIELD');
             break;
-        case JOBS.BLACK_MAGE:
+        case JOBS.BlackMage:
             char.learnAbility(job, 'active', 'FIRE');
             char.learnAbility(job, 'active', 'THUNDER');
             char.learnAbility(job, 'active', 'BLIZZARD');
             char.learnAbility(job, 'support', 'MAGIC_BOOST');
             break;
-        case JOBS.WHITE_MAGE:
+        case JOBS.WhiteMage:
             char.learnAbility(job, 'active', 'CURE');
             char.learnAbility(job, 'active', 'PROTECT');
             char.learnAbility(job, 'active', 'SHELL');
             char.learnAbility(job, 'support', 'HEALING_BOOST');
             break;
-        case JOBS.ARCHER:
+        case JOBS.Archer:
             char.learnAbility(job, 'active', 'CHARGE');
             char.learnAbility(job, 'active', 'RAPID_FIRE');
             char.learnAbility(job, 'active', 'ARROW_RAIN');
@@ -115,23 +115,23 @@ function createTestCharacter(name, job, position = 'front') {
     // Equip appropriate gear
     const equipment = createBasicEquipment();
     switch (job) {
-        case JOBS.KNIGHT:
+        case JOBS.Knight:
             char.equipItem(equipment.bronzeSword, EQUIPMENT_SLOTS.MAIN_HAND);
             char.equipItem(equipment.bronzeShield, EQUIPMENT_SLOTS.OFF_HAND);
             char.equipItem(equipment.bronzeHelm, EQUIPMENT_SLOTS.HEAD);
             char.equipItem(equipment.bronzeArmor, EQUIPMENT_SLOTS.BODY);
             break;
-        case JOBS.BLACK_MAGE:
+        case JOBS.BlackMage:
             char.equipItem(equipment.woodenStaff, EQUIPMENT_SLOTS.MAIN_HAND);
             char.equipItem(equipment.leatherCap, EQUIPMENT_SLOTS.HEAD);
             char.equipItem(equipment.clothRobe, EQUIPMENT_SLOTS.BODY);
             break;
-        case JOBS.WHITE_MAGE:
+        case JOBS.WhiteMage:
             char.equipItem(equipment.woodenStaff, EQUIPMENT_SLOTS.MAIN_HAND);
             char.equipItem(equipment.leatherCap, EQUIPMENT_SLOTS.HEAD);
             char.equipItem(equipment.clothRobe, EQUIPMENT_SLOTS.BODY);
             break;
-        case JOBS.ARCHER:
+        case JOBS.Archer:
             char.equipItem(equipment.shortBow, EQUIPMENT_SLOTS.MAIN_HAND);
             char.equipItem(equipment.leatherCap, EQUIPMENT_SLOTS.HEAD);
             char.equipItem(equipment.leatherVest, EQUIPMENT_SLOTS.BODY);
@@ -213,15 +213,15 @@ function runCombatTest() {
     console.log('=== Starting Combat Test ===\n');
 
     // Create party and monsters
-    const playerParty = new PARTY();
-    const monsterParty = new PARTY();
+    const playerParty = new Party();
+    const monsterParty = new Party();
     
     // Create monsters
     const monsters = [
-        MONSTERFACTORY.createMonster('goblin'),
-        MONSTERFACTORY.createMonster('archer_goblin', 2),
-        MONSTERFACTORY.createMonster('dark_mage', 2),
-        MONSTERFACTORY.createMonster('orc', 3)
+        MonsterFactory.createMonster('goblin'),
+        MonsterFactory.createMonster('archer_goblin', 2),
+        MonsterFactory.createMonster('dark_mage', 2),
+        MonsterFactory.createMonster('orc', 3)
     ];
 
     // Add monsters to their party with appropriate positions
@@ -232,14 +232,14 @@ function runCombatTest() {
     
     // Initialize party members
     ['Roland', 'Vivi', 'Rosa', 'Maria'].forEach((name, i) => {
-        const job = [JOBS.KNIGHT, JOBS.BLACK_MAGE, JOBS.WHITE_MAGE, JOBS.ARCHER][i];
+        const job = [JOBS.Knight, JOBS.BlackMage, JOBS.WhiteMage, JOBS.Archer][i];
         const position = i === 0 ? 'front' : 'back';
         const char = createTestCharacter(name, job, position);
         playerParty.addMember(char, position);
     });
 
     // Initialize combat
-    const combat = new COMBATMANAGER(playerParty, monsterParty);
+    const combat = new CombatManager(playerParty, monsterParty);
     const combatLog = [];
     let turnCount = 0;
     const MAX_TURNS = 10;
@@ -267,7 +267,7 @@ function runCombatTest() {
         } else {
             // Choose appropriate ability based on job
             switch (currentActor.entity.currentJob) {
-                case JOBS.KNIGHT:
+                case JOBS.Knight:
                     // Knights use BREAK for damage, or PROTECT for defense
                     if (abilities.active.BREAK_ARMOR) {
                         action = {
@@ -283,7 +283,7 @@ function runCombatTest() {
                         };
                     }
                     break;
-                case JOBS.BLACK_MAGE:
+                case JOBS.BlackMage:
                     // Black Mages prefer FIRE for damage
                     if (abilities.active.FIRE) {
                         action = {
@@ -305,7 +305,7 @@ function runCombatTest() {
                         };
                     }
                     break;
-                case JOBS.WHITE_MAGE:
+                case JOBS.WhiteMage:
                     // Find wounded ally
                     const healTargets = combat.getValidTargets({
                         entity: currentActor.entity,
@@ -346,7 +346,7 @@ function runCombatTest() {
                         };
                     }
                     break;
-                case JOBS.ARCHER:
+                case JOBS.Archer:
                     // Archers prefer RAPID_FIRE for consistent damage
                     if (abilities.active.RAPID_FIRE) {
                         action = {

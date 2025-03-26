@@ -1,5 +1,5 @@
-import { CHARACTER } from './character.js';
-import { MONSTER } from './monsters/Monster.js';
+import { Character } from './character.js';
+import { Monster } from './monsters/Monster.js';
 
 const COMBAT_STATES = {
     ACTIVE: 'active',
@@ -12,7 +12,7 @@ const COMBAT_RESULTS = {
     FLEE: 'flee'
 };
 
-class PARTY {
+class Party {
     constructor() {
         this.members = [];
         this.frontRow = [];
@@ -74,7 +74,7 @@ class PARTY {
     }
 }
 
-class COMBATMANAGER {
+class CombatManager {
     constructor(partyA, partyB) {
         this.partyA = partyA; // The player's party
         this.partyB = partyB; // The opposing party
@@ -406,6 +406,6 @@ class COMBATMANAGER {
 export {
     COMBAT_STATES,
     COMBAT_RESULTS,
-    COMBATMANAGER,
-    PARTY
+    CombatManager,
+    Party
 };

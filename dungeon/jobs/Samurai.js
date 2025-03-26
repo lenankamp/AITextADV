@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class SAMURAI extends JOBINTERFACE {
+export class Samurai extends JobInterface {
     static getBaseStats() {
         return {
             hp: 125,
@@ -141,9 +140,9 @@ export class SAMURAI extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.KNIGHT]: 3,
-            [JOBS.MONK]: 4,
-            [JOBS.DRAGOON]: 2
+            [JOBS.Knight]: 3,
+            [JOBS.Monk]: 4,
+            [JOBS.Dragoon]: 2
         };
     }
 

@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class ARCHER extends JOBINTERFACE {
+export class Archer extends JobInterface {
     static getDescription() {
         return "Skilled ranged combatants who excel at precision attacks from a distance. Masters of tactical positioning and battlefield control through various arrow types. In combat, they provide reliable single-target and area damage while maintaining safe distance.";
     }
@@ -127,7 +126,7 @@ export class ARCHER extends JOBINTERFACE {
                 }
             },
             reaction: {
-                ARCHER_GUARD: {
+                Archer_GUARD: {
                     name: 'Archer Guard',
                     chance: 0.3,
                     effect: 'ranged_defense_up',
@@ -162,7 +161,7 @@ export class ARCHER extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.SQUIRE]: 2
+            [JOBS.Squire]: 2
         };
     }
 }

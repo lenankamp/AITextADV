@@ -1,6 +1,6 @@
 import { EQUIPMENT_TYPES } from './index.js';
 
-export class EQUIPMENT {
+export class Equipment {
     constructor(config) {
         this.name = config.name;
         this.type = config.type;
@@ -23,7 +23,7 @@ export class EQUIPMENT {
             const jobClass = character.getJobClass(character.currentJob);
             if (!jobClass) return false;
 
-            const currentJobName = jobClass.name.replace('JOBINTERFACE', '');
+            const currentJobName = jobClass.name.replace('JobInterface', '');
             if (!this.requirements.jobs.some(job => 
                 job.toLowerCase() === currentJobName.toLowerCase()
             )) {

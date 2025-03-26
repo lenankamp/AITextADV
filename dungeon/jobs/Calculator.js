@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class CALCULATOR extends JOBINTERFACE {
+export class Calculator extends JobInterface {
     static getDescription() {
         return "Tactical specialists who utilize mathematical principles to manipulate combat conditions. Their unique abilities allow them to target enemies based on numerical properties like height, level, and other statistical values. While complex to master, their ability to affect multiple targets simultaneously through mathematical calculations makes them powerful battlefield controllers.";
     }
@@ -151,9 +150,9 @@ export class CALCULATOR extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.BLACK_MAGE]: 4,
-            [JOBS.TIME_MAGE]: 3,
-            [JOBS.ORACLE]: 3
+            [JOBS.BlackMage]: 4,
+            [JOBS.TimeMage]: 3,
+            [JOBS.Oracle]: 3
         };
     }
 }

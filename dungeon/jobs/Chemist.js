@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class CHEMIST extends JOBINTERFACE {
+export class Chemist extends JobInterface {
     static getDescription() {
         return "Masters of item manipulation and alchemy. Specializing in item usage, creation, and enhancement, they provide crucial support through potions and crafted goods. Their expertise allows them to identify, analyze, and mix items for maximum effectiveness.";
     }

@@ -1,6 +1,6 @@
-import { CHARACTER } from '../character.js';
+import { Character } from '../character.js';
 
-class MONSTER extends CHARACTER {
+class Monster extends Character {
     constructor(template) {
         super(template.name);
         this.type = 'monster';
@@ -136,4 +136,4 @@ class MONSTER extends CHARACTER {
     }
 }
 
-export { MONSTER };
+export { Monster };

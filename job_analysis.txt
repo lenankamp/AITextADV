@@ -39,7 +39,7 @@ BARRAGE: Multiple shots hitting all enemies in area (MP: 35) [JP: 600]
 
 Reaction Abilities:
 ------------------
-ARCHER_GUARD: Reduces damage from ranged attacks [JP: 200]
+Archer_GUARD: Reduces damage from ranged attacks [JP: 200]
 COUNTER_SHOT: Chance to counter with a ranged attack [JP: 300]
 
 Support Abilities:
@@ -49,7 +49,7 @@ PRECISE_AIM: Improves critical hit chance [JP: 300]
 
 Requirements:
 ------------
-SQUIRE level 2
+Squire level 2
 
 ==================================================
 
@@ -104,9 +104,9 @@ RESONANCE: Increase potency of song effects [JP: 450]
 
 Requirements:
 ------------
-WHITE_MAGE level 3
-ORACLE level 2
-DANCER level 2
+WhiteMage level 3
+Oracle level 2
+Dancer level 2
 
 ==================================================
 
@@ -167,7 +167,7 @@ DUAL_CAST: Cast two spells in one turn [JP: 999]
 
 Requirements:
 ------------
-CHEMIST level 2
+Chemist level 2
 
 ==================================================
 
@@ -222,9 +222,9 @@ QUICK_CALCULATE: Reduce casting time of abilities [JP: 400]
 
 Requirements:
 ------------
-BLACK_MAGE level 4
-TIME_MAGE level 3
-ORACLE level 3
+BlackMage level 4
+TimeMage level 3
+Oracle level 3
 
 ==================================================
 
@@ -330,9 +330,9 @@ PERFORMANCE_FOCUS: Enhances duration and effectiveness of dance abilities [JP: 4
 
 Requirements:
 ------------
-MONK level 3
-ORACLE level 3
-GEOMANCER level 2
+Monk level 3
+Oracle level 3
+Geomancer level 2
 
 ==================================================
 
@@ -387,7 +387,7 @@ SURE_LANDING: Always land safely from jumps [JP: 300]
 
 Requirements:
 ------------
-THIEF level 3
+Thief level 3
 
 ==================================================
 
@@ -442,7 +442,7 @@ NATURE_STEP: Ignore negative terrain effects [JP: 400]
 
 Requirements:
 ------------
-MONK level 3
+Monk level 3
 
 ==================================================
 
@@ -499,7 +499,7 @@ WEAPON_GUARD: Chance to block with equipped weapon [JP: 500]
 
 Requirements:
 ------------
-SQUIRE level 2
+Squire level 2
 
 ==================================================
 
@@ -534,7 +534,7 @@ Active Abilities:
 REPLICATE: Copies the last action performed by any character (MP: variable) [JP: 300]
 MIMIC_MASTERY: Enhanced version of basic mimicry with increased power (MP: variable) [JP: 450]
 PERFECT_COPY: Creates an exact replica of the copied ability (MP: original_cost) [JP: 600]
-MIME_SEQUENCE: Repeats a sequence of previously used actions (MP: 35) [JP: 500]
+Mime_SEQUENCE: Repeats a sequence of previously used actions (MP: 35) [JP: 500]
 BATTLE_MEMORY: Learn and store an enemy ability for later use (MP: 40) [JP: 550]
 TACTICAL_COPY: Copy an ability with enhanced tactical effects (MP: variable) [JP: 450]
 MIMIC_FORM: Temporarily copies enemy type and resistances (MP: 40) [JP: 550]
@@ -551,10 +551,10 @@ EXPERIENCED_MIMIC: Increases accuracy of mimicked abilities [JP: 450]
 
 Requirements:
 ------------
-SAMURAI level 3
-CALCULATOR level 3
-DANCER level 2
-BARD level 2
+Samurai level 3
+Calculator level 3
+Dancer level 2
+Bard level 2
 
 ==================================================
 
@@ -609,7 +609,7 @@ MARTIAL_MASTERY: Enhance all martial arts abilities [JP: 600]
 
 Requirements:
 ------------
-KNIGHT level 2
+Knight level 2
 
 ==================================================
 
@@ -664,9 +664,9 @@ STEALTH: Improved stealth movement and detection avoidance [JP: 400]
 
 Requirements:
 ------------
-ARCHER level 3
-THIEF level 4
-GEOMANCER level 2
+Archer level 3
+Thief level 4
+Geomancer level 2
 
 ==================================================
 
@@ -721,7 +721,7 @@ ASTRAL_SIGHT: Greatly improves all detection abilities [JP: 600]
 
 Requirements:
 ------------
-WHITE_MAGE level 2
+WhiteMage level 2
 
 ==================================================
 
@@ -776,8 +776,8 @@ SILVER_TONGUE: Reduce MP cost of speechcraft abilities [JP: 400]
 
 Requirements:
 ------------
-ORACLE level 2
-TIME_MAGE level 2
+Oracle level 2
+TimeMage level 2
 
 ==================================================
 
@@ -832,9 +832,9 @@ INNER_PEACE: Allows wielding one-handed weapons in both hands for increased dama
 
 Requirements:
 ------------
-KNIGHT level 3
-MONK level 4
-DRAGOON level 2
+Knight level 3
+Monk level 4
+Dragoon level 2
 
 ==================================================
 
@@ -940,9 +940,9 @@ EIDOLON_BOND: Strengthens summoned creatures [JP: 450]
 
 Requirements:
 ------------
-BLACK_MAGE level 4
-TIME_MAGE level 3
-ORACLE level 2
+BlackMage level 4
+TimeMage level 3
+Oracle level 2
 
 ==================================================
 
@@ -996,7 +996,7 @@ TRAP_MASTERY: Enhances trap detection range and grants chance to auto-disarm [JP
 
 Requirements:
 ------------
-ARCHER level 2
+Archer level 2
 
 ==================================================
 
@@ -1050,7 +1050,7 @@ TEMPORAL_MASTERY: Strengthen all time magic effects [JP: 600]
 
 Requirements:
 ------------
-BLACK_MAGE level 2
+BlackMage level 2
 
 ==================================================
 
@@ -1108,7 +1108,7 @@ MP_RECOVERY: Gradually restore MP while walking [JP: 600]
 
 Requirements:
 ------------
-CHEMIST level 2
+Chemist level 2
 
 ==================================================
 

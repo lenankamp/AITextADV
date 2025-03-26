@@ -1,7 +1,7 @@
-import { EQUIPMENT } from './Equipment.js';
+import { Equipment } from './Equipment.js';
 import { EQUIPMENT_TYPES, ARMOR_TYPES, EQUIPMENT_SLOTS } from './index.js';
 
-export class ARMOR extends EQUIPMENT {
+export class Armor extends Equipment {
     constructor(config) {
         super({
             ...config,

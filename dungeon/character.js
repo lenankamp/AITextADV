@@ -1,9 +1,9 @@
-import { JOBS } from './jobs/constants.js';
+import { JOBS } from './jobs/index.js';
 import { EQUIPMENT_SLOTS } from './equipment/index.js';
 import * as Jobs from './jobs/index.js';
 
 // Base character class
-class CHARACTER {
+class Character {
     constructor(name) {
         this.name = name;
         this.type = 'person'; // Base class is for people, monsters override this
@@ -63,7 +63,7 @@ class CHARACTER {
         };
 
         // Initialize job system before setting initial job
-        this.jobs[JOBS.SQUIRE] = { 
+        this.jobs[JOBS.Squire] = { 
             level: 1, 
             jp: 0, 
             spentJp: 0,
@@ -76,7 +76,7 @@ class CHARACTER {
         };
 
         // Initialize with Squire job
-        this.setJob(JOBS.SQUIRE);
+        this.setJob(JOBS.Squire);
         
         // Update HP/MP to include job bonuses
         this.status.hp = this.getMaxHP();
@@ -148,26 +148,26 @@ class CHARACTER {
 
     getJobClass(jobId) {
         switch (jobId) {
-            case JOBS.SQUIRE: return Jobs.SQUIRE;
-            case JOBS.CHEMIST: return Jobs.CHEMIST;
-            case JOBS.KNIGHT: return Jobs.KNIGHT;
-            case JOBS.ARCHER: return Jobs.ARCHER;
-            case JOBS.WHITE_MAGE: return Jobs.WHITEMAGE;
-            case JOBS.BLACK_MAGE: return Jobs.BLACKMAGE;
-            case JOBS.MONK: return Jobs.MONK;
-            case JOBS.THIEF: return Jobs.THIEF;
-            case JOBS.ORACLE: return Jobs.ORACLE;
-            case JOBS.TIME_MAGE: return Jobs.TIMEMAGE;
-            case JOBS.GEOMANCER: return Jobs.GEOMANCER;
-            case JOBS.DRAGOON: return Jobs.DRAGOON;
-            case JOBS.SUMMONER: return Jobs.SUMMONER;
-            case JOBS.ORATOR: return Jobs.ORATOR;
-            case JOBS.SAMURAI: return Jobs.SAMURAI;
-            case JOBS.NINJA: return Jobs.NINJA;
-            case JOBS.CALCULATOR: return Jobs.CALCULATOR;
-            case JOBS.DANCER: return Jobs.DANCER;
-            case JOBS.BARD: return Jobs.BARD;
-            case JOBS.MIME: return Jobs.MIME;
+            case JOBS.Squire: return Jobs.Squire;
+            case JOBS.Chemist: return Jobs.Chemist;
+            case JOBS.Knight: return Jobs.Knight;
+            case JOBS.Archer: return Jobs.Archer;
+            case JOBS.WhiteMage: return Jobs.WhiteMage;
+            case JOBS.BlackMage: return Jobs.BlackMage;
+            case JOBS.Monk: return Jobs.Monk;
+            case JOBS.Thief: return Jobs.Thief;
+            case JOBS.Oracle: return Jobs.Oracle;
+            case JOBS.TimeMage: return Jobs.TimeMage;
+            case JOBS.Geomancer: return Jobs.Geomancer;
+            case JOBS.Dragoon: return Jobs.Dragoon;
+            case JOBS.Summoner: return Jobs.Summoner;
+            case JOBS.Orator: return Jobs.Orator;
+            case JOBS.Samurai: return Jobs.Samurai;
+            case JOBS.Ninja: return Jobs.Ninja;
+            case JOBS.Calculator: return Jobs.Calculator;
+            case JOBS.Dancer: return Jobs.Dancer;
+            case JOBS.Bard: return Jobs.Bard;
+            case JOBS.Mime: return Jobs.Mime;
             default: return null;
         }
     }
@@ -440,20 +440,20 @@ class CHARACTER {
                 if(ability.type === 'magical') return true;
                 else return false;
             case 'increase_dance_potency':
-                const dancerAbilities = this.jobs[JOBS.DANCER]?.learnedAbilities?.active;
+                const dancerAbilities = this.jobs[JOBS.Dancer]?.learnedAbilities?.active;
                 if (dancerAbilities && dancerAbilities[ability]) return true;
                 else return false;
             case 'jump_damage_up':
-                const dragoonAbilities = this.jobs[JOBS.DRAGOON]?.learnedAbilities?.active;
+                const dragoonAbilities = this.jobs[JOBS.Dragoon]?.learnedAbilities?.active;
                 if (dragoonAbilities && dragoonAbilities[ability]) return true;
                 else return false;
             case 'improve_martial_arts':
-                const monkAbilities = this.jobs[JOBS.MONK]?.learnedAbilities?.active;
+                const monkAbilities = this.jobs[JOBS.Monk]?.learnedAbilities?.active;
                 if (monkAbilities && monkAbilities[ability]) return true;
                 else return false;
             case 'enhance_next_summon':
             case 'enhance_summons':
-                const summonerAbilities = this.jobs[JOBS.SUMMONER]?.learnedAbilities?.active;
+                const summonerAbilities = this.jobs[JOBS.Summoner]?.learnedAbilities?.active;
                 if (summonerAbilities && summonerAbilities[ability]) return true;
                 else return false;
             case 'unarmed_damage_up':
@@ -1172,5 +1172,5 @@ class CHARACTER {
 }
 
 export {
-    CHARACTER
+    Character
 };

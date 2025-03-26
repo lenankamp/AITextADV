@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class DRAGOON extends JOBINTERFACE {
+export class Dragoon extends JobInterface {
     static getDescription() {
         return "Masters of aerial combat and verticality. Specializing in powerful jump attacks and mobility options, they excel at traversing difficult terrain and attacking from above.";
     }
@@ -136,7 +135,7 @@ export class DRAGOON extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.THIEF]: 3
+            [JOBS.Thief]: 3
         };
     }
 }

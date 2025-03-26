@@ -1,7 +1,6 @@
-import { JOBINTERFACE } from './JobInterface.js';
-import { JOBS } from './constants.js';
+import { JobInterface, JOBS } from './index.js';
 
-export class WHITEMAGE extends JOBINTERFACE {
+export class WhiteMage extends JobInterface {
     static getDescription() {
         return "Primary healers and support specialists who wield holy magic. Masters of recovery magic, status ailment removal, and protective enchantments. Essential for party survival with powerful healing spells and defensive buffs. In dungeons, they excel at creating safe zones through purification magic and are particularly effective at dealing with undead threats and cursed areas.";
     }
@@ -166,7 +165,7 @@ export class WHITEMAGE extends JOBINTERFACE {
 
     static getRequirements() {
         return {
-            [JOBS.CHEMIST]: 2
+            [JOBS.Chemist]: 2
         };
     }
 }
