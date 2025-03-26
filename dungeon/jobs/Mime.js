@@ -76,4 +76,133 @@ export class Mime extends JobInterface {
             [JOBS.Bard]: 2
         };
     }
+
+    // Store the last ability used by any character
+    static lastAbilityUsed = null;
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'MIMIC':
+                return this._resolveMimic(user, ability, target);
+            case 'REPLAY':
+                return this._resolveReplay(user, ability, target);
+            case 'PERFECT_COPY':
+                return this._resolvePerfectCopy(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolveMimic(user, ability, target) {
+        if (!this.lastAbilityUsed) {
+            return {
+                success: false,
+                message: 'No ability to mimic'
+            };
+        }
+
+        // Calculate mimic effectiveness based on user's stats vs original user's stats
+        const originalStats = this.lastAbilityUsed.user.getStats();
+        const mimicStats = user.getStats();
+        const effectivenessMultiplier = Math.min(1, 
+            (mimicStats.ma / originalStats.ma + mimicStats.pa / originalStats.pa) / 2
+        );
+
+        // Copy the ability but potentially with reduced effectiveness
+        const mimickedAbility = {
+            ...this.lastAbilityUsed.ability,
+            power: this.lastAbilityUsed.ability.power * effectivenessMultiplier
+        };
+
+        // Use the appropriate job's resolveSpecialAbility if it exists
+        const jobClass = this.lastAbilityUsed.jobClass;
+        if (jobClass && jobClass.resolveSpecialAbility) {
+            const result = jobClass.resolveSpecialAbility(user, mimickedAbility, target);
+            result.mimicked = true;
+            return result;
+        }
+
+        // Default handling if no special resolution exists
+        if (mimickedAbility.type === 'damage') {
+            const damage = Math.floor(mimicStats.pa * mimickedAbility.power);
+            target.status.hp = Math.max(0, target.status.hp - damage);
+            return {
+                success: true,
+                damage,
+                mimicked: true
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Mimicked ability with basic effect',
+            mimicked: true
+        };
+    }
+
+    static _resolveReplay(user, ability, target) {
+        // Replay last ability with increased effectiveness
+        if (!this.lastAbilityUsed) {
+            return {
+                success: false,
+                message: 'No ability to replay'
+            };
+        }
+
+        // Replaying uses memory of the ability for better execution
+        const replayBonus = 1.2; // 20% more effective
+        const modifiedAbility = {
+            ...this.lastAbilityUsed.ability,
+            power: (this.lastAbilityUsed.ability.power || 1) * replayBonus
+        };
+
+        return this._resolveMimic(user, {
+            ...ability,
+            replayBonus
+        }, target);
+    }
+
+    static _resolvePerfectCopy(user, ability, target) {
+        // Perfect copy requires significant MP but executes at full effectiveness
+        const mpCost = Math.floor(ability.mp * 1.5);
+        if (user.status.mp < mpCost) {
+            return {
+                success: false,
+                message: 'Not enough MP for perfect copy'
+            };
+        }
+
+        // Consume extra MP
+        user.status.mp -= mpCost;
+
+        if (!this.lastAbilityUsed) {
+            return {
+                success: false,
+                message: 'No ability to copy'
+            };
+        }
+
+        // Execute the ability at full effectiveness of original user
+        const result = this.lastAbilityUsed.jobClass.resolveSpecialAbility(
+            this.lastAbilityUsed.user,
+            this.lastAbilityUsed.ability,
+            target
+        );
+
+        return {
+            ...result,
+            perfectCopy: true,
+            mpUsed: mpCost
+        };
+    }
+
+    // Static method to record abilities for mimicry
+    static recordAbility(user, ability, jobClass) {
+        this.lastAbilityUsed = {
+            user,
+            ability,
+            jobClass,
+            timestamp: Date.now()
+        };
+    }
 }

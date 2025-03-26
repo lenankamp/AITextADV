@@ -144,4 +144,202 @@ export class Oracle extends JobInterface {
             [JOBS.WhiteMage]: 2
         };
     }
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'PREDICT':
+                return this._resolvePredict(user, ability, target);
+            case 'CONDEMN':
+                return this._resolveCondemn(user, ability, target);
+            case 'PROPHECY':
+                return this._resolveProphecy(user, ability, target);
+            case 'STAR_READING':
+                return this._resolveStarReading(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolvePredict(user, ability, target) {
+        // Base success rate on MA and level difference
+        const baseChance = 0.5 + (user.getStats().ma - target.level) * 0.04;
+        const successRate = Math.min(0.9, Math.max(0.2, baseChance));
+
+        if (Math.random() > successRate) {
+            return {
+                success: false,
+                message: 'Failed to read target\'s future'
+            };
+        }
+
+        // Predict upcoming hostile action
+        const prediction = this._generatePrediction(target);
+        target.status.predicted = true;
+        target.status.predictedAction = prediction;
+
+        // Apply defensive buff to allies if prediction is hostile
+        if (prediction.isHostile) {
+            user.status.effects.push({
+                name: 'foresight',
+                duration: 3,
+                power: 1.2
+            });
+        }
+
+        return {
+            success: true,
+            prediction,
+            effects: [{
+                name: 'predicted',
+                duration: 3
+            }]
+        };
+    }
+
+    static _resolveCondemn(user, ability, target) {
+        // Check if target is already under status effects
+        const existingEffects = target.status.effects?.length || 0;
+        const baseChance = 0.4 + (existingEffects * 0.1) + (user.getStats().ma - target.level) * 0.03;
+        const successRate = Math.min(0.85, Math.max(0.15, baseChance));
+
+        if (Math.random() > successRate) {
+            return {
+                success: false,
+                message: 'Failed to condemn target'
+            };
+        }
+
+        // Apply doom effect with delay based on target's current HP ratio
+        const hpRatio = target.status.hp / target.getMaxHP();
+        const doomDelay = Math.max(1, Math.ceil(hpRatio * 5));
+
+        target.status.effects.push({
+            name: 'doom',
+            duration: doomDelay,
+            fatal: true
+        });
+
+        return {
+            success: true,
+            message: `Condemned target with ${doomDelay} turn delay`,
+            effects: [{
+                name: 'doom',
+                duration: doomDelay
+            }]
+        };
+    }
+
+    static _resolveProphecy(user, ability, target) {
+        // Prophecy affects an area with status effects based on celestial alignment
+        const alignment = this._getCurrentCelestialAlignment();
+        const effects = [];
+
+        switch (alignment) {
+            case 'beneficial':
+                effects.push({
+                    name: 'regen',
+                    duration: 4,
+                    power: 1.5
+                }, {
+                    name: 'protect',
+                    duration: 4
+                });
+                break;
+            case 'hostile':
+                effects.push({
+                    name: 'poison',
+                    duration: 4,
+                    power: 1.2
+                }, {
+                    name: 'slow',
+                    duration: 3
+                });
+                break;
+            case 'neutral':
+                effects.push({
+                    name: 'reflect',
+                    duration: 3
+                });
+                break;
+        }
+
+        // Apply effects to target
+        effects.forEach(effect => {
+            if (!target.isImmuneToEffect(effect.name)) {
+                target.addEffect(effect);
+            }
+        });
+
+        return {
+            success: true,
+            alignment,
+            effects
+        };
+    }
+
+    static _resolveStarReading(user, ability, target) {
+        // Read celestial bodies to grant powerful buffs/debuffs
+        const stats = user.getStats();
+        const starPower = Math.floor(stats.ma * ability.power);
+        
+        // Get zodiac compatibility between user and target
+        const compatibility = this._getZodiacCompatibility(user, target);
+        const effectMultiplier = compatibility === 'compatible' ? 1.5 :
+                               compatibility === 'opposing' ? 0.5 : 1;
+
+        // Apply star-based effects
+        const effects = [{
+            name: 'celestial_blessing',
+            duration: 4,
+            power: starPower * effectMultiplier
+        }];
+
+        if (compatibility === 'compatible') {
+            effects.push({
+                name: 'haste',
+                duration: 3
+            });
+        } else if (compatibility === 'opposing') {
+            effects.push({
+                name: 'slow',
+                duration: 3
+            });
+        }
+
+        effects.forEach(effect => {
+            if (!target.isImmuneToEffect(effect.name)) {
+                target.addEffect(effect);
+            }
+        });
+
+        return {
+            success: true,
+            zodiacCompatibility: compatibility,
+            effects
+        };
+    }
+
+    static _generatePrediction(target) {
+        // Simulate predicting target's next action
+        const targetStats = target.getStats();
+        const isAggressive = target.status.hp < target.getMaxHP() * 0.5;
+        
+        return {
+            isHostile: isAggressive,
+            predictedAction: isAggressive ? 'attack' : 'defend',
+            turnDelay: Math.floor(Math.random() * 2) + 1
+        };
+    }
+
+    static _getCurrentCelestialAlignment() {
+        // Simulate celestial alignment based on time/turn
+        const alignments = ['beneficial', 'hostile', 'neutral'];
+        return alignments[Math.floor(Math.random() * alignments.length)];
+    }
+
+    static _getZodiacCompatibility(user, target) {
+        // Simulate zodiac sign compatibility
+        const compatibilities = ['compatible', 'opposing', 'neutral'];
+        return compatibilities[Math.floor(Math.random() * compatibilities.length)];
+    }
 }

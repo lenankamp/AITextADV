@@ -34,7 +34,7 @@ export class Calculator extends JobInterface {
                 abilities: {
                     CT_PRIME: {
                         name: 'CT Prime',
-                        type: 'magical',
+                        type: 'special',
                         effect: 'prime_target',
                         mp: 25,
                         jpCost: 300,
@@ -42,7 +42,7 @@ export class Calculator extends JobInterface {
                     },
                     LEVEL_DIVIDE: {
                         name: 'Level Divide',
-                        type: 'magical',
+                        type: 'special',
                         effect: 'level_target',
                         mp: 28,
                         jpCost: 350,
@@ -50,7 +50,7 @@ export class Calculator extends JobInterface {
                     },
                     HEIGHT_FACTOR: {
                         name: 'Height Factor',
-                        type: 'magical',
+                        type: 'special',
                         effect: 'height_target',
                         mp: 30,
                         jpCost: 400,
@@ -74,7 +74,7 @@ export class Calculator extends JobInterface {
                     },
                     NUMERICAL_FORCE: {
                         name: 'Numerical Force',
-                        type: 'magical',
+                        type: 'special',
                         power: 1.8,
                         effect: 'number_based_damage',
                         mp: 30,
@@ -154,5 +154,91 @@ export class Calculator extends JobInterface {
             [JOBS.TimeMage]: 3,
             [JOBS.Oracle]: 3
         };
+    }
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'CT_SPELL':
+                return this._resolveCTSpell(user, ability, target);
+            case 'LEVEL_SPELL':
+                return this._resolveLevelSpell(user, ability, target);
+            case 'PRIME_SPELL':
+                return this._resolvePrimeSpell(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolveCTSpell(user, ability, target) {
+        // Check if target's CT matches condition
+        const targetCT = target.status.ct || 0;
+        if (targetCT % ability.ctMultiple !== 0) {
+            return {
+                success: false,
+                message: 'Target CT does not match condition'
+            };
+        }
+
+        // Apply the spell effect
+        const damage = Math.floor(user.getStats().ma * ability.power);
+        target.status.hp = Math.max(0, target.status.hp - damage);
+
+        return {
+            success: true,
+            damage,
+            effects: ability.effects || []
+        };
+    }
+
+    static _resolveLevelSpell(user, ability, target) {
+        // Check if target's level matches condition
+        if (target.level % ability.levelMultiple !== 0) {
+            return {
+                success: false,
+                message: 'Target level does not match condition'
+            };
+        }
+
+        // Apply the spell effect
+        const damage = Math.floor(user.getStats().ma * ability.power);
+        target.status.hp = Math.max(0, target.status.hp - damage);
+
+        return {
+            success: true,
+            damage,
+            effects: ability.effects || []
+        };
+    }
+
+    static _resolvePrimeSpell(user, ability, target) {
+        // Check if target's level is prime
+        const isPrime = this._isPrimeNumber(target.level);
+        if (!isPrime) {
+            return {
+                success: false,
+                message: 'Target level is not prime'
+            };
+        }
+
+        // Apply the spell effect
+        const damage = Math.floor(user.getStats().ma * ability.power);
+        target.status.hp = Math.max(0, target.status.hp - damage);
+
+        return {
+            success: true,
+            damage,
+            effects: ability.effects || []
+        };
+    }
+
+    static _isPrimeNumber(num) {
+        if (num <= 1) return false;
+        if (num <= 3) return true;
+        if (num % 2 === 0 || num % 3 === 0) return false;
+
+        for (let i = 5; i * i <= num; i += 6) {
+            if (num % i === 0 || num % (i + 2) === 0) return false;
+        }
+        return true;
     }
 }

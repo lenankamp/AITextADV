@@ -158,4 +158,174 @@ export class Ninja extends JobInterface {
             [JOBS.Geomancer]: 2
         };
     }
+
+    // Track active effects
+    static activeNinjaEffects = new Map();
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'THROW':
+                return this._resolveThrow(user, ability, target);
+            case 'MIRROR_IMAGE':
+                return this._resolveMirrorImage(user, ability, target);
+            case 'ASSASSINATE':
+                return this._resolveAssassinate(user, ability, target);
+            case 'SHADOW_STITCH':
+                return this._resolveShadowStitch(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolveThrow(user, ability, target) {
+        // Calculate damage based on weapon being thrown
+        const stats = user.getStats();
+        const weapon = user.getEquippedWeapon();
+        if (!weapon) {
+            return {
+                success: false,
+                message: 'No weapon equipped to throw'
+            };
+        }
+
+        const weaponPower = weapon.power || 1;
+        const throwPower = Math.floor((stats.pa + stats.sp * 0.5) * weaponPower);
+        const damage = Math.floor(throwPower * ability.power);
+
+        // Apply damage
+        target.status.hp = Math.max(0, target.status.hp - damage);
+
+        // 20% chance to apply weapon's status effect if it has one
+        if (weapon.effect && Math.random() < 0.2) {
+            const statusEffect = {
+                name: weapon.effect,
+                duration: 3,
+                power: stats.pa * 0.1
+            };
+            if (!target.isImmuneToEffect(statusEffect.name)) {
+                target.addEffect(statusEffect);
+                this._addNinjaEffect(target, statusEffect);
+            }
+        }
+
+        return {
+            success: true,
+            damage,
+            message: `${target.name} takes ${damage} damage from thrown weapon`,
+            weaponUsed: weapon.name
+        };
+    }
+
+    static _resolveMirrorImage(user, ability, target) {
+        // Create illusory copies for evasion
+        const stats = user.getStats();
+        const copies = Math.floor(1 + (stats.ma * 0.1));
+        
+        const effect = {
+            name: 'mirror_image',
+            duration: 3,
+            power: stats.ma * 0.2,
+            copies,
+            onAttacked: (target, damage) => {
+                if (effect.copies > 0) {
+                    effect.copies--;
+                    return 0; // Damage is negated
+                }
+                return damage; // Take full damage when no copies remain
+            }
+        };
+
+        if (!target.isImmuneToEffect(effect.name)) {
+            target.addEffect(effect);
+            this._addNinjaEffect(target, effect);
+        }
+
+        return {
+            success: true,
+            message: `${copies} mirror images appear around ${target.name}`,
+            effects: [effect]
+        };
+    }
+
+    static _resolveAssassinate(user, ability, target) {
+        // High damage attack with chance of instant death
+        const stats = user.getStats();
+        const baseDamage = Math.floor(stats.pa * ability.power);
+        
+        // Calculate instant death chance
+        const levelDiff = stats.level - target.level;
+        const deathChance = Math.min(0.3, 0.1 + (levelDiff * 0.02) + (stats.sp * 0.005));
+
+        if (Math.random() < deathChance && !target.isImmuneToEffect('instant_death')) {
+            target.status.hp = 0;
+            return {
+                success: true,
+                message: `${target.name} is instantly defeated!`,
+                instantDeath: true
+            };
+        }
+
+        // Apply regular damage if instant death fails
+        const damage = Math.floor(baseDamage * (1 + (stats.sp * 0.01)));
+        target.status.hp = Math.max(0, target.status.hp - damage);
+
+        return {
+            success: true,
+            damage,
+            message: `${target.name} takes ${damage} assassination damage`
+        };
+    }
+
+    static _resolveShadowStitch(user, ability, target) {
+        // Bind target by pinning their shadow
+        const stats = user.getStats();
+        const shadowPower = Math.floor(stats.ma * 0.8 + stats.sp * 0.2);
+        
+        // Calculate success chance based on speed difference
+        const speedDiff = stats.sp - target.getStats().sp;
+        const baseChance = 0.6 + (speedDiff * 0.02);
+        const successRate = Math.min(0.9, Math.max(0.3, baseChance));
+
+        if (Math.random() > successRate) {
+            return {
+                success: false,
+                message: `${target.name} evades the shadow binding`
+            };
+        }
+
+        const effect = {
+            name: 'shadow_stitch',
+            duration: 2,
+            power: shadowPower,
+            penalties: {
+                movement: 0,
+                evasion: 0.5,
+                speed: 0.4
+            }
+        };
+
+        if (!target.isImmuneToEffect(effect.name)) {
+            target.addEffect(effect);
+            this._addNinjaEffect(target, effect);
+        }
+
+        return {
+            success: true,
+            message: `${target.name}'s shadow is bound`,
+            effects: [effect]
+        };
+    }
+
+    static _addNinjaEffect(target, effect) {
+        if (!target.id) {
+            target.id = Math.random().toString(36).substr(2, 9);
+        }
+
+        let activeEffects = this.activeNinjaEffects.get(target.id) || [];
+        // Remove any existing effect of the same type
+        activeEffects = activeEffects.filter(e => e.name !== effect.name);
+        // Add new effect
+        activeEffects.push(effect);
+        this.activeNinjaEffects.set(target.id, activeEffects);
+    }
 }

@@ -10,9 +10,9 @@ Summary:
 
 Ability Types (by frequency):
 physical: 37 uses
-magical: 37 uses
 buff: 34 uses
-special: 29 uses
+magical: 33 uses
+special: 33 uses
 status: 22 uses
 dungeon: 17 uses
 healing: 9 uses

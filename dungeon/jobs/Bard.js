@@ -165,4 +165,147 @@ export class Bard extends JobInterface {
             [JOBS.Dancer]: 2
         };
     }
+
+    // Track active songs and their effects
+    static activeSongs = new Map();
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'MINUET':
+                return this._resolveMinuet(user, ability, target);
+            case 'BATTLE_SONG':
+                return this._resolveBattleSong(user, ability, target);
+            case 'REQUIEM':
+                return this._resolveRequiem(user, ability, target);
+            case 'FINALE':
+                return this._resolveFinale(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolveMinuet(user, ability, target) {
+        // Speed and accuracy enhancement song
+        const stats = user.getStats();
+        const songPower = Math.floor(stats.ma * ability.power);
+        
+        const effect = {
+            name: 'minuet',
+            duration: 3,
+            power: songPower,
+            bonuses: {
+                speed: 1.2,
+                accuracy: 1.15
+            }
+        };
+
+        this._applySongEffect(target, effect);
+        return {
+            success: true,
+            message: `${target.name} is energized by the minuet`,
+            effects: [effect]
+        };
+    }
+
+    static _resolveBattleSong(user, ability, target) {
+        // Combat enhancement song
+        const stats = user.getStats();
+        const songPower = Math.floor(stats.ma * ability.power);
+
+        const effect = {
+            name: 'battle_song',
+            duration: 4,
+            power: songPower,
+            bonuses: {
+                attack: 1.3,
+                defense: 1.1
+            }
+        };
+
+        this._applySongEffect(target, effect);
+        return {
+            success: true,
+            message: `${target.name}'s fighting spirit is bolstered`,
+            effects: [effect]
+        };
+    }
+
+    static _resolveRequiem(user, ability, target) {
+        // Debuff song that weakens enemies
+        const stats = user.getStats();
+        const baseChance = 0.6 + ((stats.ma - target.level) * 0.05);
+        const successRate = Math.min(0.9, Math.max(0.2, baseChance));
+
+        if (Math.random() > successRate) {
+            return {
+                success: false,
+                message: 'Target resists the requiem'
+            };
+        }
+
+        const effect = {
+            name: 'requiem',
+            duration: 3,
+            power: ability.power,
+            penalties: {
+                attack: 0.7,
+                defense: 0.8,
+                speed: 0.9
+            }
+        };
+
+        this._applySongEffect(target, effect);
+        return {
+            success: true,
+            message: `${target.name} is weakened by the somber melody`,
+            effects: [effect]
+        };
+    }
+
+    static _resolveFinale(user, ability, target) {
+        // Powerful finishing move that consumes active song effects
+        const activeEffects = this.activeSongs.get(target.id) || [];
+        if (activeEffects.length === 0) {
+            return {
+                success: false,
+                message: 'No active songs to consume'
+            };
+        }
+
+        let totalPower = ability.power;
+        activeEffects.forEach(effect => {
+            totalPower += effect.power * 0.5;
+        });
+
+        const damage = Math.floor(user.getStats().ma * totalPower);
+        target.status.hp = Math.max(0, target.status.hp - damage);
+
+        // Clear all song effects after finale
+        this.activeSongs.delete(target.id);
+
+        return {
+            success: true,
+            damage,
+            message: `${target.name} takes ${damage} damage from the dramatic finale`,
+            consumedEffects: activeEffects.map(e => e.name)
+        };
+    }
+
+    static _applySongEffect(target, effect) {
+        if (!target.id) {
+            target.id = Math.random().toString(36).substr(2, 9);
+        }
+
+        let activeEffects = this.activeSongs.get(target.id) || [];
+        // Remove any existing effect of the same type
+        activeEffects = activeEffects.filter(e => e.name !== effect.name);
+        // Add new effect
+        activeEffects.push(effect);
+        this.activeSongs.set(target.id, activeEffects);
+
+        // Apply effect to target
+        if (!target.isImmuneToEffect(effect.name)) {
+            target.addEffect(effect);
+        }
+    }
 }

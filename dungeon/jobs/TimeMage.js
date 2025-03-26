@@ -144,4 +144,174 @@ export class TimeMage extends JobInterface {
     static getDescription() {
         return "Enigmatic spellcasters who manipulate the flow of time itself. Their mastery over temporal magic allows them to speed allies, slow enemies, and even stop time briefly. In combat, they excel at battlefield control through time manipulation. Their unique abilities to reset rooms and create temporal checkpoints make them invaluable for dungeon exploration and puzzle-solving.";
     }
+
+    // Track active temporal effects
+    static activeTimeEffects = new Map();
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'QUICK':
+                return this._resolveQuick(user, ability, target);
+            case 'TIME_SLIP':
+                return this._resolveTimeSlip(user, ability, target);
+            case 'TEMPORAL_ANCHOR':
+                return this._resolveTemporalAnchor(user, ability, target);
+            case 'GRAVITY':
+                return this._resolveGravity(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolveQuick(user, ability, target) {
+        // Grant an immediate extra turn
+        const stats = user.getStats();
+        const timeEffect = {
+            name: 'quick',
+            duration: 1,
+            power: stats.ma * 0.1,
+            bonuses: {
+                actionPoints: 1,
+                speed: 1.5
+            }
+        };
+
+        if (!target.isImmuneToEffect(timeEffect.name)) {
+            target.addEffect(timeEffect);
+            // Track effect
+            this._addTimeEffect(target, timeEffect);
+        }
+
+        return {
+            success: true,
+            message: `${target.name} gains an extra turn`,
+            effects: [timeEffect]
+        };
+    }
+
+    static _resolveTimeSlip(user, ability, target) {
+        // Reset target to previous state
+        const stats = user.getStats();
+        const slipPower = Math.floor(stats.ma * ability.power);
+        const timeEffect = {
+            name: 'time_slip',
+            duration: 2,
+            power: slipPower,
+            onApply: (target) => {
+                // Store current state
+                target.savedState = {
+                    hp: target.status.hp,
+                    mp: target.status.mp,
+                    effects: [...target.status.effects]
+                };
+            },
+            onRemove: (target) => {
+                // Revert to saved state
+                if (target.savedState) {
+                    target.status.hp = target.savedState.hp;
+                    target.status.mp = target.savedState.mp;
+                    target.status.effects = target.savedState.effects;
+                    delete target.savedState;
+                }
+            }
+        };
+
+        if (!target.isImmuneToEffect(timeEffect.name)) {
+            target.addEffect(timeEffect);
+            this._addTimeEffect(target, timeEffect);
+        }
+
+        return {
+            success: true,
+            message: `${target.name} becomes unstuck in time`,
+            effects: [timeEffect]
+        };
+    }
+
+    static _resolveTemporalAnchor(user, ability, target) {
+        // Create a checkpoint to return to
+        const stats = user.getStats();
+        const anchorPower = Math.floor(stats.ma * ability.power);
+        
+        const timeEffect = {
+            name: 'temporal_anchor',
+            duration: 5,
+            power: anchorPower,
+            checkpoint: {
+                position: target.position,
+                hp: target.status.hp,
+                mp: target.status.mp,
+                effects: [...target.status.effects]
+            },
+            onTrigger: (target) => {
+                if (target.status.hp <= 0 && this.checkpoint) {
+                    // Return to checkpoint state
+                    target.position = this.checkpoint.position;
+                    target.status.hp = this.checkpoint.hp;
+                    target.status.mp = this.checkpoint.mp;
+                    target.status.effects = [...this.checkpoint.effects];
+                    return true; // Effect is consumed
+                }
+                return false;
+            }
+        };
+
+        if (!target.isImmuneToEffect(timeEffect.name)) {
+            target.addEffect(timeEffect);
+            this._addTimeEffect(target, timeEffect);
+        }
+
+        return {
+            success: true,
+            message: `${target.name} is anchored in time`,
+            effects: [timeEffect]
+        };
+    }
+
+    static _resolveGravity(user, ability, target) {
+        // Deal damage based on target's max HP
+        const stats = user.getStats();
+        const gravityPower = Math.min(0.5, 0.25 + (stats.ma * 0.01)); // Cap at 50% max HP
+        const damage = Math.floor(target.getMaxHP() * gravityPower);
+
+        // Apply damage
+        target.status.hp = Math.max(1, target.status.hp - damage);
+
+        // Apply gravity effect
+        const timeEffect = {
+            name: 'gravity',
+            duration: 2,
+            power: stats.ma * 0.1,
+            penalties: {
+                speed: 0.7,
+                jumpHeight: 0.5,
+                evasion: 0.6
+            }
+        };
+
+        if (!target.isImmuneToEffect(timeEffect.name)) {
+            target.addEffect(timeEffect);
+            this._addTimeEffect(target, timeEffect);
+        }
+
+        return {
+            success: true,
+            damage,
+            message: `${target.name} takes ${damage} gravity damage`,
+            effects: [timeEffect]
+        };
+    }
+
+    static _addTimeEffect(target, effect) {
+        if (!target.id) {
+            target.id = Math.random().toString(36).substr(2, 9);
+        }
+
+        let activeEffects = this.activeTimeEffects.get(target.id) || [];
+        // Remove any existing effect of the same type
+        activeEffects = activeEffects.filter(e => e.name !== effect.name);
+        // Add new effect
+        activeEffects.push(effect);
+        this.activeTimeEffects.set(target.id, activeEffects);
+    }
 }

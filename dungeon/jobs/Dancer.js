@@ -164,4 +164,162 @@ export class Dancer extends JobInterface {
             [JOBS.Geomancer]: 2
         };
     }
+
+    // Track active dances and their effects
+    static activeDances = new Map();
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'SWORD_DANCE':
+                return this._resolveSwordDance(user, ability, target);
+            case 'TRANCE_DANCE':
+                return this._resolveTranceDance(user, ability, target);
+            case 'FORBIDDEN_DANCE':
+                return this._resolveForbiddenDance(user, ability, target);
+            case 'DANCE_OF_LIFE':
+                return this._resolveDanceOfLife(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolveSwordDance(user, ability, target) {
+        // Offensive dance that increases critical hit rate and damage
+        const stats = user.getStats();
+        const dancePower = Math.floor(stats.pa * ability.power);
+
+        const effect = {
+            name: 'sword_dance',
+            duration: 3,
+            power: dancePower,
+            bonuses: {
+                criticalRate: 0.25,
+                criticalDamage: 1.5,
+                attack: 1.2
+            }
+        };
+
+        this._applyDanceEffect(user, effect);
+        return {
+            success: true,
+            message: 'The rhythm of battle flows through your movements',
+            effects: [effect]
+        };
+    }
+
+    static _resolveTranceDance(user, ability, target) {
+        // Mystical dance that enhances magical abilities
+        const stats = user.getStats();
+        const dancePower = Math.floor(stats.ma * ability.power);
+
+        const effect = {
+            name: 'trance_dance',
+            duration: 4,
+            power: dancePower,
+            bonuses: {
+                magicPower: 1.4,
+                mpCost: 0.7
+            }
+        };
+
+        this._applyDanceEffect(user, effect);
+        return {
+            success: true,
+            message: 'Mystical energies swirl in response to your dance',
+            effects: [effect]
+        };
+    }
+
+    static _resolveForbiddenDance(user, ability, target) {
+        // High-risk, high-reward dance that drains HP but greatly increases power
+        const hpCost = Math.floor(user.status.hp * 0.3);
+        user.status.hp = Math.max(1, user.status.hp - hpCost);
+
+        const effect = {
+            name: 'forbidden_dance',
+            duration: 3,
+            power: ability.power * 2,
+            bonuses: {
+                attack: 1.8,
+                magicPower: 1.8,
+                speed: 1.4
+            },
+            penalties: {
+                defense: 0.7,
+                magicDefense: 0.7
+            }
+        };
+
+        this._applyDanceEffect(user, effect);
+        return {
+            success: true,
+            message: 'The forbidden dance exchanges life force for power',
+            effects: [effect],
+            hpLost: hpCost
+        };
+    }
+
+    static _resolveDanceOfLife(user, ability, target) {
+        // Healing dance that restores HP and removes negative status effects
+        const stats = user.getStats();
+        const healPower = Math.floor(stats.ma * ability.power);
+        const maxHeal = target.getMaxHP() * 0.4; // Cap at 40% of max HP
+        const healAmount = Math.min(healPower, maxHeal);
+
+        // Heal target
+        target.status.hp = Math.min(target.getMaxHP(), target.status.hp + healAmount);
+
+        // Remove negative status effects
+        const removedEffects = [];
+        if (target.status.effects) {
+            const negativeEffects = ['poison', 'blind', 'silence', 'paralysis', 'confusion'];
+            target.status.effects = target.status.effects.filter(effect => {
+                if (negativeEffects.includes(effect.name)) {
+                    removedEffects.push(effect.name);
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        // Apply regeneration effect
+        const regenEffect = {
+            name: 'dance_of_life',
+            duration: 3,
+            power: healPower * 0.2,
+            tickEffect: (target) => {
+                const regenAmount = Math.floor(healPower * 0.2);
+                target.status.hp = Math.min(target.getMaxHP(), target.status.hp + regenAmount);
+                return regenAmount;
+            }
+        };
+
+        this._applyDanceEffect(target, regenEffect);
+        return {
+            success: true,
+            healAmount,
+            removedEffects,
+            message: `Healing dance restores ${healAmount} HP` + 
+                    (removedEffects.length > 0 ? ` and removes ${removedEffects.join(', ')}` : ''),
+            effects: [regenEffect]
+        };
+    }
+
+    static _applyDanceEffect(target, effect) {
+        if (!target.id) {
+            target.id = Math.random().toString(36).substr(2, 9);
+        }
+
+        let activeEffects = this.activeDances.get(target.id) || [];
+        // Remove any existing effect of the same type
+        activeEffects = activeEffects.filter(e => e.name !== effect.name);
+        // Add new effect
+        activeEffects.push(effect);
+        this.activeDances.set(target.id, activeEffects);
+
+        // Apply effect to target
+        if (!target.isImmuneToEffect(effect.name)) {
+            target.addEffect(effect);
+        }
+    }
 }

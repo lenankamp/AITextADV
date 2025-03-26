@@ -159,4 +159,237 @@ export class Geomancer extends JobInterface {
             [JOBS.Monk]: 3
         };
     }
+
+    // Track current terrain effects
+    static currentTerrain = {
+        type: 'neutral',
+        power: 1.0
+    };
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'TERRAIN_MASTERY':
+                return this._resolveTerrainMastery(user, ability, target);
+            case 'NATURE_WRATH':
+                return this._resolveNatureWrath(user, ability, target);
+            case 'EARTH_HARMONY':
+                return this._resolveEarthHarmony(user, ability, target);
+            case 'ELEMENTAL_SEAL':
+                return this._resolveElementalSeal(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolveTerrainMastery(user, ability, target) {
+        // Analyze and enhance terrain effects
+        const terrainTypes = ['forest', 'mountain', 'desert', 'swamp', 'urban', 'coastal'];
+        const terrainType = terrainTypes[Math.floor(Math.random() * terrainTypes.length)];
+        
+        // Update current terrain effect
+        this.currentTerrain = {
+            type: terrainType,
+            power: 1.0 + (user.getStats().ma * 0.05)
+        };
+
+        const effect = {
+            name: 'terrain_mastery',
+            duration: 4,
+            power: this.currentTerrain.power,
+            terrain: terrainType,
+            bonuses: this._getTerrainBonuses(terrainType)
+        };
+
+        if (!target.isImmuneToEffect(effect.name)) {
+            target.addEffect(effect);
+        }
+
+        return {
+            success: true,
+            message: `The ${terrainType} terrain responds to your mastery`,
+            currentTerrain: this.currentTerrain,
+            effects: [effect]
+        };
+    }
+
+    static _resolveNatureWrath(user, ability, target) {
+        // Unleash terrain-based damage
+        const stats = user.getStats();
+        const terrainPower = this.currentTerrain.power;
+        let baseDamage = Math.floor(stats.ma * ability.power * terrainPower);
+
+        // Apply terrain-specific damage modifications
+        const terrainMultiplier = this._getTerrainDamageMultiplier(this.currentTerrain.type, target);
+        const totalDamage = Math.floor(baseDamage * terrainMultiplier);
+
+        // Apply damage
+        target.status.hp = Math.max(0, target.status.hp - totalDamage);
+
+        // Add terrain-specific status effect
+        const statusEffect = this._getTerrainStatusEffect(this.currentTerrain.type);
+        if (statusEffect && !target.isImmuneToEffect(statusEffect.name)) {
+            target.addEffect(statusEffect);
+        }
+
+        return {
+            success: true,
+            damage: totalDamage,
+            message: `${target.name} takes ${totalDamage} damage from the ${this.currentTerrain.type}'s fury`,
+            effects: statusEffect ? [statusEffect] : []
+        };
+    }
+
+    static _resolveEarthHarmony(user, ability, target) {
+        // Defensive ability that grants terrain-based protection
+        const stats = user.getStats();
+        const terrainPower = this.currentTerrain.power;
+        
+        const effect = {
+            name: 'earth_harmony',
+            duration: 3,
+            power: terrainPower,
+            terrain: this.currentTerrain.type,
+            bonuses: {
+                defense: 1.2 * terrainPower,
+                magicDefense: 1.2 * terrainPower,
+                ...this._getTerrainBonuses(this.currentTerrain.type)
+            }
+        };
+
+        if (!target.isImmuneToEffect(effect.name)) {
+            target.addEffect(effect);
+        }
+
+        // Heal based on terrain if applicable
+        let healing = 0;
+        if (['forest', 'coastal'].includes(this.currentTerrain.type)) {
+            healing = Math.floor(target.getMaxHP() * 0.15 * terrainPower);
+            target.status.hp = Math.min(target.getMaxHP(), target.status.hp + healing);
+        }
+
+        return {
+            success: true,
+            healing,
+            message: `${target.name} harmonizes with the ${this.currentTerrain.type}` +
+                     (healing > 0 ? ` and recovers ${healing} HP` : ''),
+            effects: [effect]
+        };
+    }
+
+    static _resolveElementalSeal(user, ability, target) {
+        // Create a powerful seal using terrain energy
+        const stats = user.getStats();
+        const terrainPower = this.currentTerrain.power;
+        const sealPower = Math.floor(stats.ma * ability.power * terrainPower);
+
+        const effect = {
+            name: 'elemental_seal',
+            duration: 4,
+            power: sealPower,
+            terrain: this.currentTerrain.type,
+            penalties: {
+                elementalResistance: 0.5,
+                magicDefense: 0.7
+            }
+        };
+
+        // Add terrain-specific seal effects
+        const sealEffects = this._getTerrainSealEffects(this.currentTerrain.type);
+        Object.assign(effect.penalties, sealEffects);
+
+        if (!target.isImmuneToEffect(effect.name)) {
+            target.addEffect(effect);
+        }
+
+        return {
+            success: true,
+            message: `${target.name} is sealed by ${this.currentTerrain.type} energy`,
+            effects: [effect]
+        };
+    }
+
+    static _getTerrainBonuses(terrainType) {
+        switch (terrainType) {
+            case 'forest':
+                return { evasion: 1.2, magicPower: 1.15 };
+            case 'mountain':
+                return { defense: 1.3, magicDefense: 1.2 };
+            case 'desert':
+                return { speed: 1.15, magicPower: 1.25 };
+            case 'swamp':
+                return { magicPower: 1.3, mpCost: 0.8 };
+            case 'urban':
+                return { defense: 1.15, speed: 1.2 };
+            case 'coastal':
+                return { evasion: 1.25, speed: 1.15 };
+            default:
+                return {};
+        }
+    }
+
+    static _getTerrainDamageMultiplier(terrainType, target) {
+        // Calculate damage multiplier based on terrain and target properties
+        let multiplier = 1.0;
+
+        switch (terrainType) {
+            case 'forest':
+                multiplier = target.type === 'beast' ? 0.7 : 1.2;
+                break;
+            case 'mountain':
+                multiplier = target.type === 'flying' ? 1.5 : 1.1;
+                break;
+            case 'desert':
+                multiplier = target.type === 'aquatic' ? 1.8 : 1.3;
+                break;
+            case 'swamp':
+                multiplier = target.type === 'undead' ? 0.8 : 1.4;
+                break;
+            case 'urban':
+                multiplier = target.type === 'mechanical' ? 0.9 : 1.2;
+                break;
+            case 'coastal':
+                multiplier = target.type === 'aquatic' ? 0.7 : 1.3;
+                break;
+        }
+
+        return multiplier;
+    }
+
+    static _getTerrainStatusEffect(terrainType) {
+        switch (terrainType) {
+            case 'forest':
+                return { name: 'entangle', duration: 3, power: 1.0 };
+            case 'mountain':
+                return { name: 'stun', duration: 2, power: 1.0 };
+            case 'desert':
+                return { name: 'dehydrate', duration: 3, power: 1.2 };
+            case 'swamp':
+                return { name: 'poison', duration: 4, power: 1.3 };
+            case 'urban':
+                return { name: 'blind', duration: 2, power: 1.0 };
+            case 'coastal':
+                return { name: 'slow', duration: 3, power: 1.1 };
+            default:
+                return null;
+        }
+    }
+
+    static _getTerrainSealEffects(terrainType) {
+        switch (terrainType) {
+            case 'forest':
+                return { mpRegen: 0.5, evasion: 0.7 };
+            case 'mountain':
+                return { defense: 0.6, magicDefense: 0.6 };
+            case 'desert':
+                return { speed: 0.6, mpCost: 1.5 };
+            case 'swamp':
+                return { attack: 0.7, magicPower: 0.7 };
+            case 'urban':
+                return { criticalRate: 0.5, accuracy: 0.8 };
+            case 'coastal':
+                return { speed: 0.7, evasion: 0.6 };
+            default:
+                return {};
+        }
+    }
 }

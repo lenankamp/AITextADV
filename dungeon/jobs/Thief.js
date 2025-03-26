@@ -1,6 +1,5 @@
 import { JobInterface, JOBS } from './index.js';
 
-
 export class Thief extends JobInterface {
     static getDescription() {
         return "Masters of stealth and acquisition who excel at obtaining resources through cunning. Their high speed and evasion make them difficult targets, while their stealing abilities provide crucial resources and strategic advantages. In dungeons, they are essential for disarming traps, picking locks, and finding hidden treasures, making them invaluable for exploration and resource gathering.";
@@ -132,6 +131,134 @@ export class Thief extends JobInterface {
     static getRequirements() {
         return {
             [JOBS.Archer]: 2
+        };
+    }
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'STEAL_GIL':
+                return this._resolveStealGil(user, ability, target);
+            case 'STEAL_ITEM':
+                return this._resolveStealItem(user, ability, target);
+            case 'STEAL_WEAPON':
+                return this._resolveStealEquipment(user, ability, target, 'mainHand');
+            case 'STEAL_ARMOR':
+                return this._resolveStealEquipment(user, ability, target, 'body');
+            case 'STEAL_ACCESSORY':
+                return this._resolveStealEquipment(user, ability, target, 'accessory');
+            case 'MUG':
+                return this._resolveMug(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolveStealGil(user, ability, target) {
+        // Base success rate based on user's speed vs target's speed
+        const baseChance = 0.5 + (user.getStats().sp - target.getStats().sp) * 0.05;
+        const successRate = Math.min(0.95, Math.max(0.05, baseChance));
+
+        if (Math.random() > successRate) {
+            return {
+                success: false,
+                message: 'Failed to steal gil'
+            };
+        }
+
+        // Amount of gil stolen based on target's level and a random factor
+        const stolenAmount = Math.floor(target.level * (10 + Math.random() * 20));
+        
+        // Add gil to user's inventory/wallet
+        user.gil = (user.gil || 0) + stolenAmount;
+
+        return {
+            success: true,
+            message: `Stole ${stolenAmount} gil`,
+            stolenGil: stolenAmount
+        };
+    }
+
+    static _resolveStealItem(user, ability, target) {
+        const baseChance = 0.4 + (user.getStats().sp - target.getStats().sp) * 0.04;
+        const successRate = Math.min(0.9, Math.max(0.1, baseChance));
+
+        if (!target.inventory || target.inventory.length === 0) {
+            return {
+                success: false,
+                message: 'Target has no items to steal'
+            };
+        }
+
+        if (Math.random() > successRate) {
+            return {
+                success: false,
+                message: 'Failed to steal item'
+            };
+        }
+
+        // Select random item from target's inventory
+        const itemIndex = Math.floor(Math.random() * target.inventory.length);
+        const stolenItem = target.inventory[itemIndex];
+        
+        // Remove from target and add to user
+        target.inventory.splice(itemIndex, 1);
+        user.inventory.push(stolenItem);
+
+        return {
+            success: true,
+            message: `Stole ${stolenItem.name}`,
+            stolenItem
+        };
+    }
+
+    static _resolveStealEquipment(user, ability, target, slot) {
+        const baseChance = 0.3 + (user.getStats().sp - target.getStats().sp) * 0.03;
+        const successRate = Math.min(0.75, Math.max(0.05, baseChance));
+
+        if (!target.equipment[slot]) {
+            return {
+                success: false,
+                message: `Target has no equipment in ${slot}`
+            };
+        }
+
+        if (Math.random() > successRate) {
+            return {
+                success: false,
+                message: `Failed to steal ${slot} equipment`
+            };
+        }
+
+        const stolenEquipment = target.equipment[slot];
+        target.equipment[slot] = null;
+        user.inventory.push(stolenEquipment);
+
+        return {
+            success: true,
+            message: `Stole ${stolenEquipment.name}`,
+            stolenEquipment
+        };
+    }
+
+    static _resolveMug(user, ability, target) {
+        // Mug combines a physical attack with steal
+        const stats = user.getStats();
+        const damage = Math.floor(stats.pa * ability.power);
+        
+        // Apply damage
+        target.status.hp = Math.max(0, target.status.hp - damage);
+
+        // Try to steal with increased success rate
+        const stealResult = this._resolveStealGil(user, {
+            ...ability,
+            successRateBonus: 0.2
+        }, target);
+
+        return {
+            success: true,
+            damage,
+            effects: ability.effects || [],
+            stealResult
         };
     }
 }

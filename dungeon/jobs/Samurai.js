@@ -149,4 +149,138 @@ export class Samurai extends JobInterface {
     static getDescription() {
         return "Elite warriors who combine martial prowess with spiritual techniques. Masters of the blade who excel at powerful single-target attacks and tactical positioning. Capable of drawing out a weapon's spiritual energy for devastating effects.";
     }
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'IAIDO':
+                return this._resolveIaidoTechnique(user, ability, target);
+            case 'BUSHIDO':
+                return this._resolveBushidoTechnique(user, ability, target);
+            case 'DRAW_OUT':
+                return this._resolveDrawOut(user, ability, target);
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
+
+    static _resolveIaidoTechnique(user, ability, target) {
+        // Check if user has a katana equipped
+        if (!user.equipment.mainHand?.type === 'katana') {
+            return {
+                success: false,
+                message: 'Must have a katana equipped to use Iaido'
+            };
+        }
+
+        const stats = user.getStats();
+        let damage = Math.floor(stats.pa * ability.power);
+
+        // Apply Iaido-specific bonuses
+        if (ability.element) {
+            const elementalMultiplier = target.getElementalMultiplier(ability.element);
+            damage = Math.floor(damage * elementalMultiplier);
+        }
+
+        // Special Iaido effects
+        if (ability.effects) {
+            ability.effects.forEach(effect => {
+                if (!target.isImmuneToEffect(effect)) {
+                    target.addEffect({
+                        name: effect,
+                        duration: ability.duration || 3,
+                        power: ability.effectPower || 1
+                    });
+                }
+            });
+        }
+
+        // Apply damage
+        target.status.hp = Math.max(0, target.status.hp - damage);
+
+        return {
+            success: true,
+            damage,
+            effects: ability.effects || []
+        };
+    }
+
+    static _resolveBushidoTechnique(user, ability, target) {
+        // Bushido techniques require meditation stacks
+        const meditationStacks = user.status.effects
+            .filter(effect => effect.name === 'meditation')
+            .length;
+
+        if (meditationStacks < ability.requiredStacks) {
+            return {
+                success: false,
+                message: `Requires ${ability.requiredStacks} meditation stacks`
+            };
+        }
+
+        // Consume meditation stacks
+        for (let i = 0; i < ability.requiredStacks; i++) {
+            const index = user.status.effects.findIndex(effect => effect.name === 'meditation');
+            if (index !== -1) {
+                user.status.effects.splice(index, 1);
+            }
+        }
+
+        // Calculate and apply damage with bushido bonus
+        const stats = user.getStats();
+        const damage = Math.floor(stats.pa * ability.power * (1 + (meditationStacks * 0.2)));
+        target.status.hp = Math.max(0, target.status.hp - damage);
+
+        return {
+            success: true,
+            damage,
+            effects: ability.effects || []
+        };
+    }
+
+    static _resolveDrawOut(user, ability, target) {
+        // Draw Out requires a special katana
+        if (!user.equipment.mainHand?.specialType === ability.requiredKatanaType) {
+            return {
+                success: false,
+                message: `Requires ${ability.requiredKatanaType} to use this technique`
+            };
+        }
+
+        // Calculate special Draw Out damage
+        const stats = user.getStats();
+        const baseDamage = Math.floor(stats.pa * ability.power);
+        
+        // Draw Out effects vary based on the katana type
+        let additionalEffects = [];
+        switch (ability.requiredKatanaType) {
+            case 'Masamune':
+                additionalEffects.push('haste');
+                break;
+            case 'Muramasa':
+                additionalEffects.push('berserk');
+                break;
+            case 'Kikuichimonji':
+                additionalEffects.push('protect');
+                break;
+        }
+
+        // Apply effects
+        additionalEffects.forEach(effect => {
+            if (!target.isImmuneToEffect(effect)) {
+                target.addEffect({
+                    name: effect,
+                    duration: ability.duration || 3
+                });
+            }
+        });
+
+        // Apply damage
+        target.status.hp = Math.max(0, target.status.hp - baseDamage);
+
+        return {
+            success: true,
+            damage: baseDamage,
+            effects: [...(ability.effects || []), ...additionalEffects]
+        };
+    }
 }

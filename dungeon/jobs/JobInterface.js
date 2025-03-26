@@ -56,4 +56,15 @@ export class JobInterface {
     static getDescription() {
         return "This is the default job description. Actual jobs should override all of the methods of this class.";
     }
+    
+    /**
+     * Resolves special abilities specific to this job
+     * @param {Character} user - The character using the ability
+     * @param {Object} ability - The ability being used
+     * @param {Character} target - The target of the ability
+     * @returns {Object} Result of the ability use
+     */
+    static resolveSpecialAbility(user, ability, target) {
+        throw new Error('resolveSpecialAbility must be implemented');
+    }
 }

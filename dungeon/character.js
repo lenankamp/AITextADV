@@ -488,27 +488,8 @@ class Character {
         }
     }
 
-
-    // Combat Methods
-    _calculateDamage(ability, target) {
-        const stats = this.getStats();
-        const targetStats = target.getStats();
+    _getDamageMultiplier(ability, target) {
         
-        // Use weapon damage formula if it's a basic attack
-        let damage;
-        if (!ability || ability.name === 'Attack') {
-            damage = this.calculateWeaponDamage();
-        } else {
-            if (ability.type === 'magical')
-                damage = stats.ma * (ability.power || 1);
-            else damage = stats.pa * (ability.power || 1);
-        }
-        
-        // Apply variance (±10%)
-        const variance = 0.1;
-        const randomFactor = 1 + (Math.random() * variance * 2 - variance);
-        damage *= randomFactor;
-
         // Calculate attack bonuses
         const attackBonusEffects = [];
         const defenseBonusEffects = [];
@@ -603,15 +584,36 @@ class Character {
         }
         const netBonus = attackBonus - defenseBonus;
         if (netBonus !== 0) {
-            let netEffect = 0;
+            let multiplier = 0;
             for(let i = 0; i < Math.abs(netBonus); i++) {
-                netEffect += .5*(1-netEffect);
+                multiplier += .5*(1-multiplier);
             }
-            if (netBonus < 0) netEffect = 1 - netEffect;
-            damage *= netEffect;
+            if (netBonus < 0) multiplier = 1 - multiplier;
+            return multiplier;
+        } else return 1;
+    }
+
+    // Combat Methods
+    _calculateDamage(ability, target) {
+        const stats = this.getStats();
+        const targetStats = target.getStats();
+        
+        // Use weapon damage formula if it's a basic attack
+        let damage;
+        if (!ability || ability.name === 'Attack') {
+            damage = this.calculateWeaponDamage();
+        } else {
+            if (ability.type === 'magical')
+                damage = stats.ma * (ability.power || 1);
+            else damage = stats.pa * (ability.power || 1);
         }
-
-
+        
+        // Apply variance (±10%)
+        const variance = 0.1;
+        const randomFactor = 1 + (Math.random() * variance * 2 - variance);
+        damage *= randomFactor;
+        damage *= _getDamageMultiplier(ability, target);
+        damage *= target.getElementalMultiplier(ability.element || 'none');
 
         return Math.floor(damage);
     }
@@ -826,10 +828,8 @@ class Character {
         let result;
         switch (ability.type) {
             case 'physical':
-                result = this._resolvePhysicalAbility(ability, target);
-                break;
             case 'magical':
-                result = this._resolveMagicalAbility(ability, target);
+                result = this._resolveAttackAbility(ability, target);
                 break;
             case 'healing':
                 result = this._resolveHealingAbility(ability, target);
@@ -843,30 +843,29 @@ class Character {
             case 'drain':
                 result = this._resolveDrainAbility(ability, target);
                 break;
+            case 'special':
+                // For special abilities, find the job class that owns this ability and let it handle resolution
+                const jobId = ability.jobId || this.currentJob;
+                const JobClass = this.getJobClass(jobId);
+                if (!JobClass) {
+                    result = { success: false, message: 'Invalid job for special ability' };
+                } else {
+                    result = JobClass.resolveSpecialAbility(this, ability, target);
+                }
+                break;
             default:
                 result = { success: false, message: 'Invalid ability type' };
         }
 
         // Apply back row damage reduction for physical attacks
-        if (target.position === 'back' && ability.type === 'physical' && result.damage) {
+        if (target.position === 'back' && ability.type === 'physical' && result.damage ) {
             result.damage = Math.floor(result.damage * 0.5);
         }
 
         return result;
     }
 
-    _resolvePhysicalAbility(ability, target) {
-        const stats = this.getStats();
-        const damage = this._calculateDamage(ability, target);
-        target.status.hp = Math.max(0, target.status.hp - damage);
-        return {
-            success: true,
-            damage,
-            effects: []
-        };
-    }
-
-    _resolveMagicalAbility(ability, target) {
+    _resolveAttackAbility(ability, target) {
         const stats = this.getStats();
         const damage = this._calculateDamage(ability, target);
         target.status.hp = Math.max(0, target.status.hp - damage);
