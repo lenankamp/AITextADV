@@ -36,14 +36,12 @@ const ENVIRONMENTAL_EFFECTS = {
     FROZEN: 'frozen',
     MAGICAL: 'magical',
     CORRUPTED: 'corrupted',
-    WATERY: 'water',
-    MOLTEN: 'lava',
-    SANDY: 'sand',
-    GRASSY: 'grass',
-    ROCKY: 'stone',
-    MUDDY: 'mud',
-    ICY: 'ice',
-    CRYSTALLINE: 'crystal'
+    WATERY: 'watery',
+    MOLTEN: 'molten',
+    SANDY: 'sandy',
+    MUDDY: 'muddy',
+    CRYSTALLINE: 'crystalline',
+    ROCKY: 'rocky'
 };
 
 const ELEVATION_LEVELS = {
@@ -179,6 +177,205 @@ class DungeonFloor {
             );
         }
     }
+
+    // Pattern generation helpers for environmental effects
+    _generateFluidPattern(startX, startY, width, height, branchChance = 0.3) {
+        const pattern = new Set();
+        const stack = [{x: startX, y: startY}];
+        const visited = new Set();
+        
+        // Bias flow direction - prefer horizontal or vertical movement
+        const isVerticalFlow = Math.random() < 0.5;
+        const primaryWeight = 0.7;
+        const secondaryWeight = 0.3;
+        
+        const directions = [
+            {x: -1, y: 0, weight: isVerticalFlow ? secondaryWeight : primaryWeight},
+            {x: 1, y: 0, weight: isVerticalFlow ? secondaryWeight : primaryWeight},
+            {x: 0, y: -1, weight: isVerticalFlow ? primaryWeight : secondaryWeight},
+            {x: 0, y: 1, weight: isVerticalFlow ? primaryWeight : secondaryWeight}
+        ];
+
+        while (stack.length > 0) {
+            const current = stack.pop();
+            const key = `${current.x},${current.y}`;
+            
+            if (!visited.has(key) && 
+                current.x >= 0 && current.x < width && 
+                current.y >= 0 && current.y < height) {
+                
+                pattern.add(key);
+                visited.add(key);
+
+                // Random weighted direction priority
+                const shuffledDirs = [...directions]
+                    .sort((a, b) => (Math.random() * a.weight) - (Math.random() * b.weight));
+                
+                for (const dir of shuffledDirs) {
+                    const nextX = current.x + dir.x;
+                    const nextY = current.y + dir.y;
+                    
+                    // Continue in main direction based on weight
+                    if (Math.random() < dir.weight) {
+                        stack.push({x: nextX, y: nextY});
+                    }
+                    
+                    // Possible branch with reduced chance
+                    if (Math.random() < branchChance * dir.weight) {
+                        stack.push({x: nextX, y: nextY});
+                    }
+                }
+            }
+        }
+        
+        return pattern;
+    }
+
+    _generateScatterPattern(width, height, density = 0.2) {
+        const pattern = new Set();
+        
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                if (Math.random() < density) {
+                    pattern.add(`${x},${y}`);
+                }
+            }
+        }
+        
+        return pattern;
+    }
+
+    _generateClusterPattern(width, height, clusterCount = 3, clusterSize = 3) {
+        const pattern = new Set();
+        const clusters = [];
+        
+        // Generate cluster centers
+        for (let i = 0; i < clusterCount; i++) {
+            clusters.push({
+                x: Math.floor(Math.random() * width),
+                y: Math.floor(Math.random() * height),
+                size: Math.random() * clusterSize + 1
+            });
+        }
+        
+        // Generate points for each cluster
+        for (const cluster of clusters) {
+            const pointCount = Math.floor(Math.random() * 5) + 3;
+            for (let i = 0; i < pointCount; i++) {
+                // Use gaussian-like distribution for more natural clusters
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * cluster.size;
+                const x = Math.floor(cluster.x + Math.cos(angle) * radius);
+                const y = Math.floor(cluster.y + Math.sin(angle) * radius);
+                
+                if (x >= 0 && x < width && y >= 0 && y < height) {
+                    pattern.add(`${x},${y}`);
+                }
+            }
+        }
+        
+        return pattern;
+    }
+
+    _generateWallPattern(width, height, isVertical = true) {
+        const pattern = new Set();
+        const position = Math.floor(Math.random() * (isVertical ? width : height));
+        
+        if (isVertical) {
+            for (let y = 0; y < height; y++) {
+                pattern.add(`${position},${y}`);
+                // Add some variation
+                if (Math.random() < 0.3) {
+                    pattern.add(`${position + (Math.random() < 0.5 ? 1 : -1)},${y}`);
+                }
+            }
+        } else {
+            for (let x = 0; x < width; x++) {
+                pattern.add(`${x},${position}`);
+                // Add some variation
+                if (Math.random() < 0.3) {
+                    pattern.add(`${x},${position + (Math.random() < 0.5 ? 1 : -1)}`);
+                }
+            }
+        }
+        
+        return pattern;
+    }
+
+    _generateFullRoomPattern(width, height) {
+        const pattern = new Set();
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                pattern.add(`${x},${y}`);
+            }
+        }
+        return pattern;
+    }
+
+    _generateBranchingPattern(startX, startY, width, height, branchChance = 0.3, maxBranches = 3) {
+        const pattern = new Set();
+        const stack = [{x: startX, y: startY, branches: 0}];
+        const visited = new Set();
+
+        // Directions for branching - using only orthogonal directions for more distinct patterns
+        const mainDirs = [
+            {x: -1, y: 0}, {x: 1, y: 0},
+            {x: 0, y: -1}, {x: 0, y: 1}
+        ];
+
+        while (stack.length > 0) {
+            const current = stack.pop();
+            const key = `${current.x},${current.y}`;
+
+            if (!visited.has(key) && 
+                current.x >= 0 && current.x < width && 
+                current.y >= 0 && current.y < height) {
+
+                pattern.add(key);
+                visited.add(key);
+
+                // Calculate path length to influence branching
+                const pathLength = Math.sqrt(
+                    Math.pow(current.x - startX, 2) + 
+                    Math.pow(current.y - startY, 2)
+                );
+
+                if (current.branches < maxBranches) {
+                    // Shuffle directions randomly
+                    const shuffledDirs = [...mainDirs].sort(() => Math.random() - 0.5);
+
+                    for (const dir of shuffledDirs) {
+                        const nextX = current.x + dir.x;
+                        const nextY = current.y + dir.y;
+
+                        // Increase chance of branching based on distance from start
+                        const distanceFactor = Math.min(pathLength / Math.max(width, height), 1);
+                        const adjustedBranchChance = branchChance * (1 + distanceFactor);
+
+                        // Continue path
+                        if (Math.random() < 0.8) { // High chance to continue
+                            stack.push({
+                                x: nextX,
+                                y: nextY,
+                                branches: current.branches
+                            });
+                        }
+
+                        // Create new branch with adjusted chance
+                        if (Math.random() < adjustedBranchChance) {
+                            stack.push({
+                                x: nextX,
+                                y: nextY,
+                                branches: current.branches + 1
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        return pattern;
+    }
 }
 
 // Class representing a room in the dungeon
@@ -237,12 +434,6 @@ class Room {
             case TERRAIN_TYPES.MOUNTAIN:
                 this.elevation = ELEVATION_LEVELS.HIGH;
                 break;
-            case TERRAIN_TYPES.VOLCANO:
-                this.addEnvironmentalEffect(ENVIRONMENTAL_EFFECTS.BURNING);
-                break;
-            case TERRAIN_TYPES.SNOW:
-                this.addEnvironmentalEffect(ENVIRONMENTAL_EFFECTS.FROZEN);
-                break;
         }
         
         // Set terrain for all floor tiles in the room if floor is provided
@@ -259,23 +450,6 @@ class Room {
 
     addTerrainFeature(name, value) {
         this.terrainFeatures.set(name, value);
-    }
-
-    addEnvironmentalEffect(effect, floor = null) {
-        if (!this.environmentalEffects.includes(effect)) {
-            this.environmentalEffects.push(effect);
-            
-            // Propagate effect to floor tiles if floor is provided
-            if (floor) {
-                for (let y = this.y; y < this.y + this.height; y++) {
-                    for (let x = this.x; x < this.x + this.width; x++) {
-                        if (floor.getTile(x, y) === TILE_TYPES.FLOOR) {
-                            floor.addEnvironmentalEffect(x, y, effect);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     addMagicalProperty(name, value) {
@@ -956,17 +1130,269 @@ class Dungeon {
     }
 
     _applyEnvironmentalEffectToRoom(room, floor, effect) {
-        // Apply effect to the room itself
-        room.addEnvironmentalEffect(effect, floor);
-        
-        // Apply to all floor tiles in the room
-        for (let y = room.y; y < room.y + room.height; y++) {
-            for (let x = room.x; x < room.x + room.width; x++) {
+        // Add effect to room's list
+        if (!room.environmentalEffects.includes(effect)) {
+            room.environmentalEffects.push(effect);
+        }
+
+        // Determine pattern type and coverage based on effect
+        let pattern;
+        const roomWidth = room.width;
+        const roomHeight = room.height;
+
+        switch (effect) {
+            case ENVIRONMENTAL_EFFECTS.DARKNESS:
+            case ENVIRONMENTAL_EFFECTS.HOLY:
+                // Full room coverage
+                pattern = this._generateFullRoomPattern(room);
+                break;
+
+            case ENVIRONMENTAL_EFFECTS.ELECTRIFIED:
+                // Lightning pattern - starts from 1-3 points near top of room
+                pattern = new Set();
+                const boltCount = Math.floor(Math.random() * 2) + 1;
+                for (let i = 0; i < boltCount; i++) {
+                    const startX = Math.floor(room.x + (roomWidth * (i + 1)) / (boltCount + 1));
+                    const startY = room.y;
+                    const boltPattern = this._generateLightningPattern(room, startX, startY);
+                    boltPattern.forEach(coord => pattern.add(coord));
+                }
+                break;
+
+            case ENVIRONMENTAL_EFFECTS.POISONED:
+                // Poison pattern - spreading pools
+                pattern = this._generatePoisonPattern(room);
+                break;
+
+            case ENVIRONMENTAL_EFFECTS.BURNING:
+                // Fire pattern - scattered hot spots
+                pattern = this._generateClusterPattern(room, 3, 2);
+                break;
+
+            case ENVIRONMENTAL_EFFECTS.WATERY:
+            case ENVIRONMENTAL_EFFECTS.MOLTEN:
+            case ENVIRONMENTAL_EFFECTS.MUDDY:
+                // Flowing patterns
+                pattern = this._generateFlowPattern(room);
+                break;
+
+            case ENVIRONMENTAL_EFFECTS.FROZEN:
+                // Crystalline spread from walls
+                pattern = this._generateFrostPattern(room);
+                break;
+
+            default:
+                // Random scatter for other effects
+                pattern = this._generateScatterPattern(room, 0.2);
+        }
+
+        // Apply the pattern
+        if (pattern) {
+            pattern.forEach(({x, y}) => {
                 if (floor.getTile(x, y) === TILE_TYPES.FLOOR) {
                     floor.addEnvironmentalEffect(x, y, effect);
                 }
+            });
+        }
+    }
+
+    // Helper methods for pattern generation in Dungeon class
+    _generateFullRoomPattern(room) {
+        const pattern = new Set();
+        for (let y = room.y; y < room.y + room.height; y++) {
+            for (let x = room.x; x < room.x + room.width; x++) {
+                pattern.add({x, y});
             }
         }
+        return pattern;
+    }
+
+    _generateLightningPattern(room, startX, startY) {
+        const pattern = new Set();
+        let currentX = startX;
+        let currentY = startY;
+        
+        while (currentY < room.y + room.height) {
+            pattern.add({x: currentX, y: currentY});
+            
+            // Lightning tends to move downward with some horizontal variation
+            currentY++;
+            if (Math.random() < 0.7) { // 70% chance to fork
+                const fork = Math.random() < 0.5 ? -1 : 1;
+                const newX = currentX + fork;
+                if (newX >= room.x && newX < room.x + room.width) {
+                    pattern.add({x: newX, y: currentY});
+                    if (Math.random() < 0.3) { // 30% chance to continue fork
+                        currentX = newX;
+                    }
+                }
+            }
+        }
+        
+        return pattern;
+    }
+
+    _generatePoisonPattern(room) {
+        const pattern = new Set();
+        const pools = Math.floor(Math.random() * 3) + 2;
+        
+        for (let i = 0; i < pools; i++) {
+            const centerX = Math.floor(room.x + Math.random() * room.width);
+            const centerY = Math.floor(room.y + Math.random() * room.height);
+            const radius = Math.floor(Math.random() * 2) + 2;
+            
+            // Create circular pools with some randomness
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    if (dx * dx + dy * dy <= radius * radius) {
+                        const x = centerX + dx;
+                        const y = centerY + dy;
+                        if (x >= room.x && x < room.x + room.width && 
+                            y >= room.y && y < room.y + room.height) {
+                            pattern.add({x, y});
+                            // Add some tendrils
+                            if (Math.random() < 0.3) {
+                                const tendrilX = x + (Math.random() < 0.5 ? -1 : 1);
+                                const tendrilY = y + (Math.random() < 0.5 ? -1 : 1);
+                                if (tendrilX >= room.x && tendrilX < room.x + room.width && 
+                                    tendrilY >= room.y && tendrilY < room.y + room.height) {
+                                    pattern.add({x: tendrilX, y: tendrilY});
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return pattern;
+    }
+
+    _generateFlowPattern(room) {
+        const pattern = new Set();
+        const isVertical = Math.random() < 0.5;
+        let flow = [];
+        
+        if (isVertical) {
+            const startX = room.x + Math.floor(room.width / 2);
+            const variance = Math.floor(room.width / 4);
+            
+            for (let y = room.y; y < room.y + room.height; y++) {
+                const offset = Math.sin(y * 0.5) * variance;
+                const x = Math.floor(startX + offset);
+                flow.push({x, y});
+            }
+        } else {
+            const startY = room.y + Math.floor(room.height / 2);
+            const variance = Math.floor(room.height / 4);
+            
+            for (let x = room.x; x < room.x + room.width; x++) {
+                const offset = Math.sin(x * 0.5) * variance;
+                const y = Math.floor(startY + offset);
+                flow.push({x, y});
+            }
+        }
+        
+        // Add main flow to pattern
+        flow.forEach(point => {
+            pattern.add(point);
+            // Add some spread perpendicular to flow
+            const spread = Math.floor(Math.random() * 2) + 1;
+            for (let i = 1; i <= spread; i++) {
+                if (isVertical) {
+                    pattern.add({x: point.x + i, y: point.y});
+                    pattern.add({x: point.x - i, y: point.y});
+                } else {
+                    pattern.add({x: point.x, y: point.y + i});
+                    pattern.add({x: point.x, y: point.y - i});
+                }
+            }
+        });
+        
+        return pattern;
+    }
+
+    _generateFrostPattern(room) {
+        const pattern = new Set();
+        const edges = [];
+        
+        // Start from edges
+        for (let x = room.x; x < room.x + room.width; x++) {
+            edges.push({x, y: room.y});
+            edges.push({x, y: room.y + room.height - 1});
+        }
+        for (let y = room.y; y < room.y + room.height; y++) {
+            edges.push({x: room.x, y});
+            edges.push({x: room.x + room.width - 1, y});
+        }
+        
+        // Spread inward with diminishing probability
+        edges.forEach(edge => {
+            let current = {...edge};
+            pattern.add(current);
+            
+            const centerX = room.x + room.width / 2;
+            const centerY = room.y + room.height / 2;
+            let distance = 1;
+            
+            while (distance < Math.min(room.width, room.height) / 2) {
+                const dx = centerX - current.x;
+                const dy = centerY - current.y;
+                const angle = Math.atan2(dy, dx);
+                
+                const nextX = Math.floor(current.x + Math.cos(angle));
+                const nextY = Math.floor(current.y + Math.sin(angle));
+                
+                if (nextX >= room.x && nextX < room.x + room.width &&
+                    nextY >= room.y && nextY < room.y + room.height &&
+                    Math.random() < (1 - distance / Math.min(room.width, room.height))) {
+                    current = {x: nextX, y: nextY};
+                    pattern.add(current);
+                }
+                
+                distance++;
+            }
+        });
+        
+        return pattern;
+    }
+
+    _generateClusterPattern(room, clusterCount, clusterSize) {
+        const pattern = new Set();
+        
+        for (let i = 0; i < clusterCount; i++) {
+            const centerX = Math.floor(room.x + Math.random() * room.width);
+            const centerY = Math.floor(room.y + Math.random() * room.height);
+            
+            for (let dy = -clusterSize; dy <= clusterSize; dy++) {
+                for (let dx = -clusterSize; dx <= clusterSize; dx++) {
+                    if (dx * dx + dy * dy <= clusterSize * clusterSize) {
+                        const x = centerX + dx;
+                        const y = centerY + dy;
+                        if (x >= room.x && x < room.x + room.width && 
+                            y >= room.y && y < room.y + room.height) {
+                            pattern.add({x, y});
+                        }
+                    }
+                }
+            }
+        }
+        
+        return pattern;
+    }
+
+    _generateScatterPattern(room, density) {
+        const pattern = new Set();
+        
+        for (let y = room.y; y < room.y + room.height; y++) {
+            for (let x = room.x; x < room.x + room.width; x++) {
+                if (Math.random() < density) {
+                    pattern.add({x, y});
+                }
+            }
+        }
+        
+        return pattern;
     }
 
     _propagateTerrain(floor) {
@@ -987,8 +1413,10 @@ class Dungeon {
 
         // Directions for checking adjacent tiles (including diagonals)
         const directions = [
-            {x: -1, y: 0}, {x: 1, y: 0}, {x: 0, y: -1}, {x: 0, y: 1},
-            {x: -1, y: -1}, {x: -1, y: 1}, {x: 1, y: -1}, {x: 1, y: 1}
+            {x: -1, y: 0}, {x: 1, y: 0},
+            {x: 0, y: -1}, {x: 0, y: 1},
+            {x: -1, y: -1}, {x: -1, y: 1},
+            {x: 1, y: -1}, {x: 1, y: 1}
         ];
 
         // Propagate terrain

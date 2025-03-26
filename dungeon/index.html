@@ -255,6 +255,460 @@
             overflow: hidden;
             background-color: transparent; /* Reset default background */
         }
+
+        /* Environmental effects base styles and animations */
+        @keyframes flow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 0.4; }
+            25% { opacity: 0.6; }
+            50% { opacity: 0.4; }
+            75% { opacity: 0.7; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes crystallize {
+            0% { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+            50% { clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
+            100% { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+        }
+
+        @keyframes drift {
+            0% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(2px) translateY(1px); }
+            50% { transform: translateX(0) translateY(2px); }
+            75% { transform: translateX(-1px) translateY(1px); }
+            100% { transform: translateX(0) translateY(0); }
+        }
+
+        .effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Fluid pattern effects */
+        .effect.watery, .effect.molten, .effect.muddy {
+            background-image: linear-gradient(90deg, 
+                rgba(0,0,0,0) 0%, 
+                currentColor 50%, 
+                rgba(0,0,0,0) 100%);
+            background-size: 200% 100%;
+            animation: flow 3s linear infinite;
+        }
+
+        .effect.watery {
+            color: rgba(0, 100, 255, 0.3);
+        }
+
+        .effect.molten {
+            color: rgba(255, 50, 0, 0.3);
+            animation-duration: 4s;
+        }
+
+        .effect.muddy {
+            color: rgba(139, 69, 19, 0.3);
+            animation-duration: 5s;
+        }
+
+        /* Branching pattern effects */
+        .effect.poisoned {
+            background: radial-gradient(circle at center,
+                rgba(0, 255, 0, 0.4) 0%,
+                transparent 70%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .effect.electrified {
+            background: radial-gradient(circle at center,
+                rgba(255, 255, 0, 0.4) 0%,
+                transparent 70%);
+            animation: flicker 0.5s linear infinite;
+        }
+
+        /* Scattered cluster effects */
+        .effect.burning {
+            background: radial-gradient(circle at center,
+                rgba(255, 0, 0, 0.4) 0%,
+                transparent 60%);
+            animation: flicker 1s ease-out infinite;
+        }
+
+        .effect.crystalline {
+            background: radial-gradient(circle at center,
+                rgba(200, 200, 255, 0.5) 0%,
+                transparent 70%);
+            animation: crystallize 4s ease-in-out infinite;
+        }
+
+        /* Wall pattern effects */
+        .effect.frozen {
+            background: linear-gradient(45deg,
+                rgba(200, 220, 255, 0.4) 0%,
+                transparent 50%);
+            animation: drift 3s ease-in-out infinite;
+        }
+
+        /* Full room coverage effects */
+        .effect.darkness {
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .effect.holy {
+            background: radial-gradient(circle at center,
+                rgba(255, 255, 150, 0.4) 0%,
+                transparent 80%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .effect.sandy {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(244, 164, 96, 0.3),
+                rgba(244, 164, 96, 0.3) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            animation: drift 4s linear infinite;
+        }
+
+        .effect.rocky {
+            background: radial-gradient(circle at center,
+                rgba(169, 169, 169, 0.4) 0%,
+                transparent 70%);
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+        }
+
+        /* Update legend to show patterns properly */
+        .legend-color .effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: none !important;
+        }
+
+        /* Base effect styles */
+        .effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Pattern-specific animations */
+        @keyframes flicker {
+            0%, 100% { opacity: 0.4; }
+            25% { opacity: 0.6; }
+            50% { opacity: 0.3; }
+            75% { opacity: 0.7; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes flow {
+            0% { transform: translateX(-100%) translateY(0); }
+            100% { transform: translateX(100%) translateY(0); }
+        }
+
+        @keyframes branch {
+            0% { clip-path: polygon(0% 50%, 100% 0%, 100% 100%); }
+            50% { clip-path: polygon(0% 0%, 100% 50%, 0% 100%); }
+            100% { clip-path: polygon(0% 50%, 100% 0%, 100% 100%); }
+        }
+
+        /* Fluid patterns (water, molten, muddy) */
+        .effect.watery {
+            background: repeating-linear-gradient(45deg,
+                rgba(0, 100, 255, 0.3) 0%,
+                rgba(0, 100, 255, 0.1) 25%,
+                rgba(0, 100, 255, 0.3) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 3s linear infinite;
+        }
+
+        .effect.molten {
+            background: repeating-linear-gradient(45deg,
+                rgba(255, 50, 0, 0.4) 0%,
+                rgba(255, 50, 0, 0.2) 25%,
+                rgba(255, 50, 0, 0.4) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 4s linear infinite;
+        }
+
+        .effect.muddy {
+            background: repeating-linear-gradient(45deg,
+                rgba(139, 69, 19, 0.3) 0%,
+                rgba(139, 69, 19, 0.1) 25%,
+                rgba(139, 69, 19, 0.3) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 5s linear infinite;
+        }
+
+        /* Branching patterns (poison, electricity) */
+        .effect.poisoned {
+            background: radial-gradient(
+                circle at 50% 50%,
+                rgba(0, 255, 0, 0.4) 0%,
+                rgba(0, 255, 0, 0.2) 30%,
+                transparent 70%
+            );
+            clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+            animation: branch 2s ease-in-out infinite;
+        }
+
+        .effect.electrified {
+            background: radial-gradient(
+                circle at 50% 50%,
+                rgba(255, 255, 0, 0.5) 0%,
+                rgba(255, 255, 0, 0.2) 30%,
+                transparent 70%
+            );
+            clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+            animation: branch 0.5s ease-in-out infinite;
+        }
+
+        /* Scattered cluster effects */
+        .effect.burning {
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 50, 0, 0.5) 0%,
+                transparent 60%
+            );
+            animation: flicker 1s ease-out infinite;
+        }
+
+        .effect.crystalline {
+            background: radial-gradient(
+                circle at center,
+                rgba(200, 200, 255, 0.5) 0%,
+                transparent 70%
+            );
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Full room coverage */
+        .effect.darkness {
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .effect.holy {
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 255, 150, 0.4) 0%,
+                rgba(255, 255, 150, 0.2) 50%,
+                transparent 80%
+            );
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Natural effects */
+        .effect.sandy {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(244, 164, 96, 0.3),
+                rgba(244, 164, 96, 0.3) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+        }
+
+        .effect.rocky {
+            background: radial-gradient(
+                circle at center,
+                rgba(169, 169, 169, 0.4) 0%,
+                transparent 70%
+            );
+        }
+
+        /* Legend styles */
+        .legend {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #444;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Update legend items */
+        .legend-section {
+            margin-bottom: 20px;
+        }
+
+        .legend-section h4 {
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        /* Update terrain section */
+        .legend-terrain .legend-color {
+            opacity: 0.7;
+        }
+
+        /* Environmental effects in legend */
+        .legend-effects .legend-item .effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Remove any duplicate or conflicting effect styles */
+        /* Base effects */
+        .effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Pattern-specific animations */
+        @keyframes lightning {
+            0%, 100% { 
+                clip-path: polygon(0% 50%, 33% 25%, 66% 75%, 100% 50%);
+                opacity: 0.4;
+            }
+            50% { 
+                clip-path: polygon(0% 50%, 33% 75%, 66% 25%, 100% 50%);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes poison-branch {
+            0%, 100% { 
+                clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+                opacity: 0.4;
+            }
+            50% { 
+                clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes flow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        /* Effect patterns */
+        .effect.electrified {
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255, 255, 0, 0.1) 20%,
+                rgba(255, 255, 0, 0.4) 40%,
+                rgba(255, 255, 0, 0.7) 50%,
+                rgba(255, 255, 0, 0.4) 60%,
+                rgba(255, 255, 0, 0.1) 80%,
+                transparent 100%
+            );
+            animation: lightning 0.5s steps(3) infinite;
+        }
+
+        .effect.poisoned {
+            background: radial-gradient(
+                circle at 50% 50%,
+                rgba(0, 255, 0, 0.5) 0%,
+                rgba(0, 255, 0, 0.2) 50%,
+                transparent 70%
+            );
+            animation: poison-branch 2s ease-in-out infinite;
+        }
+
+        .effect.watery {
+            background: repeating-linear-gradient(45deg,
+                rgba(0, 100, 255, 0.3) 0%,
+                rgba(0, 100, 255, 0.1) 25%,
+                rgba(0, 100, 255, 0.3) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 3s linear infinite;
+        }
+
+        .effect.molten {
+            background: repeating-linear-gradient(45deg,
+                rgba(255, 50, 0, 0.4) 0%,
+                rgba(255, 50, 0, 0.2) 25%,
+                rgba(255, 50, 0, 0.4) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 4s linear infinite;
+        }
+
+        .effect.darkness {
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .effect.holy {
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 255, 150, 0.5) 0%,
+                rgba(255, 255, 150, 0.2) 50%,
+                transparent 80%
+            );
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .effect.burning {
+            background: repeating-radial-gradient(
+                circle at center,
+                rgba(255, 50, 0, 0.5) 0%,
+                rgba(255, 50, 0, 0.2) 15%,
+                transparent 30%
+            );
+            animation: flicker 1s ease-out infinite;
+        }
+
+        .effect.frozen {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(200, 220, 255, 0.4) 0%,
+                rgba(200, 220, 255, 0.1) 10%,
+                transparent 20%
+            );
+        }
+
+        /* Make effects in legend static */
+        .legend .effect {
+            animation: none !important;
+        }
     </style>
 </head>
 <body>
@@ -354,6 +808,42 @@
                         <div class="effect frozen"></div>
                     </div>
                     Frozen
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect watery"></div>
+                    </div>
+                    Watery
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect molten"></div>
+                    </div>
+                    Molten
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect sandy"></div>
+                    </div>
+                    Sandy
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect muddy"></div>
+                    </div>
+                    Muddy
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect crystalline"></div>
+                    </div>
+                    Crystalline
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect rocky"></div>
+                    </div>
+                    Rocky
                 </div>
             </div>
         </div>
