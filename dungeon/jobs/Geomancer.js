@@ -168,6 +168,8 @@ export class Geomancer extends JobInterface {
 
     static resolveSpecialAbility(user, ability, target) {
         switch (ability.id) {
+            case 'TERRAIN_POWER':
+                return this._resolveTerrainPower(user, target);
             case 'TERRAIN_MASTERY':
                 return this._resolveTerrainMastery(user, ability, target);
             case 'NATURE_WRATH':
@@ -179,6 +181,85 @@ export class Geomancer extends JobInterface {
             default:
                 throw new Error(`Unknown special ability: ${ability.id}`);
         }
+    }
+
+    static _resolveTerrainPower(user, target) {
+        // Get current terrain type from combat environment
+        const terrain = user.getCurrentTerrain?.() || 'neutral';
+        
+        // Define terrain-based effects
+        const terrainEffects = {
+            plains: {
+                type: 'wind',
+                power: 1.8,
+                effect: 'float'
+            },
+            forest: {
+                type: 'nature',
+                power: 2.0,
+                effect: 'poison'
+            },
+            mountain: {
+                type: 'earth',
+                power: 2.2,
+                effect: 'slow'
+            },
+            water: {
+                type: 'water',
+                power: 1.9,
+                effect: 'water_chain'
+            },
+            desert: {
+                type: 'earth',
+                power: 2.1,
+                effect: 'blind'
+            },
+            swamp: {
+                type: 'water',
+                power: 1.7,
+                effect: ['poison', 'slow']
+            },
+            volcano: {
+                type: 'fire',
+                power: 2.4,
+                effect: 'burn'
+            },
+            snow: {
+                type: 'ice',
+                power: 2.0,
+                effect: 'freeze'
+            },
+            neutral: {
+                type: 'earth',
+                power: 1.5,
+                effect: null
+            }
+        };
+
+        const effect = terrainEffects[terrain];
+        const damage = Math.floor(user.getMA() * effect.power);
+
+        // Apply terrain-based damage and effects
+        const result = {
+            success: true,
+            damage: damage,
+            message: `Drew power from ${terrain} terrain!`,
+            effects: []
+        };
+
+        if (effect.effect) {
+            if (Array.isArray(effect.effect)) {
+                effect.effect.forEach(e => {
+                    if (!target.isImmuneToEffect(e)) {
+                        result.effects.push({ type: e, duration: 3 });
+                    }
+                });
+            } else if (!target.isImmuneToEffect(effect.effect)) {
+                result.effects.push({ type: effect.effect, duration: 3 });
+            }
+        }
+
+        return result;
     }
 
     static _resolveTerrainMastery(user, ability, target) {

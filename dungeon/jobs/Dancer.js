@@ -178,6 +178,8 @@ export class Dancer extends JobInterface {
                 return this._resolveForbiddenDance(user, ability, target);
             case 'DANCE_OF_LIFE':
                 return this._resolveDanceOfLife(user, ability, target);
+            case 'HEALING_WALTZ':
+                return this._resolveHealingWaltz(user, target);
             default:
                 throw new Error(`Unknown special ability: ${ability.id}`);
         }
@@ -302,6 +304,30 @@ export class Dancer extends JobInterface {
             message: `Healing dance restores ${healAmount} HP` + 
                     (removedEffects.length > 0 ? ` and removes ${removedEffects.join(', ')}` : ''),
             effects: [regenEffect]
+        };
+    }
+
+    static _resolveHealingWaltz(user, target) {
+        // Remove negative status effects from target
+        const negativeEffects = target.status.effects.filter(effect => 
+            ['poison', 'blind', 'silence', 'paralyze', 'slow', 'stop'].includes(effect.type)
+        );
+        
+        if (negativeEffects.length === 0) {
+            return {
+                success: false,
+                message: 'No negative effects to remove'
+            };
+        }
+
+        negativeEffects.forEach(effect => {
+            target.removeEffect(effect.type);
+        });
+
+        return {
+            success: true,
+            message: `Removed ${negativeEffects.length} negative effects`,
+            effects: negativeEffects.map(e => ({ type: `remove_${e.type}` }))
         };
     }
 

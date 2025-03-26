@@ -82,15 +82,76 @@ export class Mime extends JobInterface {
 
     static resolveSpecialAbility(user, ability, target) {
         switch (ability.id) {
-            case 'MIMIC':
-                return this._resolveMimic(user, ability, target);
-            case 'REPLAY':
-                return this._resolveReplay(user, ability, target);
-            case 'PERFECT_COPY':
-                return this._resolvePerfectCopy(user, ability, target);
+            case 'REPLICATE':
+                return this._resolveReplicate(user, target);
+            case 'BATTLE_MEMORY':
+                return this._resolveBattleMemory(user, target);
             default:
                 throw new Error(`Unknown special ability: ${ability.id}`);
         }
+    }
+
+    static _resolveReplicate(user, target) {
+        // Get the last action performed by the target
+        const lastAction = target.lastAction;
+        if (!lastAction) {
+            return {
+                success: false,
+                message: 'No action to replicate'
+            };
+        }
+
+        // Try to execute the same ability
+        const result = user.useAbility(lastAction.ability.id, lastAction.target);
+
+        // Add mimic bonus effect
+        if (result.success) {
+            if (result.damage) {
+                result.damage = Math.floor(result.damage * 1.2); // 20% bonus damage
+            }
+            if (result.healing) {
+                result.healing = Math.floor(result.healing * 1.2); // 20% bonus healing
+            }
+            result.message = `Mimicked ${lastAction.ability.name} with enhanced effect!`;
+        }
+
+        return result;
+    }
+
+    static _resolveBattleMemory(user, target) {
+        // Check if target has any usable abilities
+        const targetJob = target.currentJob;
+        if (!targetJob) {
+            return {
+                success: false,
+                message: 'No abilities to learn from target'
+            };
+        }
+
+        // Temporarily learn a random ability from target's job
+        const abilities = targetJob.getAbilities().active.abilities;
+        const abilityKeys = Object.keys(abilities);
+        const randomAbility = abilities[abilityKeys[Math.floor(Math.random() * abilityKeys.length)]];
+
+        // Store the ability for later use
+        if (!user.mimeMemory) {
+            user.mimeMemory = [];
+        }
+        user.mimeMemory.push({
+            id: randomAbility.id,
+            name: randomAbility.name,
+            duration: 3 // Ability can be used for 3 turns
+        });
+
+        return {
+            success: true,
+            message: `Learned ${randomAbility.name} from target!`,
+            effects: [{
+                type: 'memory_gain',
+                ability: randomAbility.name,
+                duration: 3
+            }]
+        };
     }
 
     static _resolveMimic(user, ability, target) {

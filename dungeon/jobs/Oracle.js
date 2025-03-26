@@ -155,6 +155,10 @@ export class Oracle extends JobInterface {
                 return this._resolveProphecy(user, ability, target);
             case 'STAR_READING':
                 return this._resolveStarReading(user, ability, target);
+            case 'PREMONITION':
+                return this._resolvePremonition(user, target);
+            case 'ENEMY_INSIGHT':
+                return this._resolveEnemyInsight(user, target);
             default:
                 throw new Error(`Unknown special ability: ${ability.id}`);
         }
@@ -316,6 +320,51 @@ export class Oracle extends JobInterface {
             success: true,
             zodiacCompatibility: compatibility,
             effects
+        };
+    }
+
+    static _resolvePremonition(user, target) {
+        // Create a prediction effect that will store upcoming actions
+        const effect = {
+            type: 'premonition',
+            duration: 3,
+            predictions: [],
+            onTurnStart: (character) => {
+                // Predict next enemy action with 70% accuracy
+                if (Math.random() < 0.7) {
+                    const nextAction = character.getNextAction();
+                    if (nextAction) {
+                        effect.predictions.push(nextAction);
+                    }
+                }
+            }
+        };
+
+        target.addEffect(effect);
+        return {
+            success: true,
+            message: 'Granted ability to foresee upcoming actions',
+            effects: [effect]
+        };
+    }
+
+    static _resolveEnemyInsight(user, target) {
+        // Reveal enemy stats and next action
+        const stats = target.getStats();
+        const weaknesses = target.getWeaknesses?.() || [];
+        const nextAction = target.getNextAction?.();
+
+        return {
+            success: true,
+            message: 'Revealed enemy information',
+            analysis: {
+                stats: stats,
+                weaknesses: weaknesses,
+                nextAction: nextAction ? {
+                    name: nextAction.name,
+                    type: nextAction.type
+                } : null
+            }
         };
     }
 

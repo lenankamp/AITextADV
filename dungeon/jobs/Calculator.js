@@ -158,15 +158,109 @@ export class Calculator extends JobInterface {
 
     static resolveSpecialAbility(user, ability, target) {
         switch (ability.id) {
-            case 'CT_SPELL':
-                return this._resolveCTSpell(user, ability, target);
-            case 'LEVEL_SPELL':
-                return this._resolveLevelSpell(user, ability, target);
-            case 'PRIME_SPELL':
-                return this._resolvePrimeSpell(user, ability, target);
+            case 'CT_PRIME':
+                return this._resolvePrimeNumber(user, target, 'ct');
+            case 'LEVEL_DIVIDE':
+                return this._resolveDivisibleNumber(user, target, 'level');
+            case 'HEIGHT_FACTOR':
+                return this._resolveHeightFactor(user, target);
+            case 'MULTIPLY':
+                return this._resolveMultiply(user, ability, target);
+            case 'NUMERICAL_FORCE':
+                return this._resolveNumericalForce(user, target);
+            case 'DIVIDE_MP':
+                return this._resolveDivideMP(user, target);
             default:
                 throw new Error(`Unknown special ability: ${ability.id}`);
         }
+    }
+
+    static _resolvePrimeNumber(user, target, attribute) {
+        const value = target[attribute];
+        if (this._isPrime(value)) {
+            return {
+                success: true,
+                damage: Math.floor(user.getMA() * 2.5),
+                message: `${target.name}'s ${attribute} value is prime!`
+            };
+        }
+        return {
+            success: false,
+            message: `${target.name}'s ${attribute} value is not prime`
+        };
+    }
+
+    static _resolveDivisibleNumber(user, target, attribute) {
+        const value = target[attribute];
+        if (value % 4 === 0 || value % 5 === 0) {
+            return {
+                success: true,
+                damage: Math.floor(user.getMA() * 2),
+                message: `${target.name}'s ${attribute} is divisible by 4 or 5!`
+            };
+        }
+        return {
+            success: false,
+            message: `${target.name}'s ${attribute} is not divisible by 4 or 5`
+        };
+    }
+
+    static _resolveHeightFactor(user, target) {
+        const heightDiff = Math.abs(user.height - target.height);
+        if (heightDiff > 0) {
+            return {
+                success: true,
+                damage: Math.floor(user.getMA() * (heightDiff * 0.5)),
+                message: `Height difference of ${heightDiff} affects damage!`
+            };
+        }
+        return {
+            success: false,
+            message: 'No height difference to exploit'
+        };
+    }
+
+    static _resolveMultiply(user, ability, target) {
+        const baseDamage = Math.floor(user.getMA() * 1.5);
+        return {
+            success: true,
+            damage: baseDamage * 2,
+            effects: [
+                { type: 'magic_vulnerability', duration: 3 }
+            ],
+            message: 'Magical damage multiplied!'
+        };
+    }
+
+    static _resolveNumericalForce(user, target) {
+        // Damage based on last digit of target's HP
+        const lastDigit = target.status.hp % 10;
+        return {
+            success: true,
+            damage: Math.floor(user.getMA() * (1 + lastDigit * 0.1)),
+            message: `Damage calculated from HP's last digit: ${lastDigit}`
+        };
+    }
+
+    static _resolveDivideMP(user, target) {
+        const currentMP = target.status.mp;
+        const reduction = Math.floor(currentMP / 2);
+        target.status.mp -= reduction;
+        return {
+            success: true,
+            message: `Reduced target's MP by half (${reduction})`,
+            effects: [
+                { type: 'mp_reduced', value: reduction }
+            ]
+        };
+    }
+
+    static _isPrime(num) {
+        if (num <= 1) return false;
+        for (let i = 2; i <= Math.sqrt(num); i++) {
+            if (num % i === 0) return false;
+        }
+        return true;
     }
 
     static _resolveCTSpell(user, ability, target) {

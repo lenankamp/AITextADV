@@ -20,7 +20,7 @@ Testing: Accumulate
 
 Testing: Dash
 ✓ Ability executed successfully
-  Damage dealt: 17
+  Damage dealt: 19
 
 Testing: Rally Cry
 ✓ Ability executed successfully
@@ -28,7 +28,7 @@ Testing: Rally Cry
 
 Testing: First Aid
 ✓ Ability executed successfully
-  Healing done: 13
+  Healing done: 12
 
 Testing: Focus
 ✓ Ability executed successfully
@@ -56,7 +56,7 @@ Testing Chemist Abilities
 
 Testing: Use Potion
 ✓ Ability executed successfully
-  Healing done: 13
+  Healing done: 12
 
 Testing: Throw Item
 ✗ Ability failed: No item specified to throw
@@ -103,11 +103,10 @@ Testing: Slash Blade
 
 Testing: Break Armor
 ✓ Ability executed successfully
-  Damage dealt: 18
+  Damage dealt: 28
 
 Testing: Shield Bash
 ✓ Ability executed successfully
-  Damage dealt: 21
 
 Testing: Cover
 ✓ Ability executed successfully
@@ -115,7 +114,7 @@ Testing: Cover
 
 Testing: Holy Blade
 ✓ Ability executed successfully
-  Damage dealt: 35
+  Damage dealt: 34
 
 Testing: Sentinel
 ✓ Ability executed successfully
@@ -147,6 +146,7 @@ Testing Archer Abilities
 
 Testing: Charge
 ✓ Ability executed successfully
+  Damage dealt: 26
 
 Testing: Rapid Fire
 ✓ Ability executed successfully
@@ -156,26 +156,24 @@ Testing: Arrow Rain
 
 Testing: Precision Shot
 ✓ Ability executed successfully
-  Damage dealt: 27
 
 Testing: Sniper Shot
 ✓ Ability executed successfully
-  Damage dealt: 32
+  Damage dealt: 29
 
 Testing: Disabling Shot
 ✓ Ability executed successfully
+  Damage dealt: 9
 
 Testing: Weakness Shot
 ✓ Ability executed successfully
-  Damage dealt: 14
+  Damage dealt: 12
 
 Testing: Piercing Arrow
 ✓ Ability executed successfully
-  Damage dealt: 24
 
 Testing: Takedown Shot
 ✓ Ability executed successfully
-  Damage dealt: 29
 
 Testing: Barrage
 ✓ Ability executed successfully
@@ -191,11 +189,11 @@ Testing WhiteMage Abilities
 
 Testing: Cure
 ✓ Ability executed successfully
-  Healing done: 27
+  Healing done: 25
 
 Testing: Cura
 ✓ Ability executed successfully
-  Healing done: 35
+  Healing done: 37
 
 Testing: Curaga
 ✓ Ability executed successfully
@@ -221,7 +219,7 @@ Testing: Shell
 
 Testing: Holy
 ✓ Ability executed successfully
-  Damage dealt: 11
+  Damage dealt: 10
 
 Testing: Regen
 ✓ Ability executed successfully
@@ -235,7 +233,7 @@ Testing: Sacred Purification
 
 Testing: Banish
 ✓ Ability executed successfully
-  Damage dealt: 37
+  Damage dealt: 40
 
 Job Summary:
 Total abilities: 13
@@ -257,28 +255,29 @@ Testing: Firaga
 
 Testing: Thunder
 ✓ Ability executed successfully
-  Damage dealt: 34
+  Damage dealt: 32
 
 Testing: Thundara
 ✓ Ability executed successfully
-  Damage dealt: 38
+  Damage dealt: 44
 
 Testing: Thundaga
 ✓ Ability executed successfully
 
 Testing: Blizzard
 ✓ Ability executed successfully
-  Damage dealt: 27
+  Damage dealt: 30
 
 Testing: Blizzara
 ✓ Ability executed successfully
-  Damage dealt: 41
+  Damage dealt: 37
 
 Testing: Blizzaga
 ✓ Ability executed successfully
 
 Testing: Break
 ✓ Ability executed successfully
+  Effects applied: petrify
 
 Testing: Death
 ✓ Ability executed successfully
@@ -286,7 +285,6 @@ Testing: Death
 
 Testing: Flare
 ✓ Ability executed successfully
-  Damage dealt: 56
 
 Testing: Arcane Disruption
 ✓ Ability executed successfully
@@ -312,11 +310,10 @@ Testing: Chakra
 
 Testing: Pummel
 ✓ Ability executed successfully
-  Damage dealt: 20
 
 Testing: Earth Slash
 ✓ Ability executed successfully
-  Damage dealt: 30
+  Damage dealt: 34
 
 Testing: Internal Release
 ✓ Ability executed successfully
@@ -328,21 +325,21 @@ Testing: Meditation
 
 Testing: Pressure Point
 ✓ Ability executed successfully
+  Effects applied: paralyze
 
 Testing: Spirit Blade
 ✓ Ability executed successfully
-  Damage dealt: 34
+  Damage dealt: 36
 
 Testing: Chakra Blast
 ✓ Ability executed successfully
-  Damage dealt: 23
+  Damage dealt: 22
 
 Testing: Mantra
 ✓ Ability executed successfully
 
 Testing: Hundred Fists
 ✓ Ability executed successfully
-  Damage dealt: 2
 
 Job Summary:
 Total abilities: 10
@@ -354,7 +351,7 @@ Testing Thief Abilities
 --------------------
 
 Testing: Steal Gil
-✓ Ability executed successfully
+✗ Ability failed: Failed to steal gil
 
 Testing: Steal Item
 ✗ Ability failed: Target has no items to steal
@@ -370,7 +367,7 @@ Testing: Steal EXP
 
 Testing: Mug
 ✓ Ability executed successfully
-  Damage dealt: 20
+  Damage dealt: 19
 
 Testing: Trapsmith
 ✗ Ability failed: Invalid ability type
@@ -383,8 +380,8 @@ Testing: Pilfer
 
 Job Summary:
 Total abilities: 9
-Successful: 3
-Failed: 4
+Successful: 2
+Failed: 5
 Errors: 2
 
 Testing Oracle Abilities
@@ -394,23 +391,26 @@ Testing: Divine Sight
 ✗ Ability failed: Invalid ability type
 
 Testing: Premonition
-✗ Error executing ability: Unknown special ability: PREMONITION
+✓ Ability executed successfully
+  Effects applied: premonition
 
 Testing: Enemy Insight
-✗ Error executing ability: Unknown special ability: ENEMY_INSIGHT
+✓ Ability executed successfully
 
 Testing: Fate Map
 ✗ Ability failed: Invalid ability type
 
 Testing: Condemn
 ✓ Ability executed successfully
+  Effects applied: doom
 
 Testing: Star Sight
 ✓ Ability executed successfully
-  Effects applied: silence
+  Effects applied: blind
 
 Testing: Calamity
 ✓ Ability executed successfully
+  Effects applied: poison, silence
 
 Testing: Fortune Guard
 ✓ Ability executed successfully
@@ -420,9 +420,9 @@ Testing: Prophecy Shield
 
 Job Summary:
 Total abilities: 9
-Successful: 5
+Successful: 7
 Failed: 2
-Errors: 2
+Errors: 0
 
 Testing TimeMage Abilities
 --------------------
@@ -433,10 +433,10 @@ Testing: Haste
 
 Testing: Slow
 ✓ Ability executed successfully
-  Effects applied: slow
 
 Testing: Stop
 ✓ Ability executed successfully
+  Effects applied: stop
 
 Testing: Float
 ✓ Ability executed successfully
@@ -444,7 +444,6 @@ Testing: Float
 
 Testing: Gravity
 ✓ Ability executed successfully
-  Damage dealt: 14
 
 Testing: Time Slip
 ✗ Ability failed: Invalid ability type
@@ -472,7 +471,7 @@ Testing Geomancer Abilities
 --------------------
 
 Testing: Terrain Power
-✗ Error executing ability: Unknown special ability: TERRAIN_POWER
+✗ Error executing ability: user.getMA is not a function
 
 Testing: Earth Render
 ✓ Ability executed successfully
@@ -513,7 +512,6 @@ Testing Dragoon Abilities
 
 Testing: Jump
 ✓ Ability executed successfully
-  Damage dealt: 31
 
 Testing: Lancet
 ✓ Ability executed successfully
@@ -521,13 +519,14 @@ Testing: Lancet
 
 Testing: High Jump
 ✓ Ability executed successfully
+  Damage dealt: 38
 
 Testing: Sweep Dive
 ✓ Ability executed successfully
 
 Testing: Dragon Breath
 ✓ Ability executed successfully
-  Damage dealt: 20
+  Damage dealt: 22
 
 Testing: Piercing Strike
 ✓ Ability executed successfully
@@ -570,7 +569,6 @@ Testing: Phoenix
 
 Testing: Odin
 ✓ Ability executed successfully
-  Damage dealt: 64
 
 Testing: Moogle
 ✓ Ability executed successfully
@@ -586,6 +584,7 @@ Testing Orator Abilities
 
 Testing: Persuade
 ✓ Ability executed successfully
+  Effects applied: charm
 
 Testing: Negotiate
 ✗ Ability failed: Negotiation failed
@@ -606,6 +605,7 @@ Testing: Peace Talk
 
 Testing: Intimidate
 ✓ Ability executed successfully
+  Effects applied: fear
 
 Testing: Rallying Cry
 ✓ Ability executed successfully
@@ -629,26 +629,25 @@ Testing Samurai Abilities
 
 Testing: Iaido
 ✓ Ability executed successfully
-  Damage dealt: 35
+  Damage dealt: 37
 
 Testing: Blade Spirit
 ✓ Ability executed successfully
 
 Testing: Storm Edge
 ✓ Ability executed successfully
-  Damage dealt: 36
+  Damage dealt: 37
 
 Testing: Demon Slice
 ✓ Ability executed successfully
-  Damage dealt: 41
+  Damage dealt: 67
 
 Testing: Zen Slash
 ✓ Ability executed successfully
-  Damage dealt: 47
 
 Testing: Soul Blade
 ✓ Ability executed successfully
-  Damage dealt: 39
+  Damage dealt: 38
 
 Testing: Meditation
 ✓ Ability executed successfully
@@ -656,11 +655,10 @@ Testing: Meditation
 
 Testing: Binding Blade
 ✓ Ability executed successfully
-  Damage dealt: 31
+  Damage dealt: 33
 
 Testing: Masamune
 ✓ Ability executed successfully
-  Damage dealt: 46
 
 Job Summary:
 Total abilities: 9
@@ -688,14 +686,15 @@ Testing: Infiltrate
 
 Testing: Flame Veil
 ✓ Ability executed successfully
-  Damage dealt: 22
+  Damage dealt: 19
 
 Testing: Water Veil
 ✓ Ability executed successfully
-  Damage dealt: 20
+  Damage dealt: 22
 
 Testing: Shadow Stitch
 ✓ Ability executed successfully
+  Effects applied: immobilize
 
 Testing: Mirror Image
 ✓ Ability executed successfully
@@ -703,7 +702,7 @@ Testing: Mirror Image
 
 Testing: Assassinate
 ✓ Ability executed successfully
-  Damage dealt: 39
+  Damage dealt: 41
 
 Job Summary:
 Total abilities: 10
@@ -715,30 +714,31 @@ Testing Calculator Abilities
 --------------------
 
 Testing: CT Prime
-✗ Error executing ability: Unknown special ability: CT_PRIME
+✗ Error executing ability: user.getMA is not a function
 
 Testing: Level Divide
-✗ Error executing ability: Unknown special ability: LEVEL_DIVIDE
+✗ Error executing ability: user.getMA is not a function
 
 Testing: Height Factor
-✗ Error executing ability: Unknown special ability: HEIGHT_FACTOR
+✗ Ability failed: No height difference to exploit
 
 Testing: Multiply
-✗ Error executing ability: Unknown special ability: MULTIPLY
+✗ Error executing ability: user.getMA is not a function
 
 Testing: Prime Strike
 ✓ Ability executed successfully
-  Damage dealt: 30
+  Damage dealt: 32
 
 Testing: Numerical Force
-✗ Error executing ability: Unknown special ability: NUMERICAL_FORCE
+✗ Error executing ability: user.getMA is not a function
 
 Testing: Factor Barrier
 ✓ Ability executed successfully
   Effects applied: numeric_shield
 
 Testing: Divide MP
-✗ Error executing ability: Unknown special ability: DIVIDE_MP
+✓ Ability executed successfully
+  Effects applied: mp_reduced
 
 Testing: Perfect Number
 ✓ Ability executed successfully
@@ -746,12 +746,13 @@ Testing: Perfect Number
 
 Testing: Modulo Mastery
 ✓ Ability executed successfully
+  Damage dealt: 37
 
 Job Summary:
 Total abilities: 10
-Successful: 4
-Failed: 0
-Errors: 6
+Successful: 5
+Failed: 1
+Errors: 4
 
 Testing Dancer Abilities
 --------------------
@@ -776,7 +777,7 @@ Testing: Bewitching Dance
 ✓ Ability executed successfully
 
 Testing: Healing Waltz
-✗ Error executing ability: Unknown special ability: HEALING_WALTZ
+✓ Ability executed successfully
 
 Testing: Forbidden Dance
 ✓ Ability executed successfully
@@ -790,9 +791,9 @@ Testing: Last Waltz
 
 Job Summary:
 Total abilities: 10
-Successful: 9
+Successful: 10
 Failed: 0
-Errors: 1
+Errors: 0
 
 Testing Bard Abilities
 --------------------
@@ -825,13 +826,13 @@ Testing: Dissonant Wave
 ✓ Ability executed successfully
 
 Testing: Grand Finale
-✗ Error executing ability: Unknown special ability: GRAND_FINALE
+✓ Ability executed successfully
 
 Job Summary:
 Total abilities: 10
-Successful: 9
+Successful: 10
 Failed: 0
-Errors: 1
+Errors: 0
 
 SPECIAL JOBS
 =========
@@ -840,24 +841,24 @@ Testing Mime Abilities
 --------------------
 
 Testing: Replicate
-✗ Error executing ability: Unknown special ability: REPLICATE
+✗ Ability failed: No action to replicate
 
 Testing: Battle Memory
-✗ Error executing ability: Unknown special ability: BATTLE_MEMORY
+✗ Error executing ability: targetJob.getAbilities is not a function
 
 Job Summary:
 Total abilities: 2
 Successful: 0
-Failed: 0
-Errors: 2
+Failed: 1
+Errors: 1
 
 ==================
 CUMULATIVE TOTALS
 ==================
 Total abilities tested: 190
-Total successful: 145 (76%)
-Total failed: 23 (12%)
-Total errors: 22 (12%)
+Total successful: 149 (78%)
+Total failed: 26 (14%)
+Total errors: 15 (8%)
 ==================
 
 Ability testing complete!

@@ -171,14 +171,8 @@ export class Bard extends JobInterface {
 
     static resolveSpecialAbility(user, ability, target) {
         switch (ability.id) {
-            case 'MINUET':
-                return this._resolveMinuet(user, ability, target);
-            case 'BATTLE_SONG':
-                return this._resolveBattleSong(user, ability, target);
-            case 'REQUIEM':
-                return this._resolveRequiem(user, ability, target);
-            case 'FINALE':
-                return this._resolveFinale(user, ability, target);
+            case 'GRAND_FINALE':
+                return this._resolveGrandFinale(user, target);
             default:
                 throw new Error(`Unknown special ability: ${ability.id}`);
         }
@@ -288,6 +282,35 @@ export class Bard extends JobInterface {
             damage,
             message: `${target.name} takes ${damage} damage from the dramatic finale`,
             consumedEffects: activeEffects.map(e => e.name)
+        };
+    }
+
+    static _resolveGrandFinale(user, target) {
+        // Find all active songs on allies and enemies
+        const activeSongs = [...(target.status.effects || [])].filter(effect => 
+            effect.source === 'song'
+        );
+
+        if (activeSongs.length === 0) {
+            return {
+                success: false,
+                message: 'No active songs to consume'
+            };
+        }
+
+        // Remove all active songs and convert their power into damage
+        activeSongs.forEach(song => {
+            target.removeEffect(song.type);
+        });
+
+        const baseDamage = Math.floor(user.getMA() * 2);
+        const totalDamage = baseDamage * (1 + (activeSongs.length * 0.5));
+
+        return {
+            success: true,
+            damage: totalDamage,
+            message: `Grand Finale consumes ${activeSongs.length} songs for massive damage!`,
+            effects: activeSongs.map(song => ({ type: `remove_${song.type}` }))
         };
     }
 
