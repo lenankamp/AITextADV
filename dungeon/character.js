@@ -305,25 +305,46 @@ class Character {
     }
 
     // Equipment Methods
-    equipItem(item, slot) {
+    canEquipToSlot(item, slot) {
         // Check if item can be equipped by this character
         if (!item.canBeEquippedBy(this)) {
-            return { success: false, message: 'Cannot equip this item' };
+            return false;
         }
 
-        // Check if the slot is valid for this item
-        if (!item.isValidForSlot(slot, this)) {
-            return { success: false, message: 'Invalid slot for this item' };
+        // Handle shield equipping
+        if (item.type === 'shield') {
+            const hasShieldAbility = this.getSupportAbilities()
+                .some(ability => ability.effect === 'enable_shield');
+            if (!hasShieldAbility) {
+                return false;
+            }
+        }
+
+        // Handle dual wielding
+        if (slot === EQUIPMENT_SLOTS.OFF_HAND && item.type === 'weapon') {
+            const hasDualWield = this.getSupportAbilities()
+                .some(ability => ability.effect === 'enable_dual_wielding');
+            if (!hasDualWield) {
+                return false;
+            }
+        }
+
+        return item.isValidForSlot(slot, this);
+    }
+
+    equipItem(item, slot) {
+        // Check if item can be equipped to this slot
+        if (!this.canEquipToSlot(item, slot)) {
+            return { success: false, message: 'Cannot equip this item to that slot' };
         }
 
         // Handle two-handed weapons
         if (item.isTwoHanded && slot === EQUIPMENT_SLOTS.MAIN_HAND) {
+            // Can't equip two-handed weapon if dual wielding
+            if (this.equipment[EQUIPMENT_SLOTS.OFF_HAND]?.type === 'weapon') {
+                return { success: false, message: 'Cannot equip two-handed weapon while dual wielding' };
+            }
             this.equipment[EQUIPMENT_SLOTS.OFF_HAND] = null;
-        }
-
-        // Handle off-hand items when a two-handed weapon is equipped
-        if (slot === EQUIPMENT_SLOTS.OFF_HAND && this.equipment[EQUIPMENT_SLOTS.MAIN_HAND]?.isTwoHanded) {
-            return { success: false, message: 'Cannot equip off-hand item with two-handed weapon' };
         }
 
         // Store the current item for potential return to inventory
@@ -342,6 +363,9 @@ class Character {
     calculateWeaponDamage() {
         const stats = this.getStats();
         const mainWeapon = this.equipment[EQUIPMENT_SLOTS.MAIN_HAND];
+        const offWeapon = this.equipment[EQUIPMENT_SLOTS.OFF_HAND];
+        const hasDualWield = this.getSupportAbilities()
+            .some(ability => ability.effect === 'enable_dual_wielding');
         
         if (!mainWeapon) {
             return stats.pa; // Base physical attack if no weapon
@@ -349,14 +373,22 @@ class Character {
 
         let damage = mainWeapon.calculateDamage(stats);
 
+        // Add off-hand weapon damage if dual wielding
+        if (hasDualWield && offWeapon?.type === 'weapon') {
+            const offHandDamage = offWeapon.calculateDamage(stats);
+            // Off-hand attacks deal 50% damage
+            damage += Math.floor(offHandDamage * 0.5);
+        }
+
         // Apply weapon effects that modify damage
-        if (mainWeapon.effects) {
-            mainWeapon.effects.forEach(effect => {
+        [mainWeapon, offWeapon].forEach(weapon => {
+            if (!weapon?.effects) return;
+            weapon.effects.forEach(effect => {
                 if (effect === 'critical_up') {
                     damage *= 1.5;
                 }
             });
-        }
+        });
 
         return Math.floor(damage);
     }
@@ -633,17 +665,26 @@ class Character {
         // Base healing calculation using magical attack and ability power
         let healing = stats.ma * (ability.power || 1);
         
+        // Check for Healing Boost support ability
+        const hasHealingBoost = this.getSupportAbilities()
+            .some(ability => ability.effect === 'increase_heal_power');
+        if (hasHealingBoost) {
+            healing *= 1.5; // 50% healing increase
+        }
+
+        // Check for Item Boost when using items
+        if (ability.isItem) {
+            const hasItemBoost = this.getSupportAbilities()
+                .some(ability => ability.effect === 'improve_item_effect');
+            if (hasItemBoost) {
+                healing *= 1.3; // 30% boost to item healing
+            }
+        }
+        
         // Apply variance (±5% for healing)
         const variance = 0.05;
         const randomFactor = 1 + (Math.random() * variance * 2 - variance);
         healing *= randomFactor;
-        
-        // Apply any healing boost effects
-        const healingBoost = this.status.effects
-            .filter(effect => effect.name === 'enhance_healing')
-            .reduce((total, effect) => total + (effect.power || 0.2), 1);
-        
-        healing *= healingBoost;
         
         return Math.floor(healing);
     }
@@ -813,31 +854,46 @@ class Character {
     }
 
     useAbility(abilityId, target) {
-        const abilities = this.getAvailableAbilities();
-        const ability = abilities.active[abilityId];
-        
+        const ability = this.getAvailableAbilities().active[abilityId];
         if (!ability) {
             return { success: false, message: 'Ability not found' };
         }
 
-        // Handle position restrictions - only physical non-ranged abilities are restricted
+        // Handle Quick Calculate
+        const hasQuickCalculate = this.getSupportAbilities()
+            .some(ability => ability.effect === 'reduce_cast_time');
+        if (hasQuickCalculate && ability.castTime) {
+            ability = { ...ability, castTime: Math.floor(ability.castTime * 0.5) };
+        }
+
+        // Handle position restrictions
         if (this.position === 'back' && ability.type === 'physical' && !ability.ranged && !this.isRanged()) {
             return { success: false, message: 'Cannot use melee attack from back row' };
         }
 
-        // Check MP cost
-        if (this.status.mp < (ability.mp || 0)) {
-            return { success: false, message: 'Not enough MP' };
+        // Check MP cost and any MP cost reduction effects
+        let mpCost = ability.mp || 0;
+        const hasSilverTongue = this.getSupportAbilities()
+            .some(ability => ability.effect === 'reduce_mp_cost');
+        if (hasSilverTongue) {
+            mpCost = Math.floor(mpCost * 0.7); // 30% MP cost reduction
         }
 
-        // Apply MP cost
-        this.status.mp -= (ability.mp || 0);
+        if (this.status.mp < mpCost) {
+            return { success: false, message: 'Not enough MP' };
+        }
 
         // For AOE abilities, we need all targets in the same party as the target
         const targets = ability.aoe ? (target.party || [target]) : [target];
 
-        // Calculate and apply effects for all targets
-        let results = targets.map(currentTarget => {
+        // Check for Dual Cast support ability
+        const hasDualCast = this.getSupportAbilities()
+            .some(ability => ability.effect === 'cast_twice');
+        const isSpell = ability.type === 'magical' || ability.type === 'status';
+
+        // Apply MP cost and resolve first cast
+        this.status.mp -= mpCost;
+        const firstCastResults = targets.map(currentTarget => {
             let result;
             switch (ability.type) {
                 case 'physical':
@@ -857,14 +913,12 @@ class Character {
                     result = this._resolveDrainAbility(ability, currentTarget);
                     break;
                 case 'special':
-                    // For special abilities, find the job class that owns this ability and let it handle resolution
                     const jobId = ability.jobId || this.currentJob;
                     const JobClass = this.getJobClass(jobId);
                     if (!JobClass) {
                         result = { success: false, message: 'Invalid job for special ability' };
                     } else {
                         result = JobClass.resolveSpecialAbility(this, ability, currentTarget);
-                        // Apply any effects from special abilities
                         if (result.success && result.effects) {
                             result.effects.forEach(effect => {
                                 currentTarget.addEffect({
@@ -880,18 +934,37 @@ class Character {
                 default:
                     result = { success: false, message: 'Invalid ability type' };
             }
-
-            // Add target reference to result
             return { ...result, target: currentTarget };
         });
 
-        // For buffs and status effects that are AOE, mark the result as AOE and return all results
-        if ((ability.type === 'buff' || ability.type === 'status') && ability.aoe) {
-            return results;
+        // Handle Dual Cast for spells
+        if (hasDualCast && isSpell && this.status.mp >= mpCost) {
+            this.status.mp -= mpCost;
+            const secondCastResults = targets.map(currentTarget => {
+                let result;
+                switch (ability.type) {
+                    case 'magical':
+                        result = this._resolveAttackAbility(ability, currentTarget);
+                        break;
+                    case 'status':
+                        result = this._resolveStatusAbility(ability, currentTarget);
+                        break;
+                    default:
+                        result = { success: false, message: 'Invalid dual cast type' };
+                }
+                return { ...result, target: currentTarget };
+            });
+
+            if (ability.aoe) {
+                return [...firstCastResults, ...secondCastResults];
+            }
+            return [firstCastResults[0], secondCastResults[0]];
         }
 
-        // For all other abilities (damage, healing, etc), return just the first result
-        return results[0];
+        if (ability.aoe) {
+            return firstCastResults;
+        }
+        return firstCastResults[0];
     }
 
     _resolveAttackAbility(ability, target) {
@@ -903,15 +976,25 @@ class Character {
             return result;
         }
 
-        // Base evasion check
-        const evasion = target.getStats().ev;
-        if (Math.random() < (evasion / 100)) {
+        // Replace the old evasion check with new accuracy system
+        const hitChance = this._calculateAccuracy(ability, target);
+        if (Math.random() >= hitChance) {
             return { success: false, message: 'Attack missed', effects: [] };
         }
+
+        // Calculate critical hit
+        const critChance = this._calculateCriticalChance(ability, target);
+        const isCritical = Math.random() < critChance;
 
         // Calculate and apply damage
         let damage = this._calculateDamage(ability, target);
         
+        // Apply critical hit multiplier
+        if (isCritical) {
+            damage = Math.floor(damage * 1.5);
+            result.isCritical = true;
+        }
+
         // Apply any damage reduction from reactions
         if (result.damageReduction) {
             damage = Math.floor(damage * (1 - result.damageReduction));
@@ -1661,6 +1744,395 @@ class Character {
         // Sort by score and return array of [id, ability] pairs
         scoredAbilities.sort((a, b) => b.score - a.score);
         return scoredAbilities.map(({ id, ability }) => [id, ability]);
+    }
+
+    // Add these new methods for accuracy and critical calculations
+    _calculateAccuracy(ability, target) {
+        // Base accuracy (85%)
+        let accuracy = 0.85;
+        
+        // Get accuracy bonuses from support abilities
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            if (ability.effect === 'accuracy_up') {
+                accuracy += ability.power || 0.15;
+            }
+        });
+
+        // Check equipment for accuracy modifiers
+        Object.values(this.equipment).forEach(item => {
+            if (!item) return;
+            if (item.effects?.includes('accuracy_up')) {
+                accuracy += 0.1;
+            }
+            // Apply item-specific accuracy bonus if it exists
+            if (item.getAccuracyBonus) {
+                accuracy += item.getAccuracyBonus();
+            }
+        });
+
+        // Check status effects for accuracy modifiers
+        this.status.effects.forEach(effect => {
+            switch (effect.name) {
+                case 'blind':
+                    accuracy *= 0.5;
+                    break;
+                case 'precision':
+                    accuracy += 0.2;
+                    break;
+            }
+        });
+
+        // Calculate target's evasion
+        let evasion = target.getStats().ev / 100; // Base evasion from stats
+        
+        // Check target's status effects for evasion modifiers
+        target.status.effects.forEach(effect => {
+            switch (effect.name) {
+                case 'slow':
+                    evasion *= 0.7;
+                    break;
+                case 'haste':
+                    evasion *= 1.3;
+                    break;
+                case 'immobilize':
+                    evasion *= 0.5;
+                    break;
+            }
+        });
+
+        // Final hit chance calculation
+        return Math.min(0.99, Math.max(0.1, accuracy - evasion));
+    }
+
+    _calculateCriticalChance(ability, target) {
+        // Base critical chance (5%)
+        let critChance = 0.05;
+        
+        // Get critical bonuses from support abilities
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            if (ability.effect === 'increase_critical') {
+                critChance += ability.power || 0.1;
+            }
+        });
+
+        // Check equipment for critical modifiers
+        Object.values(this.equipment).forEach(item => {
+            if (!item) return;
+            if (item.effects?.includes('critical_up')) {
+                critChance += 0.05;
+            }
+            // Apply item-specific critical bonus if it exists
+            if (item.getCriticalBonus) {
+                critChance += item.getCriticalBonus();
+            }
+        });
+
+        // Check status effects for critical modifiers
+        this.status.effects.forEach(effect => {
+            switch (effect.name) {
+                case 'focus':
+                    critChance += 0.15;
+                    break;
+                case 'weakness_exposed':
+                    critChance += 0.2;
+                    break;
+            }
+        });
+
+        // Check target's critical resistance
+        target.status.effects.forEach(effect => {
+            if (effect.name === 'guard') {
+                critChance *= 0.5;
+            }
+        });
+
+        // Final critical chance calculation
+        return Math.min(0.5, Math.max(0.01, critChance));
+    }
+
+    getInitiative() {
+        let initiative = this.getStats().sp;
+        
+        // Apply Time Sense support ability
+        const hasTimeSense = this.getSupportAbilities()
+            .some(ability => ability.effect === 'initiative_up');
+        if (hasTimeSense) {
+            initiative *= 1.5;
+        }
+
+        // Check status effects
+        this.status.effects.forEach(effect => {
+            switch (effect.name) {
+                case 'haste':
+                    initiative *= 1.5;
+                    break;
+                case 'slow':
+                    initiative *= 0.5;
+                    break;
+                case 'stop':
+                    initiative = 0;
+                    break;
+            }
+        });
+
+        return Math.floor(initiative);
+    }
+
+    useItem(item, target) {
+        // Check for Item Boost support ability
+        const hasItemBoost = this.getSupportAbilities()
+            .some(ability => ability.effect === 'improve_item_effect');
+            
+        const itemEffect = { ...item.effect };
+        
+        // Apply Item Boost if applicable
+        if (hasItemBoost) {
+            if (itemEffect.healing) {
+                itemEffect.healing *= 1.3;
+            }
+            if (itemEffect.power) {
+                itemEffect.power *= 1.3;
+            }
+            if (itemEffect.duration) {
+                itemEffect.duration = Math.floor(itemEffect.duration * 1.3);
+            }
+        }
+
+        return this.useAbility({
+            ...itemEffect,
+            isItem: true,
+            name: item.name
+        }, target);
+    }
+
+    _calculatePerformanceEffect(ability) {
+        const stats = this.getStats();
+        let effectPower = ability.power || 1;
+        let duration = ability.duration || 3;
+
+        // Check for performance enhancing abilities
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            switch (ability.effect) {
+                case 'enhance_song_power':
+                    if (ability.type === 'song') {
+                        effectPower *= 1.5;
+                    }
+                    break;
+                case 'extend_song_duration':
+                    if (ability.type === 'song') {
+                        duration = Math.floor(duration * 1.5);
+                    }
+                    break;
+                case 'increase_dance_success':
+                    if (ability.type === 'dance') {
+                        effectPower *= 1.3;
+                    }
+                    break;
+                case 'extend_dance_duration':
+                    if (ability.type === 'dance') {
+                        duration = Math.floor(duration * 1.4);
+                    }
+                    break;
+                case 'increase_dance_potency':
+                    if (ability.type === 'dance') {
+                        effectPower *= 1.4;
+                    }
+                    break;
+            }
+        });
+
+        return { power: effectPower, duration };
+    }
+
+    _calculateTerrainEffects(ability) {
+        // Skip if no terrain system is present
+        if (!this.currentTerrain) return { power: 1, duration: 1 };
+
+        let power = 1;
+        let ignoreNegative = false;
+
+        // Check for terrain-affecting support abilities
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            switch (ability.effect) {
+                case 'enhance_terrain_magic':
+                    if (this.currentTerrain.type === ability.terrainType) {
+                        power *= 1.5;
+                    }
+                    break;
+                case 'ignore_terrain':
+                    ignoreNegative = true;
+                    break;
+            }
+        });
+
+        // Apply terrain effects if not ignored
+        if (!ignoreNegative && this.currentTerrain.penalty) {
+            power *= (1 - this.currentTerrain.penalty);
+        }
+
+        return { power };
+    }
+
+    _calculateStealthBonus() {
+        let stealthLevel = 0;
+
+        // Check for stealth-enhancing support abilities
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            if (ability.effect === 'improve_sneaking') {
+                stealthLevel += 2;
+            }
+        });
+
+        // Add equipment stealth bonuses
+        Object.values(this.equipment).forEach(item => {
+            if (item?.effects?.includes('stealth_up')) {
+                stealthLevel += 1;
+            }
+        });
+
+        // Check status effects
+        this.status.effects.forEach(effect => {
+            if (effect.name === 'invisible') {
+                stealthLevel += 3;
+            }
+            if (effect.name === 'camouflage') {
+                stealthLevel += 2;
+            }
+        });
+
+        return stealthLevel;
+    }
+
+    move(newPosition) {
+        const oldPosition = this.position;
+        this.position = newPosition;
+
+        // Handle movement-based abilities
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            switch (ability.effect) {
+                case 'heal_while_moving':
+                    // Squire's Move HP Up
+                    const healAmount = Math.floor(this.getMaxHP() * 0.1);
+                    this.status.hp = Math.min(this.getMaxHP(), this.status.hp + healAmount);
+                    break;
+                case 'mp_regen_walking':
+                    // White Mage's MP Recovery
+                    const mpRestore = Math.floor(this.getMaxMP() * 0.05);
+                    this.status.mp = Math.min(this.getMaxMP(), this.status.mp + mpRestore);
+                    break;
+            }
+        });
+
+        return true;
+    }
+
+    _calculateMimicAccuracy(originalAbility) {
+        // Base mimic accuracy of 75%
+        let accuracy = 0.75;
+        
+        // Improve accuracy with Mime's support ability
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            if (ability.effect === 'improve_copy_accuracy') {
+                accuracy = Math.min(0.95, accuracy + 0.2);
+            }
+        });
+
+        return accuracy;
+    }
+
+    _handleTrapDetection(area) {
+        let detectionRange = 1; // Base detection range
+        let autoDisarm = false;
+
+        // Check for Thief's trap mastery
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            if (ability.effect === 'extended_trap_detection') {
+                detectionRange = 2;
+            }
+            if (ability.effect === 'auto_disarm') {
+                autoDisarm = true;
+            }
+        });
+
+        // Return detection capabilities
+        return {
+            range: detectionRange,
+            autoDisarm: autoDisarm
+        };
+    }
+
+    _calculatePredictionAccuracy() {
+        let predictionPower = 1;
+        
+        // Enhance prediction abilities
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            if (ability.effect === 'enhance_prediction') {
+                predictionPower += 0.5;
+            }
+            if (ability.effect === 'enhance_detection') {
+                predictionPower += 0.3;
+            }
+        });
+
+        return predictionPower;
+    }
+
+    _calculateMagicModifiers(ability) {
+        let powerMultiplier = 1;
+        let mpCostMultiplier = 1;
+
+        const support = this.getSupportAbilities();
+        support.forEach(supportAbility => {
+            switch (supportAbility.effect) {
+                case 'enhance_math_magic':
+                    if (ability.jobId === JOBS.Calculator) {
+                        powerMultiplier *= 1.5;
+                    }
+                    break;
+                case 'enhance_time_magic':
+                    if (ability.element === 'time') {
+                        powerMultiplier *= 1.4;
+                    }
+                    break;
+                case 'reduce_summon_mp_cost':
+                    if (ability.jobId === JOBS.Summoner) {
+                        mpCostMultiplier *= 0.7;
+                    }
+                    break;
+            }
+        });
+
+        return { powerMultiplier, mpCostMultiplier };
+    }
+
+    _calculateMPCost(ability) {
+        let mpCost = ability.mp || 0;
+        
+        // Apply general MP cost reductions
+        const support = this.getSupportAbilities();
+        support.forEach(ability => {
+            switch (ability.effect) {
+                case 'reduce_mp_cost':
+                    mpCost *= 0.7; // Orator's Silver Tongue
+                    break;
+                case 'reduce_summon_mp_cost':
+                    if (ability.jobId === JOBS.Summoner) {
+                        mpCost *= 0.7; // Summoner's Mastery
+                    }
+                    break;
+            }
+        });
+
+        return Math.floor(mpCost);
     }
 }
 
