@@ -26,6 +26,7 @@ class Party {
         }
 
         member.setPosition(position);
+        member.party = this.members; // Set party reference
         this.members.push(member);
         if (position === 'front') {
             this.frontRow.push(member);
@@ -42,6 +43,7 @@ class Party {
         this.members.splice(index, 1);
         this.frontRow = this.frontRow.filter(m => m !== member);
         this.backRow = this.backRow.filter(m => m !== member);
+        member.party = null; // Clear party reference
         return true;
     }
 
@@ -156,12 +158,22 @@ class CombatManager {
 
         // Process the ability use
         const result = actor.useAbility(abilityId, target);
-        result.target = target;
+        if (Array.isArray(result)) {
+            // For AOE abilities that return an array of results
+            return {
+                success: true,
+                isAoe: true,
+                targets: result,
+                effects: result[0].effects // Use first target's effects for display
+            };
+        } else {
+            // Single target result
+            result.target = target;
+            return result;
+        }
 
         // Check for combat end after each action
         this._checkCombatEnd();
-
-        return result;
     }
 
     _advanceTurn() {
@@ -338,9 +350,9 @@ class CombatManager {
                     targets: result.targets.map(t => ({
                         name: t.target.name,
                         position: t.target.position,
-                        damage: t.result.damage,
-                        healing: t.result.healing,
-                        effects: t.result.effects,
+                        damage: t.damage,
+                        healing: t.healing,
+                        effects: t.effects,
                         remainingHp: t.target.status.hp,
                         maxHp: t.target.getMaxHP()
                     }))

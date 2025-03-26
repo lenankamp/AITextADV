@@ -129,7 +129,7 @@ export class Knight extends JobInterface {
                 DEFENSE_BOOST: {
                     name: 'Defense Boost',
                     chance: 0.3,
-                    effect: ['protect', 'shell'],
+                    effect: 'increase_defense',
                     jpCost: 450,
                     description: 'Chance to increase defense when hit'
                 }

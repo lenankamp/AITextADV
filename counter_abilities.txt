@@ -1,0 +1,339 @@
+Counter/Reaction Ability Analysis
+============================
+
+Archer
+======
+
+Archer Guard:
+  chance: 0.3
+  effect: ranged_defense_up
+  jpCost: 200
+  description: Reduces damage from ranged attacks
+
+Counter Shot:
+  effect: counter_shot
+  chance: 0.25
+  type: physical
+  power: 0.8
+  jpCost: 300
+  description: Chance to counter with a ranged attack
+
+----------------------------------------
+
+Bard
+====
+
+Perfect Pitch:
+  chance: 0.3
+  effect: counter_with_song
+  jpCost: 400
+  description: Counter attacks with random song effect
+
+Harmony Shield:
+  chance: 0.35
+  effect: shell
+  jpCost: 450
+  description: Reduce incoming magical damage
+
+----------------------------------------
+
+BlackMage
+=========
+
+Magic Shield:
+  chance: 0.3
+  effect: shell
+  jpCost: 400
+  description: Chance to reduce incoming magical damage
+
+Spell Return:
+  chance: 0.2
+  effect: reflect
+  jpCost: 500
+  description: Chance to reflect magical attacks
+
+----------------------------------------
+
+Calculator
+==========
+
+Absorb MP:
+  chance: 0.3
+  effect: mp_drain
+  jpCost: 400
+  description: Chance to drain MP when hit
+
+Numeric Guard:
+  chance: 0.25
+  effect: number_defense
+  jpCost: 450
+  description: Reduce damage based on numerical properties
+
+----------------------------------------
+
+Chemist
+=======
+
+Auto Potion:
+  chance: 0.35
+  effect: use_potion_when_hurt
+  jpCost: 400
+  description: Automatically use potion when damaged
+
+Quick Pocket:
+  chance: 0.3
+  effect: free_item_use
+  jpCost: 450
+  description: Chance to use items without consuming them
+
+----------------------------------------
+
+Dancer
+======
+
+Rhythm Sense:
+  chance: 0.3
+  effect: evade_melee
+  jpCost: 400
+  description: Chance to dodge physical attacks
+
+Moving Grace:
+  chance: 0.25
+  effect: counter_with_dance
+  jpCost: 450
+  description: Counter attacks with dance effect
+
+----------------------------------------
+
+Dragoon
+=======
+
+Dragon Spirit:
+  chance: 0.3
+  effect: nullify_air_damage
+  jpCost: 400
+  description: Chance to nullify damage while airborne
+
+Aerial Recovery:
+  chance: 0.35
+  effect: recover_fall
+  jpCost: 350
+  description: Chance to recover from falling damage
+
+----------------------------------------
+
+Geomancer
+=========
+
+Earth Embrace:
+  chance: 0.3
+  effect: terrain_heal
+  jpCost: 400
+  description: Chance to heal when standing on natural terrain
+
+Nature Shield:
+  chance: 0.25
+  effect: terrain_defense
+  jpCost: 450
+  description: Reduces damage based on current terrain
+
+----------------------------------------
+
+Knight
+======
+
+Parry:
+  chance: 0.35
+  effect: protect
+  jpCost: 400
+  description: Chance to reduce physical damage
+
+Defense Boost:
+  chance: 0.3
+  effect: increase_defense
+  jpCost: 450
+  description: Chance to increase defense when hit
+
+----------------------------------------
+
+Mime
+====
+
+Adaptive Form:
+  chance: 0.2
+  effect: adapt_to_damage_type
+  jpCost: 500
+  description: Temporarily gains resistance to damage type received
+
+----------------------------------------
+
+Monk
+====
+
+Counter:
+  chance: 0.4
+  power: 1
+  jpCost: 300
+  description: Counter physical attacks
+
+Inner Strength:
+  chance: 0.35
+  effect: hp_restore
+  jpCost: 400
+  description: Chance to restore HP when damaged
+
+----------------------------------------
+
+Ninja
+=====
+
+Vanish:
+  chance: 0.3
+  effect: temporary_invisibility
+  jpCost: 400
+  description: Become temporarily invisible when hit
+
+Shadow Return:
+  chance: 0.25
+  effect: counter_with_status
+  jpCost: 500
+  description: Counter attacks with status effect
+
+----------------------------------------
+
+Oracle
+======
+
+Prescience:
+  chance: 0.25
+  effect: survive_fatal
+  jpCost: 400
+  description: Chance to survive fatal damage with 1 HP
+
+Fortune Shield:
+  chance: 0.3
+  effect: prevent_status
+  jpCost: 450
+  description: Chance to prevent status effects
+
+----------------------------------------
+
+Orator
+======
+
+Counter Argue:
+  chance: 0.3
+  effect: reflect_status
+  jpCost: 400
+  description: Chance to reflect status effects
+
+Diplomatic Immunity:
+  chance: 0.35
+  effect: avoid_damage
+  jpCost: 450
+  description: Chance to avoid damage through negotiation
+
+----------------------------------------
+
+Samurai
+=======
+
+Third Eye:
+  chance: 0.35
+  effect: anticipate_attack
+  jpCost: 450
+  description: Chance to completely avoid next physical attack
+
+Retribution:
+  chance: 0.25
+  effect: counter_with_power
+  jpCost: 500
+  description: Counter physical attacks with increased power
+
+----------------------------------------
+
+Squire
+======
+
+Counter Tackle:
+  chance: 0.25
+  effect: counter_attack
+  jpCost: 300
+  description: Counter physical attacks with a tackle
+
+Defensive Stance:
+  chance: 0.3
+  effect: reduce_damage
+  jpCost: 250
+  description: Chance to reduce incoming damage
+
+----------------------------------------
+
+Summoner
+========
+
+Summon Boost:
+  chance: 0.3
+  effect: enhance_next_summon
+  jpCost: 400
+  description: Chance to enhance next summon's power
+
+Eidolon Shield:
+  chance: 0.25
+  effect: summon_barrier
+  jpCost: 500
+  description: Chance to summon protective barrier when hit
+
+----------------------------------------
+
+Thief
+=====
+
+Vigilance:
+  chance: 0.3
+  effect: detect_ambush
+  jpCost: 300
+  description: Chance to detect and prevent surprise attacks
+
+Sticky Fingers:
+  chance: 0.25
+  effect: counter_steal
+  jpCost: 400
+  description: Chance to steal items when hit
+
+----------------------------------------
+
+TimeMage
+========
+
+Time Ward:
+  chance: 0.3
+  effect: resist_time_magic
+  jpCost: 400
+  description: Chance to resist time magic
+
+Temporal Shift:
+  chance: 0.25
+  effect: evade
+  jpCost: 500
+  description: Phase through time to avoid damage
+
+----------------------------------------
+
+WhiteMage
+=========
+
+Auto-Regen:
+  chance: 0.4
+  effect: regen
+  jpCost: 400
+  description: Chance to gain regen when damaged
+
+Divine Grace:
+  chance: 0.25
+  effect: enhance_healing
+  jpCost: 450
+  description: Chance to enhance healing received
+
+----------------------------------------
+

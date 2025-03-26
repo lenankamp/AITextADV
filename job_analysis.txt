@@ -26,26 +26,103 @@ EV: 0.3
 
 Active Abilities:
 ----------------
-CHARGE: Powerful charged shot (MP: 12) [JP: 100]
-RAPID_FIRE: Multiple quick shots (MP: 15) [JP: 200]
-ARROW_RAIN: Deals damage to all enemies in an area (MP: 20) [JP: 300]
-PRECISION_SHOT: High accuracy shot with increased critical rate (MP: 18) [JP: 400]
-SNIPER_SHOT: Long-range precision attack (MP: 25) [JP: 450]
-DISABLING_SHOT: Deals damage and slows the target (MP: 15) [JP: 250]
-WEAKNESS_SHOT: Reduces target defense while dealing damage (MP: 25) [JP: 450]
-PIERCING_ARROW: Arrow that pierces through defenses (MP: 28) [JP: 400]
-TAKEDOWN_SHOT: Powerful shot that knocks target back (MP: 32) [JP: 500]
-BARRAGE: Multiple shots hitting all enemies in area (MP: 35) [JP: 600]
+Aim:
+Charge:
+  type: physical
+  power: 2
+  mp: 12
+  charge: 1
+  jpCost: 100
+  description: Powerful charged shot
+Rapid Fire:
+  type: physical
+  power: 0.8
+  hits: 4
+  mp: 15
+  jpCost: 200
+  description: Multiple quick shots
+Arrow Rain:
+  type: physical
+  power: 1.2
+  aoe: true
+  mp: 20
+  jpCost: 300
+  description: Deals damage to all enemies in an area
+Precision Shot:
+  type: physical
+  power: 1.8
+  accuracy: 1.5
+  critRate: 0.3
+  mp: 18
+  jpCost: 400
+  description: High accuracy shot with increased critical rate
+Sniper Shot:
+  type: physical
+  power: 2.2
+  mp: 25
+  jpCost: 450
+  description: Long-range precision attack
+Disabling Shot:
+  type: physical
+  power: 0.7
+  effect: slow
+  mp: 15
+  jpCost: 250
+  description: Deals damage and slows the target
+Weakness Shot:
+  type: physical
+  power: 1
+  effect: defense_down
+  mp: 25
+  jpCost: 450
+  description: Reduces target defense while dealing damage
+Piercing Arrow:
+  type: physical
+  power: 1.6
+  effect: armor_pierce
+  mp: 28
+  jpCost: 400
+  description: Arrow that pierces through defenses
+Takedown Shot:
+  type: physical
+  power: 2
+  effect: knockback
+  mp: 32
+  jpCost: 500
+  description: Powerful shot that knocks target back
+Barrage:
+  type: physical
+  power: 1.4
+  hits: 3
+  aoe: true
+  mp: 35
+  jpCost: 600
+  description: Multiple shots hitting all enemies in area
 
 Reaction Abilities:
 ------------------
-Archer_GUARD: Reduces damage from ranged attacks [JP: 200]
-COUNTER_SHOT: Chance to counter with a ranged attack [JP: 300]
+Archer Guard:
+  chance: 0.3
+  effect: ranged_defense_up
+  jpCost: 200
+  description: Reduces damage from ranged attacks
+Counter Shot:
+  chance: 0.25
+  type: physical
+  power: 0.8
+  jpCost: 300
+  description: Chance to counter with a ranged attack
 
 Support Abilities:
 -----------------
-CONCENTRATE: Increases accuracy of attacks [JP: 150]
-PRECISE_AIM: Improves critical hit chance [JP: 300]
+Concentrate:
+  effect: accuracy_up
+  jpCost: 150
+  description: Increases accuracy of attacks
+Precise Aim:
+  effect: increase_critical
+  jpCost: 300
+  description: Improves critical hit chance
 
 Requirements:
 ------------
@@ -81,26 +158,101 @@ EV: 0.3
 
 Active Abilities:
 ----------------
-BATTLE_CHANT: Increase party defense through song (MP: 18) [JP: 200]
-LIFE_SONG: Grant regeneration to party (MP: 22) [JP: 250]
-MANA_PAEAN: Grant MP regeneration to party (MP: 25) [JP: 300]
-HERO_BALLAD: Major boost to party combat stats (MP: 35) [JP: 400]
-SILENCE_SONG: Silence all enemies in range (MP: 28) [JP: 350]
-CONFUSION_CAROL: Confuse enemies with discordant notes (MP: 30) [JP: 375]
-PEACEFUL_NOCTURNE: Put enemies to sleep with soothing melody (MP: 32) [JP: 400]
-NAMELESS_SONG: Grant random positive effects to party (MP: 20) [JP: 300]
-DISSONANT_WAVE: Damage enemies with sonic waves (MP: 32) [JP: 450]
-GRAND_FINALE: Powerful sonic attack that removes buffs (MP: 45) [JP: 500]
+Songs:
+Battle Chant:
+  type: buff
+  effect: protect
+  aoe: true
+  mp: 18
+  jpCost: 200
+  description: Increase party defense through song
+Life Song:
+  type: buff
+  effect: regen
+  aoe: true
+  mp: 22
+  jpCost: 250
+  description: Grant regeneration to party
+Mana Paean:
+  type: buff
+  effect: mp_regen
+  aoe: true
+  mp: 25
+  jpCost: 300
+  description: Grant MP regeneration to party
+Hero Ballad:
+  type: buff
+  aoe: true
+  mp: 35
+  jpCost: 400
+  description: Major boost to party combat stats
+Silence Song:
+  type: status
+  effect: silence
+  aoe: true
+  mp: 28
+  jpCost: 350
+  description: Silence all enemies in range
+Confusion Carol:
+  type: status
+  effect: confuse
+  aoe: true
+  mp: 30
+  jpCost: 375
+  description: Confuse enemies with discordant notes
+Peaceful Nocturne:
+  type: status
+  effect: sleep
+  aoe: true
+  mp: 32
+  jpCost: 400
+  description: Put enemies to sleep with soothing melody
+Nameless Song:
+  type: buff
+  effect: random_buff
+  aoe: true
+  mp: 20
+  jpCost: 300
+  description: Grant random positive effects to party
+Dissonant Wave:
+  type: magical
+  power: 2
+  element: sonic
+  aoe: true
+  mp: 32
+  jpCost: 450
+  description: Damage enemies with sonic waves
+Grand Finale:
+  type: special
+  power: 2.5
+  aoe: true
+  mp: 45
+  jpCost: 500
+  description: Powerful sonic attack that removes buffs
 
 Reaction Abilities:
 ------------------
-PERFECT_PITCH: Counter attacks with random song effect [JP: 400]
-HARMONY_SHIELD: Reduce incoming magical damage [JP: 450]
+Perfect Pitch:
+  chance: 0.3
+  effect: counter_with_song
+  jpCost: 400
+  description: Counter attacks with random song effect
+Harmony Shield:
+  chance: 0.35
+  effect: shell
+  jpCost: 450
+  description: Reduce incoming magical damage
 
 Support Abilities:
 -----------------
-SONG_MASTERY: Increase duration of song effects [JP: 500]
-RESONANCE: Increase potency of song effects [JP: 450]
+Song Mastery:
+  effect: extend_song_duration
+  jpCost: 500
+  description: Increase duration of song effects
+Resonance:
+  effect: enhance_song_power
+  jpCost: 450
+  description: Increase potency of song effects
 
 Requirements:
 ------------
@@ -138,32 +290,116 @@ EV: 0.2
 
 Active Abilities:
 ----------------
-FIRE: magical ability power 1.8 (MP: 16) [JP: 200]
-FIRA: magical ability power 2.4 (MP: 24) [JP: 400]
-FIRAGA: magical ability power 3 (AoE) (MP: 48) [JP: 600]
-THUNDER: magical ability power 1.9 (MP: 18) [JP: 200]
-THUNDARA: magical ability power 2.5 (MP: 26) [JP: 400]
-THUNDAGA: magical ability power 3.1 (AoE) (MP: 50) [JP: 600]
-BLIZZARD: magical ability power 1.7 (MP: 14) [JP: 200]
-BLIZZARA: magical ability power 2.3 (MP: 22) [JP: 400]
-BLIZZAGA: magical ability power 2.9 (AoE) (MP: 46) [JP: 600]
-BREAK: status ability causing petrify (MP: 30) [JP: 450]
-DEATH: status ability causing instant_death (MP: 40) [JP: 750]
-FLARE: Ultimate single-target damage spell (MP: 60) [JP: 900]
-MAGICAL_BURST: Destroys magical barriers and enchantments (MP: 25) [JP: 300]
-ARCANE_DISRUPTION: Detect and dispel magical effects in an area (MP: 35) [JP: 450]
-ARCANE_EYE: Reveals magical traps and analyzes curses (MP: 15) [JP: 200]
-VOID_PULSE: Dispels magical fields in an area (MP: 35) [JP: 400]
+Black Magic:
+Fire:
+  type: magical
+  element: fire
+  power: 1.8
+  mp: 16
+  jpCost: 200
+Fira:
+  type: magical
+  element: fire
+  power: 2.4
+  mp: 24
+  jpCost: 400
+Firaga:
+  type: magical
+  element: fire
+  power: 3
+  aoe: true
+  mp: 48
+  jpCost: 600
+Thunder:
+  type: magical
+  element: lightning
+  power: 1.9
+  mp: 18
+  jpCost: 200
+Thundara:
+  type: magical
+  element: lightning
+  power: 2.5
+  mp: 26
+  jpCost: 400
+Thundaga:
+  type: magical
+  element: lightning
+  power: 3.1
+  aoe: true
+  mp: 50
+  jpCost: 600
+Blizzard:
+  type: magical
+  element: ice
+  power: 1.7
+  mp: 14
+  jpCost: 200
+Blizzara:
+  type: magical
+  element: ice
+  power: 2.3
+  mp: 22
+  jpCost: 400
+Blizzaga:
+  type: magical
+  element: ice
+  power: 2.9
+  aoe: true
+  mp: 46
+  jpCost: 600
+Break:
+  type: status
+  effect: petrify
+  mp: 30
+  jpCost: 450
+Death:
+  type: status
+  effect: instant_death
+  mp: 40
+  jpCost: 750
+Flare:
+  type: magical
+  element: non-elemental
+  power: 3.5
+  mp: 60
+  jpCost: 900
+  description: Ultimate single-target damage spell
+Arcane Disruption:
+  type: dungeon
+  aoe: true
+  mp: 35
+  jpCost: 450
+  description: Detect and dispel magical effects in an area
+Arcane Eye:
+  type: dungeon
+  mp: 15
+  jpCost: 200
+  description: Reveals magical traps and analyzes curses
 
 Reaction Abilities:
 ------------------
-MAGIC_SHIELD: Chance to reduce incoming magical damage [JP: 400]
-SPELL_RETURN: Chance to reflect magical attacks [JP: 500]
+Magic Shield:
+  chance: 0.3
+  effect: shell
+  jpCost: 400
+  description: Chance to reduce incoming magical damage
+Spell Return:
+  chance: 0.2
+  effect: reflect
+  jpCost: 500
+  description: Chance to reflect magical attacks
 
 Support Abilities:
 -----------------
-MAGIC_BOOST: Increases magical damage [JP: 500]
-DUAL_CAST: Cast two spells in one turn [JP: 999]
+Magic Boost:
+  effect: increase_magic_power
+  jpCost: 500
+  description: Increases magical damage
+Dual Cast:
+  effect: cast_twice
+  jpCost: 999
+  description: Cast two spells in one turn
 
 Requirements:
 ------------
@@ -199,26 +435,92 @@ EV: 0.2
 
 Active Abilities:
 ----------------
-CT_PRIME: Target units with prime CT values (MP: 25) [JP: 300]
-LEVEL_DIVIDE: Target units with divisible levels (MP: 28) [JP: 350]
-HEIGHT_FACTOR: Target units at specific height multiples (MP: 30) [JP: 400]
-MULTIPLY: Multiply spell effects on valid targets (MP: 35) [JP: 450]
-PRIME_STRIKE: Deal damage based on prime numbers (MP: 32) [JP: 500]
-NUMERICAL_FORCE: Deal damage based on numerical properties (MP: 30) [JP: 450]
-FACTOR_BARRIER: Create barrier based on mathematical factors (MP: 38) [JP: 550]
-DIVIDE_MP: Divide target's MP by a factor (MP: 20) [JP: 400]
-PERFECT_NUMBER: Optimize stats based on perfect numbers (MP: 45) [JP: 600]
-MODULO_MASTERY: Ultimate number-based attack (MP: 50) [JP: 700]
+Arithmeticks:
+CT Prime:
+  type: special
+  effect: prime_target
+  mp: 25
+  jpCost: 300
+  description: Target units with prime CT values
+Level Divide:
+  type: special
+  effect: level_target
+  mp: 28
+  jpCost: 350
+  description: Target units with divisible levels
+Height Factor:
+  type: special
+  effect: height_target
+  mp: 30
+  jpCost: 400
+  description: Target units at specific height multiples
+Multiply:
+  type: special
+  mp: 35
+  jpCost: 450
+  description: Multiply spell effects on valid targets
+Prime Strike:
+  type: magical
+  power: 2
+  effect: prime_damage
+  mp: 32
+  jpCost: 500
+  description: Deal damage based on prime numbers
+Numerical Force:
+  type: special
+  power: 1.8
+  effect: number_based_damage
+  mp: 30
+  jpCost: 450
+  description: Deal damage based on numerical properties
+Factor Barrier:
+  type: buff
+  effect: numeric_shield
+  mp: 38
+  jpCost: 550
+  description: Create barrier based on mathematical factors
+Divide MP:
+  type: special
+  mp: 20
+  jpCost: 400
+  description: Divide target's MP by a factor
+Perfect Number:
+  type: buff
+  effect: perfect_stats
+  mp: 45
+  jpCost: 600
+  description: Optimize stats based on perfect numbers
+Modulo Mastery:
+  type: magical
+  power: 2.5
+  effect: remainder_damage
+  mp: 50
+  jpCost: 700
+  description: Ultimate number-based attack
 
 Reaction Abilities:
 ------------------
-ABSORB_MP: Chance to drain MP when hit [JP: 400]
-NUMERIC_GUARD: Reduce damage based on numerical properties [JP: 450]
+Absorb MP:
+  chance: 0.3
+  effect: mp_drain
+  jpCost: 400
+  description: Chance to drain MP when hit
+Numeric Guard:
+  chance: 0.25
+  effect: number_defense
+  jpCost: 450
+  description: Reduce damage based on numerical properties
 
 Support Abilities:
 -----------------
-ARCANE_MATH: Increase power of mathematical abilities [JP: 500]
-QUICK_CALCULATE: Reduce casting time of abilities [JP: 400]
+Arcane Math:
+  effect: enhance_math_magic
+  jpCost: 500
+  description: Increase power of mathematical abilities
+Quick Calculate:
+  effect: reduce_cast_time
+  jpCost: 400
+  description: Reduce casting time of abilities
 
 Requirements:
 ------------
@@ -256,26 +558,80 @@ EV: 0.2
 
 Active Abilities:
 ----------------
-USE_POTION: Use healing items with increased effectiveness [JP: 100]
-THROW_ITEM: Throw items at increased range [JP: 200]
-MIX: Combine two items for unique effects (MP: 10) [JP: 400]
-ANALYZE: Reveal enemy stats and weaknesses (MP: 12) [JP: 250]
-BREW_POTION: Create basic healing potion (MP: 15) [JP: 300]
-ANTIDOTE_BREW: Create antidote for status effects (MP: 15) [JP: 300]
-SAMPLE: Extract useful components from monsters (MP: 20) [JP: 350]
-BOMB_CRAFT: Create explosive items from materials (MP: 25) [JP: 450]
-MEGA_POTION: Create powerful healing potion that affects area (MP: 35) [JP: 600]
-ELIXIR_CRAFT: Create powerful elixir that fully restores and buffs (MP: 50) [JP: 800]
+Item:
+Use Potion:
+  type: healing
+  effect: enhance_item
+  jpCost: 100
+  description: Use healing items with increased effectiveness
+Throw Item:
+  type: special
+  power: item_dependent
+  jpCost: 200
+  description: Throw items at enemies for various effects
+Mix:
+  type: special
+  mp: 10
+  jpCost: 400
+  description: Combine two items for unique effects
+Analyze:
+  type: analyze
+  mp: 12
+  jpCost: 250
+  description: Reveal enemy stats and weaknesses
+Brew Potion:
+  type: special
+  mp: 15
+  jpCost: 300
+  description: Create basic healing potion
+Antidote Brew:
+  type: special
+  mp: 15
+  jpCost: 300
+  description: Create antidote for status effects
+Sample:
+  type: special
+  mp: 20
+  jpCost: 350
+  description: Extract useful components from monsters
+Bomb Craft:
+  type: special
+  mp: 25
+  jpCost: 450
+  description: Create explosive items from materials
+Mega Potion:
+  type: healing
+  aoe: true
+  jpCost: 600
+  description: Use powerful healing potion that affects area
+Elixir Craft:
+  type: special
+  jpCost: 800
+  description: Use powerful elixir that fully restores and buffs
 
 Reaction Abilities:
 ------------------
-AUTO_POTION: Automatically use potion when damaged [JP: 400]
-QUICK_POCKET: Chance to use items without consuming them [JP: 450]
+Auto Potion:
+  chance: 0.35
+  effect: use_potion_when_hurt
+  jpCost: 400
+  description: Automatically use potion when damaged
+Quick Pocket:
+  chance: 0.3
+  effect: free_item_use
+  jpCost: 450
+  description: Chance to use items without consuming them
 
 Support Abilities:
 -----------------
-ITEM_BOOST: Increase effectiveness of used items [JP: 500]
-MEDICINE_LORE: Increase healing from items and abilities [JP: 400]
+Item Boost:
+  effect: improve_item_effect
+  jpCost: 500
+  description: Increase effectiveness of used items
+Medicine Lore:
+  effect: improve_healing
+  jpCost: 400
+  description: Increase healing from items and abilities
 
 ==================================================
 
@@ -307,26 +663,96 @@ EV: 0.4
 
 Active Abilities:
 ----------------
-SLOW_DANCE: Reduce enemy speed through dance (MP: 16) [JP: 200]
-TEMPTING_WALTZ: Charm target with mesmerizing dance (MP: 24) [JP: 300]
-WAR_DANCE: Boost party attack through dance (MP: 20) [JP: 250]
-EXHAUSTING_POLKA: Drain enemy stamina and MP (MP: 28) [JP: 350]
-SIREN_DANCE: Confuse enemies with alluring dance (MP: 30) [JP: 400]
-BEWITCHING_DANCE: Put enemies to sleep with enchanting dance (MP: 35) [JP: 450]
-HEALING_WALTZ: Remove status effects with restorative dance (MP: 22) [JP: 280]
-FORBIDDEN_DANCE: Drain MP with dark dance (MP: 40) [JP: 500]
-TRANCE_DANCE: Enter powerful trance state (MP: 45) [JP: 600]
-LAST_WALTZ: Ultimate dance draining HP and MP (MP: 50) [JP: 800]
+Dance:
+Slow Dance:
+  type: status
+  effect: slow
+  aoe: true
+  mp: 16
+  jpCost: 200
+  description: Reduce enemy speed through dance
+Tempting Waltz:
+  type: status
+  effect: charm
+  mp: 24
+  jpCost: 300
+  description: Charm target with mesmerizing dance
+War Dance:
+  type: buff
+  effect: attack_up
+  aoe: true
+  mp: 20
+  jpCost: 250
+  description: Boost party attack through dance
+Exhausting Polka:
+  type: drain
+  aoe: true
+  mp: 28
+  jpCost: 350
+  description: Drain enemy stamina and MP
+Siren Dance:
+  type: status
+  effect: confusion
+  aoe: true
+  mp: 30
+  jpCost: 400
+  description: Confuse enemies with alluring dance
+Bewitching Dance:
+  type: status
+  aoe: true
+  mp: 35
+  jpCost: 450
+  description: Put enemies to sleep with enchanting dance
+Healing Waltz:
+  type: special
+  aoe: true
+  mp: 22
+  jpCost: 280
+  description: Remove status effects with restorative dance
+Forbidden Dance:
+  type: drain
+  power: 2.2
+  effect: mp_drain
+  aoe: true
+  mp: 40
+  jpCost: 500
+  description: Drain MP with dark dance
+Trance Dance:
+  type: buff
+  target: self
+  mp: 45
+  jpCost: 600
+  description: Enter powerful trance state
+Last Waltz:
+  type: drain
+  power: 3
+  aoe: true
+  mp: 50
+  jpCost: 800
+  description: Ultimate dance draining HP and MP
 
 Reaction Abilities:
 ------------------
-RHYTHM_SENSE: Chance to dodge physical attacks [JP: 400]
-MOVING_GRACE: Counter attacks with dance effect [JP: 450]
+Rhythm Sense:
+  chance: 0.3
+  effect: evade_melee
+  jpCost: 400
+  description: Chance to dodge physical attacks
+Moving Grace:
+  chance: 0.25
+  effect: counter_with_dance
+  jpCost: 450
+  description: Counter attacks with dance effect
 
 Support Abilities:
 -----------------
-DANCE_MASTERY: Improve success rate of dance abilities [JP: 500]
-PERFORMANCE_FOCUS: Enhances duration and effectiveness of dance abilities [JP: 450]
+Dance Mastery:
+  effect: increase_dance_success
+  jpCost: 500
+  description: Improve success rate of dance abilities
+Performance Focus:
+  jpCost: 450
+  description: Enhances duration and effectiveness of dance abilities
 
 Requirements:
 ------------
@@ -342,7 +768,7 @@ Dragoon
 
 Description:
 -----------
-Masters of aerial combat and verticality. Specializing in powerful jump attacks and mobility options, they excel at traversing difficult terrain and attacking from above. Their abilities to breach vertical barriers and scout from high vantage points make them invaluable for exploration.
+Masters of aerial combat and verticality. Specializing in powerful jump attacks and mobility options, they excel at traversing difficult terrain and attacking from above.
 
 Base Stats:
 -----------
@@ -364,26 +790,82 @@ EV: 0.2
 
 Active Abilities:
 ----------------
-JUMP: Basic jumping attack with height-based bonus (MP: 12) [JP: 200]
-LANCET: Drain HP and MP from target (MP: 8) [JP: 200]
-HIGH_JUMP: Powerful jump with longer charge time (MP: 20) [JP: 400]
-AERIAL_SURVEY: Scout high areas and upper floors (MP: 15) [JP: 300]
-BREACH: Break through weakened ceilings to new areas (MP: 28) [JP: 450]
-VERTICAL_PATH: Find paths between floor levels (MP: 22) [JP: 350]
-SWEEP_DIVE: Area-of-effect diving attack (MP: 25) [JP: 500]
-DRAGON_BREATH: Channel dragon energy in cone attack (MP: 16) [JP: 400]
-PIERCING_STRIKE: Ignore portion of enemy defense (MP: 22) [JP: 400]
-GEIRSKOGUL: Ultimate dragoon technique (MP: 45) [JP: 800]
+Jump:
+Jump:
+  type: physical
+  power: 2
+  charge: 1
+  ranged: true
+  mp: 12
+  jpCost: 200
+  description: Basic jumping attack with height-based bonus
+Lancet:
+  type: drain
+  power: 1
+  mp: 8
+  jpCost: 200
+  description: Drain HP and MP from target
+High Jump:
+  type: physical
+  power: 2.8
+  ranged: true
+  charge: 2
+  mp: 20
+  jpCost: 400
+  description: Powerful jump with longer charge time
+Sweep Dive:
+  type: physical
+  power: 1.8
+  aoe: true
+  mp: 25
+  jpCost: 500
+  description: Area-of-effect diving attack
+Dragon Breath:
+  type: magical
+  element: dragon
+  power: 2.2
+  mp: 16
+  jpCost: 400
+  description: Channel dragon energy in cone attack
+Piercing Strike:
+  type: physical
+  power: 2
+  effect: armor_pierce
+  mp: 22
+  jpCost: 400
+  description: Ignore portion of enemy defense
+Geirskogul:
+  type: physical
+  power: 3.2
+  element: dragon
+  aoe: true
+  mp: 45
+  jpCost: 800
+  description: Ultimate dragoon technique
 
 Reaction Abilities:
 ------------------
-DRAGON_SPIRIT: Chance to nullify damage while airborne [JP: 400]
-AERIAL_RECOVERY: Chance to recover from falling damage [JP: 350]
+Dragon Spirit:
+  chance: 0.3
+  effect: nullify_air_damage
+  jpCost: 400
+  description: Chance to nullify damage while airborne
+Aerial Recovery:
+  chance: 0.35
+  effect: recover_fall
+  jpCost: 350
+  description: Chance to recover from falling damage
 
 Support Abilities:
 -----------------
-DRAGON_MIGHT: Increase jump attack damage [JP: 500]
-SURE_LANDING: Always land safely from jumps [JP: 300]
+Dragon Might:
+  effect: jump_damage_up
+  jpCost: 500
+  description: Increase jump attack damage
+Sure Landing:
+  effect: safe_landing
+  jpCost: 300
+  description: Always land safely from jumps
 
 Requirements:
 ------------
@@ -419,26 +901,96 @@ EV: 0.2
 
 Active Abilities:
 ----------------
-TERRAIN_POWER: Attack based on current terrain (MP: 25) [JP: 300]
-EARTH_RENDER: Powerful earth-based attack (MP: 30) [JP: 400]
-TERRA_PULSE: Area earth damage (MP: 35) [JP: 450]
-TERRAIN_SIGHT: Reveal detailed terrain layout and features (MP: 28) [JP: 350]
-EARTH_SENSE: Detect hidden paths and hazards in current area (MP: 20) [JP: 300]
-ROCK_PATH: Create temporary paths over gaps (MP: 32) [JP: 400]
-TERRAIN_SHIFT: Temporarily modify terrain properties (MP: 40) [JP: 500]
-SANDSTORM: Area damage with chance to blind (MP: 38) [JP: 450]
-NATURE_COMMUNION: Reveal environmental hazards and natural resources (MP: 45) [JP: 600]
-GAIA_FORCE: Ultimate earth-based attack (MP: 50) [JP: 700]
+Geomancy:
+Terrain Power:
+  type: special
+  mp: 25
+  jpCost: 300
+  description: Attack based on current terrain
+Earth Render:
+  type: magical
+  element: earth
+  power: 2.4
+  mp: 30
+  jpCost: 400
+  description: Powerful earth-based attack
+Terra Pulse:
+  type: magical
+  element: earth
+  power: 2.2
+  aoe: true
+  mp: 35
+  jpCost: 450
+  description: Area earth damage
+Terrain Sight:
+  type: dungeon
+  effect: reveal_terrain
+  mp: 28
+  jpCost: 350
+  description: Reveal detailed terrain layout and features
+Earth Sense:
+  type: dungeon
+  mp: 20
+  jpCost: 300
+  description: Detect hidden paths and hazards in current area
+Rock Path:
+  type: dungeon
+  effect: create_path
+  mp: 32
+  jpCost: 400
+  description: Create temporary paths over gaps
+Terrain Shift:
+  type: dungeon
+  effect: modify_terrain
+  mp: 40
+  jpCost: 500
+  description: Temporarily modify terrain properties
+Sandstorm:
+  type: magical
+  element: earth
+  power: 2
+  effect: blind
+  aoe: true
+  mp: 38
+  jpCost: 450
+  description: Area damage with chance to blind
+Nature Communion:
+  type: dungeon
+  mp: 45
+  jpCost: 600
+  description: Reveal environmental hazards and natural resources
+Gaia Force:
+  type: magical
+  element: earth
+  power: 3
+  aoe: true
+  mp: 50
+  jpCost: 700
+  description: Ultimate earth-based attack
 
 Reaction Abilities:
 ------------------
-EARTH_EMBRACE: Chance to heal when standing on natural terrain [JP: 400]
-NATURE_SHIELD: Reduces damage based on current terrain [JP: 450]
+Earth Embrace:
+  chance: 0.3
+  effect: terrain_heal
+  jpCost: 400
+  description: Chance to heal when standing on natural terrain
+Nature Shield:
+  chance: 0.25
+  effect: terrain_defense
+  jpCost: 450
+  description: Reduces damage based on current terrain
 
 Support Abilities:
 -----------------
-TERRAIN_MASTERY: Strengthens all terrain-based abilities [JP: 500]
-NATURE_STEP: Ignore negative terrain effects [JP: 400]
+Terrain Mastery:
+  effect: enhance_terrain_magic
+  jpCost: 500
+  description: Strengthens all terrain-based abilities
+Nature Step:
+  effect: ignore_terrain
+  jpCost: 400
+  description: Ignore negative terrain effects
 
 Requirements:
 ------------
@@ -474,28 +1026,91 @@ EV: 0.1
 
 Active Abilities:
 ----------------
-SLASH_BLADE: Basic powerful sword attack (MP: 15) [JP: 200]
-BREAK_ARMOR: Reduces target defense (MP: 18) [JP: 250]
-SHIELD_BASH: Shield attack that may stun target (MP: 20) [JP: 300]
-COVER: Take damage in place of an ally (MP: 25) [JP: 400]
-HOLY_BLADE: Holy-aspected sword attack (MP: 28) [JP: 450]
-SENTINEL: Greatly increase defense and draw attacks (MP: 30) [JP: 500]
-DEFENSIVE_STANCE: Become immobile but immune to physical damage (MP: 35) [JP: 600]
-MIGHTY_GUARD: Grant protective barriers to all allies (MP: 45) [JP: 700]
-SWORD_BREAK: Attack that may disarm the target (MP: 32) [JP: 550]
-DIVINE_GUARD: Ultimate defensive technique with regeneration (MP: 50) [JP: 800]
+Arts of War:
+Slash Blade:
+  type: physical
+  power: 2
+  mp: 15
+  jpCost: 200
+  description: Basic powerful sword attack
+Break Armor:
+  type: physical
+  power: 1.2
+  effect: defense_down
+  mp: 18
+  jpCost: 250
+  description: Reduces target defense
+Shield Bash:
+  type: physical
+  power: 1.4
+  effect: stun
+  mp: 20
+  jpCost: 300
+  description: Shield attack that may stun target
+Cover:
+  type: buff
+  effect: protect_ally
+  mp: 25
+  jpCost: 400
+  description: Take damage in place of an ally
+Holy Blade:
+  type: physical
+  element: holy
+  power: 2.2
+  mp: 28
+  jpCost: 450
+  description: Holy-aspected sword attack
+Sentinel:
+  type: special
+  mp: 30
+  jpCost: 500
+  description: Greatly increase defense and draw attacks
+Defensive Stance:
+  type: buff
+  mp: 35
+  jpCost: 600
+  description: Become immobile but immune to physical damage
+Mighty Guard:
+  type: buff
+  aoe: true
+  mp: 45
+  jpCost: 700
+  description: Grant protective barriers to all allies
+Sword Break:
+  type: physical
+  power: 1.8
+  effect: attack_down
+  mp: 32
+  jpCost: 550
+  description: Attack that may disarm the target
+Divine Guard:
+  type: buff
+  mp: 50
+  jpCost: 800
+  description: Ultimate defensive technique with regeneration
 
 Reaction Abilities:
 ------------------
-PARRY: Chance to reduce physical damage [JP: 400]
-DEFENSE_BOOST: Chance to increase defense when hit [JP: 450]
+Parry:
+  chance: 0.35
+  effect: protect
+  jpCost: 400
+  description: Chance to reduce physical damage
+Defense Boost:
+  chance: 0.3
+  jpCost: 450
+  description: Chance to increase defense when hit
 
 Support Abilities:
 -----------------
-EQUIP_SHIELD: Allows equipping of shields [JP: 300]
-DEFENSE_MASTERY: Passive increase to defense [JP: 400]
-STONESKIN: Reduces all damage taken [JP: 600]
-WEAPON_GUARD: Chance to block with equipped weapon [JP: 500]
+Equip Shield:
+  effect: enable_shield
+  jpCost: 300
+  description: Allows equipping of shields
+Stoneskin:
+  effect: damage_reduction
+  jpCost: 600
+  description: Reduces all damage taken
 
 Requirements:
 ------------
@@ -531,23 +1146,32 @@ EV: 0.35
 
 Active Abilities:
 ----------------
-REPLICATE: Copies the last action performed by any character (MP: variable) [JP: 300]
-MIMIC_MASTERY: Enhanced version of basic mimicry with increased power (MP: variable) [JP: 450]
-PERFECT_COPY: Creates an exact replica of the copied ability (MP: original_cost) [JP: 600]
-Mime_SEQUENCE: Repeats a sequence of previously used actions (MP: 35) [JP: 500]
-BATTLE_MEMORY: Learn and store an enemy ability for later use (MP: 40) [JP: 550]
-TACTICAL_COPY: Copy an ability with enhanced tactical effects (MP: variable) [JP: 450]
-MIMIC_FORM: Temporarily copies enemy type and resistances (MP: 40) [JP: 550]
-ABILITY_SYNTHESIS: Combine two copied abilities into a new effect (MP: 45) [JP: 650]
-PERFECT_MIMICRY: Copy all actions from last round with enhanced power (MP: 50) [JP: 800]
+Mimic:
+Replicate:
+  type: special
+  mp: variable
+  jpCost: 300
+  description: Copies the last action performed by any character
+Battle Memory:
+  type: special
+  mp: 40
+  jpCost: 550
+  description: Learn and store an enemy ability for later use
 
 Reaction Abilities:
 ------------------
-ADAPTIVE_FORM: Temporarily gains resistance to damage type received [JP: 500]
+Adaptive Form:
+  chance: 0.2
+  effect: adapt_to_damage_type
+  jpCost: 500
+  description: Temporarily gains resistance to damage type received
 
 Support Abilities:
 -----------------
-EXPERIENCED_MIMIC: Increases accuracy of mimicked abilities [JP: 450]
+Experienced Mimic:
+  effect: improve_copy_accuracy
+  jpCost: 450
+  description: Increases accuracy of mimicked abilities
 
 Requirements:
 ------------
@@ -586,26 +1210,95 @@ EV: 0.3
 
 Active Abilities:
 ----------------
-CHAKRA: Restore HP through meditation [JP: 200]
-PUMMEL: Strike multiple times with bare hands [JP: 300]
-EARTH_SLASH: Channel earth energy into an attack [JP: 400]
-INTERNAL_RELEASE: Release inner power to enhance abilities (MP: 15) [JP: 450]
-MEDITATION: Meditate to regenerate HP and MP over time (MP: 20) [JP: 350]
-PRESSURE_POINT: Strike vital points to paralyze target (MP: 18) [JP: 400]
-SPIRIT_BLADE: Infuse attacks with spiritual energy (MP: 25) [JP: 450]
-CHAKRA_BLAST: Release concentrated spiritual energy (MP: 30) [JP: 500]
-MANTRA: Project spiritual barrier around allies (MP: 35) [JP: 550]
-HUNDRED_FISTS: Ultimate martial arts technique (MP: 45) [JP: 800]
+Martial Arts:
+Chakra:
+  type: healing
+  power: 1.5
+  target: self
+  mp: 0
+  jpCost: 200
+  description: Restore HP through meditation
+Pummel:
+  type: physical
+  power: 1.2
+  hits: 3
+  mp: 0
+  jpCost: 300
+  description: Strike multiple times with bare hands
+Earth Slash:
+  type: physical
+  element: earth
+  power: 2
+  mp: 0
+  jpCost: 400
+  description: Channel earth energy into an attack
+Internal Release:
+  type: buff
+  mp: 15
+  jpCost: 450
+  description: Release inner power to enhance abilities
+Meditation:
+  type: buff
+  target: self
+  mp: 20
+  jpCost: 350
+  description: Meditate to regenerate HP and MP over time
+Pressure Point:
+  type: status
+  effect: paralyze
+  mp: 18
+  jpCost: 400
+  description: Strike vital points to paralyze target
+Spirit Blade:
+  type: physical
+  power: 2.2
+  element: holy
+  mp: 25
+  jpCost: 450
+  description: Infuse attacks with spiritual energy
+Chakra Blast:
+  type: magical
+  power: 2.4
+  mp: 30
+  jpCost: 500
+  description: Release concentrated spiritual energy
+Mantra:
+  type: buff
+  aoe: true
+  mp: 35
+  jpCost: 550
+  description: Project spiritual barrier around allies
+Hundred Fists:
+  type: physical
+  power: 0.5
+  hits: 10
+  mp: 45
+  jpCost: 800
+  description: Ultimate martial arts technique
 
 Reaction Abilities:
 ------------------
-COUNTER: Counter physical attacks [JP: 300]
-INNER_STRENGTH: Chance to restore HP when damaged [JP: 400]
+Counter:
+  chance: 0.4
+  power: 1
+  jpCost: 300
+  description: Counter physical attacks
+Inner Strength:
+  chance: 0.35
+  effect: hp_restore
+  jpCost: 400
+  description: Chance to restore HP when damaged
 
 Support Abilities:
 -----------------
-BRAWLER: Increase unarmed combat damage [JP: 500]
-MARTIAL_MASTERY: Enhance all martial arts abilities [JP: 600]
+Brawler:
+  effect: unarmed_damage_up
+  jpCost: 500
+  description: Increase unarmed combat damage
+Martial Mastery:
+  effect: improve_martial_arts
+  jpCost: 600
+  description: Enhance all martial arts abilities
 
 Requirements:
 ------------
@@ -641,26 +1334,95 @@ EV: 0.4
 
 Active Abilities:
 ----------------
-THROW: Throw any weapon as a projectile [JP: 200]
-SHADOW_WALK: Move silently through areas undetected (MP: 15) [JP: 300]
-WALL_WALK: Walk on walls to bypass obstacles (MP: 25) [JP: 400]
-SMOKE_BOMB: Create smoke screen that blinds enemies (MP: 12) [JP: 250]
-INFILTRATE: Sneak past enemy patrols undetected (MP: 20) [JP: 350]
-FLAME_VEIL: Fire-based ninjutsu attack (MP: 16) [JP: 300]
-WATER_VEIL: Water-based ninjutsu attack (MP: 20) [JP: 300]
-SHADOW_STITCH: Bind target's shadow to prevent movement (MP: 18) [JP: 350]
-MIRROR_IMAGE: Create illusory copies to evade attacks (MP: 28) [JP: 450]
-ASSASSINATE: Powerful strike with chance of instant death (MP: 45) [JP: 600]
+Ninjutsu:
+Throw:
+  type: special
+  power: weapon_dependent
+  mp: 0
+  jpCost: 200
+  description: Throw any weapon as a projectile
+Shadow Walk:
+  type: dungeon
+  effect: stealth_movement
+  mp: 15
+  jpCost: 300
+  description: Move silently through areas undetected
+Wall Walk:
+  type: dungeon
+  effect: traverse_walls
+  mp: 25
+  jpCost: 400
+  description: Walk on walls to bypass obstacles
+Smoke Bomb:
+  type: status
+  effect: blind
+  aoe: true
+  mp: 12
+  jpCost: 250
+  description: Create smoke screen that blinds enemies
+Infiltrate:
+  type: dungeon
+  effect: bypass_enemies
+  mp: 20
+  jpCost: 350
+  description: Sneak past enemy patrols undetected
+Flame Veil:
+  type: magical
+  element: fire
+  power: 1.8
+  mp: 16
+  jpCost: 300
+  description: Fire-based ninjutsu attack
+Water Veil:
+  type: magical
+  element: water
+  power: 1.9
+  mp: 20
+  jpCost: 300
+  description: Water-based ninjutsu attack
+Shadow Stitch:
+  type: status
+  effect: immobilize
+  mp: 18
+  jpCost: 350
+  description: Bind target's shadow to prevent movement
+Mirror Image:
+  type: buff
+  effect: create_decoy
+  mp: 28
+  jpCost: 450
+  description: Create illusory copies to evade attacks
+Assassinate:
+  type: physical
+  power: 3
+  effect: instant_death
+  mp: 45
+  jpCost: 600
+  description: Powerful strike with chance of instant death
 
 Reaction Abilities:
 ------------------
-VANISH: Become temporarily invisible when hit [JP: 400]
-SHADOW_RETURN: Counter attacks with status effect [JP: 500]
+Vanish:
+  chance: 0.3
+  effect: temporary_invisibility
+  jpCost: 400
+  description: Become temporarily invisible when hit
+Shadow Return:
+  chance: 0.25
+  effect: counter_with_status
+  jpCost: 500
+  description: Counter attacks with status effect
 
 Support Abilities:
 -----------------
-DUAL_WIELD: Equip weapons in both hands [JP: 500]
-STEALTH: Improved stealth movement and detection avoidance [JP: 400]
+Dual Wield:
+  effect: enable_dual_wielding
+  jpCost: 500
+  description: Equip weapons in both hands
+Stealth:
+  effect: improve_sneaking
+  jpCost: 400
+  description: Improved stealth movement and detection avoidance
 
 Requirements:
 ------------
@@ -698,26 +1460,82 @@ EV: 0.3
 
 Active Abilities:
 ----------------
-DIVINE_SIGHT: Foresee upcoming enemy encounters and their patterns (MP: 18) [JP: 250]
-PREMONITION: See outcomes of actions before taking them (MP: 22) [JP: 300]
-PATTERN_VISION: Predict upcoming events and their consequences (MP: 20) [JP: 350]
-ENEMY_INSIGHT: Reveal enemy stats and predict next action (MP: 25) [JP: 400]
-FATE_MAP: Reveal locations of future events and treasures (MP: 30) [JP: 450]
-CONDEMN: Mark target for inevitable defeat (MP: 35) [JP: 500]
-STAR_SIGHT: Blind and silence target with starlight (MP: 38) [JP: 550]
-CALAMITY: Inflict multiple status effects (MP: 45) [JP: 650]
-FORTUNE_GUARD: Protect allies from critical hits (MP: 40) [JP: 600]
-PROPHECY_SHIELD: Use future sight to protect from incoming threats (MP: 50) [JP: 700]
+Divination:
+Divine Sight:
+  type: dungeon
+  effect: predict_encounters
+  mp: 18
+  jpCost: 250
+  description: Foresee upcoming enemy encounters and their patterns
+Premonition:
+  type: special
+  mp: 22
+  jpCost: 300
+  description: See outcomes of actions before taking them
+Enemy Insight:
+  type: special
+  mp: 25
+  jpCost: 400
+  description: Reveal enemy stats and predict next action
+Fate Map:
+  type: dungeon
+  mp: 30
+  jpCost: 450
+  description: Reveal locations of future events and treasures
+Condemn:
+  type: status
+  effect: doom
+  mp: 35
+  jpCost: 500
+  description: Mark target for inevitable defeat
+Star Sight:
+  type: status
+  mp: 38
+  jpCost: 550
+  description: Blind and silence target with starlight
+Calamity:
+  type: status
+  mp: 45
+  jpCost: 650
+  description: Inflict multiple status effects
+Fortune Guard:
+  type: buff
+  effect: predict_critical
+  aoe: true
+  mp: 40
+  jpCost: 600
+  description: Protect allies from critical hits
+Prophecy Shield:
+  type: buff
+  effect: predict_damage
+  aoe: true
+  mp: 50
+  jpCost: 700
+  description: Use future sight to protect from incoming threats
 
 Reaction Abilities:
 ------------------
-PRESCIENCE: Chance to survive fatal damage with 1 HP [JP: 400]
-FORTUNE_SHIELD: Chance to prevent status effects [JP: 450]
+Prescience:
+  chance: 0.25
+  effect: survive_fatal
+  jpCost: 400
+  description: Chance to survive fatal damage with 1 HP
+Fortune Shield:
+  chance: 0.3
+  effect: prevent_status
+  jpCost: 450
+  description: Chance to prevent status effects
 
 Support Abilities:
 -----------------
-PROPHECY: Improves accuracy of prediction abilities [JP: 500]
-ASTRAL_SIGHT: Greatly improves all detection abilities [JP: 600]
+Prophecy:
+  effect: enhance_prediction
+  jpCost: 500
+  description: Improves accuracy of prediction abilities
+Astral Sight:
+  effect: enhance_detection
+  jpCost: 600
+  description: Greatly improves all detection abilities
 
 Requirements:
 ------------
@@ -753,26 +1571,82 @@ EV: 0.3
 
 Active Abilities:
 ----------------
-PERSUADE: Convince enemy to temporarily join (MP: 25) [JP: 350]
-NEGOTIATE: Convince enemy to give up gil (MP: 15) [JP: 200]
-ENTHRALL: Confuse target with rhetoric (MP: 22) [JP: 300]
-PRAISE: Boost ally morale and stats (MP: 20) [JP: 250]
-CONDEMN: Lower enemy morale and stats (MP: 20) [JP: 250]
-PEACE_TALK: Attempt to end combat peacefully (MP: 30) [JP: 400]
-INTIMIDATE: Frighten enemy into retreat (MP: 28) [JP: 450]
-DIPLOMACY: Convince enemies to allow safe passage (MP: 35) [JP: 500]
-RALLYING_CRY: Powerful party-wide morale boost (MP: 45) [JP: 600]
-FINAL_ARGUMENT: Ultimate persuasion technique (MP: 50) [JP: 750]
+Speechcraft:
+Persuade:
+  type: status
+  effect: charm
+  mp: 25
+  jpCost: 350
+  description: Convince enemy to temporarily join
+Negotiate:
+  type: special
+  mp: 15
+  jpCost: 200
+  description: Convince enemy to give up gil
+Enthrall:
+  type: status
+  effect: confusion
+  mp: 22
+  jpCost: 300
+  description: Confuse target with rhetoric
+Praise:
+  type: buff
+  effect: increase_stats
+  mp: 20
+  jpCost: 250
+  description: Boost ally morale and stats
+Condemn:
+  type: status
+  effect: decrease_stats
+  mp: 20
+  jpCost: 250
+  description: Lower enemy morale and stats
+Peace Talk:
+  type: special
+  mp: 30
+  jpCost: 400
+  description: Attempt to end combat peacefully
+Intimidate:
+  type: status
+  mp: 28
+  jpCost: 450
+  description: Frighten enemy into retreat
+Rallying Cry:
+  type: buff
+  aoe: true
+  mp: 45
+  jpCost: 600
+  description: Powerful party-wide morale boost
+Final Argument:
+  type: special
+  power: 2.5
+  mp: 50
+  jpCost: 750
+  description: Ultimate persuasion technique
 
 Reaction Abilities:
 ------------------
-COUNTER_ARGUE: Chance to reflect status effects [JP: 400]
-DIPLOMATIC_IMMUNITY: Chance to avoid damage through negotiation [JP: 450]
+Counter Argue:
+  chance: 0.3
+  effect: reflect_status
+  jpCost: 400
+  description: Chance to reflect status effects
+Diplomatic Immunity:
+  chance: 0.35
+  effect: avoid_damage
+  jpCost: 450
+  description: Chance to avoid damage through negotiation
 
 Support Abilities:
 -----------------
-NEGOTIATOR: Improve success rate of all speechcraft [JP: 500]
-SILVER_TONGUE: Reduce MP cost of speechcraft abilities [JP: 400]
+Negotiator:
+  effect: improve_persuasion
+  jpCost: 500
+  description: Improve success rate of all speechcraft
+Silver Tongue:
+  effect: reduce_mp_cost
+  jpCost: 400
+  description: Reduce MP cost of speechcraft abilities
 
 Requirements:
 ------------
@@ -809,26 +1683,86 @@ EV: 0.3
 
 Active Abilities:
 ----------------
-IAIDO: Quick-draw technique with high accuracy (MP: 20) [JP: 300]
-BLADE_SPIRIT: Area attack that releases sword energy (MP: 25) [JP: 400]
-STORM_EDGE: physical ability power 2.2 (MP: 22) [JP: 350]
-DEMON_SLICE: physical ability power 2.6 causing defense_down (MP: 28) [JP: 450]
-ZEN_SLASH: physical ability power 2.8 causing ignore_defense (MP: 35) [JP: 500]
-SOUL_BLADE: Sword technique that drains spiritual energy (MP: 32) [JP: 450]
-MEDITATION: Focus mind to enhance combat abilities (MP: 25) [JP: 400]
-BLADE_WARD: Create defensive barrier of spinning blades (MP: 30) [JP: 500]
-BINDING_BLADE: physical ability power 2 causing stop (MP: 30) [JP: 400]
-MASAMUNE: Ultimate sword technique with multiple effects (MP: 45) [JP: 600]
+Draw Out:
+Iaido:
+  type: physical
+  power: 2.4
+  mp: 20
+  jpCost: 300
+  description: Quick-draw technique with high accuracy
+Blade Spirit:
+  type: physical
+  power: 1.8
+  aoe: true
+  mp: 25
+  jpCost: 400
+  description: Area attack that releases sword energy
+Storm Edge:
+  type: physical
+  element: wind
+  power: 2.2
+  mp: 22
+  jpCost: 350
+Demon Slice:
+  type: physical
+  power: 2.6
+  effect: defense_down
+  mp: 28
+  jpCost: 450
+Zen Slash:
+  type: physical
+  power: 2.8
+  effect: armor_pierce
+  mp: 35
+  jpCost: 500
+Soul Blade:
+  type: physical
+  element: holy
+  power: 2.5
+  effect: spirit_drain
+  mp: 32
+  jpCost: 450
+  description: Sword technique that drains spiritual energy
+Meditation:
+  type: buff
+  mp: 25
+  jpCost: 400
+  description: Focus mind to enhance combat abilities
+Binding Blade:
+  type: physical
+  power: 2
+  effect: stop
+  mp: 30
+  jpCost: 400
+Masamune:
+  type: physical
+  power: 3
+  mp: 45
+  jpCost: 600
+  description: Ultimate sword technique with multiple effects
 
 Reaction Abilities:
 ------------------
-THIRD_EYE: Chance to completely avoid next physical attack [JP: 450]
-RETRIBUTION: Counter physical attacks with increased power [JP: 500]
+Third Eye:
+  chance: 0.35
+  effect: anticipate_attack
+  jpCost: 450
+  description: Chance to completely avoid next physical attack
+Retribution:
+  chance: 0.25
+  effect: counter_with_power
+  jpCost: 500
+  description: Counter physical attacks with increased power
 
 Support Abilities:
 -----------------
-KATANA_MASTERY: causing katana_damage_up [JP: 500]
-INNER_PEACE: Allows wielding one-handed weapons in both hands for increased damage [JP: 600]
+Katana Mastery:
+  effect: katana_damage_up
+  jpCost: 500
+Double Handed:
+  effect: enable_two_hand
+  jpCost: 600
+  description: Allows wielding one-handed weapons in both hands for increased damage
 
 Requirements:
 ------------
@@ -866,26 +1800,86 @@ EV: 0.2
 
 Active Abilities:
 ----------------
-THROW_STONE: Basic ranged attack using stones [JP: 100]
-ACCUMULATE: Build up physical strength [JP: 150]
-DASH: Quick rushing attack [JP: 200]
-BASIC_MAINTENANCE: Basic repair of damaged equipment (MP: 10) [JP: 200]
-RALLY_CRY: Boost party morale, increasing stats slightly (MP: 15) [JP: 300]
-FIRST_AID: Basic healing technique (MP: 8) [JP: 250]
-FOCUS: Increase accuracy for next attack (MP: 5) [JP: 200]
-INSPECT: Analyze enemy or object for weaknesses (MP: 12) [JP: 250]
-BATTLE_TACTICS: Grant defensive bonus to nearby allies (MP: 18) [JP: 300]
-DETERMINATION: Chance to survive a fatal blow (MP: 25) [JP: 400]
+Basic Skills:
+Throw Stone:
+  type: physical
+  ranged: true
+  power: 1.2
+  mp: 0
+  jpCost: 100
+  description: Basic ranged attack using stones
+Accumulate:
+  type: buff
+  effect: attack_up
+  target: self
+  mp: 0
+  jpCost: 150
+  description: Build up physical strength
+Dash:
+  type: physical
+  power: 1.4
+  mp: 0
+  jpCost: 200
+  description: Quick rushing attack
+Rally Cry:
+  type: buff
+  effect: party_stats_up
+  mp: 15
+  jpCost: 300
+  description: Boost party morale, increasing stats slightly
+First Aid:
+  type: healing
+  power: 1.2
+  mp: 8
+  jpCost: 250
+  description: Basic healing technique
+Focus:
+  type: buff
+  effect: accuracy_up
+  mp: 5
+  jpCost: 200
+  description: Increase accuracy for next attack
+Inspect:
+  type: analyze
+  mp: 12
+  jpCost: 250
+  description: Analyze enemy or object for weaknesses
+Battle Tactics:
+  type: buff
+  effect: party_defense_up
+  mp: 18
+  jpCost: 300
+  description: Grant defensive bonus to nearby allies
+Determination:
+  type: buff
+  effect: survive_fatal
+  mp: 25
+  jpCost: 400
+  description: Chance to survive a fatal blow
 
 Reaction Abilities:
 ------------------
-COUNTER_TACKLE: Counter physical attacks with a tackle [JP: 300]
-DEFENSIVE_STANCE: Chance to reduce incoming damage [JP: 250]
+Counter Tackle:
+  chance: 0.25
+  effect: counter_attack
+  jpCost: 300
+  description: Counter physical attacks with a tackle
+Defensive Stance:
+  chance: 0.3
+  effect: reduce_damage
+  jpCost: 250
+  description: Chance to reduce incoming damage
 
 Support Abilities:
 -----------------
-JP_BOOST: Increase JP gained from battles [JP: 300]
-MOVE_HP_UP: Recover HP while moving [JP: 250]
+JP Boost:
+  effect: increase_jp_gain
+  jpCost: 300
+  description: Increase JP gained from battles
+Move HP Up:
+  effect: heal_while_moving
+  jpCost: 250
+  description: Recover HP while moving
 
 ==================================================
 
@@ -917,26 +1911,115 @@ EV: 0.2
 
 Active Abilities:
 ----------------
-IFRIT: Summon fire elemental for massive damage (MP: 32) [JP: 400]
-SHIVA: Summon ice queen for damage and slow (MP: 30) [JP: 400]
-RAMUH: Summon thunder god for lightning assault (MP: 34) [JP: 400]
-BAHAMUT: Summon dragon king for ultimate destruction (MP: 45) [JP: 800]
-CARBUNCLE: Summon mystic beast for party reflection (MP: 28) [JP: 300]
-TITAN: Summon earth giant for ground-shaking attack (MP: 35) [JP: 450]
-LEVIATHAN: Summon sea serpent for tidal wave (MP: 40) [JP: 600]
-PHOENIX: Summon immortal bird for revival (MP: 50) [JP: 800]
-ODIN: Summon warrior king for devastating strike (MP: 45) [JP: 750]
-MOOGLE: Summon helpful moogle for party healing (MP: 22) [JP: 250]
+Summon Magic:
+Ifrit:
+  type: magical
+  element: fire
+  power: 2.8
+  aoe: true
+  mp: 32
+  jpCost: 400
+  description: Summon fire elemental for massive damage
+Shiva:
+  type: magical
+  element: ice
+  power: 2.6
+  effect: slow
+  aoe: true
+  mp: 30
+  jpCost: 400
+  description: Summon ice queen for damage and slow
+Ramuh:
+  type: magical
+  element: lightning
+  power: 2.7
+  effect: paralyze
+  aoe: true
+  mp: 34
+  jpCost: 400
+  description: Summon thunder god for lightning assault
+Bahamut:
+  type: magical
+  element: non-elemental
+  power: 3.2
+  aoe: true
+  mp: 45
+  jpCost: 800
+  description: Summon dragon king for ultimate destruction
+Carbuncle:
+  type: buff
+  effect: reflect
+  aoe: true
+  mp: 28
+  jpCost: 300
+  description: Summon mystic beast for party reflection
+Titan:
+  type: magical
+  element: earth
+  power: 2.5
+  effect: stun
+  aoe: true
+  mp: 35
+  jpCost: 450
+  description: Summon earth giant for ground-shaking attack
+Leviathan:
+  type: magical
+  element: water
+  power: 3
+  effect: drown
+  aoe: true
+  mp: 40
+  jpCost: 600
+  description: Summon sea serpent for tidal wave
+Phoenix:
+  type: magical
+  element: fire
+  power: 2.4
+  effect: party_raise
+  aoe: true
+  mp: 50
+  jpCost: 800
+  description: Summon immortal bird for revival
+Odin:
+  type: magical
+  element: non-elemental
+  power: 3.5
+  effect: instant_death
+  mp: 45
+  jpCost: 750
+  description: Summon warrior king for devastating strike
+Moogle:
+  type: healing
+  effect: party_heal
+  power: 1.5
+  aoe: true
+  mp: 22
+  jpCost: 250
+  description: Summon helpful moogle for party healing
 
 Reaction Abilities:
 ------------------
-SUMMON_BOOST: Chance to enhance next summon's power [JP: 400]
-EIDOLON_SHIELD: Chance to summon protective barrier when hit [JP: 500]
+Summon Boost:
+  chance: 0.3
+  effect: enhance_next_summon
+  jpCost: 400
+  description: Chance to enhance next summon's power
+Eidolon Shield:
+  chance: 0.25
+  effect: summon_barrier
+  jpCost: 500
+  description: Chance to summon protective barrier when hit
 
 Support Abilities:
 -----------------
-SUMMON_MASTERY: Reduces MP cost of summons [JP: 600]
-EIDOLON_BOND: Strengthens summoned creatures [JP: 450]
+Summon Mastery:
+  effect: reduce_summon_mp_cost
+  jpCost: 600
+  description: Reduces MP cost of summons
+Eidolon Bond:
+  effect: enhance_summons
+  jpCost: 450
+  description: Strengthens summoned creatures
 
 Requirements:
 ------------
@@ -974,25 +2057,73 @@ EV: 0.4
 
 Active Abilities:
 ----------------
-STEAL_GIL: steal ability causing steal_money [JP: 200]
-STEAL_ITEM: steal ability causing steal_consumable [JP: 300]
-STEAL_WEAPON: steal ability causing steal_equipment (MP: 10) [JP: 400]
-STEAL_HEART: status ability causing charm (MP: 18) [JP: 350]
-STEAL_EXP: special ability causing drain_experience (MP: 25) [JP: 450]
-MUG: physical ability power 1.5 causing damage_and_steal (MP: 15) [JP: 400]
-TRAPSMITH: Detect and safely disarm traps in the area (MP: 18) [JP: 350]
-LOCKPICK: Pick locks on doors and chests (MP: 10) [JP: 200]
-PILFER: Steals positive status effects from target (MP: 20) [JP: 500]
+Thievery:
+Steal Gil:
+  type: special
+  mp: 0
+  jpCost: 200
+Steal Item:
+  type: special
+  mp: 0
+  jpCost: 300
+Steal Weapon:
+  type: special
+  mp: 10
+  jpCost: 400
+Steal Heart:
+  type: status
+  effect: charm
+  mp: 18
+  jpCost: 350
+Steal EXP:
+  type: special
+  mp: 25
+  jpCost: 450
+Mug:
+  type: physical
+  power: 1.5
+  effect: damage_and_steal
+  mp: 15
+  jpCost: 400
+Trapsmith:
+  type: dungeon
+  mp: 18
+  jpCost: 350
+  description: Detect and safely disarm traps in the area
+Lockpick:
+  type: dungeon
+  effect: unlock
+  mp: 10
+  jpCost: 200
+  description: Pick locks on doors and chests
+Pilfer:
+  type: special
+  mp: 20
+  jpCost: 500
+  description: Steals positive status effects from target
 
 Reaction Abilities:
 ------------------
-VIGILANCE: Chance to detect and prevent surprise attacks [JP: 300]
-STICKY_FINGERS: Chance to steal items when hit [JP: 400]
+Vigilance:
+  chance: 0.3
+  effect: detect_ambush
+  jpCost: 300
+  description: Chance to detect and prevent surprise attacks
+Sticky Fingers:
+  chance: 0.25
+  effect: counter_steal
+  jpCost: 400
+  description: Chance to steal items when hit
 
 Support Abilities:
 -----------------
-TREASURE_HUNTER: Improves success rate of stealing abilities [JP: 400]
-TRAP_MASTERY: Enhances trap detection range and grants chance to auto-disarm [JP: 450]
+Treasure Hunter:
+  effect: increase_steal_rate
+  jpCost: 400
+  description: Improves success rate of stealing abilities
+Trap Mastery:
+  jpCost: 450
+  description: Enhances trap detection range and grants chance to auto-disarm
 
 Requirements:
 ------------
@@ -1028,25 +2159,85 @@ EV: 0.2
 
 Active Abilities:
 ----------------
-HASTE: Increase target's speed (MP: 24) [JP: 300]
-SLOW: Decrease target's speed (MP: 20) [JP: 300]
-STOP: Freeze target in time (MP: 30) [JP: 500]
-FLOAT: Allow target to float above ground (MP: 18) [JP: 200]
-GRAVITY: Deal damage based on target's max HP (MP: 32) [JP: 400]
-TIME_SLIP: Reset a room to its original state (MP: 35) [JP: 450]
-TEMPORAL_ANCHOR: Create a temporal checkpoint to return to (MP: 40) [JP: 500]
-QUICK: Grant an immediate extra turn (MP: 45) [JP: 800]
-METEOR: Call down devastating meteors (MP: 60) [JP: 900]
+Time Magic:
+Haste:
+  type: buff
+  effect: haste
+  mp: 24
+  jpCost: 300
+  description: Increase target's speed
+Slow:
+  type: status
+  effect: slow
+  mp: 20
+  jpCost: 300
+  description: Decrease target's speed
+Stop:
+  type: status
+  effect: stop
+  mp: 30
+  jpCost: 500
+  description: Freeze target in time
+Float:
+  type: buff
+  effect: levitate
+  mp: 18
+  jpCost: 200
+  description: Allow target to float above ground
+Gravity:
+  type: magical
+  effect: gravity_damage
+  mp: 32
+  jpCost: 400
+  description: Deal damage based on target's max HP
+Time Slip:
+  type: dungeon
+  effect: reset_room
+  mp: 35
+  jpCost: 450
+  description: Reset a room to its original state
+Temporal Anchor:
+  type: dungeon
+  effect: create_checkpoint
+  mp: 40
+  jpCost: 500
+  description: Create a temporal checkpoint to return to
+Quick:
+  type: special
+  mp: 45
+  jpCost: 800
+  description: Grant an immediate extra turn
+Meteor:
+  type: magical
+  power: 3.5
+  aoe: true
+  mp: 60
+  jpCost: 900
+  description: Call down devastating meteors
 
 Reaction Abilities:
 ------------------
-TIME_WARD: Chance to resist time magic [JP: 400]
-TEMPORAL_SHIFT: Phase through time to avoid damage [JP: 500]
+Time Ward:
+  chance: 0.3
+  effect: resist_time_magic
+  jpCost: 400
+  description: Chance to resist time magic
+Temporal Shift:
+  chance: 0.25
+  effect: evade
+  jpCost: 500
+  description: Phase through time to avoid damage
 
 Support Abilities:
 -----------------
-TIME_SENSE: Improve chance of acting first [JP: 300]
-TEMPORAL_MASTERY: Strengthen all time magic effects [JP: 600]
+Time Sense:
+  effect: initiative_up
+  jpCost: 300
+  description: Improve chance of acting first
+Temporal Mastery:
+  effect: enhance_time_magic
+  jpCost: 600
+  description: Strengthen all time magic effects
 
 Requirements:
 ------------
@@ -1082,29 +2273,100 @@ EV: 0.2
 
 Active Abilities:
 ----------------
-CURE: healing ability power 1.8 (MP: 14) [JP: 200]
-CURA: healing ability power 2.4 (MP: 20) [JP: 400]
-CURAGA: healing ability power 3 (AoE) (MP: 40) [JP: 600]
-RAISE: healing ability causing revive (MP: 30) [JP: 500]
-RERAISE: support ability causing auto_revive (MP: 40) [JP: 800]
-ESUNA: healing ability causing remove_status (MP: 18) [JP: 300]
-PROTECT: support ability causing increase_defense (MP: 15) [JP: 250]
-SHELL: support ability causing increase_magic_defense (MP: 15) [JP: 250]
-HOLY: magical ability power 3.2 (MP: 56) [JP: 900]
-REGEN: support ability causing heal_over_time (MP: 22) [JP: 400]
-DISPEL: support ability causing remove_buffs (MP: 25) [JP: 350]
-SACRED_PURIFICATION: Creates a purified holy zone that cleanses and protects (MP: 38) [JP: 500]
-BANISH: Forces undead creatures to flee (MP: 30) [JP: 450]
+White Magic:
+Cure:
+  type: healing
+  power: 1.8
+  mp: 14
+  jpCost: 200
+Cura:
+  type: healing
+  power: 2.4
+  mp: 20
+  jpCost: 400
+Curaga:
+  type: healing
+  power: 3
+  aoe: true
+  mp: 40
+  jpCost: 600
+Raise:
+  type: healing
+  effect: revive
+  mp: 30
+  jpCost: 500
+Reraise:
+  type: buff
+  effect: auto_revive
+  mp: 40
+  jpCost: 800
+Esuna:
+  type: special
+  mp: 18
+  jpCost: 300
+Protect:
+  type: buff
+  effect: protect
+  mp: 15
+  jpCost: 250
+Shell:
+  type: buff
+  effect: shell
+  mp: 15
+  jpCost: 250
+Holy:
+  type: magical
+  element: holy
+  power: 3.2
+  mp: 56
+  jpCost: 900
+Regen:
+  type: buff
+  effect: heal_over_time
+  mp: 22
+  jpCost: 400
+Dispel:
+  type: special
+  mp: 25
+  jpCost: 350
+Sacred Purification:
+  type: dungeon
+  aoe: true
+  mp: 38
+  jpCost: 500
+  description: Creates a purified holy zone that cleanses and protects
+Banish:
+  type: magical
+  element: holy
+  power: 2.5
+  effect: undead_repel
+  mp: 30
+  jpCost: 450
+  description: Forces undead creatures to flee
 
 Reaction Abilities:
 ------------------
-AUTO_REGEN: Chance to gain regen when damaged [JP: 400]
-DIVINE_GRACE: Chance to enhance healing received [JP: 450]
+Auto-Regen:
+  chance: 0.4
+  effect: regen
+  jpCost: 400
+  description: Chance to gain regen when damaged
+Divine Grace:
+  chance: 0.25
+  effect: enhance_healing
+  jpCost: 450
+  description: Chance to enhance healing received
 
 Support Abilities:
 -----------------
-HEALING_BOOST: Increases healing power [JP: 500]
-MP_RECOVERY: Gradually restore MP while walking [JP: 600]
+Healing Boost:
+  effect: increase_heal_power
+  jpCost: 500
+  description: Increases healing power
+MP Recovery:
+  effect: mp_regen_walking
+  jpCost: 600
+  description: Gradually restore MP while walking
 
 Requirements:
 ------------

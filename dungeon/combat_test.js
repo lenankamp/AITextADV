@@ -168,14 +168,18 @@ function printCombatStatus(state, combat) {
     console.log('\n=== Combat Status ===');
     console.log('Party:');
     state.parties.A.forEach(member => {
-        const maxHp = combat.partyA.members.find(m => m.name === member.name).getMaxHP();
-        console.log(`  ${member.name.padEnd(10)} [${member.position.padEnd(5)}] HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}`);
+        const character = combat.partyA.members.find(m => m.name === member.name);
+        const maxHp = character.getMaxHP();
+        const statusEffects = character.status.effects?.length ? ` [${character.status.effects.map(e => e.name).join(', ')}]` : '';
+        console.log(`  ${member.name.padEnd(10)} [${member.position.padEnd(5)}] HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}${statusEffects}`);
     });
 
     console.log('\nOpposing Forces:');
     state.parties.B.forEach(member => {
-        const maxHp = combat.partyB.members.find(m => m.name === member.name).getMaxHP();
-        console.log(`  ${member.name.padEnd(15)} [${member.position.padEnd(5)}] HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}`);
+        const character = combat.partyB.members.find(m => m.name === member.name);
+        const maxHp = character.getMaxHP();
+        const statusEffects = character.status.effects?.length ? ` [${character.status.effects.map(e => e.name).join(', ')}]` : '';
+        console.log(`  ${member.name.padEnd(15)} [${member.position.padEnd(5)}] HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}${statusEffects}`);
     });
     console.log('==================\n');
 }
@@ -186,16 +190,35 @@ function printActionResult(actor, action, result) {
     
     if (action.type === 'ability') {
         message += `uses ${action.ability}`;
-        if (result.damage) {
-            const targetName = result.target?.name || action.target?.name || 'target';
-            message += ` → ${targetName} takes ${result.damage} damage`;
-        }
-        if (result.healing) {
-            const targetName = result.target?.name || action.target?.name || 'target';
-            message += ` → ${targetName} recovers ${result.healing} HP`;
-        }
-        if (result.effects?.length > 0) {
-            message += ` (${result.effects.map(e => e.type).join(', ')})`;
+        
+        // Handle AOE results
+        if (result.isAoe && result.targets) {
+            message += ' → AOE Effects:';
+            result.targets.forEach(targetResult => {
+                const targetName = targetResult.target?.name || 'unknown';
+                if (targetResult.damage) {
+                    message += `\n    ${targetName} takes ${targetResult.damage} damage`;
+                }
+                if (targetResult.healing) {
+                    message += `\n    ${targetName} recovers ${targetResult.healing} HP`;
+                }
+                if (targetResult.effects?.length > 0) {
+                    message += `\n    ${targetName} gains effects: ${targetResult.effects.map(e => e.type).join(', ')}`;
+                }
+            });
+        } else {
+            // Single target results
+            if (result.damage) {
+                const targetName = result.target?.name || action.target?.name || 'target';
+                message += ` → ${targetName} takes ${result.damage} damage`;
+            }
+            if (result.healing) {
+                const targetName = result.target?.name || action.target?.name || 'target';
+                message += ` → ${targetName} recovers ${result.healing} HP`;
+            }
+            if (result.effects?.length > 0) {
+                message += ` (${result.effects.map(e => e.type).join(', ')})`;
+            }
         }
     } else if (action.type === 'skip') {
         message += 'skips their turn';
@@ -206,6 +229,24 @@ function printActionResult(actor, action, result) {
     }
     
     console.log(message);
+
+    // Debug output for BATTLE_CRY
+    if (actor.name === 'Orc' && action.ability === 'BATTLE_CRY') {
+        console.log('\n=== BATTLE_CRY Debug Info ===');
+        console.log('Effects:', result.effects);
+        if (result.targets) {
+            result.targets.forEach(t => {
+                console.log(`Target ${t.target.name} effects:`, 
+                    t.target.status.effects.map(e => ({ 
+                        name: e.name, 
+                        duration: e.duration,
+                        power: e.power 
+                    }))
+                );
+            });
+        }
+        console.log('=== End BATTLE_CRY Debug ===\n');
+    }
 }
 
 // Main test function
@@ -384,6 +425,10 @@ function runCombatTest() {
         }
 
         const result = combat.processAction(action);
+        // Add debug logging before and after ability use
+        console.log('=== Action Status Effects Debug ===');
+        console.log('Before action - Target status:', action.target.status);
+        console.log('Action result:', result);
         printActionResult(currentActor.entity, action, result);
         
         // Print updated status if significant changes occurred

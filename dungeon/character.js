@@ -473,6 +473,8 @@ class Character {
         switch (effect) {
             case 'damage_reduction':
             case 'predict_damage':
+            case 'defense_up':
+            case 'defense_down':
                 return true;
             case 'protect':
                 if (ability.type !== 'magical') return true;
@@ -524,7 +526,7 @@ class Character {
         // Check support abilities
         this.abilities.support.forEach(support => {
             const relevantEffects = [
-                'attack_up', 'armor_pierce', 'armor_pierce',
+                'attack_up', 'armor_pierce',
                 'increase_magic_power', 'magic_up', 'increase_dance_potency',
                 'jump_damage_up', 'unarmed_damage_up', 'improve_martial_arts',
                 'katana_damage_up', 'enhance_next_summon', 'enhance_summons'
@@ -539,16 +541,19 @@ class Character {
         Object.values(target.equipment).forEach(item => {
             if (!item) return;
             if (item.effects) {
-                const relevantEffects = ['protect', 'shell', 'defense_down', 'damage_reduction', 'predict_damage', 'ranged_defense_up'];
+                const relevantEffects = ['protect', 'shell', 'defense_up', 'defense_down', 'damage_reduction', 'predict_damage', 'ranged_defense_up'];
                 relevantEffects.forEach(effect => {
-                    if (item.effects.includes(effect) && _effectDefenseRelevant(effect, ability, target)) defenseBonusEffects.push(effect);
+                    if (item.effects.includes(effect) && _effectDefenseRelevant(effect, ability, target)) {
+                        if (effect === 'defense_down') attackBonusEffects.push('defense_down');
+                        else defenseBonusEffects.push(effect);
+                    }
                 });
             }
         });
 
         // Check target status effects
         target.status.effects.forEach(effect => {
-            const relevantEffects = ['protect', 'shell', 'defense_down', 'damage_reduction', 'predict_damage', 'ranged_defense_up'];
+            const relevantEffects = ['protect', 'shell', 'defense_up', 'defense_down', 'damage_reduction', 'predict_damage', 'ranged_defense_up'];
             if (relevantEffects.includes(effect.name)) {
                 if (effect.name === 'defense_down') {
                     attackBonusEffects.push('defense_down');
@@ -612,9 +617,13 @@ class Character {
         const variance = 0.1;
         const randomFactor = 1 + (Math.random() * variance * 2 - variance);
         damage *= randomFactor;
-        damage *= _getDamageMultiplier(ability, target);
+        damage *= this._getDamageMultiplier(ability, target);
         damage *= target.getElementalMultiplier(ability.element || 'none');
 
+        // Apply back row damage reduction for physical attacks
+        if (target.position === 'back' && ability.type === 'physical' && !ability.ranged && !this.isRanged()) {
+            damage *= 0.5;
+        }
         return Math.floor(damage);
     }
 
@@ -824,68 +833,251 @@ class Character {
         // Apply MP cost
         this.status.mp -= (ability.mp || 0);
 
-        // Calculate and apply effects
-        let result;
-        switch (ability.type) {
-            case 'physical':
-            case 'magical':
-                result = this._resolveAttackAbility(ability, target);
-                break;
-            case 'healing':
-                result = this._resolveHealingAbility(ability, target);
-                break;
-            case 'buff':
-                result = this._resolveSupportAbility(ability, target);
-                break;
-            case 'status':
-                result = this._resolveStatusAbility(ability, target);
-                break;
-            case 'drain':
-                result = this._resolveDrainAbility(ability, target);
-                break;
-            case 'special':
-                // For special abilities, find the job class that owns this ability and let it handle resolution
-                const jobId = ability.jobId || this.currentJob;
-                const JobClass = this.getJobClass(jobId);
-                if (!JobClass) {
-                    result = { success: false, message: 'Invalid job for special ability' };
-                } else {
-                    result = JobClass.resolveSpecialAbility(this, ability, target);
-                }
-                break;
-            default:
-                result = { success: false, message: 'Invalid ability type' };
+        // For AOE abilities, we need all targets in the same party as the target
+        const targets = ability.aoe ? (target.party || [target]) : [target];
+
+        // Calculate and apply effects for all targets
+        let results = targets.map(currentTarget => {
+            let result;
+            switch (ability.type) {
+                case 'physical':
+                case 'magical':
+                    result = this._resolveAttackAbility(ability, currentTarget);
+                    break;
+                case 'healing':
+                    result = this._resolveHealingAbility(ability, currentTarget);
+                    break;
+                case 'buff':
+                    result = this._resolveSupportAbility(ability, currentTarget);
+                    break;
+                case 'status':
+                    result = this._resolveStatusAbility(ability, currentTarget);
+                    break;
+                case 'drain':
+                    result = this._resolveDrainAbility(ability, currentTarget);
+                    break;
+                case 'special':
+                    // For special abilities, find the job class that owns this ability and let it handle resolution
+                    const jobId = ability.jobId || this.currentJob;
+                    const JobClass = this.getJobClass(jobId);
+                    if (!JobClass) {
+                        result = { success: false, message: 'Invalid job for special ability' };
+                    } else {
+                        result = JobClass.resolveSpecialAbility(this, ability, currentTarget);
+                        // Apply any effects from special abilities
+                        if (result.success && result.effects) {
+                            result.effects.forEach(effect => {
+                                currentTarget.addEffect({
+                                    name: effect.type,
+                                    duration: effect.duration,
+                                    power: effect.power,
+                                    source: this.name
+                                });
+                            });
+                        }
+                    }
+                    break;
+                default:
+                    result = { success: false, message: 'Invalid ability type' };
+            }
+
+            // Add target reference to result
+            return { ...result, target: currentTarget };
+        });
+
+        // For buffs and status effects that are AOE, mark the result as AOE and return all results
+        if ((ability.type === 'buff' || ability.type === 'status') && ability.aoe) {
+            return results;
         }
 
-        // Apply back row damage reduction for physical attacks
-        if (target.position === 'back' && ability.type === 'physical' && result.damage ) {
-            result.damage = Math.floor(result.damage * 0.5);
+        // For all other abilities (damage, healing, etc), return just the first result
+        return results[0];
+    }
+
+    _resolveAttackAbility(ability, target) {
+        const reaction = target.getReactionAbility();
+        const result = { success: true, effects: [] };
+        
+        // Pre-hit reaction checks
+        if (this._handleReaction(reaction, ability, target, result)) {
+            return result;
         }
+
+        // Base evasion check
+        const evasion = target.getStats().ev;
+        if (Math.random() < (evasion / 100)) {
+            return { success: false, message: 'Attack missed', effects: [] };
+        }
+
+        // Calculate and apply damage
+        let damage = this._calculateDamage(ability, target);
+        
+        // Apply any damage reduction from reactions
+        if (result.damageReduction) {
+            damage = Math.floor(damage * (1 - result.damageReduction));
+        }
+        
+        target.status.hp = Math.max(0, target.status.hp - damage);
+        result.damage = damage;
+
+        // Post-hit reaction checks
+        if (reaction && Math.random() < reaction.chance) {
+            switch (reaction.effect) {
+                // Counter attacks
+                case 'counter_attack':
+                case 'counter_with_power':
+                    result.counter = {
+                        type: 'damage',
+                        power: reaction.power || (reaction.effect === 'counter_with_power' ? 1.5 : 1),
+                        target: this
+                    };
+                    break;
+                case 'counter_with_dance':
+                case 'counter_with_song':
+                    result.counter = {
+                        type: reaction.effect,
+                        target: this
+                    };
+                    break;
+                case 'counter_with_status':
+                    result.counter = {
+                        type: 'status',
+                        effect: 'blind',  // Example status effect
+                        target: this
+                    };
+                    break;
+                case 'counter_steal':
+                    result.counter = {
+                        type: 'steal',
+                        target: this
+                    };
+                    break;
+
+                // MP related reactions
+                case 'mp_drain':
+                    const mpDrain = Math.floor(damage * 0.2);
+                    this.status.mp = Math.max(0, this.status.mp - mpDrain);
+                    target.status.mp = Math.min(target.getMaxMP(), target.status.mp + mpDrain);
+                    result.effects.push({ type: 'mp_drain', value: mpDrain });
+                    break;
+
+                // Recovery reactions
+                case 'use_potion_when_hurt':
+                    const healAmount = Math.min(50, target.getMaxHP() - target.status.hp);
+                    if (healAmount > 0) {
+                        target.status.hp += healAmount;
+                        result.effects.push({ type: 'heal', value: healAmount });
+                    }
+                    break;
+                case 'hp_restore':
+                    const restoration = Math.floor(damage * 0.3);
+                    target.status.hp = Math.min(target.getMaxHP(), target.status.hp + restoration);
+                    result.effects.push({ type: 'heal', value: restoration });
+                    break;
+                case 'terrain_heal':
+                    const terrainHeal = Math.floor(damage * 0.2);
+                    target.status.hp = Math.min(target.getMaxHP(), target.status.hp + terrainHeal);
+                    result.effects.push({ type: 'heal', value: terrainHeal });
+                    break;
+                case 'recover_fall':
+                    if (target.status.effects.some(e => e.name === 'falling')) {
+                        result.effects.push({ type: 'remove_status', status: 'falling' });
+                    }
+                    break;
+
+                // Status effect reactions
+                case 'regen':
+                    result.effects.push({ type: 'regen', duration: 3 });
+                    break;
+                case 'adapt_to_damage_type':
+                    result.effects.push({ type: `resist_${ability.type}`, duration: 3 });
+                    break;
+                case 'prevent_status':
+                    result.effects.push({ type: 'status_immune', duration: 2 });
+                    break;
+                case 'reflect_status':
+                    if (ability.type === 'status') {
+                        result.counter = {
+                            type: 'status',
+                            effect: ability.effect,
+                            target: this
+                        };
+                    }
+                    break;
+                case 'enhance_healing':
+                    result.effects.push({ type: 'healing_up', duration: 3 });
+                    break;
+                case 'survive_fatal':
+                    if (target.status.hp <= 0) {
+                        target.status.hp = 1;
+                        result.effects.push({ type: 'survive_fatal' });
+                    }
+                    break;
+                case 'enhance_next_summon':
+                    result.effects.push({ type: 'summon_power_up', duration: 1 });
+                    break;
+            }
+        }
+
+        this._handleCounter(result, result.counter);
 
         return result;
     }
 
-    _resolveAttackAbility(ability, target) {
-        const stats = this.getStats();
-        const damage = this._calculateDamage(ability, target);
-        target.status.hp = Math.max(0, target.status.hp - damage);
-        return {
-            success: true,
-            damage,
-            effects: []
-        };
-    }
-
     _resolveHealingAbility(ability, target) {
-        const stats = this.getStats();
-        const healing = Math.floor(stats.ma * (ability.power || 1));
+        const reaction = target.getReactionAbility();
+        const result = { success: true, effects: [] };
+        
+        // Handle pre-healing reactions
+        if (reaction && Math.random() < reaction.chance) {
+            switch (reaction.effect) {
+                case 'enhance_healing':
+                    result.healingBoost = 1.5;
+                    break;
+                case 'quick_pocket':
+                    // Chemist's ability to use items without consuming them
+                    if (ability.isItem) {
+                        result.preserveItem = true;
+                    }
+                    break;
+                case 'survive_fatal':
+                    // Oracle's ability to survive fatal damage also enhances healing
+                    result.healingBoost = (result.healingBoost || 1) * 1.2;
+                    break;
+            }
+        }
+
+        // Calculate and apply healing
+        let healing = this._calculateHealing(ability);
+        
+        // Apply healing boost if applicable
+        if (result.healingBoost) {
+            healing = Math.floor(healing * result.healingBoost);
+        }
+        
         const maxHp = target.getMaxHP();
         target.status.hp = Math.min(maxHp, target.status.hp + healing);
-        return {
-            success: true,
-            healing,
-            effects: []
-        };
+        result.healing = healing;
+
+        // Handle post-healing reactions
+        if (reaction && Math.random() < reaction.chance) {
+            switch (reaction.effect) {
+                case 'regen':
+                    result.effects.push({ type: 'regen', duration: 3 });
+                    break;
+                case 'enhance_next_summon':
+                    result.effects.push({ type: 'summon_power_up', duration: 1 });
+                    break;
+                case 'adapt_to_damage_type':
+                    // When healed, gain temporary resistance to the last damage type received
+                    if (target.lastDamageType) {
+                        result.effects.push({ type: `resist_${target.lastDamageType}`, duration: 3 });
+                    }
+                    break;
+            }
+        }
+
+        return result;
     }
 
     _resolveSupportAbility(ability, target) {
@@ -894,6 +1086,12 @@ class Character {
         if (ability.effect) {
             const effects = Array.isArray(ability.effect) ? ability.effect : [ability.effect];
             effects.forEach(effect => {
+                target.addEffect({
+                    name: effect,
+                    duration: ability.duration || 3,
+                    power: ability.power || 1,
+                    source: this.name
+                });
                 result.effects.push({
                     type: effect,
                     duration: ability.duration || 3,
@@ -910,25 +1108,77 @@ class Character {
     }
 
     _resolveStatusAbility(ability, target) {
+        const reaction = target.getReactionAbility();
         const result = { success: true, effects: [] };
-        
+
+        // Check for specific immunities first
+        if (target.isImmuneToEffect(ability.effect)) {
+            result.success = false;
+            result.message = 'Target is immune to effect';
+            return result;
+        }
+
+        // Handle pre-effect reactions
+        if (reaction && Math.random() < reaction.chance) {
+            switch (reaction.effect) {
+                case 'prevent_status':
+                    result.success = false;
+                    result.message = 'Status effect prevented';
+                    result.effects.push({ type: 'status_immune', duration: 2 });
+                    return result;
+                
+                case 'reflect_status':
+                    result.counter = {
+                        type: 'status',
+                        effect: ability.effect,
+                        target: this,
+                        duration: ability.duration
+                    };
+                    return result;
+            }
+        }
+
+        // Apply the status effect if not prevented
         if (ability.effect) {
             const effects = Array.isArray(ability.effect) ? ability.effect : [ability.effect];
             effects.forEach(effect => {
-                // Check if status effect applies based on chance
-                const chance = ability.chance || 0.5; // Default 50% chance if not specified
+                const chance = ability.chance || 0.5;
                 if (Math.random() < chance) {
-                    result.effects.push({
+                    const effectData = {
                         type: effect,
                         duration: ability.duration || 3,
                         power: ability.power || 1
+                    };
+                    result.effects.push(effectData);
+                    
+                    target.addEffect({
+                        name: effect,
+                        duration: effectData.duration,
+                        power: effectData.power,
+                        source: this.name
                     });
                 }
             });
         }
 
-        if (ability.aoe) {
-            result.isAoe = true;
+        // Handle counter reactions after status is applied
+        if (reaction && Math.random() < reaction.chance) {
+            switch (reaction.effect) {
+                case 'counter_argue':
+                    // Orator's special counter
+                    result.counter = {
+                        type: 'status',
+                        effect: ['silence', 'confusion'][Math.floor(Math.random() * 2)],
+                        target: this,
+                        duration: 2
+                    };
+                    break;
+            }
+        }
+
+        // Resolve any counters
+        if (result.counter) {
+            this._handleCounter(result, result.counter);
         }
 
         return result;
@@ -1002,6 +1252,250 @@ class Character {
         });
 
         return effectResult;
+    }
+
+    _handleCounter(result, counter) {
+        if (!counter) return;
+
+        switch (counter.type) {
+            case 'damage':
+                const damageResult = this._resolveAttackAbility({
+                    type: 'physical',
+                    power: counter.power || 1
+                }, counter.target);
+                result.counterResult = damageResult;
+                break;
+            case 'status':
+                const statusResult = this._resolveStatusAbility({
+                    type: 'status',
+                    effect: counter.effect,
+                    chance: 1
+                }, counter.target);
+                result.counterResult = statusResult;
+                break;
+            case 'counter_with_song':
+                const songResult = this._resolveSupportAbility({
+                    type: 'buff',
+                    effect: ['attack_up', 'defense_up', 'speed_up'][Math.floor(Math.random() * 3)],
+                    duration: 3
+                }, counter.target);
+                result.counterResult = songResult;
+                break;
+            case 'counter_with_dance':
+                const danceResult = this._resolveStatusAbility({
+                    type: 'status',
+                    effect: ['slow', 'blind', 'silence'][Math.floor(Math.random() * 3)],
+                    chance: 1,
+                    duration: 3
+                }, counter.target);
+                result.counterResult = danceResult;
+                break;
+            case 'steal':
+                // TODO: Implement stealing mechanics
+                result.counterResult = { type: 'steal', success: true };
+                break;
+        }
+    }
+
+    _handleReaction(reaction, ability, target, result) {
+        if (!reaction || Math.random() >= reaction.chance) return false;
+
+        switch (reaction.effect) {
+            // Counter shot specific handling
+            case 'counter_shot':
+                result.counter = {
+                    type: 'damage',
+                    power: reaction.power || 0.8,
+                    ranged: true,
+                    target: this
+                };
+                break;
+
+            // Quick Pocket ability
+            case 'free_item_use':
+                if (ability.isItem) {
+                    result.preserveItem = true;
+                    return false; // Don't block the ability
+                }
+                break;
+
+            // Defense Boost ability
+            case 'increase_defense':
+                result.effects.push({ 
+                    type: 'defense_up', 
+                    duration: 3,
+                    power: 1.5
+                });
+                return false; // Don't block the ability
+
+            // Time magic specific
+            case 'resist_time_magic':
+                if (ability.element === 'time') {
+                    result.success = false;
+                    result.message = 'Time magic resisted';
+                    return true;
+                }
+                break;
+
+            // Status effect handling
+            case 'reflect_status':
+                if (ability.type === 'status') {
+                    result.counter = {
+                        type: 'status',
+                        effect: ability.effect,
+                        target: this
+                    };
+                    return true;
+                }
+                break;
+            case 'prevent_status':
+                if (ability.type === 'status') {
+                    result.effects.push({ type: 'status_immune', duration: 2 });
+                    return true;
+                }
+                break;
+
+            // Magical effect handling
+            case 'reflect':
+                if (ability.type === 'magical') {
+                    result.counter = {
+                        type: ability.type,
+                        effect: ability.effect,
+                        target: this
+                    };
+                    return true;
+                }
+                break;
+            case 'enhance_healing':
+                if (ability.type === 'healing') {
+                    result.healingBoost = 1.5;
+                    return false; // Don't block the ability
+                }
+                break;
+
+            // Physical attack avoidance
+            case 'evade_melee':
+                if (ability.type === 'physical' && !ability.ranged) {
+                    result.success = false;
+                    result.message = 'Attack evaded through dance';
+                    return true;
+                }
+                break;
+            case 'anticipate_attack':
+                if (ability.type === 'physical') {
+                    result.success = false;
+                    result.message = 'Attack anticipated and avoided';
+                    return true;
+                }
+                break;
+            case 'detect_ambush':
+                if (!this.status.effects.some(e => e.name === 'revealed')) {
+                    result.success = false;
+                    result.message = 'Surprise attack detected';
+                    return true;
+                }
+                break;
+            case 'avoid_damage':
+                result.success = false;
+                result.message = 'Damage avoided through negotiation';
+                return true;
+
+            // Terrain and position-based effects
+            case 'nullify_air_damage':
+                if (this.status.effects.some(e => e.name === 'jump')) {
+                    result.success = false;
+                    result.message = 'Attack nullified mid-air';
+                    return true;
+                }
+                break;
+            case 'terrain_defense':
+                // TODO: Implement terrain type check
+                result.damageReduction = 0.3;
+                return false;
+                
+            // Special defensive effects
+            case 'number_defense':
+                // Calculator's special defense based on numbers
+                if ((this.status.hp % 5) === 0) {
+                    result.damageReduction = 0.5;
+                    return false;
+                }
+                break;
+            case 'temporary_invisibility':
+                result.success = false;
+                result.message = 'Target vanished';
+                result.effects.push({ type: 'invisible', duration: 1 });
+                return true;
+        }
+        return false;
+    }
+
+    _resolvePostActionReactions(result, target, ability) {
+        const reaction = target.getReactionAbility();
+        if (!reaction || Math.random() >= reaction.chance) return;
+
+        switch (reaction.effect) {
+            // Response to damage
+            case 'counter_shot':
+                if (ability.type === 'physical') {
+                    result.counter = {
+                        type: 'damage',
+                        power: 0.8,
+                        ranged: true,
+                        target: this
+                    };
+                }
+                break;
+
+            // Item preservation
+            case 'free_item_use':
+                if (ability.isItem) {
+                    result.preserveItem = true;
+                }
+                break;
+
+            // Post-damage status effects
+            case 'adapt_to_damage_type':
+                if (ability.type) {
+                    result.effects.push({
+                        type: `resist_${ability.type}`,
+                        duration: 3
+                    });
+                }
+                break;
+
+            // Stat modifications
+            case 'increase_defense':
+                result.effects.push({
+                    type: 'defense_up',
+                    duration: 3,
+                    power: 1.5
+                });
+                break;
+
+            // Recovery effects
+            case 'hp_restore':
+                const healAmount = Math.floor(result.damage * 0.3);
+                target.status.hp = Math.min(target.getMaxHP(), target.status.hp + healAmount);
+                result.effects.push({ type: 'heal', value: healAmount });
+                break;
+
+            // Special counters
+            case 'counter_argue':
+                if (ability.type === 'status') {
+                    result.counter = {
+                        type: 'status',
+                        effect: ['silence', 'confusion'][Math.floor(Math.random() * 2)],
+                        target: this,
+                        duration: 2
+                    };
+                }
+                break;
+        }
+
+        if (result.counter) {
+            this._handleCounter(result, result.counter);
+        }
     }
 
     // Status Effect Methods
@@ -1083,7 +1577,7 @@ class Character {
         }
 
         // For physical attacks, handle ranged vs melee based on positions and weapon
-        if (ability.type === 'physical' && !ability.ranged && !this.isRanged()) {
+        if (ability.type === 'physical' && !this.isRanged()) {
             return targets.filter(t => 
                 t.position === 'front' || this.position === 'front'
             );

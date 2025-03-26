@@ -135,6 +135,7 @@ export class Archer extends JobInterface {
                 },
                 COUNTER_SHOT: {
                     name: 'Counter Shot',
+                    effect: 'counter_shot',
                     chance: 0.25,
                     type: 'physical',
                     power: 0.8,
