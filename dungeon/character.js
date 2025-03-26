@@ -130,6 +130,9 @@ class Character {
         const currentJobData = this.jobs[this.currentJob];
         if (!currentJobData) return false;
         
+        // Apply JP Boost if available
+        amount = this._calculateJPGain(amount);
+        
         currentJobData.jp += amount;
         
         let leveled = false;
@@ -324,7 +327,9 @@ class Character {
         if (slot === EQUIPMENT_SLOTS.OFF_HAND && item.type === 'weapon') {
             const hasDualWield = this.getSupportAbilities()
                 .some(ability => ability.effect === 'enable_dual_wielding');
-            if (!hasDualWield) {
+            const hasDoubleHand = this.getSupportAbilities()
+                .some(ability => ability.effect === 'enable_two_hand');
+            if (!hasDualWield && !hasDoubleHand) {
                 return false;
             }
         }
@@ -672,6 +677,13 @@ class Character {
             healing *= 1.5; // 50% healing increase
         }
 
+        // Check for Medicine Lore (Chemist) when healing
+        const hasMedicineLore = this.getSupportAbilities()
+            .some(ability => ability.effect === 'improve_healing');
+        if (hasMedicineLore) {
+            healing *= 1.4; // 40% healing increase
+        }
+
         // Check for Item Boost when using items
         if (ability.isItem) {
             const hasItemBoost = this.getSupportAbilities()
@@ -918,15 +930,24 @@ class Character {
                     if (!JobClass) {
                         result = { success: false, message: 'Invalid job for special ability' };
                     } else {
-                        result = JobClass.resolveSpecialAbility(this, ability, currentTarget);
+                        // Pass the ability ID for proper routing in resolveSpecialAbility
+                        result = JobClass.resolveSpecialAbility(this, { ...ability, id: abilityId }, currentTarget);
                         if (result.success && result.effects) {
                             result.effects.forEach(effect => {
-                                currentTarget.addEffect({
-                                    name: effect.type,
-                                    duration: effect.duration,
-                                    power: effect.power,
-                                    source: this.name
-                                });
+                                if (typeof effect === 'string') {
+                                    currentTarget.addEffect({
+                                        name: effect,
+                                        duration: ability.duration || 3,
+                                        source: this.name
+                                    });
+                                } else {
+                                    currentTarget.addEffect({
+                                        name: effect.type,
+                                        duration: effect.duration,
+                                        power: effect.power,
+                                        source: this.name
+                                    });
+                                }
                             });
                         }
                     }
@@ -956,13 +977,21 @@ class Character {
             });
 
             if (ability.aoe) {
-                return [...firstCastResults, ...secondCastResults];
+                return {
+                    success: true,
+                    isAoe: true,
+                    targets: [...firstCastResults, ...secondCastResults]
+                };
             }
             return [firstCastResults[0], secondCastResults[0]];
         }
 
         if (ability.aoe) {
-            return firstCastResults;
+            return {
+                success: true,
+                isAoe: true,
+                targets: firstCastResults
+            };
         }
         return firstCastResults[0];
     }
@@ -2017,14 +2046,21 @@ class Character {
         support.forEach(ability => {
             switch (ability.effect) {
                 case 'heal_while_moving':
-                    // Squire's Move HP Up
                     const healAmount = Math.floor(this.getMaxHP() * 0.1);
                     this.status.hp = Math.min(this.getMaxHP(), this.status.hp + healAmount);
                     break;
                 case 'mp_regen_walking':
-                    // White Mage's MP Recovery
-                    const mpRestore = Math.floor(this.getMaxMP() * 0.05);
-                    this.status.mp = Math.min(this.getMaxMP(), this.status.mp + mpRestore);
+                    const mpAmount = Math.floor(this.getMaxMP() * 0.05);
+                    this.status.mp = Math.min(this.getMaxMP(), this.status.mp + mpAmount);
+                    break;
+                case 'safe_landing':
+                    if (this.status.effects.some(e => e.name === 'jump')) {
+                        this.addEffect({
+                            name: 'safe_landing',
+                            duration: 1,
+                            power: 1
+                        });
+                    }
                     break;
             }
         });
@@ -2052,15 +2088,18 @@ class Character {
         let autoDisarm = false;
 
         // Check for Thief's trap mastery
-        const support = this.getSupportAbilities();
-        support.forEach(ability => {
-            if (ability.effect === 'extended_trap_detection') {
+        const trapMastery = this.getSupportAbilities()
+            .find(ability => ability.effect.includes('extended_trap_detection') || 
+                            ability.effect.includes('auto_disarm'));
+        
+        if (trapMastery) {
+            if (trapMastery.effect.includes('extended_trap_detection')) {
                 detectionRange = 2;
             }
-            if (ability.effect === 'auto_disarm') {
+            if (trapMastery.effect.includes('auto_disarm')) {
                 autoDisarm = true;
             }
-        });
+        }
 
         // Return detection capabilities
         return {
@@ -2133,6 +2172,128 @@ class Character {
         });
 
         return Math.floor(mpCost);
+    }
+
+    _calculateJPGain(amount) {
+        // Check for JP Boost support ability
+        const hasJPBoost = this.getSupportAbilities()
+            .some(ability => ability.effect === 'increase_jp_gain');
+        if (hasJPBoost) {
+            amount = Math.floor(amount * 1.5); // 50% JP gain increase
+        }
+        return amount;
+    }
+
+    _calculateDanceEffect(ability) {
+        let duration = ability.duration || 3;
+        let potency = ability.power || 1;
+
+        // Check for Performance Focus (Dancer)
+        const performanceFocus = this.getSupportAbilities()
+            .find(ability => ability.effect === 'extend_dance_duration,increase_dance_potency');
+        
+        if (performanceFocus) {
+            duration = Math.floor(duration * 1.5);
+            potency *= 1.3;
+        }
+
+        return { duration, potency };
+    }
+
+    _resolveStealAbility(ability, target) {
+        const result = { success: false, effects: [] };
+        
+        // Calculate steal success rate
+        const stealChance = this._calculateStealSuccess(target);
+        
+        if (Math.random() < stealChance) {
+            // Determine what can be stolen based on ability
+            let stolenItem = null;
+            switch (ability.name) {
+                case 'Steal Gil':
+                    stolenItem = { type: 'gil', amount: Math.floor(Math.random() * 100 + 50) };
+                    break;
+                case 'Steal Item':
+                    if (target.inventory && target.inventory.length > 0) {
+                        const itemIndex = Math.floor(Math.random() * target.inventory.length);
+                        stolenItem = target.inventory.splice(itemIndex, 1)[0];
+                    }
+                    break;
+                case 'Steal Weapon':
+                    if (target.equipment?.mainHand) {
+                        stolenItem = target.equipment.mainHand;
+                        target.equipment.mainHand = null;
+                    }
+                    break;
+                case 'Pilfer':
+                    if (target.status.effects.length > 0) {
+                        const effectIndex = Math.floor(Math.random() * target.status.effects.length);
+                        const effect = target.status.effects.splice(effectIndex, 1)[0];
+                        this.addEffect(effect);
+                        stolenItem = { type: 'effect', effect };
+                    }
+                    break;
+            }
+            
+            if (stolenItem) {
+                result.success = true;
+                result.stolenItem = stolenItem;
+                if (stolenItem.type !== 'effect') {
+                    this.inventory.push(stolenItem);
+                }
+            }
+        }
+        
+        return result;
+    }
+
+    _resolveSpeechcraftAbility(ability, target) {
+        const result = { success: false, effects: [] };
+        
+        // Base success chance (50%)
+        let successRate = 0.5;
+        
+        // Apply Negotiator bonus if present
+        const hasNegotiator = this.getSupportAbilities()
+            .some(ability => ability.effect === 'improve_persuasion');
+        if (hasNegotiator) {
+            successRate += 0.2; // +20% success rate
+        }
+        
+        // Apply level difference modifier
+        const levelDiff = this.level - target.level;
+        successRate += levelDiff * 0.05; // +/-5% per level difference
+        
+        // Check for success
+        if (Math.random() < successRate) {
+            result.success = true;
+            
+            switch (ability.name) {
+                case 'Persuade':
+                    result.effects.push({ type: 'charm', duration: 3 });
+                    break;
+                case 'Negotiate':
+                    result.effects.push({ type: 'gil_gain', amount: Math.floor(target.level * 50) });
+                    break;
+                case 'Peace Talk':
+                    result.effects.push({ type: 'retreat', chance: 0.7 });
+                    break;
+                // ... other speechcraft abilities
+            }
+            
+            // Apply effects to target
+            result.effects.forEach(effect => {
+                if (effect.type !== 'gil_gain') {
+                    target.addEffect({
+                        name: effect.type,
+                        duration: effect.duration || 1,
+                        source: this.name
+                    });
+                }
+            });
+        }
+        
+        return result;
     }
 }
 

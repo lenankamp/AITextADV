@@ -107,6 +107,7 @@ Archer Guard:
   jpCost: 200
   description: Reduces damage from ranged attacks
 Counter Shot:
+  effect: counter_shot
   chance: 0.25
   type: physical
   power: 0.8
@@ -1098,6 +1099,7 @@ Parry:
   description: Chance to reduce physical damage
 Defense Boost:
   chance: 0.3
+  effect: increase_defense
   jpCost: 450
   description: Chance to increase defense when hit
 

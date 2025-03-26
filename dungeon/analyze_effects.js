@@ -1,4 +1,4 @@
-import * as Jobs from './dungeon/jobs/index.js';
+import * as Jobs from './jobs/index.js';
 import fs from 'fs';
 
 class AbilityAnalyzer {

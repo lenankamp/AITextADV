@@ -3,7 +3,7 @@ import path from 'path';
 
 // Read the counter abilities file
 const counterAbilitiesText = fs.readFileSync('./counter_abilities.txt', 'utf8');
-const characterJsText = fs.readFileSync('./dungeon/character.js', 'utf8');
+const characterJsText = fs.readFileSync('./character.js', 'utf8');
 
 // Parse counter abilities
 function parseCounterAbilities(text) {

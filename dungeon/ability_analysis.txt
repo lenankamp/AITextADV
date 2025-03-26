@@ -2,7 +2,7 @@
 
 Summary:
 {
-  "totalEffects": 161,
+  "totalEffects": 163,
   "totalTypes": 9,
   "totalElements": 10,
   "totalTargetingTypes": 1
@@ -32,10 +32,10 @@ sonic: 1 uses
 wind: 1 uses
 
 All Effects (by frequency):
-protect: 9 uses
-shell: 7 uses
+protect: 8 uses
 slow: 6 uses
 attack_up: 6 uses
+shell: 6 uses
 mp_drain: 5 uses
 silence: 4 uses
 haste: 4 uses
@@ -58,6 +58,7 @@ survive_fatal: 2 uses
 stop: 2 uses
 knockback: 1 uses
 ranged_defense_up: 1 uses
+counter_shot: 1 uses
 increase_critical: 1 uses
 confuse: 1 uses
 random_buff: 1 uses
@@ -111,6 +112,7 @@ ignore_terrain: 1 uses
 protect_ally: 1 uses
 physical_immunity: 1 uses
 attack_down: 1 uses
+increase_defense: 1 uses
 enable_shield: 1 uses
 damage_reduction: 1 uses
 adapt_to_damage_type: 1 uses
@@ -356,7 +358,7 @@ Examples: [
 ]
 
 effect:
-Used 188 times
+Used 189 times
 Examples: [
   "Archer.active.DISABLING_SHOT",
   "Archer.active.WEAKNESS_SHOT",
@@ -398,13 +400,14 @@ Examples: [
 Per-Job Effect Analysis:
 
 Archer:
-Total effects: 7
+Total effects: 8
 Effects: [
   "slow",
   "defense_down",
   "armor_pierce",
   "knockback",
   "ranged_defense_up",
+  "counter_shot",
   "accuracy_up",
   "increase_critical"
 ]
@@ -523,7 +526,7 @@ Total effects: 0
 Effects: []
 
 Knight:
-Total effects: 11
+Total effects: 12
 Effects: [
   "defense_down",
   "stun",
@@ -534,6 +537,7 @@ Effects: [
   "shell",
   "attack_down",
   "regen",
+  "increase_defense",
   "enable_shield",
   "damage_reduction"
 ]

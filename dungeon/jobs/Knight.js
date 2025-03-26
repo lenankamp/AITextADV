@@ -156,4 +156,19 @@ export class Knight extends JobInterface {
             [JOBS.Squire]: 2
         };
     }
+
+    static resolveSpecialAbility(user, ability, target) {
+        switch (ability.id) {
+            case 'SENTINEL':
+                return {
+                    success: true,
+                    effects: [
+                        { type: 'defense_up', duration: 3, magnitude: 2 },
+                        { type: 'draw_attacks', duration: 3 }
+                    ]
+                };
+            default:
+                throw new Error(`Unknown special ability: ${ability.id}`);
+        }
+    }
 }

@@ -43,7 +43,7 @@ export class Armor extends Equipment {
 
         // For shield, check if character has a two-handed weapon
         if (this.armorType === ARMOR_TYPES.SHIELD) {
-            const mainHandWeapon = character.equipment.mainHand;
+            const mainHandWeapon = character.equipment[EQUIPMENT_SLOTS.MAIN_HAND];
             if (mainHandWeapon && mainHandWeapon.isTwoHanded) {
                 return false;
             }

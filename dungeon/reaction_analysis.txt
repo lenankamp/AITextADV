@@ -296,8 +296,8 @@ Time Ward:
 Temporal Shift:
   Effect: regen
   Name occurrences: 0
-  Effect occurrences: 4
-  Total references: 4
+  Effect occurrences: 5
+  Total references: 5
 
 
 WhiteMage
@@ -306,8 +306,8 @@ WhiteMage
 Divine Grace:
   Effect: enhance_healing
   Name occurrences: 0
-  Effect occurrences: 4
-  Total references: 4
+  Effect occurrences: 3
+  Total references: 3
 
 
 Summary
@@ -338,5 +338,5 @@ Multiple Handler Warnings:
 - Samurai: Retribution (counter_with_power) - 2 handlers
 - Summoner: Summon Boost (enhance_next_summon) - 5 handlers
 - Summoner: Eidolon Shield (summon_barrier) - 2 handlers
-- TimeMage: Temporal Shift (regen) - 4 handlers
-- WhiteMage: Divine Grace (enhance_healing) - 4 handlers
+- TimeMage: Temporal Shift (regen) - 5 handlers
+- WhiteMage: Divine Grace (enhance_healing) - 3 handlers

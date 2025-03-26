@@ -166,20 +166,32 @@ function formatHP(current, max) {
 // Helper to print combat status
 function printCombatStatus(state, combat) {
     console.log('\n=== Combat Status ===');
-    console.log('Party:');
+    
+    // Print initiative order
+    console.log('Initiative Order:');
+    state.initiatives.forEach(actor => {
+        const status = actor.hasActed ? '[ACTED]' : actor.initiative > 100 ? '[READY]' : '';
+        console.log(`  ${actor.name.padEnd(15)} Initiative: ${actor.initiative.toFixed(1).padEnd(6)} ${status}`);
+    });
+
+    console.log('\nParty:');
     state.parties.A.forEach(member => {
         const character = combat.partyA.members.find(m => m.name === member.name);
         const maxHp = character.getMaxHP();
-        const statusEffects = character.status.effects?.length ? ` [${character.status.effects.map(e => e.name).join(', ')}]` : '';
-        console.log(`  ${member.name.padEnd(10)} [${member.position.padEnd(5)}] HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}${statusEffects}`);
+        const statusEffects = character.status.effects?.length ? 
+            ` [${character.status.effects.map(e => e.name).join(', ')}]` : '';
+        console.log(`  ${member.name.padEnd(10)} [${member.position.padEnd(5)}] `+
+            `HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}${statusEffects}`);
     });
 
     console.log('\nOpposing Forces:');
     state.parties.B.forEach(member => {
         const character = combat.partyB.members.find(m => m.name === member.name);
         const maxHp = character.getMaxHP();
-        const statusEffects = character.status.effects?.length ? ` [${character.status.effects.map(e => e.name).join(', ')}]` : '';
-        console.log(`  ${member.name.padEnd(15)} [${member.position.padEnd(5)}] HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}${statusEffects}`);
+        const statusEffects = character.status.effects?.length ? 
+            ` [${character.status.effects.map(e => e.name).join(', ')}]` : '';
+        console.log(`  ${member.name.padEnd(15)} [${member.position.padEnd(5)}] `+
+            `HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}${statusEffects}`);
     });
     console.log('==================\n');
 }
@@ -283,130 +295,61 @@ function runCombatTest() {
     const combat = new CombatManager(playerParty, monsterParty);
     const combatLog = [];
     let turnCount = 0;
-    const MAX_TURNS = 10;
+    const MAX_TURNS = 100; // Increased to account for initiative-based turns
 
-    // Print initial state
-    console.log('Initial Setup:');
-    printCombatStatus(combat.getCombatState(), combat);
-
-    while (combat.state === 'active' && turnCount < MAX_TURNS) {
-        console.log(`\n=== Turn ${turnCount + 1} ===`);
-        
-        const currentActor = combat.getCurrentActor();
-        if (!currentActor) {
-            console.log('No valid actor found');
-            break;
-        }
-
-        let action;
-        const abilities = currentActor.entity.getAvailableAbilities();
-        const validTargets = combat.getValidTargets(currentActor);
-
-        if (validTargets.length === 0) {
-            console.log('No valid targets available, skipping turn');
-            action = { type: 'skip' };
+    function getValidTargets(currentActor, ability) {
+        const isMonster = currentActor.entity.type === 'monster';
+        if (ability?.type === 'healing' || ability?.type === 'buff') {
+            return isMonster ? combat.partyB.members : combat.partyA.members;
         } else {
+            return isMonster ? combat.partyA.members : combat.partyB.members;
+        }
+    }
+    
+       // Print initial state
+       console.log('Initial Setup:');
+       printCombatStatus(combat.getCombatState(), combat);
+   
+       while (combat.state === 'active' && turnCount < MAX_TURNS) {
+           const state = combat.getCombatState();
+           const currentActor = state.currentActor;
+           
+           if (!currentActor) {
+               combat._updateInitiative();
+               continue;
+           }
+   
+           console.log(`\n=== Turn ${turnCount + 1} - ${currentActor.entity.name}'s Action ===`);
+   
+           let action;
+           const entity = currentActor.entity;
+           const abilities = entity.getAvailableAbilities();
+           
+           // Get valid targets based on entity type
+           const validTargets = entity.type === 'monster' ? 
+               combat.partyA.members.filter(m => m.status.hp > 0) :
+               combat.partyB.members.filter(m => m.status.hp > 0);
+   
+           if (validTargets.length === 0) {
+               action = { type: 'skip' };
+           } else {
             // Choose appropriate ability based on job
-            switch (currentActor.entity.currentJob) {
+            const monsterPartyMembers = combat.partyB.members;
+            const playerPartyMembers = combat.partyA.members;
+            switch (entity.currentJob) {
                 case JOBS.Knight:
-                    // Knights use BREAK for damage, or PROTECT for defense
-                    if (abilities.active.BREAK_ARMOR) {
-                        action = {
-                            type: 'ability',
-                            ability: 'BREAK_ARMOR',
-                            target: validTargets[0]
-                        };
-                    } else {
-                        action = {
-                            type: 'ability',
-                            ability: 'ATTACK',
-                            target: validTargets[0]
-                        };
-                    }
-                    break;
                 case JOBS.BlackMage:
-                    // Black Mages prefer FIRE for damage
-                    if (abilities.active.FIRE) {
-                        action = {
-                            type: 'ability',
-                            ability: 'FIRE',
-                            target: validTargets[0]
-                        };
-                    } else if (abilities.active.THUNDER) {
-                        action = {
-                            type: 'ability',
-                            ability: 'THUNDER',
-                            target: validTargets[0]
-                        };
-                    } else {
-                        action = {
-                            type: 'ability',
-                            ability: 'ATTACK',
-                            target: validTargets[0]
-                        };
-                    }
-                    break;
                 case JOBS.WhiteMage:
-                    // Find wounded ally
-                    const healTargets = combat.getValidTargets({
-                        entity: currentActor.entity,
-                        ability: abilities.active.CURE || abilities.active.PROTECT
-                    });
-                    const woundedAlly = healTargets.find(m => m.status.hp < m.getMaxHP());
-                    if (woundedAlly && abilities.active.CURE) {
-                        console.log('White Mage choosing CURE targeting:', woundedAlly.name);
-                        action = {
-                            type: 'ability',
-                            ability: 'CURE',
-                            target: woundedAlly
-                        };
-                    } else if (abilities.active.PROTECT) {
-                        // Cast PROTECT on front line if no healing needed
-                        const frontLine = healTargets.find(m => m.position === 'front');
-                        if (frontLine) {
-                            console.log('White Mage choosing PROTECT targeting:', frontLine.name);
-                            action = {
-                                type: 'ability',
-                                ability: 'PROTECT',
-                                target: frontLine
-                            };
-                        } else {
-                            console.log('White Mage choosing ATTACK targeting:', validTargets[0].name);
-                            action = {
-                                type: 'ability',
-                                ability: 'ATTACK',
-                                target: validTargets[0]
-                            };
-                        }
-                    } else {
-                        console.log('White Mage choosing ATTACK targeting:', validTargets[0].name);
-                        action = {
-                            type: 'ability',
-                            ability: 'ATTACK',
-                            target: validTargets[0]
-                        };
-                    }
-                    break;
                 case JOBS.Archer:
-                    // Archers prefer RAPID_FIRE for consistent damage
-                    if (abilities.active.RAPID_FIRE) {
-                        action = {
-                            type: 'ability',
-                            ability: 'RAPID_FIRE',
-                            target: validTargets[0]
-                        };
+                    action = currentActor.entity.getAIAction(monsterPartyMembers, playerPartyMembers);
+                    if (action) {
+                        console.log(`Player choosing ${action.ability} targeting:`, action.target.name);
                     } else {
-                        action = {
-                            type: 'ability',
-                            ability: 'ATTACK',
-                            target: validTargets[0]
-                        };
+                        console.log('Player has no valid action');
                     }
                     break;
                 case 'monster':
                     // Monster's turn - use AI decision making
-                    const monsterPartyMembers = combat.partyB.members;
-                    const playerPartyMembers = combat.partyA.members;
                     action = currentActor.entity.getAIAction(playerPartyMembers, monsterPartyMembers);
                     if (action) {
                         console.log(`Monster choosing ${action.ability} targeting:`, action.target.name);
@@ -424,23 +367,18 @@ function runCombatTest() {
             }
         }
 
+
         const result = combat.processAction(action);
-        // Add debug logging before and after ability use
-        console.log('=== Action Status Effects Debug ===');
-        console.log('Before action - Target status:', action.target.status);
-        console.log('Action result:', result);
         printActionResult(currentActor.entity, action, result);
         
-        // Print updated status if significant changes occurred
-        if (result.damage || result.healing) {
-            printCombatStatus(combat.getCombatState(), combat);
-        }
+        // Print updated status after each action
+        printCombatStatus(combat.getCombatState(), combat);
 
         turnCount++;
     }
 
     console.log('\n=== Combat Finished ===');
-    console.log(`Result: ${combat.state.toUpperCase()}`);
+    console.log(`Result: ${combat.result || 'TIMEOUT'}`);
     console.log(`Total turns: ${turnCount}`);
     
     // Write final combat log

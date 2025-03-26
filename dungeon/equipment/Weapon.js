@@ -34,7 +34,7 @@ export class Weapon extends Equipment {
         // One-handed weapons can go in either hand if character has dual wield
         const abilities = character.getSupportAbilities();
         const hasDualWield = abilities.some(ability => 
-            ability.abilityId === 'DUAL_WIELD');
+            ability.effect === 'enable_dual_wielding');
             
         if (slot === EQUIPMENT_SLOTS.OFF_HAND && !hasDualWield) {
             return false;

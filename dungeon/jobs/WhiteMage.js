@@ -179,6 +179,8 @@ export class WhiteMage extends JobInterface {
                 return this._resolveRaise(user, ability, target);
             case 'HOLY':
                 return this._resolveHoly(user, ability, target);
+            case 'DISPEL':
+                return this._resolveDispel(user, ability, target);
             default:
                 throw new Error(`Unknown special ability: ${ability.id}`);
         }
@@ -301,6 +303,30 @@ export class WhiteMage extends JobInterface {
             damage: totalDamage,
             isUndeadBonus: isUndead,
             effects
+        };
+    }
+
+    static _resolveDispel(user, ability, target) {
+        const dispellableEffects = target.status.effects.filter(effect => 
+            !effect.permanent && effect.source !== target.name // Can't dispel self-applied effects
+        );
+        
+        if (dispellableEffects.length === 0) {
+            return {
+                success: false,
+                message: 'No dispellable effects found'
+            };
+        }
+
+        // Remove all dispellable effects
+        target.status.effects = target.status.effects.filter(effect => 
+            effect.permanent || effect.source === target.name
+        );
+
+        return {
+            success: true,
+            message: `Dispelled ${dispellableEffects.length} effects`,
+            removedEffects: dispellableEffects.map(e => e.name)
         };
     }
 

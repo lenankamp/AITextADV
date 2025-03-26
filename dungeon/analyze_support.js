@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import * as Jobs from './dungeon/jobs/index.js';
+import * as Jobs from './jobs/index.js';
 
 // Parse support abilities from all job classes
 function getSupportAbilities() {
@@ -33,17 +33,41 @@ function getSupportAbilities() {
 
 // Analyze implementation in character.js
 function analyzeImplementation(abilities) {
-    const characterJs = fs.readFileSync('./dungeon/character.js', 'utf8');
+    const characterJs = fs.readFileSync('./character.js', 'utf8');
     const results = [];
 
     for (const ability of abilities) {
-        const nameMatches = (characterJs.match(new RegExp(ability.name, 'g')) || []).length;
-        const effectMatches = ability.effect ? 
-            (characterJs.match(new RegExp(ability.effect, 'g')) || []).length : 0;
+        // Split composite effects and search for each part, ensure effect is a string
+        const effects = (ability.effect && typeof ability.effect === 'string') ? 
+            ability.effect.split(',').map(e => e.trim()) : 
+            (Array.isArray(ability.effect) ? ability.effect : [String(ability.effect || '')]);
+        
+        // Escape special regex characters in ability name
+        const escapedName = ability.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const nameMatches = (characterJs.match(new RegExp(escapedName, 'g')) || []).length;
+        
+        // Search for each individual effect with word boundaries
+        const effectMatches = effects.reduce((total, effect) => {
+            if (!effect) return total;
+            const escapedEffect = String(effect).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const matches = (characterJs.match(new RegExp(`\\b${escapedEffect}\\b`, 'g')) || []).length;
+            return total + matches;
+        }, 0);
         
         // Look for specific support ability handling patterns
-        const supportHandlingMatches = (characterJs.match(new RegExp(`support.*${ability.effect}`, 'g')) || []).length;
-        const effectHandlingMatches = (characterJs.match(new RegExp(`_effect.*${ability.effect}`, 'g')) || []).length;
+        const supportHandlingMatches = effects.reduce((total, effect) => {
+            if (!effect) return total;
+            const escapedEffect = String(effect).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const matches = (characterJs.match(new RegExp(`support.*${escapedEffect}\\b`, 'g')) || []).length;
+            return total + matches;
+        }, 0);
+        
+        const effectHandlingMatches = effects.reduce((total, effect) => {
+            if (!effect) return total;
+            const escapedEffect = String(effect).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const matches = (characterJs.match(new RegExp(`_[a-zA-Z]*effect.*${escapedEffect}\\b`, 'g')) || []).length;
+            return total + matches;
+        }, 0);
         
         results.push({
             job: ability.job,
