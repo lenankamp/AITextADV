@@ -13,12 +13,57 @@ const TILE_TYPES = {
     TRAP: 7
 };
 
+const TERRAIN_TYPES = {
+    PLAINS: 'plains',
+    FOREST: 'forest',
+    MOUNTAIN: 'mountain',
+    WATER: 'water',
+    DESERT: 'desert',
+    SWAMP: 'swamp',
+    VOLCANO: 'volcano',
+    SNOW: 'snow',
+    CAVE: 'cave',
+    RUINS: 'ruins'
+};
+
+const ENVIRONMENTAL_EFFECTS = {
+    NONE: 'none',
+    DARKNESS: 'darkness',
+    HOLY: 'holy',
+    POISONED: 'poisoned',
+    ELECTRIFIED: 'electrified',
+    BURNING: 'burning',
+    FROZEN: 'frozen',
+    MAGICAL: 'magical',
+    CORRUPTED: 'corrupted',
+    WATERY: 'water',
+    MOLTEN: 'lava',
+    SANDY: 'sand',
+    GRASSY: 'grass',
+    ROCKY: 'stone',
+    MUDDY: 'mud',
+    ICY: 'ice',
+    CRYSTALLINE: 'crystal'
+};
+
+const ELEVATION_LEVELS = {
+    DEPTHS: -2,
+    BASEMENT: -1,
+    GROUND: 0,
+    RAISED: 1,
+    HIGH: 2,
+    PEAK: 3
+};
+
 const DUNGEON_FEATURES = {
-    Monster: 'monster',
+    MONSTER: 'monster',
     TRAP: 'trap',
     TREASURE: 'treasure',
     LORE: 'lore',
-    SECRET: 'secret'
+    SECRET: 'secret',
+    SHRINE: 'shrine',
+    BARRIER: 'barrier',
+    HAZARD: 'hazard'
 };
 
 // Add room types
@@ -53,6 +98,9 @@ class DungeonFloor {
         this.corridors = [];
         this.entrance = null;
         this.exit = null;
+        this.terrainMap = Array(height).fill().map(() => Array(width).fill(null));
+        this.elevationMap = Array(height).fill().map(() => Array(width).fill(ELEVATION_LEVELS.GROUND));
+        this.environmentalEffects = new Map(); // Store effects by coordinates
     }
 
     isWithinBounds(x, y) {
@@ -80,6 +128,57 @@ class DungeonFloor {
             this.entities.splice(index, 1);
         }
     }
+
+    setTerrain(x, y, terrainType) {
+        if (!this.isWithinBounds(x, y)) return false;
+        this.terrainMap[y][x] = terrainType;
+        return true;
+    }
+
+    getTerrain(x, y) {
+        if (!this.isWithinBounds(x, y)) return null;
+        return this.terrainMap[y][x];
+    }
+
+    setElevation(x, y, elevation) {
+        if (!this.isWithinBounds(x, y)) return false;
+        this.elevationMap[y][x] = elevation;
+        return true;
+    }
+
+    getElevation(x, y) {
+        if (!this.isWithinBounds(x, y)) return null;
+        return this.elevationMap[y][x];
+    }
+
+    addEnvironmentalEffect(x, y, effect, duration = Infinity) {
+        const key = `${x},${y}`;
+        if (!this.environmentalEffects.has(key)) {
+            this.environmentalEffects.set(key, []);
+        }
+        this.environmentalEffects.get(key).push({
+            type: effect,
+            duration: duration,
+            startTurn: 0 // Will be set when combat starts
+        });
+    }
+
+    getEnvironmentalEffects(x, y) {
+        const key = `${x},${y}`;
+        return this.environmentalEffects.get(key) || [];
+    }
+
+    updateEnvironmentalEffects(currentTurn) {
+        for (const [key, effects] of this.environmentalEffects.entries()) {
+            // Filter out expired effects
+            this.environmentalEffects.set(key, 
+                effects.filter(effect => 
+                    effect.duration === Infinity || 
+                    effect.startTurn + effect.duration > currentTurn
+                )
+            );
+        }
+    }
 }
 
 // Class representing a room in the dungeon
@@ -91,6 +190,11 @@ class Room {
         this.height = height;
         this.features = [];
         this.doors = [];
+        this.terrain = TERRAIN_TYPES.PLAINS;
+        this.elevation = ELEVATION_LEVELS.GROUND;
+        this.environmentalEffects = [];
+        this.terrainFeatures = new Map();
+        this.magicalProperties = new Map();
     }
 
     addFeature(feature) {
@@ -121,6 +225,71 @@ class Room {
                this.type === ROOM_TYPES.EXIT ||
                this.type === ROOM_TYPES.BOSS ||
                this.type === ROOM_TYPES.NORMAL; // Normal rooms are considered critical path for better connectivity
+    }
+
+    setTerrain(type, floor = null) {
+        this.terrain = type;
+        // Update room features based on terrain
+        switch (type) {
+            case TERRAIN_TYPES.WATER:
+                this.addTerrainFeature('depth', Math.floor(Math.random() * 3) + 1);
+                break;
+            case TERRAIN_TYPES.MOUNTAIN:
+                this.elevation = ELEVATION_LEVELS.HIGH;
+                break;
+            case TERRAIN_TYPES.VOLCANO:
+                this.addEnvironmentalEffect(ENVIRONMENTAL_EFFECTS.BURNING);
+                break;
+            case TERRAIN_TYPES.SNOW:
+                this.addEnvironmentalEffect(ENVIRONMENTAL_EFFECTS.FROZEN);
+                break;
+        }
+        
+        // Set terrain for all floor tiles in the room if floor is provided
+        if (floor) {
+            for (let y = this.y; y < this.y + this.height; y++) {
+                for (let x = this.x; x < this.x + this.width; x++) {
+                    if (floor.getTile(x, y) === TILE_TYPES.FLOOR) {
+                        floor.setTerrain(x, y, type);
+                    }
+                }
+            }
+        }
+    }
+
+    addTerrainFeature(name, value) {
+        this.terrainFeatures.set(name, value);
+    }
+
+    addEnvironmentalEffect(effect, floor = null) {
+        if (!this.environmentalEffects.includes(effect)) {
+            this.environmentalEffects.push(effect);
+            
+            // Propagate effect to floor tiles if floor is provided
+            if (floor) {
+                for (let y = this.y; y < this.y + this.height; y++) {
+                    for (let x = this.x; x < this.x + this.width; x++) {
+                        if (floor.getTile(x, y) === TILE_TYPES.FLOOR) {
+                            floor.addEnvironmentalEffect(x, y, effect);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    addMagicalProperty(name, value) {
+        this.magicalProperties.set(name, value);
+    }
+
+    getCurrentTerrain() {
+        return {
+            type: this.terrain,
+            elevation: this.elevation,
+            effects: [...this.environmentalEffects],
+            features: Object.fromEntries(this.terrainFeatures),
+            magicalProperties: Object.fromEntries(this.magicalProperties)
+        };
     }
 }
 
@@ -174,6 +343,9 @@ class Dungeon {
         
         // Add features (monsters, traps, treasure, etc.)
         this._addFeatures(floor);
+        
+        // Generate environment
+        this._generateEnvironment(floor);
         
         return floor;
     }
@@ -646,6 +818,211 @@ class Dungeon {
             this._addDoorsToRoom(floor, room);
         }
     }
+
+    _generateEnvironment(floor) {
+        // Define biome chunks for the floor
+        const chunkSize = 10;
+        const chunks = [];
+        for (let y = 0; y < floor.height; y += chunkSize) {
+            for (let x = 0; x < floor.width; x += chunkSize) {
+                chunks.push({
+                    x, y,
+                    width: Math.min(chunkSize, floor.width - x),
+                    height: Math.min(chunkSize, floor.height - y),
+                    terrain: this._selectTerrainType(floor.floorNumber)
+                });
+            }
+        }
+
+        // Apply terrain only within room boundaries
+        for (const room of floor.rooms) {
+            const centerX = room.x + room.width / 2;
+            const centerY = room.y + room.height / 2;
+            
+            // Find which chunk this room is in
+            const chunk = chunks.find(c => 
+                centerX >= c.x && centerX < c.x + c.width &&
+                centerY >= c.y && centerY < c.y + c.height
+            );
+
+            if (chunk) {
+                // Apply terrain only to floor tiles within the room
+                for (let y = room.y; y < room.y + room.height; y++) {
+                    for (let x = room.x; x < room.x + room.width; x++) {
+                        if (floor.getTile(x, y) === TILE_TYPES.FLOOR) {
+                            floor.setTerrain(x, y, chunk.terrain);
+                        }
+                    }
+                }
+                this._applyTerrainFeatures(room, floor);
+            }
+        }
+
+        // Add environmental effects
+        this._addEnvironmentalEffects(floor);
+        // Propagate terrain to create natural transitions
+        this._propagateTerrain(floor);
+    }
+
+    _selectTerrainType(floorNumber) {
+        // Higher floors have more extreme terrain
+        const availableTerrains = [TERRAIN_TYPES.PLAINS, TERRAIN_TYPES.FOREST];
+        
+        if (floorNumber > 1) {
+            availableTerrains.push(TERRAIN_TYPES.MOUNTAIN, TERRAIN_TYPES.DESERT);
+        }
+        if (floorNumber > 3) {
+            availableTerrains.push(TERRAIN_TYPES.WATER, TERRAIN_TYPES.SWAMP);
+        }
+        if (floorNumber > 5) {
+            availableTerrains.push(TERRAIN_TYPES.VOLCANO, TERRAIN_TYPES.SNOW);
+        }
+
+        return availableTerrains[Math.floor(Math.random() * availableTerrains.length)];
+    }
+
+    _applyTerrainFeatures(room, floor) {
+        switch (room.terrain) {
+            case TERRAIN_TYPES.WATER:
+                room.addTerrainFeature('water_depth', Math.floor(Math.random() * 3) + 1);
+                room.addTerrainFeature('swimming_required', room.terrainFeatures.get('water_depth') > 2);
+                break;
+            case TERRAIN_TYPES.MOUNTAIN:
+                const height = Math.floor(Math.random() * 3) + 1;
+                room.elevation = height;
+                room.addTerrainFeature('climbing_required', height > 2);
+                break;
+            case TERRAIN_TYPES.VOLCANO:
+                room.addEnvironmentalEffect(ENVIRONMENTAL_EFFECTS.BURNING);
+                room.addTerrainFeature('lava_pools', Math.random() > 0.5);
+                break;
+            case TERRAIN_TYPES.SWAMP:
+                room.addTerrainFeature('quicksand', Math.random() > 0.7);
+                room.addEnvironmentalEffect(ENVIRONMENTAL_EFFECTS.POISONED);
+                break;
+        }
+    }
+
+    _addEnvironmentalEffects(floor) {
+        for (const room of floor.rooms) {
+            // Add environmental effects based on room type and terrain
+            if (room.type === ROOM_TYPES.SECRET) {
+                this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.DARKNESS);
+                this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.MAGICAL);
+            }
+            if (room.type === ROOM_TYPES.BOSS) {
+                this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.CORRUPTED);
+            }
+
+            // Add terrain-specific effects
+            switch (room.terrain) {
+                case TERRAIN_TYPES.SNOW:
+                    this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.FROZEN);
+                    break;
+                case TERRAIN_TYPES.VOLCANO:
+                    this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.BURNING);
+                    break;
+                case TERRAIN_TYPES.SWAMP:
+                    if (Math.random() > 0.5) {
+                        this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.POISONED);
+                    }
+                    break;
+                case TERRAIN_TYPES.WATER:
+                    this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.WATERY);
+                    break;
+                case TERRAIN_TYPES.DESERT:
+                    if (Math.random() > 0.7) {
+                        this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.SANDY);
+                    }
+                    break;
+                case TERRAIN_TYPES.MOUNTAIN:
+                    if (Math.random() > 0.8) {
+                        this._applyEnvironmentalEffectToRoom(room, floor, ENVIRONMENTAL_EFFECTS.ROCKY);
+                    }
+                    break;
+            }
+
+            // Random chance for additional effects based on floor level
+            if (floor.floorNumber > 5 && Math.random() > 0.8) {
+                const possibleEffects = [
+                    ENVIRONMENTAL_EFFECTS.DARKNESS,
+                    ENVIRONMENTAL_EFFECTS.HOLY,
+                    ENVIRONMENTAL_EFFECTS.ELECTRIFIED
+                ];
+                const randomEffect = possibleEffects[Math.floor(Math.random() * possibleEffects.length)];
+                this._applyEnvironmentalEffectToRoom(room, floor, randomEffect);
+            }
+        }
+    }
+
+    _applyEnvironmentalEffectToRoom(room, floor, effect) {
+        // Apply effect to the room itself
+        room.addEnvironmentalEffect(effect, floor);
+        
+        // Apply to all floor tiles in the room
+        for (let y = room.y; y < room.y + room.height; y++) {
+            for (let x = room.x; x < room.x + room.width; x++) {
+                if (floor.getTile(x, y) === TILE_TYPES.FLOOR) {
+                    floor.addEnvironmentalEffect(x, y, effect);
+                }
+            }
+        }
+    }
+
+    _propagateTerrain(floor) {
+        const visited = new Set();
+        const queue = [];
+
+        // Initialize queue with room floor tiles
+        for (const room of floor.rooms) {
+            for (let y = room.y; y < room.y + room.height; y++) {
+                for (let x = room.x; x < room.x + room.width; x++) {
+                    if (floor.getTile(x, y) === TILE_TYPES.FLOOR && floor.getTerrain(x, y)) {
+                        queue.push({ x, y, terrain: floor.getTerrain(x, y) });
+                        visited.add(`${x},${y}`);
+                    }
+                }
+            }
+        }
+
+        // Directions for checking adjacent tiles (including diagonals)
+        const directions = [
+            {x: -1, y: 0}, {x: 1, y: 0}, {x: 0, y: -1}, {x: 0, y: 1},
+            {x: -1, y: -1}, {x: -1, y: 1}, {x: 1, y: -1}, {x: 1, y: 1}
+        ];
+
+        // Propagate terrain
+        while (queue.length > 0) {
+            const current = queue.shift();
+            
+            // Check adjacent tiles
+            for (const dir of directions) {
+                const newX = current.x + dir.x;
+                const newY = current.y + dir.y;
+                const key = `${newX},${newY}`;
+
+                if (!visited.has(key) && 
+                    floor.isWithinBounds(newX, newY) && 
+                    floor.getTile(newX, newY) === TILE_TYPES.FLOOR) {
+                    
+                    // Check if the tile is adjacent to any floor tiles
+                    const hasAdjacentFloor = directions.some(d => {
+                        const checkX = newX + d.x;
+                        const checkY = newY + d.y;
+                        return floor.isWithinBounds(checkX, checkY) && 
+                               floor.getTile(checkX, checkY) === TILE_TYPES.FLOOR;
+                    });
+
+                    if (hasAdjacentFloor) {
+                        // Apply terrain and add to queue
+                        floor.setTerrain(newX, newY, current.terrain);
+                        queue.push({ x: newX, y: newY, terrain: current.terrain });
+                        visited.add(key);
+                    }
+                }
+            }
+        }
+    }
 }
 
 // Export the classes and constants
@@ -656,5 +1033,8 @@ export {
     Entity,
     DungeonFloor,
     Room,
-    Dungeon
+    Dungeon,
+    ENVIRONMENTAL_EFFECTS,
+    TERRAIN_TYPES,
+    ELEVATION_LEVELS
 };

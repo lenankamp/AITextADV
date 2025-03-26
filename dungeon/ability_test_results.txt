@@ -12,7 +12,7 @@ Testing Squire Abilities
 
 Testing: Throw Stone
 ✓ Ability executed successfully
-  Damage dealt: 16
+  Damage dealt: 15
 
 Testing: Accumulate
 ✓ Ability executed successfully
@@ -20,7 +20,6 @@ Testing: Accumulate
 
 Testing: Dash
 ✓ Ability executed successfully
-  Damage dealt: 19
 
 Testing: Rally Cry
 ✓ Ability executed successfully
@@ -99,14 +98,15 @@ Testing Knight Abilities
 
 Testing: Slash Blade
 ✓ Ability executed successfully
-  Damage dealt: 29
+  Damage dealt: 28
 
 Testing: Break Armor
 ✓ Ability executed successfully
-  Damage dealt: 28
+  Damage dealt: 18
 
 Testing: Shield Bash
 ✓ Ability executed successfully
+  Damage dealt: 20
 
 Testing: Cover
 ✓ Ability executed successfully
@@ -114,7 +114,7 @@ Testing: Cover
 
 Testing: Holy Blade
 ✓ Ability executed successfully
-  Damage dealt: 34
+  Damage dealt: 30
 
 Testing: Sentinel
 ✓ Ability executed successfully
@@ -146,10 +146,11 @@ Testing Archer Abilities
 
 Testing: Charge
 ✓ Ability executed successfully
-  Damage dealt: 26
+  Damage dealt: 27
 
 Testing: Rapid Fire
 ✓ Ability executed successfully
+  Damage dealt: 11
 
 Testing: Arrow Rain
 ✓ Ability executed successfully
@@ -159,21 +160,21 @@ Testing: Precision Shot
 
 Testing: Sniper Shot
 ✓ Ability executed successfully
-  Damage dealt: 29
+  Damage dealt: 31
 
 Testing: Disabling Shot
 ✓ Ability executed successfully
-  Damage dealt: 9
 
 Testing: Weakness Shot
 ✓ Ability executed successfully
-  Damage dealt: 12
+  Damage dealt: 18
 
 Testing: Piercing Arrow
 ✓ Ability executed successfully
 
 Testing: Takedown Shot
 ✓ Ability executed successfully
+  Damage dealt: 25
 
 Testing: Barrage
 ✓ Ability executed successfully
@@ -189,7 +190,7 @@ Testing WhiteMage Abilities
 
 Testing: Cure
 ✓ Ability executed successfully
-  Healing done: 25
+  Healing done: 26
 
 Testing: Cura
 ✓ Ability executed successfully
@@ -200,7 +201,7 @@ Testing: Curaga
 
 Testing: Raise
 ✓ Ability executed successfully
-  Healing done: 15
+  Healing done: 14
 
 Testing: Reraise
 ✓ Ability executed successfully
@@ -219,7 +220,7 @@ Testing: Shell
 
 Testing: Holy
 ✓ Ability executed successfully
-  Damage dealt: 10
+  Damage dealt: 12
 
 Testing: Regen
 ✓ Ability executed successfully
@@ -233,7 +234,6 @@ Testing: Sacred Purification
 
 Testing: Banish
 ✓ Ability executed successfully
-  Damage dealt: 40
 
 Job Summary:
 Total abilities: 13
@@ -246,38 +246,38 @@ Testing BlackMage Abilities
 
 Testing: Fire
 ✓ Ability executed successfully
+  Damage dealt: 33
 
 Testing: Fira
 ✓ Ability executed successfully
+  Damage dealt: 37
 
 Testing: Firaga
 ✓ Ability executed successfully
 
 Testing: Thunder
 ✓ Ability executed successfully
-  Damage dealt: 32
+  Damage dealt: 30
 
 Testing: Thundara
 ✓ Ability executed successfully
-  Damage dealt: 44
+  Damage dealt: 42
 
 Testing: Thundaga
 ✓ Ability executed successfully
 
 Testing: Blizzard
 ✓ Ability executed successfully
-  Damage dealt: 30
 
 Testing: Blizzara
 ✓ Ability executed successfully
-  Damage dealt: 37
+  Damage dealt: 36
 
 Testing: Blizzaga
 ✓ Ability executed successfully
 
 Testing: Break
 ✓ Ability executed successfully
-  Effects applied: petrify
 
 Testing: Death
 ✓ Ability executed successfully
@@ -285,6 +285,7 @@ Testing: Death
 
 Testing: Flare
 ✓ Ability executed successfully
+  Damage dealt: 57
 
 Testing: Arcane Disruption
 ✓ Ability executed successfully
@@ -306,14 +307,15 @@ Testing Monk Abilities
 
 Testing: Chakra
 ✓ Ability executed successfully
-  Healing done: 15
+  Healing done: 14
 
 Testing: Pummel
 ✓ Ability executed successfully
+  Damage dealt: 18
 
 Testing: Earth Slash
 ✓ Ability executed successfully
-  Damage dealt: 34
+  Damage dealt: 33
 
 Testing: Internal Release
 ✓ Ability executed successfully
@@ -329,17 +331,18 @@ Testing: Pressure Point
 
 Testing: Spirit Blade
 ✓ Ability executed successfully
-  Damage dealt: 36
+  Damage dealt: 35
 
 Testing: Chakra Blast
 ✓ Ability executed successfully
-  Damage dealt: 22
+  Damage dealt: 23
 
 Testing: Mantra
 ✓ Ability executed successfully
 
 Testing: Hundred Fists
 ✓ Ability executed successfully
+  Damage dealt: 1
 
 Job Summary:
 Total abilities: 10
@@ -351,7 +354,7 @@ Testing Thief Abilities
 --------------------
 
 Testing: Steal Gil
-✗ Ability failed: Failed to steal gil
+✓ Ability executed successfully
 
 Testing: Steal Item
 ✗ Ability failed: Target has no items to steal
@@ -361,13 +364,14 @@ Testing: Steal Weapon
 
 Testing: Steal Heart
 ✓ Ability executed successfully
+  Effects applied: charm
 
 Testing: Steal EXP
 ✗ Error executing ability: Unknown special ability: STEAL_EXP
 
 Testing: Mug
 ✓ Ability executed successfully
-  Damage dealt: 19
+  Damage dealt: 18
 
 Testing: Trapsmith
 ✗ Ability failed: Invalid ability type
@@ -380,8 +384,8 @@ Testing: Pilfer
 
 Job Summary:
 Total abilities: 9
-Successful: 2
-Failed: 5
+Successful: 3
+Failed: 4
 Errors: 2
 
 Testing Oracle Abilities
@@ -406,7 +410,7 @@ Testing: Condemn
 
 Testing: Star Sight
 ✓ Ability executed successfully
-  Effects applied: blind
+  Effects applied: blind, silence
 
 Testing: Calamity
 ✓ Ability executed successfully
@@ -436,7 +440,6 @@ Testing: Slow
 
 Testing: Stop
 ✓ Ability executed successfully
-  Effects applied: stop
 
 Testing: Float
 ✓ Ability executed successfully
@@ -444,6 +447,7 @@ Testing: Float
 
 Testing: Gravity
 ✓ Ability executed successfully
+  Damage dealt: 16
 
 Testing: Time Slip
 ✗ Ability failed: Invalid ability type
@@ -475,7 +479,7 @@ Testing: Terrain Power
 
 Testing: Earth Render
 ✓ Ability executed successfully
-  Damage dealt: 33
+  Damage dealt: 34
 
 Testing: Terra Pulse
 ✓ Ability executed successfully
@@ -512,24 +516,26 @@ Testing Dragoon Abilities
 
 Testing: Jump
 ✓ Ability executed successfully
+  Damage dealt: 31
 
 Testing: Lancet
 ✓ Ability executed successfully
-  Damage dealt: 15
+  Damage dealt: 13
 
 Testing: High Jump
 ✓ Ability executed successfully
-  Damage dealt: 38
+  Damage dealt: 42
 
 Testing: Sweep Dive
 ✓ Ability executed successfully
 
 Testing: Dragon Breath
 ✓ Ability executed successfully
-  Damage dealt: 22
+  Damage dealt: 20
 
 Testing: Piercing Strike
 ✓ Ability executed successfully
+  Damage dealt: 28
 
 Testing: Geirskogul
 ✓ Ability executed successfully
@@ -569,6 +575,7 @@ Testing: Phoenix
 
 Testing: Odin
 ✓ Ability executed successfully
+  Damage dealt: 61
 
 Testing: Moogle
 ✓ Ability executed successfully
@@ -584,14 +591,12 @@ Testing Orator Abilities
 
 Testing: Persuade
 ✓ Ability executed successfully
-  Effects applied: charm
 
 Testing: Negotiate
 ✗ Ability failed: Negotiation failed
 
 Testing: Enthrall
 ✓ Ability executed successfully
-  Effects applied: confusion
 
 Testing: Praise
 ✓ Ability executed successfully
@@ -599,13 +604,13 @@ Testing: Praise
 
 Testing: Condemn
 ✓ Ability executed successfully
+  Effects applied: decrease_stats
 
 Testing: Peace Talk
 ✗ Ability failed: Peace talk failed
 
 Testing: Intimidate
 ✓ Ability executed successfully
-  Effects applied: fear
 
 Testing: Rallying Cry
 ✓ Ability executed successfully
@@ -629,25 +634,25 @@ Testing Samurai Abilities
 
 Testing: Iaido
 ✓ Ability executed successfully
-  Damage dealt: 37
+  Damage dealt: 35
 
 Testing: Blade Spirit
 ✓ Ability executed successfully
 
 Testing: Storm Edge
 ✓ Ability executed successfully
-  Damage dealt: 37
+  Damage dealt: 34
 
 Testing: Demon Slice
 ✓ Ability executed successfully
-  Damage dealt: 67
+  Damage dealt: 41
 
 Testing: Zen Slash
 ✓ Ability executed successfully
+  Damage dealt: 48
 
 Testing: Soul Blade
 ✓ Ability executed successfully
-  Damage dealt: 38
 
 Testing: Meditation
 ✓ Ability executed successfully
@@ -659,6 +664,7 @@ Testing: Binding Blade
 
 Testing: Masamune
 ✓ Ability executed successfully
+  Damage dealt: 48
 
 Job Summary:
 Total abilities: 9
@@ -686,11 +692,11 @@ Testing: Infiltrate
 
 Testing: Flame Veil
 ✓ Ability executed successfully
-  Damage dealt: 19
+  Damage dealt: 22
 
 Testing: Water Veil
 ✓ Ability executed successfully
-  Damage dealt: 22
+  Damage dealt: 23
 
 Testing: Shadow Stitch
 ✓ Ability executed successfully
@@ -702,7 +708,7 @@ Testing: Mirror Image
 
 Testing: Assassinate
 ✓ Ability executed successfully
-  Damage dealt: 41
+  Damage dealt: 40
 
 Job Summary:
 Total abilities: 10
@@ -727,7 +733,7 @@ Testing: Multiply
 
 Testing: Prime Strike
 ✓ Ability executed successfully
-  Damage dealt: 32
+  Damage dealt: 27
 
 Testing: Numerical Force
 ✗ Error executing ability: user.getMA is not a function
@@ -856,8 +862,8 @@ Errors: 1
 CUMULATIVE TOTALS
 ==================
 Total abilities tested: 190
-Total successful: 149 (78%)
-Total failed: 26 (14%)
+Total successful: 150 (79%)
+Total failed: 25 (13%)
 Total errors: 15 (8%)
 ==================
 
