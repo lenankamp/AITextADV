@@ -47,22 +47,17 @@ function loadDefaultSettings() {
         "Adventurous Spirit",
         "Eager Learner",
         "Loyal Friend"
-      ],
-      stunts: {
-        'Pokémon Bond': "You get a +2 to create advantages when working with your Pokémon.",
-        'Quick Reflexes': "You get a +2 to overcome obstacles when dodging attacks.",
-        'Strategic Thinker': "You get a +2 to create advantages when planning your next move."
-      }
+      ]
     },
     // rules
     rule_set: "Fate Accelerated",
     ruleprompt_fae_action1: "\n\nPlayer is attempting the action: '$action'. Given the context, answer the following question, only giving the simple answer without preface or explanation. What level of training in the appropriate field would one need to complete this task? Answer among one of the following: basic, intermediate, advanced, expert, or master.",
-    ruleprompt_fae_action2: "Approach defintions:\nCareful: A Careful action is when you pay close attention to detail and take your time to do the job right. Lining up a long-range arrow shot. Attentively standing watch. Disarming a bank’s alarm system.\nClever: A Clever action requires that you think fast, solve problems, or account for complex variables. Finding the weakness in an enemy swordsman’s style. Finding the weak point in a fortress wall. Fixing a computer.\nFlashy: A Flashy action draws attention to you; it’s full of style and panache. Delivering an inspiring speech to your army. Embarrassing your opponent in a duel. Producing a magical fireworks display.\nForceful: A Forceful action isn’t subtle—it’s brute strength. Wrestling a bear. Staring down a thug. Casting a big, powerful magic spell. \nQuick: A Quick action requires that you move quickly and with dexterity. Dodging an arrow. Getting in the first punch. Disarming a bomb as it ticks 3… 2… 1… \nSneaky: A Sneaky action is done with an emphasis on misdirection, stealth, or deceit. Talking your way out of getting arrested. Picking a pocket. Feinting in a sword fight.\n\nPlayer is attempting the action: '$action'. Given the context and the player character sheet, answer the following questions in a numbered list format, only giving the simple answer without preface or explanation. 1. Yes or no, is the action impossible in the current situation? Be sure to consider if it's physiologically plausible, an anachronism, or required items are not present when considering the possibility. 2. What is the player's approach? Answer the one that best fits among: careful, clever, flashy, forceful, quick, or sneaky 3. Give a comma separated list of obviously relevant aspects, stunts, or situational advantages that make this action more likely to succeed. If none are clearly relevant to the action answer n/a. 4. Give a comma separated list of obviously relevant aspects or situational disadvantages that make this action more likely to fail. If none are clearly relevant to the action answer n/a. Be strict and harsh in determining relevance. The answer if a stunt, aspect, or situation is relevant is probably n/a.",
+    ruleprompt_fae_action2: "Approach defintions:\nCareful: A Careful action is when you pay close attention to detail and take your time to do the job right. Lining up a long-range arrow shot. Attentively standing watch. Disarming a bank’s alarm system.\nClever: A Clever action requires that you think fast, solve problems, or account for complex variables. Finding the weakness in an enemy swordsman’s style. Finding the weak point in a fortress wall. Fixing a computer.\nFlashy: A Flashy action draws attention to you; it’s full of style and panache. Delivering an inspiring speech to your army. Embarrassing your opponent in a duel. Producing a magical fireworks display.\nForceful: A Forceful action isn’t subtle—it’s brute strength. Wrestling a bear. Staring down a thug. Casting a big, powerful magic spell. \nQuick: A Quick action requires that you move quickly and with dexterity. Dodging an arrow. Getting in the first punch. Disarming a bomb as it ticks 3… 2… 1… \nSneaky: A Sneaky action is done with an emphasis on misdirection, stealth, or deceit. Talking your way out of getting arrested. Picking a pocket. Feinting in a sword fight.\n\nPlayer is attempting the action: '$action'. Given the context and the player character sheet, answer the following questions in a numbered list format, only giving the simple answer without preface or explanation. 1. Yes or no, is the action impossible in the current situation? Be sure to consider if it's physiologically plausible, an anachronism, or required items are not present when considering the possibility. 2. What is the player's approach? Answer the one that best fits among: careful, clever, flashy, forceful, quick, or sneaky 3. Give a comma separated list of obviously relevant aspects, or situational advantages that make this action more likely to succeed. If none are clearly relevant to the action answer n/a. 4. Give a comma separated list of obviously relevant aspects or situational disadvantages that make this action more likely to fail. If none are clearly relevant to the action answer n/a. Be strict and harsh in determining relevance. The answer if a stunt, aspect, or situation is relevant is probably n/a.",
     // tts settings
     tts_enable: false,
     tts_type: "Kobold",
     tts_api: "http://localhost:5001/api/extra/tts/",
-    tts_api_key: "b8f3c5b0d5f1e4c8a6e9b1c2d4f3e2f1",
+    tts_api_key: "INSERT_API_KEY_HERE",
     tts_default_male: "kobo",
     tts_default_female: "cheery",
     tts_narrator: "chatty",
@@ -90,9 +85,9 @@ function loadDefaultSettings() {
     seed_variation: 0,
     // text generation API settings
     story_param: {
-      textAPI: "https://api.featherless.ai/v1/",
+      textAPI: "http://localhost:5001/v1/",
       textAPItype: "openai",
-      apiKey: "rc_7da126beca20c440a73eb148ea5199c986913ec139c83e259652e8a0012e4ffd",
+      apiKey: "INSERT_API_KEY_HERE",
       model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 400,
@@ -111,9 +106,9 @@ function loadDefaultSettings() {
       typical: 1
     },
     question_param: {
-      textAPI: "https://api.featherless.ai/v1/",
+      textAPI: "http://localhost:5001/v1/",
       textAPItype: "openai",
-      apiKey: "rc_7da126beca20c440a73eb148ea5199c986913ec139c83e259652e8a0012e4ffd",
+      apiKey: "INSERT_API_KEY_HERE",
       model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 600,
@@ -132,9 +127,9 @@ function loadDefaultSettings() {
       typical: 1
     },
     creative_question_param: {
-      textAPI: "https://api.featherless.ai/v1/",
+      textAPI: "http://localhost:5001/v1/",
       textAPItype: "openai",
-      apiKey: "rc_7da126beca20c440a73eb148ea5199c986913ec139c83e259652e8a0012e4ffd",
+      apiKey: "INSERT_API_KEY_HERE",
       model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 600,
@@ -153,9 +148,9 @@ function loadDefaultSettings() {
       typical: 1
     },
     summary_param: {
-      textAPI: "https://api.featherless.ai/v1/",
+      textAPI: "http://localhost:5001/v1/",
       textAPItype: "openai",
-      apiKey: "rc_7da126beca20c440a73eb148ea5199c986913ec139c83e259652e8a0012e4ffd",
+      apiKey: "INSERT_API_KEY_HERE",
       model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 600,
@@ -265,7 +260,7 @@ function loadDefaultSettings() {
     sampleFAEAction: [
       {
         "role": "user",
-        "content": "\"First, we need to find some batteries. There might be some in that storage closet.\" Your eyes drift towards the cluttered closet, its door slightly ajar. \"And I'll need something to straighten out this antenna.\" You glance around the room, spotting a few potential tools amidst the debris—a broken chair leg, a rusty fork. You hand the radio back to the girl and gesture for her to stay with it, \"Can you take care of this? I’ll be right back.\" She nods eagerly, cradling the radio as if it were a fragile treasure.\nAspects: The Man with the Plan,Big Brain,Good with Computers,Lone Wolf,Always on the Run\nPlayer is attempting the action: 'Enact the plan to fix the radio.'. Given the context and the player character sheet, answer the following questions in a numbered list format, only giving the simple answer without preface or explanation. 1. Yes or no, is the action impossible in the current situation? Be sure to consider if it's physiologically plausible, an anachronism, or required items are not present when considering the possibility. 2. What is the player's approach? Answer the one that best fits among: careful, clever, flashy, forceful, quick, or sneaky 3. Give a comma separated list of obviously relevant aspects, stunts, or situational advantages that make this action more likely to succeed. If none are clearly relevant to the action answer n/a. 4. Give a comma separated list of obviously relevant aspects or situational disadvantages that make this action more likely to fail. If none are clearly relevant to the action answer n/a. Be strict and harsh in determining relevance. The answer if a stunt, aspect, or situation is relevant is probably n/a.",
+        "content": "\"First, we need to find some batteries. There might be some in that storage closet.\" Your eyes drift towards the cluttered closet, its door slightly ajar. \"And I'll need something to straighten out this antenna.\" You glance around the room, spotting a few potential tools amidst the debris—a broken chair leg, a rusty fork. You hand the radio back to the girl and gesture for her to stay with it, \"Can you take care of this? I’ll be right back.\" She nods eagerly, cradling the radio as if it were a fragile treasure.\nAspects: The Man with the Plan,Big Brain,Good with Computers,Lone Wolf,Always on the Run\nPlayer is attempting the action: 'Enact the plan to fix the radio.'. Given the context and the player character sheet, answer the following questions in a numbered list format, only giving the simple answer without preface or explanation. 1. Yes or no, is the action impossible in the current situation? Be sure to consider if it's physiologically plausible, an anachronism, or required items are not present when considering the possibility. 2. What is the player's approach? Answer the one that best fits among: careful, clever, flashy, forceful, quick, or sneaky 3. Give a comma separated list of obviously relevant aspects, or situational advantages that make this action more likely to succeed. If none are clearly relevant to the action answer n/a. 4. Give a comma separated list of obviously relevant aspects or situational disadvantages that make this action more likely to fail. If none are clearly relevant to the action answer n/a. Be strict and harsh in determining relevance. The answer if a stunt, aspect, or situation is relevant is probably n/a.",
       },
       {
       "role": "assistant",

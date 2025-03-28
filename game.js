@@ -1067,11 +1067,7 @@ function minContext(limit = null, extraContext = "") {
 }
 
 function faeCharSheet(charsheet) {
-    let charsheetString = "Stunts: ";
-    for (const [key, value] of Object.entries(charsheet.stunts)) {
-        charsheetString += key + ": " + value + ", ";
-    }
-
+    let charsheetString = "";
     let aspects = Array.isArray(charsheet.aspects) 
         ? charsheet.aspects.join(',')
         : charsheet.aspects;

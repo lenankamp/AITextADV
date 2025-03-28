@@ -1,34 +1,58 @@
-notes to self
+# AI Text Adventure
 
-continue testing affinity.
+![screenshot image of text adventure application](/build/readme-ss.webp)
 
-record and have memories in context
-    added, untested
+## Overview
 
-have issues for empty arrays, such as people and creatures being iterated through.
+This is a personal playground where I've been learning to code with LLM. It's a mess, and I'm more prone to wander than even the LLM. The text adventure interface itself is intended as a base framework for a kingmaker game I wanted for myself. The dungeon explorer is a side project because I wanted a class based game with AI generated class artwork.  
 
-modify consequence addition to be a stricter, verifying it's a "new" affliction
-    added "minutes" duration to rest time question to allow for ignoring minute afflictions
+## Build / Use
 
-issues with descriptions with numbers in them
+The Text Adventure client requires no imports and can be run directly from a local browser, CORS be damned. The dungeon explorer relies on ES modules and will need be hosted for that to work, but it should be setup properly to be completely ignorable.
 
-Review Move to Area for preferring sublocation generation....not very smart on where it goes, but it goes
+## Contributions
 
-Memories are returning as "$name remembers <actual response>"
+Yes, please. Thing I really want most is prompt tuning.  
 
-Dismissed follower in different area lost image? Not recreated
+## LLM Used in Development and Testing
 
-world map image generation
-    more or less done
+I pretty much exclusively used huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated from huggingface for playing and testing. I like the Mistral Instruct a lot for it's ability to follow instructions and still have some creativity. The system was specifically setup to allow differing the question answer model and the story writer, but for most testing my system doesn't really handle model swapping all that well, so one versatile model is ideal.  
 
-default affinity for area
+## License
 
-faction system
+This project is licensed under the Apache License, Version 2.0 - see [LICENSE](LICENSE) for details.  
 
-area memory/events, possible happenings while gone
+This work is based on Fate Core System and Fate Accelerated Edition (found at https://www.faterpg.com/), products of Evil Hat Productions, LLC, developed, authored, and edited by Leonard Balsera, Brian Engard, Jeremy Keller, Ryan Macklin, Mike Olson, Clark Valentine, Amanda Valentine, Fred Hicks, and Rob Donoghue, and licensed for our use under the Creative Commons Attribution 3.0 Unported license (https://creativecommons.org/licenses/by/3.0/).  
 
-add climate to world gen menu
+## notes to self / known issues I want to address
 
-Have loader appear for entire time of initial world gen...
+continue testing affinity.  
 
-__default__, (final fantasy tactics costume,({black mage, rod, wizard hat and black robe|white mage, hood, hooded white robe, wooden staff|Time Mage, silly hat, purple robe|Summoner, pointy hat, green robe|Oracle, prophet, yellow robe, fancy jewelery|squire, sword, leather armor|knight, heavy armor, sword|purple dragon armor, spear, lancer, helmet|red samurai armor, banded genji, katana|martial artist, pugilist, fists|chemist, potions, medic|archer, bow and quiver|Thief, bandanna, dagger, leather shorts|Ninja, scarf, blades|bard, musical instrument|glasses, scientist, blue robe, abacus|Dancer, scarf, ruffled dress|Geomancer, brown poncho|Mime, mask, face paint, vibrant colors|diplomat, goofy hat, long pink dress})), blonde twin tails, dark elf tanned, arm tattoo, amethyst eyes, clothes, black background, standing, facing viewer,
+record and have memories in context  
+    added, untested  
+
+issues with empty arrays, such as people and creatures being iterated through.  
+
+modify consequence addition to be a stricter, verifying it's a "new" affliction  
+    added "minutes" duration to rest time question to allow for ignoring minute afflictions  
+
+issues with descriptions with numbers in them, issue seems limited to the tooltip, been ignoring  
+
+Review Move to Area for preferring sublocation generation....not very smart on where it goes, but it goes  
+
+Memories are returning as "$name remembers <actual response>"  
+
+Dismissed follower in different area lost image? Not recreated  
+
+world map image generation  
+    more or less done  
+
+default affinity for area  
+
+faction system with affinity, at least something so maybe my own mother might know me  
+
+area memory/events, possible happenings while gone  
+
+add climate to world gen menu  
+
+Have loader appear for entire time of initial world gen...  
