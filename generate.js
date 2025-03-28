@@ -295,6 +295,7 @@ async function generateArtImpl(prompt, negprompt = '', seed = -1) {
     } else {
         const response = await fetch(settings.sdAPI, {
             method: 'POST',
+            mode: 'cors',
             headers: {
                 'Content-Type': 'application/json'
             },
