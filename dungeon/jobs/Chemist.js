@@ -142,18 +142,89 @@ export class Chemist extends JobInterface {
 
     static resolveSpecialAbility(user, ability, target) {
         switch (ability.id) {
+            case 'BREW_POTION':
+                return this._resolveBrewPotion(user, ability, target);
+            case 'ANTIDOTE_BREW':
+                return this._resolveAntidoteBrew(user, ability, target);
+            case 'SAMPLE':
+                return this._resolveSample(user, ability, target);
+            case 'BOMB_CRAFT':
+                return this._resolveBombCraft(user, ability, target);
             case 'MIX':
                 return this._resolveMix(user, ability, target);
             case 'THROW_ITEM':
                 return this._resolveThrowItem(user, ability, target);
             case 'SALVE':
                 return this._resolveSalve(user, ability, target);
+            case 'ELIXIR_CRAFT':
+                return this._resolveElixirCraft(user, ability, target);
             default:
                 throw new Error(`Unknown special ability: ${ability.id}`);
         }
     }
 
+    static _resolveBrewPotion(user, ability, target) {
+        const potion = this._createItem('potion', 1);
+        user.inventory.push(potion);
+        return {
+            success: true,
+            message: 'Brewed a potion',
+            item: potion
+        };
+    }
+
+    static _resolveAntidoteBrew(user, ability, target) {
+        const antidote = this._createItem('antidote', 1);
+        user.inventory.push(antidote);
+        return {
+            success: true,
+            message: 'Brewed an antidote',
+            item: antidote
+        };
+    }
+
+    static _resolveElixirCraft(user, ability, target) {
+        const elixir = this._createItem('elixir', 1);
+        user.inventory.push(elixir);
+        return {
+            success: true,
+            message: 'Crafted an elixir',
+            item: elixir
+        };
+    }
+
+    static _resolveSample(user, ability, target) {
+        // Sample ability extracts useful components from monsters
+        // For now, just generate some random items
+        const itemTypes = ['bone', 'hide', 'claw', 'fang', 'scale'];
+        const item = this._createItem(itemTypes[Math.floor(Math.random() * itemTypes.length)], 1);
+        user.inventory.push(item);
+        return {
+            success: true,
+            message: `Extracted ${item.name}`,
+            item
+        };
+    }
+
+    static _resolveBombCraft(user, ability, target) {
+        // Create a bomb item with random power
+        const power = Math.floor(Math.random() * 50) + 50;
+        const bomb = this._createItem('bomb', power);
+        user.inventory.push(bomb);
+        return {
+            success: true,
+            message: `Crafted a bomb with power ${power}`,
+            item: bomb
+        };
+    }
+
+
     static _resolveMix(user, ability, target) {
+        if(!ability.items)
+            return {
+                success: false,
+                message: 'Two items are required for mixing'
+            };
         const { item1, item2 } = ability.items;
         if (!item1 || !item2) {
             return {
@@ -301,6 +372,12 @@ export class Chemist extends JobInterface {
     }
 
     static _calculateMixEffect(item1, item2) {
+        if(!item1 || !item2) {
+            return {
+                success: false,
+                message: 'Two items are required for mixing'
+            };
+        }
         // Define mix combinations and their effects
         const mixTable = {
             'potion_potion': {
@@ -346,4 +423,67 @@ export class Chemist extends JobInterface {
             effects: mix.effects
         };
     }
+
+    static _createItem(type, power) {
+        const item = {
+            id: `${type}_${Date.now()}`,
+            name: type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+            type: type,
+            power: power
+        };
+
+        if (type === 'potion') {
+            item.effects = [{
+                name: 'healing',
+                power: power
+            }];
+        } else if (type === 'bomb') {
+            item.type = 'damage_item';
+            item.effects = [{
+                name: 'damage',
+                power: power
+            }];
+        } else if (type === 'elixir') {
+                item.effects = [{
+                    name: 'healing',
+                    power: 9999
+                }, {
+                    name: 'regen',
+                    duration: 5
+                }];
+        } else if (type === 'antidote') {
+            item.effects = [{
+                name: 'cure_poison'
+            }];
+        } else if (type === 'bone') {
+            item.effects = [{
+                name: 'strength_up',
+                duration: 3
+            }];
+        } else if (type === 'hide') {
+            item.effects = [{
+                name: 'defense_up',
+                duration: 3
+            }];
+        } else if (type === 'claw') {
+            item.effects = [{
+                name: 'haste',
+                duration: 3
+            }];
+        } else if (type === 'fang') {
+            item.effects = [{
+                name: 'berserk',
+                duration: 3
+            }];
+        } else if (type === 'scale') {
+            item.effects = [{
+                name: 'shell',
+                duration: 3
+            }];
+        } else {
+            item.effects = [];
+        }
+        return item;
+    }
+
 }

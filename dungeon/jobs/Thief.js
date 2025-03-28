@@ -1,5 +1,6 @@
 import { JobInterface, JOBS } from './index.js';
 
+
 export class Thief extends JobInterface {
     static getDescription() {
         return "Masters of stealth and acquisition who excel at obtaining resources through cunning. Their high speed and evasion make them difficult targets, while their stealing abilities provide crucial resources and strategic advantages. In dungeons, they are essential for disarming traps, picking locks, and finding hidden treasures, making them invaluable for exploration and resource gathering.";
@@ -73,7 +74,8 @@ export class Thief extends JobInterface {
                     TRAPSMITH: {
                         name: 'Trapsmith',
                         type: 'dungeon',
-                        effect: ['detect_traps', 'disarm_trap', 'trap_analysis'],
+                        effect: ['detect_traps'],
+                        autoDisarm: true,
                         mp: 18,
                         jpCost: 350,
                         description: 'Detect and safely disarm traps in the area'
@@ -136,6 +138,8 @@ export class Thief extends JobInterface {
 
     static resolveSpecialAbility(user, ability, target) {
         switch (ability.id) {
+            case 'PILFER':
+                return this._resolvePilfer(user, ability, target);
             case 'STEAL_GIL':
                 return this._resolveStealGil(user, ability, target);
             case 'STEAL_ITEM':
@@ -148,9 +152,69 @@ export class Thief extends JobInterface {
                 return this._resolveStealEquipment(user, ability, target, 'accessory');
             case 'MUG':
                 return this._resolveMug(user, ability, target);
+            case 'STEAL_EXP':
+                return this._resolveStealExp(user, ability, target);
             default:
                 throw new Error(`Unknown special ability: ${ability.id}`);
         }
+    }
+
+    static _resolveStealExp(user, ability, target) {
+        const baseChance = 0.2 + (user.getStats().sp - target.getStats().sp) * 0.02;
+        const successRate = Math.min(0.8, Math.max(0.1, baseChance));
+
+        if (Math.random() > successRate) {
+            return {
+                success: false,
+                message: 'Failed to steal EXP'
+            };
+        }
+
+        const stolenExp = Math.floor(target.level * (10 + Math.random() * 20));
+        target.exp -= stolenExp;
+        user.exp += stolenExp;
+
+        return {
+            success: true,
+            message: `Stole ${stolenExp} EXP`,
+            stolenExp
+        };
+    }
+
+    static _resolvePilfer(user, ability, target) {
+        if (!target.status) {
+            return {
+                success: false,
+                message: 'Target has no status effects to steal'
+            };
+        }
+
+        const stolenEffects = Object.keys(target.status).filter(key => key !== 'hp' && Math.random() < 0.5);
+        if (stolenEffects.length === 0) {
+            return {
+                success: false,
+                message: 'Failed to steal status effects'
+            };
+        }
+
+        // Copy and remove effects from target
+        const stolenEffectsData = {};
+        stolenEffects.forEach(key => {
+            stolenEffectsData[key] = target.status[key];
+            delete target.status[key];
+        });
+
+        // Add to user
+        user.status = {
+            ...user.status,
+            ...stolenEffectsData
+        };
+
+        return {
+            success: true,
+            message: `Stole ${stolenEffects.join(', ')}`,
+            stolenEffects: stolenEffectsData
+        };
     }
 
     static _resolveStealGil(user, ability, target) {

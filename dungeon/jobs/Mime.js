@@ -129,7 +129,13 @@ export class Mime extends JobInterface {
         }
 
         // Temporarily learn a random ability from target's job
-        const abilities = targetJob.getAbilities().active.abilities;
+        const abilities = target.getAvailableAbilities().active.abilities;
+        if (!abilities) {
+            return {
+                success: false,
+                message: 'No abilities to learn from target'
+            };
+        }
         const abilityKeys = Object.keys(abilities);
         const randomAbility = abilities[abilityKeys[Math.floor(Math.random() * abilityKeys.length)]];
 

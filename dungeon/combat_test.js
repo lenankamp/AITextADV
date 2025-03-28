@@ -68,9 +68,9 @@ function createBasicEquipment() {
 }
 
 // Helper to create a basic character with a job
-function createTestCharacter(name, job, position = 'front') {
+function createTestCharacter(name, job, row = 'front') {
     const char = new Character(name);
-    char.setPosition(position);
+    char.setRow(row);
     char.gainJP(4000); // Give enough JP to change jobs
     char.setJob(JOBS.Chemist);
     char.gainJP(4000); // Give enough JP to change jobs
@@ -180,7 +180,7 @@ function printCombatStatus(state, combat) {
         const maxHp = character.getMaxHP();
         const statusEffects = character.status.effects?.length ? 
             ` [${character.status.effects.map(e => e.name).join(', ')}]` : '';
-        console.log(`  ${member.name.padEnd(10)} [${member.position.padEnd(5)}] `+
+        console.log(`  ${member.name.padEnd(10)} [${member.row.padEnd(5)}] `+
             `HP: ${formatHP(member.hp, maxHp).padEnd(20)} MP: ${member.mp}${statusEffects}`);
     });
 
@@ -277,18 +277,18 @@ function runCombatTest() {
         MonsterFactory.createMonster('orc', 3)
     ];
 
-    // Add monsters to their party with appropriate positions
+    // Add monsters to their party with appropriate row
     monsters.forEach((monster, i) => {
-        const position = i === 0 || i === 3 ? 'front' : 'back';  // Goblin and Orc in front, others in back
-        monsterParty.addMember(monster, position);
+        const row = i === 0 || i === 3 ? 'front' : 'back';  // Goblin and Orc in front, others in back
+        monsterParty.addMember(monster, row);
     });
     
     // Initialize party members
     ['Roland', 'Vivi', 'Rosa', 'Maria'].forEach((name, i) => {
         const job = [JOBS.Knight, JOBS.BlackMage, JOBS.WhiteMage, JOBS.Archer][i];
-        const position = i === 0 ? 'front' : 'back';
-        const char = createTestCharacter(name, job, position);
-        playerParty.addMember(char, position);
+        const row = i === 0 ? 'front' : 'back';
+        const char = createTestCharacter(name, job, row);
+        playerParty.addMember(char, row);
     });
 
     // Initialize combat

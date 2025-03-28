@@ -1,4 +1,3 @@
-import { Monster, MonsterFactory } from './monsters/index.js';
 import { EncounterManager } from './encounters.js';
 
 // Constants for dungeon generation
@@ -622,83 +621,6 @@ class Dungeon {
                 }
                 return roll > 0.9 ? 'normal' : 'easy';
         }
-    }
-
-    _generateMonsters(count, floorLevel, difficulty) {
-        const monsters = [];
-        const monsterTemplates = {
-            goblin: {
-                name: 'Goblin',
-                stats: {
-                    hp: 50,
-                    mp: 20,
-                    pa: 8,
-                    ma: 4,
-                    sp: 6,
-                    ev: 5
-                },
-                abilities: {
-                    ATTACK: {
-                        name: 'Attack',
-                        type: 'physical',
-                        power: 1,
-                        description: 'Basic attack'
-                    }
-                },
-                position: 'front'
-            },
-            orc: {
-                name: 'Orc',
-                stats: {
-                    hp: 75,
-                    mp: 15,
-                    pa: 10,
-                    ma: 3,
-                    sp: 4,
-                    ev: 3
-                },
-                abilities: {
-                    ATTACK: {
-                        name: 'Attack',
-                        type: 'physical',
-                        power: 1.2,
-                        description: 'Strong melee attack'
-                    }
-                },
-                position: 'front'
-            }
-        };
-
-        for (let i = 0; i < count; i++) {
-            const type = Object.keys(monsterTemplates)[Math.floor(Math.random() * Object.keys(monsterTemplates).length)];
-            const template = monsterTemplates[type];
-            const levelBonus = difficulty === 'boss' ? 2 : difficulty === 'hard' ? 1 : 0;
-            
-            // Scale stats based on level
-            const leveledTemplate = {
-                ...template,
-                level: floorLevel + levelBonus,
-                stats: { ...template.stats }
-            };
-
-            // Scale stats based on level and difficulty
-            const levelScaling = (leveledTemplate.level - 1) * 0.1; // 10% per level
-            const difficultyScaling = difficulty === 'boss' ? 2 : 
-                                    difficulty === 'hard' ? 1.5 : 1;
-
-            Object.keys(leveledTemplate.stats).forEach(stat => {
-                leveledTemplate.stats[stat] = Math.floor(
-                    leveledTemplate.stats[stat] * 
-                    (1 + levelScaling) * 
-                    difficultyScaling
-                );
-            });
-
-            const monster = new Monster(leveledTemplate);
-            monsters.push(monster);
-        }
-
-        return monsters;
     }
 
     _connectRooms(floor) {

@@ -15,24 +15,16 @@ const COMBAT_RESULTS = {
 class Party {
     constructor() {
         this.members = [];
-        this.frontRow = [];
-        this.backRow = [];
         this.maxSize = 4;
     }
 
-    addMember(member, position = 'front') {
+    addMember(member) {
         if (this.members.length >= this.maxSize) {
             return false;
         }
 
-        member.setPosition(position);
         member.party = this.members; // Set party reference
         this.members.push(member);
-        if (position === 'front') {
-            this.frontRow.push(member);
-        } else {
-            this.backRow.push(member);
-        }
         return true;
     }
 
@@ -41,29 +33,7 @@ class Party {
         if (index === -1) return false;
 
         this.members.splice(index, 1);
-        this.frontRow = this.frontRow.filter(m => m !== member);
-        this.backRow = this.backRow.filter(m => m !== member);
         member.party = null; // Clear party reference
-        return true;
-    }
-
-    changePosition(member, newPosition) {
-        if (!this.members.includes(member)) return false;
-        
-        // Remove from current position
-        if (member.position === 'front') {
-            this.frontRow = this.frontRow.filter(m => m !== member);
-        } else {
-            this.backRow = this.backRow.filter(m => m !== member);
-        }
-
-        // Add to new position
-        member.setPosition(newPosition);
-        if (newPosition === 'front') {
-            this.frontRow.push(member);
-        } else {
-            this.backRow.push(member);
-        }
         return true;
     }
 
@@ -71,8 +41,8 @@ class Party {
         return this.members.every(member => member.status.hp <= 0);
     }
 
-    getRow(position) {
-        return position === 'front' ? this.frontRow : this.backRow;
+    getRow(row) {
+        return row === 'front' ? this.frontRow : this.backRow;
     }
 }
 
@@ -224,7 +194,7 @@ class CombatManager {
         const logEntry = {
             turn: this.turn,
             actor: actor.name,
-            position: actor.position,
+            row: actor.row,
             stats: actor.getStats(),
             equipment: Object.fromEntries(
                 Object.entries(actor.equipment)
@@ -239,7 +209,7 @@ class CombatManager {
                 ...result,
                 targets: result.targets.map(t => ({
                     name: t.target.name,
-                    position: t.target.position,
+                    row: t.target.row,
                     damage: t.damage,
                     healing: t.healing,
                     effects: t.effects,
@@ -250,7 +220,7 @@ class CombatManager {
                 ...result,
                 target: result.target ? {
                     name: result.target.name,
-                    position: result.target.position,
+                    row: result.target.row,
                     remainingHp: result.target.status.hp,
                     maxHp: result.target.getMaxHP()
                 } : undefined
@@ -275,14 +245,14 @@ class CombatManager {
                     name: member.name,
                     hp: member.status.hp,
                     mp: member.status.mp,
-                    position: member.position,
+                    row: member.row,
                     effects: member.status.effects
                 })),
                 B: this.partyB.members.map(member => ({
                     name: member.name,
                     hp: member.status.hp,
                     mp: member.status.mp,
-                    position: member.position,
+                    row: member.row,
                     effects: member.status.effects
                 }))
             }

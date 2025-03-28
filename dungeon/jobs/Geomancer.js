@@ -237,7 +237,7 @@ export class Geomancer extends JobInterface {
         };
 
         const effect = terrainEffects[terrain];
-        const damage = Math.floor(user.getMA() * effect.power);
+        const damage = Math.floor(user.getStats().ma * effect.power);
 
         // Apply terrain-based damage and effects
         const result = {

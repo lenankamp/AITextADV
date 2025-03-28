@@ -1,6 +1,7 @@
 import { JOBS } from './jobs/index.js';
 import { EQUIPMENT_SLOTS } from './equipment/index.js';
 import * as Jobs from './jobs/index.js';
+import { TILE_TYPES } from './dungeon.js';
 
 // Base character class
 class Character {
@@ -10,8 +11,10 @@ class Character {
         this.level = 1;
         this.experience = 0;
         this.jp = 0;
-        this.position = 'front';
+        this.row = 'front';
         this.jobs = {};
+        this.party = null;
+        this.dungeonContext = null;
         this._cachedJobData = new Map();
         
         this.baseAbilities = {
@@ -658,7 +661,7 @@ class Character {
         damage *= target.getElementalMultiplier(ability.element || 'none');
 
         // Apply back row damage reduction for physical attacks
-        if (target.position === 'back' && ability.type === 'physical' && !ability.ranged && !this.isRanged()) {
+        if (target.row === 'back' && ability.type === 'physical' && !ability.ranged && !this.isRanged()) {
             damage *= 0.5;
         }
         return Math.floor(damage);
@@ -878,8 +881,8 @@ class Character {
             ability = { ...ability, castTime: Math.floor(ability.castTime * 0.5) };
         }
 
-        // Handle position restrictions
-        if (this.position === 'back' && ability.type === 'physical' && !ability.ranged && !this.isRanged()) {
+        // Handle row restrictions
+        if (this.row === 'back' && ability.type === 'physical' && !ability.ranged && !this.isRanged()) {
             return { success: false, message: 'Cannot use melee attack from back row' };
         }
 
@@ -893,6 +896,12 @@ class Character {
 
         if (this.status.mp < mpCost) {
             return { success: false, message: 'Not enough MP' };
+        }
+
+        // Special handling for dungeon abilities
+        if (ability.type === 'dungeon') {
+            this.status.mp -= mpCost;
+            return this._resolveDungeonAbility(ability, target);
         }
 
         // For AOE abilities, we need all targets in the same party as the target
@@ -1315,6 +1324,134 @@ class Character {
         return result;
     }
 
+    _resolveDungeonAbility(ability, target) {
+        if (!this.dungeonContext) {
+            return { success: false, message: 'No dungeon context available' };
+        }
+
+        const floor = this.dungeonContext.getCurrentFloor();
+        if (!floor) {
+            return { success: false, message: 'Invalid floor' };
+        }
+
+        const pos = this.party?.position;
+        if (!pos) {
+            return { success: false, message: 'Invalid position' };
+        }
+
+        switch (ability.effect) {
+            case 'reveal_terrain': {
+                // For Oracle's Divine Sight, Geomancer's Terrain Sight
+                const revealRadius = ability.radius || 3;
+                const revealed = floor.revealArea(pos.x, pos.y, revealRadius);
+                return { 
+                    success: true, 
+                    message: 'Area revealed',
+                    revealedTiles: revealed
+                };
+            }
+
+            case 'stealth_movement':
+            case 'bypass_enemies': {
+                const enabled = this.dungeonContext.setStealthMode(true, ability.duration || 3);
+                return { 
+                    success: enabled, 
+                    effects: ['stealth_active'],
+                    duration: ability.duration || 3
+                };
+            }
+
+            case 'traverse_walls': {
+                const enabled = this.dungeonContext.enableWallTraversal(true, ability.duration || 2);
+                return { 
+                    success: enabled, 
+                    effects: ['wall_walk_active'],
+                    duration: ability.duration || 2
+                };
+            }
+
+            case 'unlock': {
+                const tile = floor.getTile(pos.x, pos.y);
+                if (tile !== TILE_TYPES.DOOR && tile !== TILE_TYPES.SECRET_DOOR) {
+                    return { success: false, message: 'No door to unlock' };
+                }
+                const unlocked = floor.unlockDoor(pos.x, pos.y);
+                return {
+                    success: unlocked,
+                    message: unlocked ? 'Door unlocked' : 'Failed to unlock door'
+                };
+            }
+
+            case 'detect_traps': {
+                const range = ability.range || 2;
+                const traps = floor.getTrapsInRange(pos.x, pos.y, range);
+                const autoDisarm = ability.autoDisarm || false;
+
+                traps.forEach(trap => {
+                    if (autoDisarm) {
+                        floor.disarmTrap(trap.x, trap.y);
+                    } else {
+                        floor.revealTrap(trap.x, trap.y);
+                    }
+                });
+
+                return {
+                    success: true,
+                    trapsFound: traps.length,
+                    trapsDisarmed: autoDisarm ? traps.length : 0,
+                    message: `${traps.length} traps ${autoDisarm ? 'disarmed' : 'detected'}`
+                };
+            }
+
+            case 'predict_encounters': {
+                const range = ability.range || 5;
+                const encounters = this.dungeonContext.getUpcomingEncounters?.(pos.x, pos.y, range) || [];
+                return {
+                    success: true,
+                    encounters,
+                    message: `Predicted ${encounters.length} potential encounters`
+                };
+            }
+
+            case 'create_checkpoint': {
+                const created = this.dungeonContext.createCheckpoint();
+                return {
+                    success: created,
+                    effects: ['checkpoint_created'],
+                    message: created ? 'Checkpoint created' : 'Failed to create checkpoint'
+                };
+            }
+
+            case 'reset_room': {
+                const room = this.dungeonContext.getCurrentRoom();
+                if (!room) {
+                    return { success: false, message: 'Not in a valid room' };
+                }
+                room.reset();
+                return {
+                    success: true,
+                    message: 'Room reset to original state'
+                };
+            }
+
+            case 'modify_terrain': {
+                const currentTerrain = floor.getTerrain(pos.x, pos.y);
+                if (!this._isValidTerrainModification(currentTerrain, ability.targetTerrain)) {
+                    return { success: false, message: 'Invalid terrain modification' };
+                }
+                floor.setTerrain(pos.x, pos.y, ability.targetTerrain);
+                return {
+                    success: true,
+                    previousTerrain: currentTerrain,
+                    newTerrain: ability.targetTerrain
+                };
+            }
+
+            default:
+                return { success: false, message: 'Unknown dungeon ability effect' };
+        }
+    }
+
     _resolveAnalyzeAbility(ability, target) {
         const result = { success: true, effects: [] };
         
@@ -1628,19 +1765,19 @@ class Character {
             .filter(effect => effect.duration > 0);
     }
 
-    setPosition(position) {
-        if (position !== 'front' && position !== 'back') {
+    setRow(row) {
+        if (row !== 'front' && row !== 'back') {
             return false;
         }
-        this.position = position;
+        this.row = row;
         return true;
     }
     
-    switchPosition() {
-        if (this.position === 'front')
-            this.position = 'back';
+    switchRow() {
+        if (this.row === 'front')
+            this.row = 'back';
         else
-            this.position = 'front';
+            this.row = 'front';
     }
 
     getAIAction(enemies, allies = []) {
@@ -1688,10 +1825,10 @@ class Character {
             return targets;  // The combat manager already filters for correct targets
         }
 
-        // For physical attacks, handle ranged vs melee based on positions and weapon
+        // For physical attacks, handle ranged vs melee based on row and weapon
         if (ability.type === 'physical' && !this.isRanged()) {
             return targets.filter(t => 
-                t.position === 'front' || this.position === 'front'
+                t.row === 'front' || this.row === 'front'
             );
         }
 
@@ -1726,7 +1863,7 @@ class Character {
                 return targets.find(t => !t.status.effects.some(e => e.type === ability.effect)) || 
                        targets[Math.floor(Math.random() * targets.length)];
             case 'physical':
-                const frontRowTargets = targets.filter(t => t.position === 'front');
+                const frontRowTargets = targets.filter(t => t.row === 'front');
                 if (frontRowTargets.length > 0 && !ability.ranged && !this.isRanged()) {
                     return frontRowTargets[Math.floor(Math.random() * frontRowTargets.length)];
                 }
@@ -2037,10 +2174,7 @@ class Character {
         return stealthLevel;
     }
 
-    move(newPosition) {
-        const oldPosition = this.position;
-        this.position = newPosition;
-
+    resolveMove() {
         // Handle movement-based abilities
         const support = this.getSupportAbilities();
         support.forEach(ability => {
@@ -2198,53 +2332,6 @@ class Character {
         }
 
         return { duration, potency };
-    }
-
-    _resolveStealAbility(ability, target) {
-        const result = { success: false, effects: [] };
-        
-        // Calculate steal success rate
-        const stealChance = this._calculateStealSuccess(target);
-        
-        if (Math.random() < stealChance) {
-            // Determine what can be stolen based on ability
-            let stolenItem = null;
-            switch (ability.name) {
-                case 'Steal Gil':
-                    stolenItem = { type: 'gil', amount: Math.floor(Math.random() * 100 + 50) };
-                    break;
-                case 'Steal Item':
-                    if (target.inventory && target.inventory.length > 0) {
-                        const itemIndex = Math.floor(Math.random() * target.inventory.length);
-                        stolenItem = target.inventory.splice(itemIndex, 1)[0];
-                    }
-                    break;
-                case 'Steal Weapon':
-                    if (target.equipment?.mainHand) {
-                        stolenItem = target.equipment.mainHand;
-                        target.equipment.mainHand = null;
-                    }
-                    break;
-                case 'Pilfer':
-                    if (target.status.effects.length > 0) {
-                        const effectIndex = Math.floor(Math.random() * target.status.effects.length);
-                        const effect = target.status.effects.splice(effectIndex, 1)[0];
-                        this.addEffect(effect);
-                        stolenItem = { type: 'effect', effect };
-                    }
-                    break;
-            }
-            
-            if (stolenItem) {
-                result.success = true;
-                result.stolenItem = stolenItem;
-                if (stolenItem.type !== 'effect') {
-                    this.inventory.push(stolenItem);
-                }
-            }
-        }
-        
-        return result;
     }
 
     _resolveSpeechcraftAbility(ability, target) {

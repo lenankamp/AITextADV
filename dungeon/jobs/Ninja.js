@@ -178,41 +178,40 @@ export class Ninja extends JobInterface {
     }
 
     static _resolveThrow(user, ability, target) {
-        // Calculate damage based on weapon being thrown
-        const stats = user.getStats();
-        const weapon = user.getEquippedWeapon();
-        if (!weapon) {
+        const { item } = ability;
+        if (!item) {
             return {
                 success: false,
-                message: 'No weapon equipped to throw'
+                message: 'No item specified to throw'
             };
         }
 
-        const weaponPower = weapon.power || 1;
-        const throwPower = Math.floor((stats.pa + stats.sp * 0.5) * weaponPower);
-        const damage = Math.floor(throwPower * ability.power);
+        // Remove item from inventory
+        const itemIndex = user.inventory.findIndex(i => i.id === item.id);
+        if (itemIndex === -1) {
+            return {
+                success: false,
+                message: 'Item not found in inventory'
+            };
+        }
 
-        // Apply damage
+        user.inventory.splice(itemIndex, 1);
+
+        // Calculate throw effect - items are more effective when thrown
+        const throwMultiplier = 1.5;
+        let effect;
+
+        const damage = Math.floor((item.stats?.pa + user.GetStats().pa) * throwMultiplier);
         target.status.hp = Math.max(0, target.status.hp - damage);
-
-        // 20% chance to apply weapon's status effect if it has one
-        if (weapon.effect && Math.random() < 0.2) {
-            const statusEffect = {
-                name: weapon.effect,
-                duration: 3,
-                power: stats.pa * 0.1
-            };
-            if (!target.isImmuneToEffect(statusEffect.name)) {
-                target.addEffect(statusEffect);
-                this._addNinjaEffect(target, statusEffect);
-            }
-        }
+        effect = {
+            type: 'damage',
+            value: damage
+        };
 
         return {
             success: true,
-            damage,
-            message: `${target.name} takes ${damage} damage from thrown weapon`,
-            weaponUsed: weapon.name
+            message: `Threw ${item.name}`,
+            effect
         };
     }
 

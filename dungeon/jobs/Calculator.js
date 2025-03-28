@@ -180,7 +180,7 @@ export class Calculator extends JobInterface {
         if (this._isPrime(value)) {
             return {
                 success: true,
-                damage: Math.floor(user.getMA() * 2.5),
+                damage: Math.floor(user.getStats().ma * 2.5),
                 message: `${target.name}'s ${attribute} value is prime!`
             };
         }
@@ -195,7 +195,7 @@ export class Calculator extends JobInterface {
         if (value % 4 === 0 || value % 5 === 0) {
             return {
                 success: true,
-                damage: Math.floor(user.getMA() * 2),
+                damage: Math.floor(user.getStats().ma * 2),
                 message: `${target.name}'s ${attribute} is divisible by 4 or 5!`
             };
         }
@@ -210,7 +210,7 @@ export class Calculator extends JobInterface {
         if (heightDiff > 0) {
             return {
                 success: true,
-                damage: Math.floor(user.getMA() * (heightDiff * 0.5)),
+                damage: Math.floor(user.getStats().ma * (heightDiff * 0.5)),
                 message: `Height difference of ${heightDiff} affects damage!`
             };
         }
@@ -221,7 +221,7 @@ export class Calculator extends JobInterface {
     }
 
     static _resolveMultiply(user, ability, target) {
-        const baseDamage = Math.floor(user.getMA() * 1.5);
+        const baseDamage = Math.floor(user.getStats().ma * 1.5);
         return {
             success: true,
             damage: baseDamage * 2,
@@ -237,7 +237,7 @@ export class Calculator extends JobInterface {
         const lastDigit = target.status.hp % 10;
         return {
             success: true,
-            damage: Math.floor(user.getMA() * (1 + lastDigit * 0.1)),
+            damage: Math.floor(user.getStats().ma * (1 + lastDigit * 0.1)),
             message: `Damage calculated from HP's last digit: ${lastDigit}`
         };
     }
