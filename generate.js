@@ -299,7 +299,8 @@ async function generateArtImpl(prompt, negprompt = '', seed = -1) {
             credentials: 'omit', // Add this
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Origin': 'https://lenankamp.github.io'
             },
             body: JSON.stringify({
                 "prompt": settings.default_prompt + prompt,
