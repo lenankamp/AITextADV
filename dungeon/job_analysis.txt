@@ -1,0 +1,2378 @@
+
+Archer
+======
+
+Description:
+-----------
+Skilled ranged combatants who excel at precision attacks from a distance. Masters of tactical positioning and battlefield control through various arrow types. In combat, they provide reliable single-target and area damage while maintaining safe distance.
+
+Base Stats:
+-----------
+HP: 95
+MP: 45
+PA: 9
+MA: 5
+SP: 9
+EV: 7
+
+Growth Rates:
+-------------
+HP: 30
+MP: 8
+PA: 0.4
+MA: 0.2
+SP: 0.4
+EV: 0.3
+
+Active Abilities:
+----------------
+Aim:
+Charge:
+  type: physical
+  power: 2
+  mp: 12
+  charge: 1
+  jpCost: 100
+  description: Powerful charged shot
+Rapid Fire:
+  type: physical
+  power: 0.8
+  hits: 4
+  mp: 15
+  jpCost: 200
+  description: Multiple quick shots
+Arrow Rain:
+  type: physical
+  power: 1.2
+  aoe: true
+  mp: 20
+  jpCost: 300
+  description: Deals damage to all enemies in an area
+Precision Shot:
+  type: physical
+  power: 1.8
+  accuracy: 1.5
+  critRate: 0.3
+  mp: 18
+  jpCost: 400
+  description: High accuracy shot with increased critical rate
+Sniper Shot:
+  type: physical
+  power: 2.2
+  mp: 25
+  jpCost: 450
+  description: Long-range precision attack
+Disabling Shot:
+  type: physical
+  power: 0.7
+  effect: slow
+  mp: 15
+  jpCost: 250
+  description: Deals damage and slows the target
+Weakness Shot:
+  type: physical
+  power: 1
+  effect: defense_down
+  mp: 25
+  jpCost: 450
+  description: Reduces target defense while dealing damage
+Piercing Arrow:
+  type: physical
+  power: 1.6
+  effect: armor_pierce
+  mp: 28
+  jpCost: 400
+  description: Arrow that pierces through defenses
+Takedown Shot:
+  type: physical
+  power: 2
+  effect: knockback
+  mp: 32
+  jpCost: 500
+  description: Powerful shot that knocks target back
+Barrage:
+  type: physical
+  power: 1.4
+  hits: 3
+  aoe: true
+  mp: 35
+  jpCost: 600
+  description: Multiple shots hitting all enemies in area
+
+Reaction Abilities:
+------------------
+Archer Guard:
+  chance: 0.3
+  effect: ranged_defense_up
+  jpCost: 200
+  description: Reduces damage from ranged attacks
+Counter Shot:
+  effect: counter_shot
+  chance: 0.25
+  type: physical
+  power: 0.8
+  jpCost: 300
+  description: Chance to counter with a ranged attack
+
+Support Abilities:
+-----------------
+Concentrate:
+  effect: accuracy_up
+  jpCost: 150
+  description: Increases accuracy of attacks
+Precise Aim:
+  effect: increase_critical
+  jpCost: 300
+  description: Improves critical hit chance
+
+Requirements:
+------------
+Squire level 2
+
+==================================================
+
+
+Bard
+====
+
+Description:
+-----------
+Musical specialists who empower allies and weaken foes through magical songs. Their varied repertoire includes defensive chants, restorative melodies, and disruptive harmonies. While their direct combat abilities are limited, their party-wide support capabilities and ability to inflict status effects make them invaluable strategists.
+
+Base Stats:
+-----------
+HP: 85
+MP: 85
+PA: 6
+MA: 9
+SP: 8
+EV: 6
+
+Growth Rates:
+-------------
+HP: 28
+MP: 25
+PA: 0.2
+MA: 0.45
+SP: 0.4
+EV: 0.3
+
+Active Abilities:
+----------------
+Songs:
+Battle Chant:
+  type: buff
+  effect: protect
+  aoe: true
+  mp: 18
+  jpCost: 200
+  description: Increase party defense through song
+Life Song:
+  type: buff
+  effect: regen
+  aoe: true
+  mp: 22
+  jpCost: 250
+  description: Grant regeneration to party
+Mana Paean:
+  type: buff
+  effect: mp_regen
+  aoe: true
+  mp: 25
+  jpCost: 300
+  description: Grant MP regeneration to party
+Hero Ballad:
+  type: buff
+  aoe: true
+  mp: 35
+  jpCost: 400
+  description: Major boost to party combat stats
+Silence Song:
+  type: status
+  effect: silence
+  aoe: true
+  mp: 28
+  jpCost: 350
+  description: Silence all enemies in range
+Confusion Carol:
+  type: status
+  effect: confuse
+  aoe: true
+  mp: 30
+  jpCost: 375
+  description: Confuse enemies with discordant notes
+Peaceful Nocturne:
+  type: status
+  effect: sleep
+  aoe: true
+  mp: 32
+  jpCost: 400
+  description: Put enemies to sleep with soothing melody
+Nameless Song:
+  type: buff
+  effect: random_buff
+  aoe: true
+  mp: 20
+  jpCost: 300
+  description: Grant random positive effects to party
+Dissonant Wave:
+  type: magical
+  power: 2
+  element: sonic
+  aoe: true
+  mp: 32
+  jpCost: 450
+  description: Damage enemies with sonic waves
+Grand Finale:
+  type: special
+  power: 2.5
+  aoe: true
+  mp: 45
+  jpCost: 500
+  description: Powerful sonic attack that removes buffs
+
+Reaction Abilities:
+------------------
+Perfect Pitch:
+  chance: 0.3
+  effect: counter_with_song
+  jpCost: 400
+  description: Counter attacks with random song effect
+Harmony Shield:
+  chance: 0.35
+  effect: shell
+  jpCost: 450
+  description: Reduce incoming magical damage
+
+Support Abilities:
+-----------------
+Song Mastery:
+  effect: extend_song_duration
+  jpCost: 500
+  description: Increase duration of song effects
+Resonance:
+  effect: enhance_song_power
+  jpCost: 450
+  description: Increase potency of song effects
+
+Requirements:
+------------
+WhiteMage level 3
+Oracle level 2
+Dancer level 2
+
+==================================================
+
+
+BlackMage
+=========
+
+Description:
+-----------
+Powerful spellcasters specializing in destructive elemental magic. Masters of offensive magic who can devastate enemies with fire, ice, and lightning. Their magical prowess allows them to break through enemy defenses and exploit elemental weaknesses. In dungeons, they excel at detecting and dispelling magical barriers, analyzing magical anomalies, and dealing with supernatural threats.
+
+Base Stats:
+-----------
+HP: 80
+MP: 100
+PA: 4
+MA: 12
+SP: 6
+EV: 5
+
+Growth Rates:
+-------------
+HP: 20
+MP: 25
+PA: 0.1
+MA: 0.6
+SP: 0.2
+EV: 0.2
+
+Active Abilities:
+----------------
+Black Magic:
+Fire:
+  type: magical
+  element: fire
+  power: 1.8
+  mp: 16
+  jpCost: 200
+Fira:
+  type: magical
+  element: fire
+  power: 2.4
+  mp: 24
+  jpCost: 400
+Firaga:
+  type: magical
+  element: fire
+  power: 3
+  aoe: true
+  mp: 48
+  jpCost: 600
+Thunder:
+  type: magical
+  element: lightning
+  power: 1.9
+  mp: 18
+  jpCost: 200
+Thundara:
+  type: magical
+  element: lightning
+  power: 2.5
+  mp: 26
+  jpCost: 400
+Thundaga:
+  type: magical
+  element: lightning
+  power: 3.1
+  aoe: true
+  mp: 50
+  jpCost: 600
+Blizzard:
+  type: magical
+  element: ice
+  power: 1.7
+  mp: 14
+  jpCost: 200
+Blizzara:
+  type: magical
+  element: ice
+  power: 2.3
+  mp: 22
+  jpCost: 400
+Blizzaga:
+  type: magical
+  element: ice
+  power: 2.9
+  aoe: true
+  mp: 46
+  jpCost: 600
+Break:
+  type: status
+  effect: petrify
+  mp: 30
+  jpCost: 450
+Death:
+  type: status
+  effect: instant_death
+  mp: 40
+  jpCost: 750
+Flare:
+  type: magical
+  element: non-elemental
+  power: 3.5
+  mp: 60
+  jpCost: 900
+  description: Ultimate single-target damage spell
+Arcane Disruption:
+  type: dungeon
+  aoe: true
+  mp: 35
+  jpCost: 450
+  description: Detect and dispel magical effects in an area
+Arcane Eye:
+  type: dungeon
+  mp: 15
+  jpCost: 200
+  description: Reveals magical traps and analyzes curses
+
+Reaction Abilities:
+------------------
+Magic Shield:
+  chance: 0.3
+  effect: shell
+  jpCost: 400
+  description: Chance to reduce incoming magical damage
+Spell Return:
+  chance: 0.2
+  effect: reflect
+  jpCost: 500
+  description: Chance to reflect magical attacks
+
+Support Abilities:
+-----------------
+Magic Boost:
+  effect: increase_magic_power
+  jpCost: 500
+  description: Increases magical damage
+Dual Cast:
+  effect: cast_twice
+  jpCost: 999
+  description: Cast two spells in one turn
+
+Requirements:
+------------
+Chemist level 2
+
+==================================================
+
+
+Calculator
+==========
+
+Description:
+-----------
+Tactical specialists who utilize mathematical principles to manipulate combat conditions. Their unique abilities allow them to target enemies based on numerical properties like height, level, and other statistical values. While complex to master, their ability to affect multiple targets simultaneously through mathematical calculations makes them powerful battlefield controllers.
+
+Base Stats:
+-----------
+HP: 85
+MP: 100
+PA: 6
+MA: 10
+SP: 5
+EV: 4
+
+Growth Rates:
+-------------
+HP: 28
+MP: 35
+PA: 0.2
+MA: 0.5
+SP: 0.2
+EV: 0.2
+
+Active Abilities:
+----------------
+Arithmeticks:
+CT Prime:
+  type: special
+  effect: prime_target
+  mp: 25
+  jpCost: 300
+  description: Target units with prime CT values
+Level Divide:
+  type: special
+  effect: level_target
+  mp: 28
+  jpCost: 350
+  description: Target units with divisible levels
+Height Factor:
+  type: special
+  effect: height_target
+  mp: 30
+  jpCost: 400
+  description: Target units at specific height multiples
+Multiply:
+  type: special
+  mp: 35
+  jpCost: 450
+  description: Multiply spell effects on valid targets
+Prime Strike:
+  type: magical
+  power: 2
+  effect: prime_damage
+  mp: 32
+  jpCost: 500
+  description: Deal damage based on prime numbers
+Numerical Force:
+  type: special
+  power: 1.8
+  effect: number_based_damage
+  mp: 30
+  jpCost: 450
+  description: Deal damage based on numerical properties
+Factor Barrier:
+  type: buff
+  effect: numeric_shield
+  mp: 38
+  jpCost: 550
+  description: Create barrier based on mathematical factors
+Divide MP:
+  type: special
+  mp: 20
+  jpCost: 400
+  description: Divide target's MP by a factor
+Perfect Number:
+  type: buff
+  effect: perfect_stats
+  mp: 45
+  jpCost: 600
+  description: Optimize stats based on perfect numbers
+Modulo Mastery:
+  type: magical
+  power: 2.5
+  effect: remainder_damage
+  mp: 50
+  jpCost: 700
+  description: Ultimate number-based attack
+
+Reaction Abilities:
+------------------
+Absorb MP:
+  chance: 0.3
+  effect: mp_drain
+  jpCost: 400
+  description: Chance to drain MP when hit
+Numeric Guard:
+  chance: 0.25
+  effect: number_defense
+  jpCost: 450
+  description: Reduce damage based on numerical properties
+
+Support Abilities:
+-----------------
+Arcane Math:
+  effect: enhance_math_magic
+  jpCost: 500
+  description: Increase power of mathematical abilities
+Quick Calculate:
+  effect: reduce_cast_time
+  jpCost: 400
+  description: Reduce casting time of abilities
+
+Requirements:
+------------
+BlackMage level 4
+TimeMage level 3
+Oracle level 3
+
+==================================================
+
+
+Chemist
+=======
+
+Description:
+-----------
+Masters of item manipulation and alchemy. Specializing in item usage, creation, and enhancement, they provide crucial support through potions and crafted goods. Their expertise allows them to identify, analyze, and mix items for maximum effectiveness.
+
+Base Stats:
+-----------
+HP: 90
+MP: 70
+PA: 6
+MA: 8
+SP: 7
+EV: 5
+
+Growth Rates:
+-------------
+HP: 25
+MP: 15
+PA: 0.2
+MA: 0.3
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+Item:
+Use Potion:
+  type: healing
+  effect: enhance_item
+  jpCost: 100
+  description: Use healing items with increased effectiveness
+Throw Item:
+  type: special
+  power: item_dependent
+  jpCost: 200
+  description: Throw items at enemies for various effects
+Mix:
+  type: special
+  mp: 10
+  jpCost: 400
+  description: Combine two items for unique effects
+Analyze:
+  type: analyze
+  mp: 12
+  jpCost: 250
+  description: Reveal enemy stats and weaknesses
+Brew Potion:
+  type: special
+  mp: 15
+  jpCost: 300
+  description: Create basic healing potion
+Antidote Brew:
+  type: special
+  mp: 15
+  jpCost: 300
+  description: Create antidote for status effects
+Sample:
+  type: special
+  mp: 20
+  jpCost: 350
+  description: Extract useful components from monsters
+Bomb Craft:
+  type: special
+  mp: 25
+  jpCost: 450
+  description: Create explosive items from materials
+Mega Potion:
+  type: healing
+  aoe: true
+  jpCost: 600
+  description: Use powerful healing potion that affects area
+Elixir Craft:
+  type: special
+  jpCost: 800
+  description: Use powerful elixir that fully restores and buffs
+
+Reaction Abilities:
+------------------
+Auto Potion:
+  chance: 0.35
+  effect: use_potion_when_hurt
+  jpCost: 400
+  description: Automatically use potion when damaged
+Quick Pocket:
+  chance: 0.3
+  effect: free_item_use
+  jpCost: 450
+  description: Chance to use items without consuming them
+
+Support Abilities:
+-----------------
+Item Boost:
+  effect: improve_item_effect
+  jpCost: 500
+  description: Increase effectiveness of used items
+Medicine Lore:
+  effect: improve_healing
+  jpCost: 400
+  description: Increase healing from items and abilities
+
+==================================================
+
+
+Dancer
+======
+
+Description:
+-----------
+Agile performers who weave combat and artistry into mesmerizing techniques. Specialists in area-of-effect status conditions and party support through various dances. In combat, they excel at crowd control and debuffing multiple enemies simultaneously.
+
+Base Stats:
+-----------
+HP: 90
+MP: 75
+PA: 7
+MA: 8
+SP: 9
+EV: 7
+
+Growth Rates:
+-------------
+HP: 30
+MP: 20
+PA: 0.3
+MA: 0.4
+SP: 0.5
+EV: 0.4
+
+Active Abilities:
+----------------
+Dance:
+Slow Dance:
+  type: status
+  effect: slow
+  aoe: true
+  mp: 16
+  jpCost: 200
+  description: Reduce enemy speed through dance
+Tempting Waltz:
+  type: status
+  effect: charm
+  mp: 24
+  jpCost: 300
+  description: Charm target with mesmerizing dance
+War Dance:
+  type: buff
+  effect: attack_up
+  aoe: true
+  mp: 20
+  jpCost: 250
+  description: Boost party attack through dance
+Exhausting Polka:
+  type: drain
+  aoe: true
+  mp: 28
+  jpCost: 350
+  description: Drain enemy stamina and MP
+Siren Dance:
+  type: status
+  effect: confusion
+  aoe: true
+  mp: 30
+  jpCost: 400
+  description: Confuse enemies with alluring dance
+Bewitching Dance:
+  type: status
+  aoe: true
+  mp: 35
+  jpCost: 450
+  description: Put enemies to sleep with enchanting dance
+Healing Waltz:
+  type: special
+  aoe: true
+  mp: 22
+  jpCost: 280
+  description: Remove status effects with restorative dance
+Forbidden Dance:
+  type: drain
+  power: 2.2
+  effect: mp_drain
+  aoe: true
+  mp: 40
+  jpCost: 500
+  description: Drain MP with dark dance
+Trance Dance:
+  type: buff
+  target: self
+  mp: 45
+  jpCost: 600
+  description: Enter powerful trance state
+Last Waltz:
+  type: drain
+  power: 3
+  aoe: true
+  mp: 50
+  jpCost: 800
+  description: Ultimate dance draining HP and MP
+
+Reaction Abilities:
+------------------
+Rhythm Sense:
+  chance: 0.3
+  effect: evade_melee
+  jpCost: 400
+  description: Chance to dodge physical attacks
+Moving Grace:
+  chance: 0.25
+  effect: counter_with_dance
+  jpCost: 450
+  description: Counter attacks with dance effect
+
+Support Abilities:
+-----------------
+Dance Mastery:
+  effect: increase_dance_success
+  jpCost: 500
+  description: Improve success rate of dance abilities
+Performance Focus:
+  jpCost: 450
+  description: Enhances duration and effectiveness of dance abilities
+
+Requirements:
+------------
+Monk level 3
+Oracle level 3
+Geomancer level 2
+
+==================================================
+
+
+Dragoon
+=======
+
+Description:
+-----------
+Masters of aerial combat and verticality. Specializing in powerful jump attacks and mobility options, they excel at traversing difficult terrain and attacking from above.
+
+Base Stats:
+-----------
+HP: 115
+MP: 50
+PA: 10
+MA: 5
+SP: 9
+EV: 6
+
+Growth Rates:
+-------------
+HP: 38
+MP: 10
+PA: 0.5
+MA: 0.2
+SP: 0.4
+EV: 0.2
+
+Active Abilities:
+----------------
+Jump:
+Jump:
+  type: physical
+  power: 2
+  charge: 1
+  ranged: true
+  mp: 12
+  jpCost: 200
+  description: Basic jumping attack with height-based bonus
+Lancet:
+  type: drain
+  power: 1
+  mp: 8
+  jpCost: 200
+  description: Drain HP and MP from target
+High Jump:
+  type: physical
+  power: 2.8
+  ranged: true
+  charge: 2
+  mp: 20
+  jpCost: 400
+  description: Powerful jump with longer charge time
+Sweep Dive:
+  type: physical
+  power: 1.8
+  aoe: true
+  mp: 25
+  jpCost: 500
+  description: Area-of-effect diving attack
+Dragon Breath:
+  type: magical
+  element: dragon
+  power: 2.2
+  mp: 16
+  jpCost: 400
+  description: Channel dragon energy in cone attack
+Piercing Strike:
+  type: physical
+  power: 2
+  effect: armor_pierce
+  mp: 22
+  jpCost: 400
+  description: Ignore portion of enemy defense
+Geirskogul:
+  type: physical
+  power: 3.2
+  element: dragon
+  aoe: true
+  mp: 45
+  jpCost: 800
+  description: Ultimate dragoon technique
+
+Reaction Abilities:
+------------------
+Dragon Spirit:
+  chance: 0.3
+  effect: nullify_air_damage
+  jpCost: 400
+  description: Chance to nullify damage while airborne
+Aerial Recovery:
+  chance: 0.35
+  effect: recover_fall
+  jpCost: 350
+  description: Chance to recover from falling damage
+
+Support Abilities:
+-----------------
+Dragon Might:
+  effect: jump_damage_up
+  jpCost: 500
+  description: Increase jump attack damage
+Sure Landing:
+  effect: safe_landing
+  jpCost: 300
+  description: Always land safely from jumps
+
+Requirements:
+------------
+Thief level 3
+
+==================================================
+
+
+Geomancer
+=========
+
+Description:
+-----------
+Masters of terrain manipulation and natural forces. Their unique abilities allow them to draw power from and shape the environment around them. Experts at navigating and utilizing terrain features, they excel at area control and environmental manipulation while providing crucial exploration abilities.
+
+Base Stats:
+-----------
+HP: 100
+MP: 75
+PA: 7
+MA: 9
+SP: 8
+EV: 6
+
+Growth Rates:
+-------------
+HP: 35
+MP: 15
+PA: 0.3
+MA: 0.4
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+Geomancy:
+Terrain Power:
+  type: special
+  mp: 25
+  jpCost: 300
+  description: Attack based on current terrain
+Earth Render:
+  type: magical
+  element: earth
+  power: 2.4
+  mp: 30
+  jpCost: 400
+  description: Powerful earth-based attack
+Terra Pulse:
+  type: magical
+  element: earth
+  power: 2.2
+  aoe: true
+  mp: 35
+  jpCost: 450
+  description: Area earth damage
+Terrain Sight:
+  type: dungeon
+  effect: reveal_terrain
+  mp: 28
+  jpCost: 350
+  description: Reveal detailed terrain layout and features
+Earth Sense:
+  type: dungeon
+  mp: 20
+  jpCost: 300
+  description: Detect hidden paths and hazards in current area
+Rock Path:
+  type: dungeon
+  effect: create_path
+  mp: 32
+  jpCost: 400
+  description: Create temporary paths over gaps
+Terrain Shift:
+  type: dungeon
+  effect: modify_terrain
+  mp: 40
+  jpCost: 500
+  description: Temporarily modify terrain properties
+Sandstorm:
+  type: magical
+  element: earth
+  power: 2
+  effect: blind
+  aoe: true
+  mp: 38
+  jpCost: 450
+  description: Area damage with chance to blind
+Nature Communion:
+  type: dungeon
+  mp: 45
+  jpCost: 600
+  description: Reveal environmental hazards and natural resources
+Gaia Force:
+  type: magical
+  element: earth
+  power: 3
+  aoe: true
+  mp: 50
+  jpCost: 700
+  description: Ultimate earth-based attack
+
+Reaction Abilities:
+------------------
+Earth Embrace:
+  chance: 0.3
+  effect: terrain_heal
+  jpCost: 400
+  description: Chance to heal when standing on natural terrain
+Nature Shield:
+  chance: 0.25
+  effect: terrain_defense
+  jpCost: 450
+  description: Reduces damage based on current terrain
+
+Support Abilities:
+-----------------
+Terrain Mastery:
+  effect: enhance_terrain_magic
+  jpCost: 500
+  description: Strengthens all terrain-based abilities
+Nature Step:
+  effect: ignore_terrain
+  jpCost: 400
+  description: Ignore negative terrain effects
+
+Requirements:
+------------
+Monk level 3
+
+==================================================
+
+
+Knight
+======
+
+Description:
+-----------
+Elite warriors trained in the arts of sword and shield. Masters of defense who can protect allies and withstand powerful attacks. Their ability to cover for allies and maintain defensive formations makes them essential frontline fighters and protectors.
+
+Base Stats:
+-----------
+HP: 120
+MP: 40
+PA: 10
+MA: 4
+SP: 6
+EV: 4
+
+Growth Rates:
+-------------
+HP: 40
+MP: 5
+PA: 0.5
+MA: 0.1
+SP: 0.2
+EV: 0.1
+
+Active Abilities:
+----------------
+Arts of War:
+Slash Blade:
+  type: physical
+  power: 2
+  mp: 15
+  jpCost: 200
+  description: Basic powerful sword attack
+Break Armor:
+  type: physical
+  power: 1.2
+  effect: defense_down
+  mp: 18
+  jpCost: 250
+  description: Reduces target defense
+Shield Bash:
+  type: physical
+  power: 1.4
+  effect: stun
+  mp: 20
+  jpCost: 300
+  description: Shield attack that may stun target
+Cover:
+  type: buff
+  effect: protect_ally
+  mp: 25
+  jpCost: 400
+  description: Take damage in place of an ally
+Holy Blade:
+  type: physical
+  element: holy
+  power: 2.2
+  mp: 28
+  jpCost: 450
+  description: Holy-aspected sword attack
+Sentinel:
+  type: special
+  mp: 30
+  jpCost: 500
+  description: Greatly increase defense and draw attacks
+Defensive Stance:
+  type: buff
+  mp: 35
+  jpCost: 600
+  description: Become immobile but immune to physical damage
+Mighty Guard:
+  type: buff
+  aoe: true
+  mp: 45
+  jpCost: 700
+  description: Grant protective barriers to all allies
+Sword Break:
+  type: physical
+  power: 1.8
+  effect: attack_down
+  mp: 32
+  jpCost: 550
+  description: Attack that may disarm the target
+Divine Guard:
+  type: buff
+  mp: 50
+  jpCost: 800
+  description: Ultimate defensive technique with regeneration
+
+Reaction Abilities:
+------------------
+Parry:
+  chance: 0.35
+  effect: protect
+  jpCost: 400
+  description: Chance to reduce physical damage
+Defense Boost:
+  chance: 0.3
+  effect: increase_defense
+  jpCost: 450
+  description: Chance to increase defense when hit
+
+Support Abilities:
+-----------------
+Equip Shield:
+  effect: enable_shield
+  jpCost: 300
+  description: Allows equipping of shields
+Stoneskin:
+  effect: damage_reduction
+  jpCost: 600
+  description: Reduces all damage taken
+
+Requirements:
+------------
+Squire level 2
+
+==================================================
+
+
+Mime
+====
+
+Description:
+-----------
+Unique specialists who can perfectly replicate the abilities of others. Through their mastery of mimicry, they can copy and enhance both ally and enemy techniques, making them incredibly versatile but demanding to master. Their ability to adapt and utilize multiple skill types simultaneously makes them powerful but requires deep understanding of various combat styles.
+
+Base Stats:
+-----------
+HP: 110
+MP: 90
+PA: 8
+MA: 8
+SP: 8
+EV: 7
+
+Growth Rates:
+-------------
+HP: 35
+MP: 28
+PA: 0.4
+MA: 0.4
+SP: 0.4
+EV: 0.35
+
+Active Abilities:
+----------------
+Mimic:
+Replicate:
+  type: special
+  mp: variable
+  jpCost: 300
+  description: Copies the last action performed by any character
+Battle Memory:
+  type: special
+  mp: 40
+  jpCost: 550
+  description: Learn and store an enemy ability for later use
+
+Reaction Abilities:
+------------------
+Adaptive Form:
+  chance: 0.2
+  effect: adapt_to_damage_type
+  jpCost: 500
+  description: Temporarily gains resistance to damage type received
+
+Support Abilities:
+-----------------
+Experienced Mimic:
+  effect: improve_copy_accuracy
+  jpCost: 450
+  description: Increases accuracy of mimicked abilities
+
+Requirements:
+------------
+Samurai level 3
+Calculator level 3
+Dancer level 2
+Bard level 2
+
+==================================================
+
+
+Monk
+====
+
+Description:
+-----------
+Disciplined martial artists who channel inner energy into powerful combat techniques. Masters of unarmed combat who combine physical prowess with spiritual power. Their meditation abilities and powerful strikes make them excellent frontline fighters who can sustain themselves through inner strength.
+
+Base Stats:
+-----------
+HP: 130
+MP: 40
+PA: 11
+MA: 5
+SP: 8
+EV: 7
+
+Growth Rates:
+-------------
+HP: 45
+MP: 8
+PA: 0.6
+MA: 0.2
+SP: 0.3
+EV: 0.3
+
+Active Abilities:
+----------------
+Martial Arts:
+Chakra:
+  type: healing
+  power: 1.5
+  target: self
+  mp: 0
+  jpCost: 200
+  description: Restore HP through meditation
+Pummel:
+  type: physical
+  power: 1.2
+  hits: 3
+  mp: 0
+  jpCost: 300
+  description: Strike multiple times with bare hands
+Earth Slash:
+  type: physical
+  element: earth
+  power: 2
+  mp: 0
+  jpCost: 400
+  description: Channel earth energy into an attack
+Internal Release:
+  type: buff
+  mp: 15
+  jpCost: 450
+  description: Release inner power to enhance abilities
+Meditation:
+  type: buff
+  target: self
+  mp: 20
+  jpCost: 350
+  description: Meditate to regenerate HP and MP over time
+Pressure Point:
+  type: status
+  effect: paralyze
+  mp: 18
+  jpCost: 400
+  description: Strike vital points to paralyze target
+Spirit Blade:
+  type: physical
+  power: 2.2
+  element: holy
+  mp: 25
+  jpCost: 450
+  description: Infuse attacks with spiritual energy
+Chakra Blast:
+  type: magical
+  power: 2.4
+  mp: 30
+  jpCost: 500
+  description: Release concentrated spiritual energy
+Mantra:
+  type: buff
+  aoe: true
+  mp: 35
+  jpCost: 550
+  description: Project spiritual barrier around allies
+Hundred Fists:
+  type: physical
+  power: 0.5
+  hits: 10
+  mp: 45
+  jpCost: 800
+  description: Ultimate martial arts technique
+
+Reaction Abilities:
+------------------
+Counter:
+  chance: 0.4
+  power: 1
+  jpCost: 300
+  description: Counter physical attacks
+Inner Strength:
+  chance: 0.35
+  effect: hp_restore
+  jpCost: 400
+  description: Chance to restore HP when damaged
+
+Support Abilities:
+-----------------
+Brawler:
+  effect: unarmed_damage_up
+  jpCost: 500
+  description: Increase unarmed combat damage
+Martial Mastery:
+  effect: improve_martial_arts
+  jpCost: 600
+  description: Enhance all martial arts abilities
+
+Requirements:
+------------
+Knight level 2
+
+==================================================
+
+
+Ninja
+=====
+
+Description:
+-----------
+Highly skilled infiltrators and combat specialists who excel in stealth and agility. Masters of deception who can throw weapons, walk on walls, and create illusions. Their versatile skillset combines offensive capabilities with exceptional mobility and evasion, making them equally adept at combat and covert operations.
+
+Base Stats:
+-----------
+HP: 95
+MP: 60
+PA: 9
+MA: 7
+SP: 11
+EV: 8
+
+Growth Rates:
+-------------
+HP: 32
+MP: 12
+PA: 0.4
+MA: 0.3
+SP: 0.6
+EV: 0.4
+
+Active Abilities:
+----------------
+Ninjutsu:
+Throw:
+  type: special
+  power: weapon_dependent
+  mp: 0
+  jpCost: 200
+  description: Throw any weapon as a projectile
+Shadow Walk:
+  type: dungeon
+  effect: stealth_movement
+  mp: 15
+  jpCost: 300
+  description: Move silently through areas undetected
+Wall Walk:
+  type: dungeon
+  effect: traverse_walls
+  mp: 25
+  jpCost: 400
+  description: Walk on walls to bypass obstacles
+Smoke Bomb:
+  type: status
+  effect: blind
+  aoe: true
+  mp: 12
+  jpCost: 250
+  description: Create smoke screen that blinds enemies
+Infiltrate:
+  type: dungeon
+  effect: bypass_enemies
+  mp: 20
+  jpCost: 350
+  description: Sneak past enemy patrols undetected
+Flame Veil:
+  type: magical
+  element: fire
+  power: 1.8
+  mp: 16
+  jpCost: 300
+  description: Fire-based ninjutsu attack
+Water Veil:
+  type: magical
+  element: water
+  power: 1.9
+  mp: 20
+  jpCost: 300
+  description: Water-based ninjutsu attack
+Shadow Stitch:
+  type: status
+  effect: immobilize
+  mp: 18
+  jpCost: 350
+  description: Bind target's shadow to prevent movement
+Mirror Image:
+  type: buff
+  effect: create_decoy
+  mp: 28
+  jpCost: 450
+  description: Create illusory copies to evade attacks
+Assassinate:
+  type: physical
+  power: 3
+  effect: instant_death
+  mp: 45
+  jpCost: 600
+  description: Powerful strike with chance of instant death
+
+Reaction Abilities:
+------------------
+Vanish:
+  chance: 0.3
+  effect: temporary_invisibility
+  jpCost: 400
+  description: Become temporarily invisible when hit
+Shadow Return:
+  chance: 0.25
+  effect: counter_with_status
+  jpCost: 500
+  description: Counter attacks with status effect
+
+Support Abilities:
+-----------------
+Dual Wield:
+  effect: enable_dual_wielding
+  jpCost: 500
+  description: Equip weapons in both hands
+Stealth:
+  effect: improve_sneaking
+  jpCost: 400
+  description: Improved stealth movement and detection avoidance
+
+Requirements:
+------------
+Archer level 3
+Thief level 4
+Geomancer level 2
+
+==================================================
+
+
+Oracle
+======
+
+Description:
+-----------
+Mystical seers who can predict and manipulate future events. Their foresight abilities allow them to anticipate enemy actions and discover hidden paths. In addition to combat support through prophecy, they excel at revealing secrets and preventing ambushes through their precognitive abilities.
+
+Base Stats:
+-----------
+HP: 85
+MP: 95
+PA: 4
+MA: 11
+SP: 7
+EV: 6
+
+Growth Rates:
+-------------
+HP: 25
+MP: 22
+PA: 0.1
+MA: 0.5
+SP: 0.2
+EV: 0.3
+
+Active Abilities:
+----------------
+Divination:
+Divine Sight:
+  type: dungeon
+  effect: predict_encounters
+  mp: 18
+  jpCost: 250
+  description: Foresee upcoming enemy encounters and their patterns
+Premonition:
+  type: special
+  mp: 22
+  jpCost: 300
+  description: See outcomes of actions before taking them
+Enemy Insight:
+  type: special
+  mp: 25
+  jpCost: 400
+  description: Reveal enemy stats and predict next action
+Fate Map:
+  type: dungeon
+  mp: 30
+  jpCost: 450
+  description: Reveal locations of future events and treasures
+Condemn:
+  type: status
+  effect: doom
+  mp: 35
+  jpCost: 500
+  description: Mark target for inevitable defeat
+Star Sight:
+  type: status
+  mp: 38
+  jpCost: 550
+  description: Blind and silence target with starlight
+Calamity:
+  type: status
+  mp: 45
+  jpCost: 650
+  description: Inflict multiple status effects
+Fortune Guard:
+  type: buff
+  effect: predict_critical
+  aoe: true
+  mp: 40
+  jpCost: 600
+  description: Protect allies from critical hits
+Prophecy Shield:
+  type: buff
+  effect: predict_damage
+  aoe: true
+  mp: 50
+  jpCost: 700
+  description: Use future sight to protect from incoming threats
+
+Reaction Abilities:
+------------------
+Prescience:
+  chance: 0.25
+  effect: survive_fatal
+  jpCost: 400
+  description: Chance to survive fatal damage with 1 HP
+Fortune Shield:
+  chance: 0.3
+  effect: prevent_status
+  jpCost: 450
+  description: Chance to prevent status effects
+
+Support Abilities:
+-----------------
+Prophecy:
+  effect: enhance_prediction
+  jpCost: 500
+  description: Improves accuracy of prediction abilities
+Astral Sight:
+  effect: enhance_detection
+  jpCost: 600
+  description: Greatly improves all detection abilities
+
+Requirements:
+------------
+WhiteMage level 2
+
+==================================================
+
+
+Orator
+======
+
+Description:
+-----------
+Masters of persuasion and rhetoric who can influence both allies and enemies through speech. Their unique abilities allow them to negotiate with enemies, boost party morale, and even convince foes to retreat or join their cause.
+
+Base Stats:
+-----------
+HP: 88
+MP: 85
+PA: 5
+MA: 9
+SP: 8
+EV: 7
+
+Growth Rates:
+-------------
+HP: 28
+MP: 18
+PA: 0.2
+MA: 0.4
+SP: 0.3
+EV: 0.3
+
+Active Abilities:
+----------------
+Speechcraft:
+Persuade:
+  type: status
+  effect: charm
+  mp: 25
+  jpCost: 350
+  description: Convince enemy to temporarily join
+Negotiate:
+  type: special
+  mp: 15
+  jpCost: 200
+  description: Convince enemy to give up gil
+Enthrall:
+  type: status
+  effect: confusion
+  mp: 22
+  jpCost: 300
+  description: Confuse target with rhetoric
+Praise:
+  type: buff
+  effect: increase_stats
+  mp: 20
+  jpCost: 250
+  description: Boost ally morale and stats
+Condemn:
+  type: status
+  effect: decrease_stats
+  mp: 20
+  jpCost: 250
+  description: Lower enemy morale and stats
+Peace Talk:
+  type: special
+  mp: 30
+  jpCost: 400
+  description: Attempt to end combat peacefully
+Intimidate:
+  type: status
+  mp: 28
+  jpCost: 450
+  description: Frighten enemy into retreat
+Rallying Cry:
+  type: buff
+  aoe: true
+  mp: 45
+  jpCost: 600
+  description: Powerful party-wide morale boost
+Final Argument:
+  type: special
+  power: 2.5
+  mp: 50
+  jpCost: 750
+  description: Ultimate persuasion technique
+
+Reaction Abilities:
+------------------
+Counter Argue:
+  chance: 0.3
+  effect: reflect_status
+  jpCost: 400
+  description: Chance to reflect status effects
+Diplomatic Immunity:
+  chance: 0.35
+  effect: avoid_damage
+  jpCost: 450
+  description: Chance to avoid damage through negotiation
+
+Support Abilities:
+-----------------
+Negotiator:
+  effect: improve_persuasion
+  jpCost: 500
+  description: Improve success rate of all speechcraft
+Silver Tongue:
+  effect: reduce_mp_cost
+  jpCost: 400
+  description: Reduce MP cost of speechcraft abilities
+
+Requirements:
+------------
+Oracle level 2
+TimeMage level 2
+
+==================================================
+
+
+Samurai
+=======
+
+Description:
+-----------
+Elite warriors who combine martial prowess with spiritual techniques. Masters of the blade who excel at powerful single-target attacks and tactical positioning. Capable of drawing out a weapon's spiritual energy for devastating effects.
+
+Base Stats:
+-----------
+HP: 125
+MP: 70
+PA: 11
+MA: 7
+SP: 7
+EV: 6
+
+Growth Rates:
+-------------
+HP: 42
+MP: 15
+PA: 0.5
+MA: 0.3
+SP: 0.3
+EV: 0.3
+
+Active Abilities:
+----------------
+Draw Out:
+Iaido:
+  type: physical
+  power: 2.4
+  mp: 20
+  jpCost: 300
+  description: Quick-draw technique with high accuracy
+Blade Spirit:
+  type: physical
+  power: 1.8
+  aoe: true
+  mp: 25
+  jpCost: 400
+  description: Area attack that releases sword energy
+Storm Edge:
+  type: physical
+  element: wind
+  power: 2.2
+  mp: 22
+  jpCost: 350
+Demon Slice:
+  type: physical
+  power: 2.6
+  effect: defense_down
+  mp: 28
+  jpCost: 450
+Zen Slash:
+  type: physical
+  power: 2.8
+  effect: armor_pierce
+  mp: 35
+  jpCost: 500
+Soul Blade:
+  type: physical
+  element: holy
+  power: 2.5
+  effect: spirit_drain
+  mp: 32
+  jpCost: 450
+  description: Sword technique that drains spiritual energy
+Meditation:
+  type: buff
+  mp: 25
+  jpCost: 400
+  description: Focus mind to enhance combat abilities
+Binding Blade:
+  type: physical
+  power: 2
+  effect: stop
+  mp: 30
+  jpCost: 400
+Masamune:
+  type: physical
+  power: 3
+  mp: 45
+  jpCost: 600
+  description: Ultimate sword technique with multiple effects
+
+Reaction Abilities:
+------------------
+Third Eye:
+  chance: 0.35
+  effect: anticipate_attack
+  jpCost: 450
+  description: Chance to completely avoid next physical attack
+Retribution:
+  chance: 0.25
+  effect: counter_with_power
+  jpCost: 500
+  description: Counter physical attacks with increased power
+
+Support Abilities:
+-----------------
+Katana Mastery:
+  effect: katana_damage_up
+  jpCost: 500
+Double Handed:
+  effect: enable_two_hand
+  jpCost: 600
+  description: Allows wielding one-handed weapons in both hands for increased damage
+
+Requirements:
+------------
+Knight level 3
+Monk level 4
+Dragoon level 2
+
+==================================================
+
+
+Squire
+======
+
+Description:
+-----------
+Entry-level warriors who form the foundation of military training. While their abilities may seem basic, they excel at fundamental combat techniques and basic battlefield support. Their versatile skill set includes basic healing, equipment maintenance, and tactical awareness, making them surprisingly adaptable in various situations.
+
+Base Stats:
+-----------
+HP: 100
+MP: 50
+PA: 8
+MA: 6
+SP: 8
+EV: 5
+
+Growth Rates:
+-------------
+HP: 30
+MP: 10
+PA: 0.4
+MA: 0.2
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+Basic Skills:
+Throw Stone:
+  type: physical
+  ranged: true
+  power: 1.2
+  mp: 0
+  jpCost: 100
+  description: Basic ranged attack using stones
+Accumulate:
+  type: buff
+  effect: attack_up
+  target: self
+  mp: 0
+  jpCost: 150
+  description: Build up physical strength
+Dash:
+  type: physical
+  power: 1.4
+  mp: 0
+  jpCost: 200
+  description: Quick rushing attack
+Rally Cry:
+  type: buff
+  effect: party_stats_up
+  mp: 15
+  jpCost: 300
+  description: Boost party morale, increasing stats slightly
+First Aid:
+  type: healing
+  power: 1.2
+  mp: 8
+  jpCost: 250
+  description: Basic healing technique
+Focus:
+  type: buff
+  effect: accuracy_up
+  mp: 5
+  jpCost: 200
+  description: Increase accuracy for next attack
+Inspect:
+  type: analyze
+  mp: 12
+  jpCost: 250
+  description: Analyze enemy or object for weaknesses
+Battle Tactics:
+  type: buff
+  effect: party_defense_up
+  mp: 18
+  jpCost: 300
+  description: Grant defensive bonus to nearby allies
+Determination:
+  type: buff
+  effect: survive_fatal
+  mp: 25
+  jpCost: 400
+  description: Chance to survive a fatal blow
+
+Reaction Abilities:
+------------------
+Counter Tackle:
+  chance: 0.25
+  effect: counter_attack
+  jpCost: 300
+  description: Counter physical attacks with a tackle
+Defensive Stance:
+  chance: 0.3
+  effect: reduce_damage
+  jpCost: 250
+  description: Chance to reduce incoming damage
+
+Support Abilities:
+-----------------
+JP Boost:
+  effect: increase_jp_gain
+  jpCost: 300
+  description: Increase JP gained from battles
+Move HP Up:
+  effect: heal_while_moving
+  jpCost: 250
+  description: Recover HP while moving
+
+==================================================
+
+
+Summoner
+========
+
+Description:
+-----------
+Masters of summoning magic who call forth powerful beings from other realms. Specialists in devastating area-of-effect damage and versatile elemental coverage through their various summons. Critical for dealing with powerful threats and providing strategic options through diverse summon effects.
+
+Base Stats:
+-----------
+HP: 90
+MP: 110
+PA: 6
+MA: 12
+SP: 6
+EV: 5
+
+Growth Rates:
+-------------
+HP: 30
+MP: 40
+PA: 0.2
+MA: 0.6
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+Summon Magic:
+Ifrit:
+  type: magical
+  element: fire
+  power: 2.8
+  aoe: true
+  mp: 32
+  jpCost: 400
+  description: Summon fire elemental for massive damage
+Shiva:
+  type: magical
+  element: ice
+  power: 2.6
+  effect: slow
+  aoe: true
+  mp: 30
+  jpCost: 400
+  description: Summon ice queen for damage and slow
+Ramuh:
+  type: magical
+  element: lightning
+  power: 2.7
+  effect: paralyze
+  aoe: true
+  mp: 34
+  jpCost: 400
+  description: Summon thunder god for lightning assault
+Bahamut:
+  type: magical
+  element: non-elemental
+  power: 3.2
+  aoe: true
+  mp: 45
+  jpCost: 800
+  description: Summon dragon king for ultimate destruction
+Carbuncle:
+  type: buff
+  effect: reflect
+  aoe: true
+  mp: 28
+  jpCost: 300
+  description: Summon mystic beast for party reflection
+Titan:
+  type: magical
+  element: earth
+  power: 2.5
+  effect: stun
+  aoe: true
+  mp: 35
+  jpCost: 450
+  description: Summon earth giant for ground-shaking attack
+Leviathan:
+  type: magical
+  element: water
+  power: 3
+  effect: drown
+  aoe: true
+  mp: 40
+  jpCost: 600
+  description: Summon sea serpent for tidal wave
+Phoenix:
+  type: magical
+  element: fire
+  power: 2.4
+  effect: party_raise
+  aoe: true
+  mp: 50
+  jpCost: 800
+  description: Summon immortal bird for revival
+Odin:
+  type: magical
+  element: non-elemental
+  power: 3.5
+  effect: instant_death
+  mp: 45
+  jpCost: 750
+  description: Summon warrior king for devastating strike
+Moogle:
+  type: healing
+  effect: party_heal
+  power: 1.5
+  aoe: true
+  mp: 22
+  jpCost: 250
+  description: Summon helpful moogle for party healing
+
+Reaction Abilities:
+------------------
+Summon Boost:
+  chance: 0.3
+  effect: enhance_next_summon
+  jpCost: 400
+  description: Chance to enhance next summon's power
+Eidolon Shield:
+  chance: 0.25
+  effect: summon_barrier
+  jpCost: 500
+  description: Chance to summon protective barrier when hit
+
+Support Abilities:
+-----------------
+Summon Mastery:
+  effect: reduce_summon_mp_cost
+  jpCost: 600
+  description: Reduces MP cost of summons
+Eidolon Bond:
+  effect: enhance_summons
+  jpCost: 450
+  description: Strengthens summoned creatures
+
+Requirements:
+------------
+BlackMage level 4
+TimeMage level 3
+Oracle level 2
+
+==================================================
+
+
+Thief
+=====
+
+Description:
+-----------
+Masters of stealth and acquisition who excel at obtaining resources through cunning. Their high speed and evasion make them difficult targets, while their stealing abilities provide crucial resources and strategic advantages. In dungeons, they are essential for disarming traps, picking locks, and finding hidden treasures, making them invaluable for exploration and resource gathering.
+
+Base Stats:
+-----------
+HP: 90
+MP: 45
+PA: 8
+MA: 5
+SP: 10
+EV: 9
+
+Growth Rates:
+-------------
+HP: 28
+MP: 10
+PA: 0.3
+MA: 0.2
+SP: 0.5
+EV: 0.4
+
+Active Abilities:
+----------------
+Thievery:
+Steal Gil:
+  type: special
+  mp: 0
+  jpCost: 200
+Steal Item:
+  type: special
+  mp: 0
+  jpCost: 300
+Steal Weapon:
+  type: special
+  mp: 10
+  jpCost: 400
+Steal Heart:
+  type: status
+  effect: charm
+  mp: 18
+  jpCost: 350
+Steal EXP:
+  type: special
+  mp: 25
+  jpCost: 450
+Mug:
+  type: physical
+  power: 1.5
+  effect: damage_and_steal
+  mp: 15
+  jpCost: 400
+Trapsmith:
+  type: dungeon
+  mp: 18
+  jpCost: 350
+  description: Detect and safely disarm traps in the area
+Lockpick:
+  type: dungeon
+  effect: unlock
+  mp: 10
+  jpCost: 200
+  description: Pick locks on doors and chests
+Pilfer:
+  type: special
+  mp: 20
+  jpCost: 500
+  description: Steals positive status effects from target
+
+Reaction Abilities:
+------------------
+Vigilance:
+  chance: 0.3
+  effect: detect_ambush
+  jpCost: 300
+  description: Chance to detect and prevent surprise attacks
+Sticky Fingers:
+  chance: 0.25
+  effect: counter_steal
+  jpCost: 400
+  description: Chance to steal items when hit
+
+Support Abilities:
+-----------------
+Treasure Hunter:
+  effect: increase_steal_rate
+  jpCost: 400
+  description: Improves success rate of stealing abilities
+Trap Mastery:
+  jpCost: 450
+  description: Enhances trap detection range and grants chance to auto-disarm
+
+Requirements:
+------------
+Archer level 2
+
+==================================================
+
+
+TimeMage
+========
+
+Description:
+-----------
+Enigmatic spellcasters who manipulate the flow of time itself. Their mastery over temporal magic allows them to speed allies, slow enemies, and even stop time briefly. In combat, they excel at battlefield control through time manipulation. Their unique abilities to reset rooms and create temporal checkpoints make them invaluable for dungeon exploration and puzzle-solving.
+
+Base Stats:
+-----------
+HP: 82
+MP: 98
+PA: 4
+MA: 11
+SP: 7
+EV: 5
+
+Growth Rates:
+-------------
+HP: 22
+MP: 24
+PA: 0.1
+MA: 0.5
+SP: 0.3
+EV: 0.2
+
+Active Abilities:
+----------------
+Time Magic:
+Haste:
+  type: buff
+  effect: haste
+  mp: 24
+  jpCost: 300
+  description: Increase target's speed
+Slow:
+  type: status
+  effect: slow
+  mp: 20
+  jpCost: 300
+  description: Decrease target's speed
+Stop:
+  type: status
+  effect: stop
+  mp: 30
+  jpCost: 500
+  description: Freeze target in time
+Float:
+  type: buff
+  effect: levitate
+  mp: 18
+  jpCost: 200
+  description: Allow target to float above ground
+Gravity:
+  type: magical
+  effect: gravity_damage
+  mp: 32
+  jpCost: 400
+  description: Deal damage based on target's max HP
+Time Slip:
+  type: dungeon
+  effect: reset_room
+  mp: 35
+  jpCost: 450
+  description: Reset a room to its original state
+Temporal Anchor:
+  type: dungeon
+  effect: create_checkpoint
+  mp: 40
+  jpCost: 500
+  description: Create a temporal checkpoint to return to
+Quick:
+  type: special
+  mp: 45
+  jpCost: 800
+  description: Grant an immediate extra turn
+Meteor:
+  type: magical
+  power: 3.5
+  aoe: true
+  mp: 60
+  jpCost: 900
+  description: Call down devastating meteors
+
+Reaction Abilities:
+------------------
+Time Ward:
+  chance: 0.3
+  effect: resist_time_magic
+  jpCost: 400
+  description: Chance to resist time magic
+Temporal Shift:
+  chance: 0.25
+  effect: evade
+  jpCost: 500
+  description: Phase through time to avoid damage
+
+Support Abilities:
+-----------------
+Time Sense:
+  effect: initiative_up
+  jpCost: 300
+  description: Improve chance of acting first
+Temporal Mastery:
+  effect: enhance_time_magic
+  jpCost: 600
+  description: Strengthen all time magic effects
+
+Requirements:
+------------
+BlackMage level 2
+
+==================================================
+
+
+WhiteMage
+=========
+
+Description:
+-----------
+Primary healers and support specialists who wield holy magic. Masters of recovery magic, status ailment removal, and protective enchantments. Essential for party survival with powerful healing spells and defensive buffs. In dungeons, they excel at creating safe zones through purification magic and are particularly effective at dealing with undead threats and cursed areas.
+
+Base Stats:
+-----------
+HP: 85
+MP: 90
+PA: 4
+MA: 10
+SP: 6
+EV: 5
+
+Growth Rates:
+-------------
+HP: 25
+MP: 20
+PA: 0.1
+MA: 0.5
+SP: 0.2
+EV: 0.2
+
+Active Abilities:
+----------------
+White Magic:
+Cure:
+  type: healing
+  power: 1.8
+  mp: 14
+  jpCost: 200
+Cura:
+  type: healing
+  power: 2.4
+  mp: 20
+  jpCost: 400
+Curaga:
+  type: healing
+  power: 3
+  aoe: true
+  mp: 40
+  jpCost: 600
+Raise:
+  type: healing
+  effect: revive
+  mp: 30
+  jpCost: 500
+Reraise:
+  type: buff
+  effect: auto_revive
+  mp: 40
+  jpCost: 800
+Esuna:
+  type: special
+  mp: 18
+  jpCost: 300
+Protect:
+  type: buff
+  effect: protect
+  mp: 15
+  jpCost: 250
+Shell:
+  type: buff
+  effect: shell
+  mp: 15
+  jpCost: 250
+Holy:
+  type: magical
+  element: holy
+  power: 3.2
+  mp: 56
+  jpCost: 900
+Regen:
+  type: buff
+  effect: heal_over_time
+  mp: 22
+  jpCost: 400
+Dispel:
+  type: special
+  mp: 25
+  jpCost: 350
+Sacred Purification:
+  type: dungeon
+  aoe: true
+  mp: 38
+  jpCost: 500
+  description: Creates a purified holy zone that cleanses and protects
+Banish:
+  type: magical
+  element: holy
+  power: 2.5
+  effect: undead_repel
+  mp: 30
+  jpCost: 450
+  description: Forces undead creatures to flee
+
+Reaction Abilities:
+------------------
+Auto-Regen:
+  chance: 0.4
+  effect: regen
+  jpCost: 400
+  description: Chance to gain regen when damaged
+Divine Grace:
+  chance: 0.25
+  effect: enhance_healing
+  jpCost: 450
+  description: Chance to enhance healing received
+
+Support Abilities:
+-----------------
+Healing Boost:
+  effect: increase_heal_power
+  jpCost: 500
+  description: Increases healing power
+MP Recovery:
+  effect: mp_regen_walking
+  jpCost: 600
+  description: Gradually restore MP while walking
+
+Requirements:
+------------
+Chemist level 2
+
+==================================================
+

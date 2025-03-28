@@ -1,0 +1,420 @@
+Support Ability Implementation Analysis
+====================================
+
+
+Archer
+------
+
+Concentrate:
+  Effect: accuracy_up
+  Name occurrences: 0
+  Effect occurrences: 2
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+Precise Aim:
+  Effect: increase_critical
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+
+Bard
+----
+
+Song Mastery:
+  Effect: extend_song_duration
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+Resonance:
+  Effect: enhance_song_power
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+
+BlackMage
+---------
+
+Magic Boost:
+  Effect: increase_magic_power
+  Name occurrences: 0
+  Effect occurrences: 3
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+Dual Cast:
+  Effect: cast_twice
+  Name occurrences: 2
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+
+Calculator
+----------
+
+Arcane Math:
+  Effect: enhance_math_magic
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+Quick Calculate:
+  Effect: reduce_cast_time
+  Name occurrences: 1
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+
+Chemist
+-------
+
+Item Boost:
+  Effect: improve_item_effect
+  Name occurrences: 3
+  Effect occurrences: 2
+  Support handling: 0
+  Effect handling: 0
+  Total references: 5
+
+Medicine Lore:
+  Effect: improve_healing
+  Name occurrences: 1
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+
+Dancer
+------
+
+Dance Mastery:
+  Effect: increase_dance_success
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+Performance Focus:
+  Effect: extend_dance_duration,increase_dance_potency
+  Name occurrences: 1
+  Effect occurrences: 9
+  Support handling: 0
+  Effect handling: 0
+  Total references: 10
+
+
+Dragoon
+-------
+
+Dragon Might:
+  Effect: jump_damage_up
+  Name occurrences: 0
+  Effect occurrences: 3
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+Sure Landing:
+  Effect: safe_landing
+  Name occurrences: 0
+  Effect occurrences: 2
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+
+Geomancer
+---------
+
+Terrain Mastery:
+  Effect: enhance_terrain_magic
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+Nature Step:
+  Effect: ignore_terrain
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+
+Knight
+------
+
+Equip Shield:
+  Effect: enable_shield
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+Stoneskin:
+  Effect: damage_reduction
+  Name occurrences: 0
+  Effect occurrences: 3
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+
+Mime
+----
+
+Experienced Mimic:
+  Effect: improve_copy_accuracy
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+
+Monk
+----
+
+Brawler:
+  Effect: unarmed_damage_up
+  Name occurrences: 0
+  Effect occurrences: 3
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+Martial Mastery:
+  Effect: improve_martial_arts
+  Name occurrences: 0
+  Effect occurrences: 3
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+
+Ninja
+-----
+
+Dual Wield:
+  Effect: enable_dual_wielding
+  Name occurrences: 0
+  Effect occurrences: 2
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+Stealth:
+  Effect: improve_sneaking
+  Name occurrences: 1
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+
+Oracle
+------
+
+Prophecy:
+  Effect: enhance_prediction
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+Astral Sight:
+  Effect: enhance_detection
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+
+Orator
+------
+
+Negotiator:
+  Effect: improve_persuasion
+  Name occurrences: 3
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 4
+
+Silver Tongue:
+  Effect: reduce_mp_cost
+  Name occurrences: 1
+  Effect occurrences: 2
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+
+Samurai
+-------
+
+Katana Mastery:
+  Effect: katana_damage_up
+  Name occurrences: 0
+  Effect occurrences: 3
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+Double Handed:
+  Effect: enable_two_hand
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+
+Squire
+------
+
+JP Boost:
+  Effect: increase_jp_gain
+  Name occurrences: 2
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+Move HP Up:
+  Effect: heal_while_moving
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+
+Summoner
+--------
+
+Summon Mastery:
+  Effect: reduce_summon_mp_cost
+  Name occurrences: 0
+  Effect occurrences: 2
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+Eidolon Bond:
+  Effect: enhance_summons
+  Name occurrences: 0
+  Effect occurrences: 3
+  Support handling: 0
+  Effect handling: 0
+  Total references: 3
+
+
+Thief
+-----
+
+Treasure Hunter:
+  Effect: increase_steal_rate
+  Name occurrences: 1
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+Trap Mastery:
+  Effect: extended_trap_detection,auto_disarm
+  Name occurrences: 0
+  Effect occurrences: 2
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+
+TimeMage
+--------
+
+Time Sense:
+  Effect: initiative_up
+  Name occurrences: 1
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+Temporal Mastery:
+  Effect: enhance_time_magic
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+
+WhiteMage
+---------
+
+Healing Boost:
+  Effect: increase_heal_power
+  Name occurrences: 1
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 2
+
+MP Recovery:
+  Effect: mp_regen_walking
+  Name occurrences: 0
+  Effect occurrences: 1
+  Support handling: 0
+  Effect handling: 0
+  Total references: 1
+
+
+Summary
+=======
+
+Total support abilities: 39
+Implemented abilities: 39
+Missing abilities: 0
+
+Multiple Handler Warnings:
+------------------------
+- Archer: Concentrate (accuracy_up) - 2 effect handlers
+- BlackMage: Magic Boost (increase_magic_power) - 3 effect handlers
+- Chemist: Item Boost (improve_item_effect) - 2 effect handlers
+- Dancer: Performance Focus (extend_dance_duration,increase_dance_potency) - 9 effect handlers
+- Dragoon: Dragon Might (jump_damage_up) - 3 effect handlers
+- Dragoon: Sure Landing (safe_landing) - 2 effect handlers
+- Knight: Stoneskin (damage_reduction) - 3 effect handlers
+- Monk: Brawler (unarmed_damage_up) - 3 effect handlers
+- Monk: Martial Mastery (improve_martial_arts) - 3 effect handlers
+- Ninja: Dual Wield (enable_dual_wielding) - 2 effect handlers
+- Orator: Silver Tongue (reduce_mp_cost) - 2 effect handlers
+- Samurai: Katana Mastery (katana_damage_up) - 3 effect handlers
+- Summoner: Summon Mastery (reduce_summon_mp_cost) - 2 effect handlers
+- Summoner: Eidolon Bond (enhance_summons) - 3 effect handlers
+- Thief: Trap Mastery (extended_trap_detection,auto_disarm) - 2 effect handlers

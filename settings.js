@@ -5,12 +5,15 @@ function openSettings() {
 
   const sections = {
       'UI': ['column_width', 'topleft_height', 'topright_height'],
-      'Game Settings': [ 'affinity_threshold', 'positive_affinities', 'negative_affinities',
-        'positive_creature_affinities', 'negative_creature_affinities', 'sentient_string',
-        'creature_string', 'sentient_generation_limit', 'creature_generation_limit' ],
+      'Game Settings': [ 
+        'writing_style', 'sentient_string', 'creature_string', 
+        'sentient_generation_limit', 'creature_generation_limit',
+        'affinity_threshold', 'positive_affinities', 'negative_affinities',
+        'positive_creature_affinities', 'negative_creature_affinities',
+        ],
       'World Generation': [
           'world_description', 'starting_area', 'starting_area_description', 
-          'current_time', 'climate'
+          'current_time', 'climate', 'world_map_visual', 'world_map_seed'
       ],
       'Player Details': [
           'player_name', 'player_description', 'player_visual', 'player_seed',
@@ -24,12 +27,17 @@ function openSettings() {
         'summary_bonus_layer_chunk', 'summary_max_layers'
       ],
       'Image Generation': [
-        'autogenerate_prompts', 'concurrent_art', 'sdAPI', 'default_prompt', 
+        'autogenerate_prompts', 'concurrent_art', 'sdAPItype',
+        'sdAPI', 'default_prompt', 
         'default_negative_prompt', 'person_prompt', 'person_negprompt',
           'creature_prompt', 'creature_negprompt',
           'thing_prompt', 'thing_negprompt',
           'sd_width', 'sd_height', 'steps', 'cfg_scale',
           'save_images', 'sampler_name', 'seed_variation'
+      ],
+      'Text To Speech': [
+          'tts_enable', 'tts_type', 'tts_api', 'tts_api_key', 'tts_default_male',
+          'tts_default_female', 'tts_narrator', 'tts_player', 'tts_max_length'
       ],
       'Text Generation': [
           'story_param', 'question_param', 'creative_question_param',
@@ -44,7 +52,7 @@ function openSettings() {
           'action_string', 'generateSublocationsPrompt', 'generateEntitiesPrompt',
           'generateVisualPrompt', 'addPersonDescriptionPrompt',
           'addThingDescriptionPrompt', 'addCreatureDescriptionPrompt',
-          'outputCheckPrompt',
+          'outputCheckPrompt', 'affinityGainCheck', 'affinityLossCheck',
           'outputAutoCheckPrompt', 'consequencePrompt',
           'moveToAreaProximityPrompt', 'moveToAreaPeoplePrompt',
           'entityLeavesAreaPrompt', 'generateNewDescription'
@@ -71,71 +79,152 @@ function openSettings() {
   // Helper function for tooltips
   const createTooltip = (key) => {
     const tooltips = {
-      'column_width': 'Width of the left side panel in pixels',
-      'topleft_height': 'Height of the top quadrant in pixels',
-      'topright_height': 'Height of the middle quadrant in pixels',
-      'world_description': 'Description of the world setting',
-      'starting_area': 'Name of the starting area',
-      'starting_area_description': 'Description of the starting area',
-      'current_time': 'Current time in the game world',
+      // UI Settings
+      'column_width': 'Width of the left column',
+      'topleft_height': 'Height of the top left quadrant',
+      'topright_height': 'Height of the top right quadrant',
+      
+      // Game Settings
+      'writing_style': 'Writing style for generated text (e.g., "epic fantasy", "sensory immersion", "dark gritty realism")',
+      'sentient_string': 'Label used to refer to intelligent beings (e.g., "People")',
+      'creature_string': 'Label used to refer to non-intelligent beings (e.g., "Creatures")',
+      'sentient_generation_limit': '4 is max, can also enter a % and it will roll that chance 4 times',
+      'creature_generation_limit': '4 is max, can also enter a % and it will roll that chance 4 times',
+      'affinity_threshold': 'Number of interactions needed to increase relationship level',
+      'positive_affinities': 'List of increasingly positive relationship states',
+      'negative_affinities': 'List of increasingly negative relationship states',
+      'positive_creature_affinities': 'List of increasingly positive creature relationship states',
+      'negative_creature_affinities': 'List of increasingly negative creature relationship states',
+      
+      // World Generation Settings
+      'world_description': 'Overall description of the game world setting',
+      'starting_area': 'Name of the initial area where gameplay begins, a / can be sued to being in areas within areas',
+      'starting_area_description': 'Detailed description of the starting area',
+      'current_time': 'Year can be arbitary number, but must be Y-MM-DD HH:MM:SS format',
+      'climate': '"temperate" is default and will change by month, blank entry will disable, anything else will override if you want a nuclear winter or eternal summer',
+      
+      // Player Details
       'player_name': 'Name of the player character',
-      'player_description': 'Description of the player character',
-      'player_visual': 'Visual description of the player character',
-      'player_seed': 'Seed value for generating player character visuals',
-      'rule_set': 'Rule set used for the game',
-      'ruleprompt_fae_action1': 'Prompt for determining actions in the Fate Accelerated rule set',
-      'charsheet_fae': 'Character sheet for the Fate Accelerated rule set',
-      'sdAPI': 'URL of the Stable Diffusion API',
-      'default_prompt': 'Default prompt for image generation',
-      'default_negative_prompt': 'Default negative prompt for image generation',
-      'person_prompt': 'Base prompt for generating character images',
-      'person_negprompt': 'Negative prompt to avoid unwanted elements in character images',
-      'creature_prompt': 'Base prompt for generating creature images',
-      'creature_negprompt': 'Negative prompt to avoid unwanted elements in creature images',
-      'thing_prompt': 'Base prompt for generating object and item images',
-      'thing_negprompt': 'Negative prompt to avoid unwanted elements in object images',
+      'player_description': 'General description of the player character',
+      'player_visual': 'Detailed visual description of the player character',
+      'player_seed': 'Seed value for consistent player character visuals',
+      'player_local_movement': 'Verb used for local movement (e.g., "walks, slithers, lazily lumbers")',
+      'player_distant_movement': 'Verb used for distant movement: rides horse, teleports, walks, etc.',
+      'charsheet_fae': 'Character sheet data for Fate Accelerated system',
+      
+      // Rule System
+      'rule_set': 'Active game rule system (e.g., "Fate Accelerated")',
+      'ruleprompt_fae_action1': 'Prompt for determining action difficulty in FAE',
+      'ruleprompt_fae_action2': 'Prompt for determining action approach in FAE',
+      'sampleFAEAction': 'Example of a FAE action resolution',
+      
+      // Summary Settings
+      'summary_prompt': 'Template for generating story summaries',
+      'summary_first_layer_max': 'Maximum entries in first summary layer',
+      'summary_first_layer_chunk': 'Number of entries per chunk in first layer',
+      'summary_second_layer_max': 'Maximum entries in second summary layer',
+      'summary_second_layer_chunk': 'Number of entries per chunk in second layer',
+      'summary_bonus_layer_max': 'Maximum entries in bonus summary layer',
+      'summary_bonus_layer_chunk': 'Number of entries per chunk in bonus layer',
+      'summary_max_layers': 'Maximum number of summary layers',
+      
+      // Image Generation
+      'autogenerate_prompts': 'Whether to generate distinct image prompts, possibly better suited to AI, or save the LLM use and just use description',
+      'concurrent_art': 'Allow images to generate simultaneously with text generation',
+      'sdAPItype': 'Type of Stable Diffusion API to use, ignored at moment and a1111 like is assumed',
+      'sdAPI': 'URL of the Stable Diffusion API endpoint',
+      'default_prompt': 'Base prompt for all image generation',
+      'default_negative_prompt': 'Base negative prompt for all image generation',
+      'person_prompt': 'Additional prompt elements for generating person images',
+      'person_negprompt': 'Additional negative prompt elements for person images',
+      'creature_prompt': 'Additional prompt elements for generating creature images',
+      'creature_negprompt': 'Additional negative prompt elements for creature images',
+      'thing_prompt': 'Additional prompt elements for generating object images',
+      'thing_negprompt': 'Additional negative prompt elements for object images',
       'sd_width': 'Width of generated images in pixels',
       'sd_height': 'Height of generated images in pixels',
-      'steps': 'Number of steps for image generation',
-      'cfg_scale': 'CFG scale for image generation',
-      'save_images': 'Whether to save generated images',
-      'sampler_name': 'Name of the sampler used for image generation',
-      'seed_variation': 'Variation in seed values for image generation',
-      'story_param': 'Parameters for story text generation',
-      'question_param': 'Parameters for question text generation',
-      'creative_question_param': 'Parameters for creative question text generation',
-      'output_length': 'Length of the generated output',
-      'full_context': 'Full context information for text generation',
-      'generateAreaDescriptionPrompt': 'Prompt for generating area descriptions',
-      'areaContext': 'Context information for the current area',
-      'areaPeopleContext': 'Context information for people in the current area',
-      'areaFollowerContext': 'Context information for followers in the current area',
-      'areaThingsContext': 'Context information for things in the current area',
-      'areaCreaturesContext': 'Context information for creatures in the current area',
-      'areaPathsContext': 'Context information for paths or exits in the current area',
-      'areaTimeContext': 'Context information for the time in the current area',
+      'steps': 'Number of inference steps for image generation',
+      'cfg_scale': 'CFG scale for image generation (higher = more prompt adherence)',
+      'save_images': 'Whether to save generated images to disk',
+      'sampler_name': 'Name of the sampling algorithm to use',
+      'seed_variation': 'Adds random factor to seed for hopefully only slight variations for an entity',
+      
+      // Text to Speech
+      'tts_enable': 'Enable text-to-speech functionality',
+      'tts_type': 'Type of TTS service to use, only kobold support for now',
+      'tts_api': 'URL of the TTS API endpoint',
+      'tts_api_key': 'API key for TTS service',
+      'tts_default_male': 'Default voice for male characters',
+      'tts_default_female': 'Default voice for female characters',
+      'tts_narrator': 'Voice used for narrator text',
+      'tts_player': 'Voice used for player character',
+      'tts_max_length': 'Maximum text length for TTS conversion',
+      
+      // Text Generation
+      'story_param': 'Parameters for story generation model',
+      'question_param': 'Parameters for question answering model',
+      'creative_question_param': 'Parameters for creative question answering',
+      'summary_param': 'Parameters for summary generation',
+      'output_length': 'Desired length of generated text for story coniuations',
+      
+      // Text Prompts
+      'common_names': 'List of commonly used character names to try and exclude',
+      'max_context_entries': 'Maximum number of context entries to maintain',
+      'max_summary_entries': 'Maximum number of summary entries to maintain',
+      'full_context': 'Template for full context construction',
+      'generateAreaDescriptionPrompt': 'Template for generating area descriptions',
+      'areaContext': 'Template for area context information',
+      'areaPeopleContext': 'Template for describing people in an area',
+      'areaFollowerContext': 'Template for describing followers in an area',
+      'areaThingsContext': 'Template for describing objects in an area',
+      'areaCreaturesContext': 'Template for describing creatures in an area',
+      'areaPathsContext': 'Template for describing area exits and paths',
+      'areaTimeContext': 'Template for describing current time in area',
       'subLocationFormat': 'Format for sub-location descriptions',
       'entityFormat': 'Format for entity descriptions',
-      'action_string': 'String describing the player\'s action',
-      'generateSublocationsPrompt': 'Prompt for generating sub-locations',
-      'generateEntitiesPrompt': 'Prompt for generating entities',
-      'generateVisualPrompt': 'Prompt for generating visual descriptions',
-      'addPersonDescriptionPrompt': 'Prompt for adding person descriptions',
-      'addThingDescriptionPrompt': 'Prompt for adding thing descriptions',
-      'addCreatureDescriptionPrompt': 'Prompt for adding creature descriptions',
-      'outputCheckPrompt': 'Prompt for checking the output',
-      'outputAutoCheckPrompt': 'Prompt for automatically checking the output',
-      'consequencePrompt': 'Prompt for determining consequences',
-      'moveToAreaProximityPrompt': 'Prompt for determining proximity to areas',
-      'moveToAreaPeoplePrompt': 'Prompt for determining people moving with the player',
-      'entityLeavesAreaPrompt': 'Prompt for determining entities leaving the area',
-      'generateNewDescription': 'Prompt for generating new descriptions',
-      'sampleSublocations': 'Sample sub-locations for testing',
-      'sampleEntities': 'Sample entities for testing',
-      'sampleQuestions': 'Sample questions for testing'
-  };
+      'action_string': 'Template for describing player actions',
+      'generateSublocationsPrompt': 'Template for generating sub-locations',
+      'generateEntitiesPrompt': 'Template for generating entities',
+      'generateVisualPrompt': 'Template for generating visual descriptions',
+      'addPersonDescriptionPrompt': 'Template for adding person descriptions',
+      'addThingDescriptionPrompt': 'Template for adding object descriptions',
+      'addCreatureDescriptionPrompt': 'Template for adding creature descriptions',
+      'outputCheckPrompt': 'Template for checking output validity',
+      'outputAutoCheckPrompt': 'Template for automatic output checking',
+      'consequencePrompt': 'Template for determining action consequences',
+      'moveToAreaProximityPrompt': 'Template for checking area proximity',
+      'moveToAreaPeoplePrompt': 'Template for determining who moves with player',
+      'entityLeavesAreaPrompt': 'Template for determining entity movement',
+      'generateNewDescription': 'Template for updating entity descriptions',
+      
+      // Sample Data
+      'sampleSublocations': 'Example sub-location generation data',
+      'sampleEntities': 'Example entity generation data',
+      'sampleQuestions': 'Example question and answer data',
+      
+      // Text Generation API Settings
+      'textAPI': 'URL of the text generation API',
+      'textAPItype': 'Type of text generation API to use',
+      'apiKey': 'API key for text generation service',
+      'model': 'Model name/ID for text generation',
+      'max_context_length': 'Maximum context length for text generation',
+      'max_length': 'Maximum length of generated text',
+      'text_prompt': 'Template for text generation prompts',
+      'stop_sequence': 'Sequences that stop text generation',
+      'system_prompt': 'System-level prompt for text generation',
+      'quiet': 'Whether to suppress API output',
+      'rep_pen': 'Repetition penalty factor',
+      'rep_pen_range': 'Range for repetition penalty',
+      'rep_pen_slope': 'Slope for repetition penalty',
+      'temperature': 'Temperature for text generation randomness',
+      'tfs': 'Tail free sampling parameter',
+      'top_a': 'Top-A sampling parameter',
+      'top_k': 'Top-K sampling parameter',
+      'top_p': 'Top-P (nucleus) sampling parameter',
+      'typical': 'Typical sampling parameter'
+    };
   
-      return tooltips[key] || 'Configure this setting';
+    return tooltips[key] || 'Configure this setting';
   };
 
   // Process settings and create sections
@@ -156,24 +245,21 @@ function openSettings() {
           let section = sectionsContainer.querySelector(`.settings-section[data-section="${sectionName}"]`);
           if (!section) {
               section = document.createElement('div');
-              section.className = 'settings-section';
+              section.className = 'settings-section collapsed'; // Add collapsed class by default
               section.dataset.section = sectionName;
-              
 
               const header = document.createElement('div');
               header.className = 'settings-section-header';
-              header.innerHTML = `<span>${sectionName}</span><span class="section-toggle">▼</span>`;
+              header.innerHTML = `<span>${sectionName}</span><span class="section-toggle" style="transform: rotate(-90deg)">▼</span>`; // Start rotated
               header.onclick = (e) => {
                   const isCollapsed = section.classList.toggle('collapsed');
                   const toggle = header.querySelector('.section-toggle');
                   toggle.style.transform = isCollapsed ? 'rotate(-90deg)' : '';
                   e.stopPropagation();
               };
-              
 
               const content = document.createElement('div');
               content.className = 'settings-section-content';
-              
 
               section.appendChild(header);
               section.appendChild(content);
@@ -255,7 +341,12 @@ function openSettings() {
   resetButton.textContent = 'Reset to Defaults';
   resetButton.className = 'btn-secondary';
   resetButton.type = 'button'; // Explicitly set type to button
-  resetButton.onclick = resetSettings;
+  resetButton.onclick = (e) => {
+    e.preventDefault();
+        loadDefaultSettings();
+        overrideSettings();
+        closeSettings();
+  };
 
   actionButtons.appendChild(saveButton);
   actionButtons.appendChild(cancelButton);
@@ -294,12 +385,6 @@ function openSettings() {
 
 function closeSettings() {
   document.getElementById('settingsOverlay').style.display = 'none';
-}
-
-function resetSettings() {
-  loadDefaultSettings();
-  overrideSettings();
-  closeSettings();
 }
 
 function saveSettings() {
@@ -348,7 +433,13 @@ function saveSettings() {
       document.getElementById('q2').style.height = settings.topright_height;
       document.getElementById('q3').style.height = `calc(100vh - ${settings.topleft_height} - .5vh)`;
       document.getElementById('q4').style.height = `calc(100vh - ${settings.topright_height} - .5vh)`;
-      document.querySelector('.content').style.gridTemplateColumns = `${settings.column_width} .5vh 1fr`;
+    // Update flex properties instead of grid template columns
+    const leftSide = document.getElementById('left');
+    const rightSide = document.getElementById('right');
+    if (leftSide && rightSide) {
+        leftSide.style.flex = `0 0 ${settings.column_width}`;
+        rightSide.style.flex = '1';
+    }
   } catch (e) {
       console.error('Error applying visual settings:', e);
   }

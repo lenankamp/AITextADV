@@ -1,0 +1,174 @@
+
+=== Test Character Creation and Basic Job Setup ===
+Initial character state:
+Current job ID: Squire
+Initial jobs data: {
+  "Squire": {
+    "level": 1,
+    "jp": 0,
+    "spentJp": 0,
+    "mastered": false,
+    "learnedAbilities": {
+      "active": {},
+      "reaction": {},
+      "support": {}
+    }
+  }
+}
+Available JOBS: {
+  "Squire": "Squire",
+  "Chemist": "Chemist",
+  "Knight": "Knight",
+  "Archer": "Archer",
+  "WhiteMage": "WhiteMage",
+  "BlackMage": "BlackMage",
+  "Monk": "Monk",
+  "Thief": "Thief",
+  "Oracle": "Oracle",
+  "TimeMage": "TimeMage",
+  "Geomancer": "Geomancer",
+  "Dragoon": "Dragoon",
+  "Summoner": "Summoner",
+  "Orator": "Orator",
+  "Samurai": "Samurai",
+  "Ninja": "Ninja",
+  "Calculator": "Calculator",
+  "Dancer": "Dancer",
+  "Bard": "Bard",
+  "Mime": "Mime"
+}
+✓ Character starts as Squire
+
+Learning Squire abilities:
+Squire abilities learned: true, true, true, true
+✓ Successfully learned Squire abilities
+Available Squire abilities: {
+  "active": {
+    "ATTACK": {
+      "name": "Attack",
+      "type": "physical",
+      "power": 1,
+      "mp": 0,
+      "description": "Basic physical attack"
+    },
+    "THROW_STONE": {
+      "name": "Throw Stone",
+      "type": "physical",
+      "ranged": true,
+      "power": 1.2,
+      "mp": 0,
+      "jpCost": 100,
+      "description": "Basic ranged attack using stones"
+    },
+    "ACCUMULATE": {
+      "name": "Accumulate",
+      "type": "support",
+      "effect": "attack_up",
+      "mp": 0,
+      "jpCost": 150,
+      "description": "Build up physical strength"
+    }
+  },
+  "reaction": {
+    "COUNTER_TACKLE": {
+      "name": "Counter Tackle",
+      "chance": 0.25,
+      "effect": "counter_attack",
+      "jpCost": 300,
+      "description": "Counter physical attacks with a tackle"
+    }
+  },
+  "support": [
+    {
+      "jobId": "Squire",
+      "abilityId": "JP_BOOST",
+      "name": "JP Boost",
+      "effect": "increase_jp_gain",
+      "jpCost": 300,
+      "description": "Increase JP gained from battles"
+    }
+  ]
+}
+✓ Squire abilities are available
+
+Changing to Knight and learning abilities:
+✓ Successfully changed to Knight job
+Knight abilities learned: true, true, true, true
+✓ Successfully learned Knight abilities
+
+Setting Squire as secondary ability set:
+✓ Successfully set Squire as secondary job
+Final available abilities: {
+  "active": {
+    "ATTACK": {
+      "name": "Attack",
+      "type": "physical",
+      "power": 1,
+      "mp": 0,
+      "description": "Basic physical attack"
+    },
+    "SLASH_BLADE": {
+      "name": "Slash Blade",
+      "type": "physical",
+      "power": 2,
+      "mp": 15,
+      "jpCost": 200,
+      "description": "Basic powerful sword attack"
+    },
+    "BREAK_ARMOR": {
+      "name": "Break Armor",
+      "type": "physical",
+      "power": 1.2,
+      "effect": "defense_down",
+      "mp": 18,
+      "jpCost": 250,
+      "description": "Reduces target defense"
+    },
+    "THROW_STONE": {
+      "name": "Throw Stone",
+      "type": "physical",
+      "ranged": true,
+      "power": 1.2,
+      "mp": 0,
+      "jpCost": 100,
+      "description": "Basic ranged attack using stones"
+    },
+    "ACCUMULATE": {
+      "name": "Accumulate",
+      "type": "support",
+      "effect": "attack_up",
+      "mp": 0,
+      "jpCost": 150,
+      "description": "Build up physical strength"
+    }
+  },
+  "reaction": {
+    "PARRY": {
+      "name": "Parry",
+      "chance": 0.35,
+      "effect": "protect",
+      "jpCost": 400,
+      "description": "Chance to reduce physical damage"
+    }
+  },
+  "support": [
+    {
+      "jobId": "Knight",
+      "abilityId": "EQUIP_SHIELD",
+      "name": "Equip Shield",
+      "effect": "enable_shield",
+      "jpCost": 300,
+      "description": "Allows equipping of shields"
+    }
+  ]
+}
+✓ Both Knight and Squire abilities are available
+
+=== Basic Equipment Test ===
+✓ Successfully equipped sword
+✓ Sword is properly equipped in main hand
+
+=== Test Results ===
+Total Tests: 9
+Passed: 9
+Failed: 0

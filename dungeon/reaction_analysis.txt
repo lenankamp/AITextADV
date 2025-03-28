@@ -1,0 +1,342 @@
+Reaction Ability Usage Analysis
+============================
+
+
+Archer
+======
+
+Archer Guard:
+  Effect: ranged_defense_up
+  Name occurrences: 0
+  Effect occurrences: 4
+  Total references: 4
+
+Counter Shot:
+  Effect: counter_shot
+  Name occurrences: 0
+  Effect occurrences: 2
+  Total references: 2
+
+
+Bard
+====
+
+Perfect Pitch:
+  Effect: counter_with_song
+  Name occurrences: 0
+  Effect occurrences: 2
+  Total references: 2
+
+Harmony Shield:
+  Effect: shell
+  Name occurrences: 0
+  Effect occurrences: 5
+  Total references: 5
+
+
+BlackMage
+=========
+
+Magic Shield:
+  Effect: shell
+  Name occurrences: 0
+  Effect occurrences: 5
+  Total references: 5
+
+Spell Return:
+  Effect: reflect
+  Name occurrences: 0
+  Effect occurrences: 4
+  Total references: 4
+
+
+Calculator
+==========
+
+Absorb MP:
+  Effect: mp_drain
+  Name occurrences: 0
+  Effect occurrences: 4
+  Total references: 4
+
+Numeric Guard:
+  Effect: number_defense
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+
+Chemist
+=======
+
+Auto Potion:
+  Effect: use_potion_when_hurt
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+Quick Pocket:
+  Effect: free_item_use
+  Name occurrences: 1
+  Effect occurrences: 2
+  Total references: 3
+
+
+Dancer
+======
+
+Rhythm Sense:
+  Effect: evade_melee
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+Moving Grace:
+  Effect: counter_with_dance
+  Name occurrences: 0
+  Effect occurrences: 2
+  Total references: 2
+
+
+Dragoon
+=======
+
+Dragon Spirit:
+  Effect: nullify_air_damage
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+Aerial Recovery:
+  Effect: recover_fall
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+
+Geomancer
+=========
+
+Earth Embrace:
+  Effect: terrain_heal
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+Nature Shield:
+  Effect: terrain_defense
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+
+Knight
+======
+
+Parry:
+  Effect: protect
+  Name occurrences: 0
+  Effect occurrences: 5
+  Total references: 5
+
+Defense Boost:
+  Effect: increase_defense
+  Name occurrences: 1
+  Effect occurrences: 2
+  Total references: 3
+
+
+Mime
+====
+
+Adaptive Form:
+  Effect: adapt_to_damage_type
+  Name occurrences: 0
+  Effect occurrences: 3
+  Total references: 3
+
+
+Monk
+====
+
+Counter:
+  Effect: N/A
+  Name occurrences: 6
+  Effect occurrences: 0
+  Total references: 6
+
+Inner Strength:
+  Effect: hp_restore
+  Name occurrences: 0
+  Effect occurrences: 2
+  Total references: 2
+
+
+Ninja
+=====
+
+Vanish:
+  Effect: temporary_invisibility
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+Shadow Return:
+  Effect: counter_with_status
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+
+Oracle
+======
+
+Prescience:
+  Effect: survive_fatal
+  Name occurrences: 0
+  Effect occurrences: 3
+  Total references: 3
+
+Fortune Shield:
+  Effect: prevent_status
+  Name occurrences: 0
+  Effect occurrences: 4
+  Total references: 4
+
+
+Orator
+======
+
+Counter Argue:
+  Effect: reflect_status
+  Name occurrences: 0
+  Effect occurrences: 3
+  Total references: 3
+
+Diplomatic Immunity:
+  Effect: avoid_damage
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+
+Samurai
+=======
+
+Third Eye:
+  Effect: anticipate_attack
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+Retribution:
+  Effect: counter_with_power
+  Name occurrences: 0
+  Effect occurrences: 2
+  Total references: 2
+
+
+Squire
+======
+
+Counter Tackle:
+  Effect: counter_attack
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+Defensive Stance:
+  Effect: reduce_damage
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+
+Summoner
+========
+
+Summon Boost:
+  Effect: enhance_next_summon
+  Name occurrences: 0
+  Effect occurrences: 5
+  Total references: 5
+
+Eidolon Shield:
+  Effect: summon_barrier
+  Name occurrences: 0
+  Effect occurrences: 2
+  Total references: 2
+
+
+Thief
+=====
+
+Vigilance:
+  Effect: detect_ambush
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+Sticky Fingers:
+  Effect: counter_steal
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+
+TimeMage
+========
+
+Time Ward:
+  Effect: resist_time_magic
+  Name occurrences: 0
+  Effect occurrences: 1
+  Total references: 1
+
+Temporal Shift:
+  Effect: regen
+  Name occurrences: 0
+  Effect occurrences: 5
+  Total references: 5
+
+
+WhiteMage
+=========
+
+Divine Grace:
+  Effect: enhance_healing
+  Name occurrences: 0
+  Effect occurrences: 3
+  Total references: 3
+
+
+Summary
+=======
+
+Total reaction abilities: 38
+Implemented abilities: 38
+Missing abilities: 0
+
+Multiple Handler Warnings:
+------------------------
+- Archer: Archer Guard (ranged_defense_up) - 4 handlers
+- Archer: Counter Shot (counter_shot) - 2 handlers
+- Bard: Perfect Pitch (counter_with_song) - 2 handlers
+- Bard: Harmony Shield (shell) - 5 handlers
+- BlackMage: Magic Shield (shell) - 5 handlers
+- BlackMage: Spell Return (reflect) - 4 handlers
+- Calculator: Absorb MP (mp_drain) - 4 handlers
+- Chemist: Quick Pocket (free_item_use) - 2 handlers
+- Dancer: Moving Grace (counter_with_dance) - 2 handlers
+- Knight: Parry (protect) - 5 handlers
+- Knight: Defense Boost (increase_defense) - 2 handlers
+- Mime: Adaptive Form (adapt_to_damage_type) - 3 handlers
+- Monk: Inner Strength (hp_restore) - 2 handlers
+- Oracle: Prescience (survive_fatal) - 3 handlers
+- Oracle: Fortune Shield (prevent_status) - 4 handlers
+- Orator: Counter Argue (reflect_status) - 3 handlers
+- Samurai: Retribution (counter_with_power) - 2 handlers
+- Summoner: Summon Boost (enhance_next_summon) - 5 handlers
+- Summoner: Eidolon Shield (summon_barrier) - 2 handlers
+- TimeMage: Temporal Shift (regen) - 5 handlers
+- WhiteMage: Divine Grace (enhance_healing) - 3 handlers

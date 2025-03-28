@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AITextADV</title>
     <link rel="stylesheet" href="css/index.css">
+    <link rel="icon" href="build/icon.ico" type="image/x-icon">
 </head>
 <body>
     <div class="sidebar collapsed" id="sidebar">
@@ -15,10 +16,32 @@
         <button class="toggle-btn" id="settingsBtn" data-action="openSettings">Settings</button>
         <button class="toggle-btn" id="editCharBtn" data-action="editCharacter">Edit Character</button>
         <button class="toggle-btn" id="worldBtn" data-action="editWorld">Edit World</button>
+        <button class="toggle-btn" id="enterDungeonBtn" data-action="enterDungeon">Enter Dungeon</button>
         <input type="file" id="fileInput" data-action="handleFileInput">
     </div>
+    
+    <div id="mobile-nav">
+        <button class="btn-secondary" data-view="right">Adventure</button>
+        <button class="btn-secondary" id="mobilemenuBtn" data-action="toggleMobileMenu">Menu</button>
+        <button class="btn-secondary" data-view="left">Info</button>
+    </div>
+
+    <div id="mobile-menu" class="mobile-menu">
+        <button class="mobile-menu-btn" data-action="newGame">New Game</button>
+        <button class="mobile-menu-btn" data-action="saveGame">Save</button>
+        <button class="mobile-menu-btn" data-action="loadGame">Load</button>
+        <button class="mobile-menu-btn" data-action="openSettings">Settings</button>
+        <button class="mobile-menu-btn" data-action="editCharacter">Edit Character</button>
+        <button class="mobile-menu-btn" data-action="editWorld">Edit World</button>
+        <input type="file" id="mobileFileInput" data-action="handleFileInput">
+    </div>
+
     <div class="content">
         <div class="tooltip" id="tooltip"></div>
+        <div class="loader-container">
+            <div class="queue-status"></div>
+            <div class="loader"></div>
+        </div>
         <div class="side" id="left">
             <div class="quadrant" id="q1">
                 <div class="image-grid" id="image-grid"></div>
@@ -70,7 +93,7 @@
             <div class="quadrant" id="q2">
                 <div class="map-container">
                     <div class="map" id="map">
-                        <img src="map.webp" alt="Map">
+                        <img src="map.webp" alt="Map" id="mapImage">
                     </div>
                 </div>
                 <div class="resizer" id="resizer-map"></div>
@@ -99,16 +122,15 @@
         </div>
     </div>
 
-    <div class="loader" id="loader"></div>
-
     <script src="defaultsettings.js"></script>
     <script src="settings.js"></script>
     <script src="helpers.js"></script>
     <script src="generate.js"></script>
+    <script src="dungeoninterface.js"></script>
+    <script src="submenu.js"></script>
     <script src="ui.js"></script>
     <script src="map.js"></script>
     <script src="tts.js"></script>
-    <script src="settings_override.js"></script>
     <script src="game.js"></script>
     <script src="saveload.js"></script>
 </body>

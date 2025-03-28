@@ -1,0 +1,60 @@
+{
+  "name": "aitextadv",
+  "version": "0.4.0",
+  "type": "module",
+  "description": "Text adventure game powered by AI",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "css:merge": "postcss ./css/**/*.css --dir ./dist/css --config postcss.merge.js",
+    "css:sort": "postcss ./dist/css/merged.css --dir ./css --config postcss.sort.js",
+    "css:process": "postcss css/all.css -o dist/css/processed.css --config postcss.config.js",
+    "css:cleanup": "node scripts/css-cleanup.js"
+  },
+  "build": {
+    "appId": "com.aitextadv.app",
+    "mac": {
+      "category": "public.app-category.games"
+    },
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ]
+  },
+  "keywords": [],
+  "author": "Justin Hull",
+  "license": "ISC",
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "cssnano": "^7.0.6",
+    "electron": "^35.0.1",
+    "electron-builder": "^24.13.3",
+    "electron-reload": "^2.0.0-alpha.1",
+    "postcss": "^8.5.3",
+    "postcss-cli": "^11.0.1",
+    "postcss-combine-duplicated-selectors": "^10.0.3",
+    "postcss-custom-properties": "^14.0.4",
+    "postcss-discard-duplicates": "^7.0.1",
+    "postcss-import": "^16.1.0",
+    "postcss-merge-rules": "^7.0.4",
+    "postcss-nesting": "^13.0.1",
+    "postcss-preset-env": "^10.1.5",
+    "postcss-sort-media-queries": "^5.2.0"
+  }
+}

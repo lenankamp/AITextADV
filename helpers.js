@@ -75,15 +75,23 @@ function getSeason() {
 }
 
 function getDayOfWeek() {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const dateParts = settings.current_time.match(/(\d+)-(\d+)-(\d+)/).slice(1).map(Number);
-    const [year, month, day] = dateParts;
-    const date = new Date(year, month - 1, day); 
-    return days[date.getDay()];
+    try {
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const match = settings.current_time.match(/(\d+)-(\d+)-(\d+)/);
+        if (!match) return ""; // Return empty string if no valid date found
+        
+        const [_, year, month, day] = match;
+        const date = new Date(year, month - 1, day);
+        return days[date.getDay()];
+    } catch (error) {
+        console.warn("Error getting day of week:", error);
+        return ""; // Return empty string on error
+    }
 }
 
 function getPreciseTime() {
-    return settings.current_time.match(/\d+:\d+:\d+/);
+    const match = settings.current_time.match(/\d+:\d+:\d+/);
+    return match ? [match[0]] : ['00:00:00'];
 }
 
 function trimIncompleteSentences(text) {
@@ -196,11 +204,7 @@ function openOutputEditor() {
         deleteBtn.className = 'entry-control-btn';
         deleteBtn.innerHTML = '×';
         deleteBtn.title = 'Delete Entry';
-        deleteBtn.onclick = () => {
-            if (confirm('Are you sure you want to delete this entry?')) {
-                entryDiv.remove();
-            }
-        };
+        deleteBtn.dataset.action = 'deleteEntry';
 
         controls.appendChild(deleteBtn);
         entryDiv.appendChild(controls);
@@ -218,23 +222,42 @@ function openOutputEditor() {
     const saveBtn = document.createElement('button');
     saveBtn.className = 'save-changes-btn btn-primary';
     saveBtn.textContent = 'Save Changes';
-    saveBtn.onclick = () => {
-        const entries = Array.from(content.querySelectorAll('.output-entry textarea'));
-        output.innerHTML = '';
-        entries.forEach(textarea => {
-            const originalElement = document.createElement('div');
-            originalElement.innerHTML = textarea.dataset.originalHtml;
-            const newElement = originalElement.firstChild;
-            newElement.innerHTML = textarea.value.replace(/\n/g, '<br>');
-            output.appendChild(newElement);
-        });
-        overlay.remove();
-    };
+    saveBtn.dataset.action = 'saveChanges';
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'cancel-edit-btn btn-secondary';
     cancelBtn.textContent = 'Cancel';
-    cancelBtn.onclick = () => overlay.remove();
+    cancelBtn.dataset.action = 'cancelEdit';
+
+    // Event delegation for all editor actions
+    container.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        if (!action) return;
+
+        e.preventDefault();
+        switch (action) {
+            case 'deleteEntry':
+                if (confirm('Are you sure you want to delete this entry?')) {
+                    e.target.closest('.output-entry').remove();
+                }
+                break;
+            case 'saveChanges':
+                const entries = Array.from(content.querySelectorAll('.output-entry textarea'));
+                output.innerHTML = '';
+                entries.forEach(textarea => {
+                    const originalElement = document.createElement('div');
+                    originalElement.innerHTML = textarea.dataset.originalHtml;
+                    const newElement = originalElement.firstChild;
+                    newElement.innerHTML = textarea.value.replace(/\n/g, '<br>');
+                    output.appendChild(newElement);
+                });
+                overlay.remove();
+                break;
+            case 'cancelEdit':
+                overlay.remove();
+                break;
+        }
+    });
 
     actions.appendChild(cancelBtn);
     actions.appendChild(saveBtn);

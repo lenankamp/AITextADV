@@ -7,6 +7,7 @@ const maxScale = 5; // Maximum zoom level
 let longPressTimer = null;
 let longPressX, longPressY;
 const LONG_PRESS_DURATION = 500; // milliseconds
+let lastTouchDistance = 0;
 
 const map = document.getElementById('map');
 const submenu = document.createElement('div');
@@ -21,6 +22,144 @@ tooltip.style.position = 'fixed';
 tooltip.style.zIndex = '1000';
 tooltip.classList.add('tooltip');
 document.body.appendChild(tooltip);
+
+// Prevent default touch behaviors
+map.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.sublocation-row')) return; // Allow touch events on sublocation row
+    e.preventDefault();
+}, { passive: false });
+
+map.addEventListener('touchmove', (e) => {
+    if (e.target.closest('.sublocation-row')) return; // Allow touch events on sublocation row
+    e.preventDefault();
+}, { passive: false });
+
+// Handle both mouse click and touch tap events on the map
+map.addEventListener('click', (e) => {
+    const target = e.target;
+    if (target.matches('.location')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const name = target.id.replace('location-', '');
+        openSubmenu(name, e.clientX, e.clientY);
+    }
+});
+
+// Touch start handler
+map.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.sublocation-row')) return;
+    
+    isDragging = false;
+    const touch = e.touches[0];
+    dragStartX = touch.clientX;
+    dragStartY = touch.clientY;
+    
+    if (e.touches.length === 1) {
+        // Start long press timer for single touch
+        longPressX = touch.clientX - map.getBoundingClientRect().left;
+        longPressY = touch.clientY - map.getBoundingClientRect().top;
+        longPressTimer = setTimeout(() => {
+            if (!isDragging) {
+                openNewLocationPrompt(longPressX / scale, longPressY / scale);
+            }
+        }, LONG_PRESS_DURATION);
+    } else if (e.touches.length === 2) {
+        // Initialize pinch-zoom
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        lastTouchDistance = Math.hypot(
+            touch2.clientX - touch1.clientX,
+            touch2.clientY - touch1.clientY
+        );
+    }
+}, { passive: false });
+
+// Touch move handler
+map.addEventListener('touchmove', (e) => {
+    if (e.target.closest('.sublocation-row')) return;
+    
+    if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        if (dragStartX !== undefined && dragStartY !== undefined) {
+            if (Math.abs(touch.clientX - dragStartX) > 5 || Math.abs(touch.clientY - dragStartY) > 5) {
+                isDragging = true;
+                clearTimeout(longPressTimer);
+            }
+            if (isDragging) {
+                const x = touch.clientX - dragStartX + parseInt(map.style.left || '0');
+                const y = touch.clientY - dragStartY + parseInt(map.style.top || '0');
+                map.style.left = `${x}px`;
+                map.style.top = `${y}px`;
+                dragStartX = touch.clientX;
+                dragStartY = touch.clientY;
+            }
+        }
+    } else if (e.touches.length === 2) {
+        // Handle pinch-zoom
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.hypot(
+            touch2.clientX - touch1.clientX,
+            touch2.clientY - touch1.clientY
+        );
+        
+        if (lastTouchDistance) {
+            const zoomIntensity = 0.01;
+            const zoom = currentDistance / lastTouchDistance;
+            const newScale = scale * zoom;
+            
+            if (newScale >= minScale && newScale <= maxScale) {
+                scale = newScale;
+                
+                const centerX = (touch1.clientX + touch2.clientX) / 2 - map.getBoundingClientRect().left;
+                const centerY = (touch1.clientY + touch2.clientY) / 2 - map.getBoundingClientRect().top;
+                
+                const newWidth = map.offsetWidth * zoom;
+                const newHeight = map.offsetHeight * zoom;
+                
+                const dx = centerX * (zoom - 1);
+                const dy = centerY * (zoom - 1);
+                
+                map.style.width = `${newWidth}px`;
+                map.style.height = `${newHeight}px`;
+                map.style.left = `${map.offsetLeft - dx}px`;
+                map.style.top = `${map.offsetTop - dy}px`;
+                
+                // Adjust locations with centering offset
+                document.querySelectorAll('.location').forEach(location => {
+                    const name = location.id.replace('location-', '');
+                    location.style.left = `${(areas[name].x * scale) - 25}px`;
+                    location.style.top = `${(areas[name].y * scale) - 25}px`;
+                });
+            }
+        }
+        lastTouchDistance = currentDistance;
+    }
+}, { passive: false });
+
+// Touch end handler
+map.addEventListener('touchend', (e) => {
+    if (!isDragging && e.changedTouches.length === 1) {
+        const touch = e.changedTouches[0];
+        handleLocationInteraction(e, touch.clientX, touch.clientY);
+    }
+    clearTimeout(longPressTimer);
+    isDragging = false;
+    dragStartX = undefined;
+    dragStartY = undefined;
+    lastTouchDistance = 0;
+});
+
+// Handle click events on the map with event delegation
+map.addEventListener('click', (e) => {
+    const target = e.target;
+    if (target.matches('.location')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const name = target.id.replace('location-', '');
+        openSubmenu(name, e.clientX, e.clientY);
+    }
+});
 
 map.addEventListener('mousedown', (e) => {
     isDragging = false; // Start as not dragging
@@ -159,6 +298,17 @@ function addLocation(name) {
     map.appendChild(location);
 }
 
+// Handle both mouse click and touch events for locations
+function handleLocationInteraction(e, x, y) {
+    const target = e.target;
+    if (target.matches('.location')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const name = target.id.replace('location-', '');
+        openSubmenu(name, x, y);
+    }
+}
+
 // Open submenu for a location
 function openSubmenu(name, x, y) {
     const menu = document.createElement('div');
@@ -183,9 +333,40 @@ function openSubmenu(name, x, y) {
     };
     menu.appendChild(editBtn);
 
-    menu.style.left = x + 'px';
-    menu.style.top = y + 'px';
+    // Ensure menu is positioned within viewport bounds
     document.body.appendChild(menu);
+    const menuRect = menu.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    let posX = x;
+    let posY = y;
+    
+    // Adjust position if menu would overflow viewport
+    if (posX + menuRect.width > viewportWidth) {
+        posX = viewportWidth - menuRect.width - 10;
+    }
+    if (posY + menuRect.height > viewportHeight) {
+        posY = viewportHeight - menuRect.height - 10;
+    }
+    
+    menu.style.left = posX + 'px';
+    menu.style.top = posY + 'px';
+
+    // Add touch-friendly close handler
+    const closeHandler = (e) => {
+        if (!menu.contains(e.target) && !e.target.matches('.location')) {
+            menu.remove();
+            document.removeEventListener('click', closeHandler);
+            document.removeEventListener('touchstart', closeHandler);
+        }
+    };
+    
+    // Delay adding the handlers to prevent immediate closure
+    requestAnimationFrame(() => {
+        document.addEventListener('click', closeHandler);
+        document.addEventListener('touchstart', closeHandler);
+    });
 }
 
 // Update the global click handler
@@ -328,16 +509,39 @@ function openSublocationMenu(area, path, x, y) {
     };
     menu.appendChild(editBtn);
 
-    menu.style.left = x + 'px';
-    menu.style.top = y + 'px';
+    // Ensure menu is positioned within viewport bounds
     document.body.appendChild(menu);
+    const menuRect = menu.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    let posX = x;
+    let posY = y;
+    
+    // Adjust position if menu would overflow viewport
+    if (posX + menuRect.width > viewportWidth) {
+        posX = viewportWidth - menuRect.width - 10;
+    }
+    if (posY + menuRect.height > viewportHeight) {
+        posY = viewportHeight - menuRect.height - 10;
+    }
+    
+    menu.style.left = posX + 'px';
+    menu.style.top = posY + 'px';
 
-    // Close menu when clicking outside
-    document.addEventListener('click', function closeSubMenu(e) {
-        if (!menu.contains(e.target)) {
+    // Add touch-friendly close handler
+    const closeHandler = (e) => {
+        if (!menu.contains(e.target) && !e.target.closest('.sublocation-image')) {
             menu.remove();
-            document.removeEventListener('click', closeSubMenu);
+            document.removeEventListener('click', closeHandler);
+            document.removeEventListener('touchstart', closeHandler);
         }
+    };
+    
+    // Delay adding the handlers to prevent immediate closure
+    requestAnimationFrame(() => {
+        document.addEventListener('click', closeHandler);
+        document.addEventListener('touchstart', closeHandler);
     });
 }
 

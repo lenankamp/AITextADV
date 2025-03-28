@@ -1,7 +1,7 @@
-@import url('./layout.css');
-@import url('./editor.css');
-@import url('./ui-elements.css');
-@import url('./character.css');
-@import url('./map.css');
-@import url('./theme.css');
-@import url('./uncategorized.css');
+@import 'character.css';
+@import 'editor.css';
+@import 'layout.css';
+@import 'map.css';
+@import 'theme.css';
+@import 'ui-elements.css';
+@import 'uncategorized.css';

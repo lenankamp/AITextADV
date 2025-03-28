@@ -1,2 +1,4 @@
 settings_override.js
 .aider*
+node_modules/
+dist/

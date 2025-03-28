@@ -1,0 +1,1040 @@
+Ability Test Report
+==================
+
+Starting comprehensive ability tests...
+
+
+BASE JOBS
+=========
+
+Testing Squire Abilities
+--------------------
+
+Testing: Throw Stone
+✓ Ability executed successfully
+  Damage dealt: 16
+
+Testing: Accumulate
+✓ Ability executed successfully
+  Effects applied: attack_up
+
+Testing: Dash
+✓ Ability executed successfully
+  Damage dealt: 28
+
+Testing: Rally Cry
+✓ Ability executed successfully
+  Effects applied: party_stats_up
+
+Testing: First Aid
+✓ Ability executed successfully
+  Healing done: 13
+
+Testing: Focus
+✓ Ability executed successfully
+  Effects applied: accuracy_up
+
+Testing: Inspect
+✗ Ability failed: Invalid ability type
+
+Testing: Battle Tactics
+✓ Ability executed successfully
+  Effects applied: party_defense_up
+
+Testing: Determination
+✓ Ability executed successfully
+  Effects applied: survive_fatal
+
+Job Summary:
+Total abilities: 9
+Successful: 8
+Failed: 1
+Errors: 0
+
+Testing Squire Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+Testing Chemist Abilities
+--------------------
+
+Testing: Use Potion
+✓ Ability executed successfully
+  Healing done: 13
+
+Testing: Throw Item
+✗ Ability failed: No item specified to throw
+
+Testing: Mix
+✗ Ability failed: Two items are required for mixing
+
+Testing: Analyze
+✗ Ability failed: Invalid ability type
+
+Testing: Brew Potion
+✓ Ability executed successfully
+
+Testing: Antidote Brew
+✓ Ability executed successfully
+
+Testing: Sample
+✓ Ability executed successfully
+
+Testing: Bomb Craft
+✓ Ability executed successfully
+
+Testing: Mega Potion
+✓ Ability executed successfully
+
+Testing: Elixir Craft
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 10
+Successful: 7
+Failed: 3
+Errors: 0
+
+Testing Chemist Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+TIER2 JOBS
+=========
+
+Testing Knight Abilities
+--------------------
+
+Testing: Slash Blade
+✓ Ability executed successfully
+
+Testing: Break Armor
+✓ Ability executed successfully
+  Damage dealt: 18
+
+Testing: Shield Bash
+✓ Ability executed successfully
+  Damage dealt: 21
+
+Testing: Cover
+✓ Ability executed successfully
+  Effects applied: protect_ally
+
+Testing: Holy Blade
+✓ Ability executed successfully
+  Damage dealt: 34
+
+Testing: Sentinel
+✓ Ability executed successfully
+  Effects applied: defense_up, draw_attacks
+
+Testing: Defensive Stance
+✓ Ability executed successfully
+  Effects applied: physical_immunity, slow
+
+Testing: Mighty Guard
+✓ Ability executed successfully
+
+Testing: Sword Break
+✓ Ability executed successfully
+  Damage dealt: 3
+
+Testing: Divine Guard
+✓ Ability executed successfully
+  Effects applied: regen, protect, shell
+
+Job Summary:
+Total abilities: 10
+Successful: 10
+Failed: 0
+Errors: 0
+
+Testing Knight Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+Testing Archer Abilities
+--------------------
+
+Testing: Charge
+✓ Ability executed successfully
+
+Testing: Rapid Fire
+✓ Ability executed successfully
+
+Testing: Arrow Rain
+✓ Ability executed successfully
+
+Testing: Precision Shot
+✓ Ability executed successfully
+  Damage dealt: 24
+
+Testing: Sniper Shot
+✓ Ability executed successfully
+
+Testing: Disabling Shot
+✓ Ability executed successfully
+  Damage dealt: 9
+
+Testing: Weakness Shot
+✓ Ability executed successfully
+  Damage dealt: 14
+
+Testing: Piercing Arrow
+✓ Ability executed successfully
+  Damage dealt: 22
+
+Testing: Takedown Shot
+✓ Ability executed successfully
+  Damage dealt: 27
+
+Testing: Barrage
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 10
+Successful: 10
+Failed: 0
+Errors: 0
+
+Testing Archer Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+Testing WhiteMage Abilities
+--------------------
+
+Testing: Cure
+✓ Ability executed successfully
+  Healing done: 28
+
+Testing: Cura
+✓ Ability executed successfully
+  Healing done: 35
+
+Testing: Curaga
+✓ Ability executed successfully
+
+Testing: Raise
+✓ Ability executed successfully
+  Healing done: 14
+
+Testing: Reraise
+✓ Ability executed successfully
+  Effects applied: auto_revive
+
+Testing: Esuna
+✗ Ability failed: No curable status effects found
+
+Testing: Protect
+✓ Ability executed successfully
+  Effects applied: protect
+
+Testing: Shell
+✓ Ability executed successfully
+  Effects applied: shell
+
+Testing: Holy
+✓ Ability executed successfully
+  Damage dealt: 11
+
+Testing: Regen
+✓ Ability executed successfully
+  Effects applied: heal_over_time
+
+Testing: Dispel
+✓ Ability executed successfully
+
+Testing: Sacred Purification
+✗ Ability failed: Unknown dungeon ability effect
+
+Testing: Banish
+✓ Ability executed successfully
+  Damage dealt: 36
+
+Job Summary:
+Total abilities: 13
+Successful: 11
+Failed: 2
+Errors: 0
+
+Testing WhiteMage Dungeon Abilities
+-------------------------
+
+Testing dungeon ability: Sacred Purification
+✗ Dungeon ability failed: Unknown dungeon ability effect
+
+Dungeon Abilities Summary:
+Total dungeon abilities: 1
+Successful: 0
+Failed: 1
+Errors: 0
+
+Testing BlackMage Abilities
+--------------------
+
+Testing: Fire
+✓ Ability executed successfully
+  Damage dealt: 31
+
+Testing: Fira
+✓ Ability executed successfully
+  Damage dealt: 37
+
+Testing: Firaga
+✓ Ability executed successfully
+
+Testing: Thunder
+✓ Ability executed successfully
+  Damage dealt: 35
+
+Testing: Thundara
+✓ Ability executed successfully
+  Damage dealt: 40
+
+Testing: Thundaga
+✓ Ability executed successfully
+
+Testing: Blizzard
+✓ Ability executed successfully
+  Damage dealt: 30
+
+Testing: Blizzara
+✓ Ability executed successfully
+  Damage dealt: 39
+
+Testing: Blizzaga
+✓ Ability executed successfully
+
+Testing: Break
+✓ Ability executed successfully
+  Effects applied: petrify
+
+Testing: Death
+✓ Ability executed successfully
+
+Testing: Flare
+✓ Ability executed successfully
+  Damage dealt: 55
+
+Testing: Arcane Disruption
+✗ Ability failed: Unknown dungeon ability effect
+
+Testing: Arcane Eye
+✗ Ability failed: Unknown dungeon ability effect
+
+Job Summary:
+Total abilities: 14
+Successful: 12
+Failed: 2
+Errors: 0
+
+Testing BlackMage Dungeon Abilities
+-------------------------
+
+Testing dungeon ability: Arcane Disruption
+✗ Dungeon ability failed: Unknown dungeon ability effect
+
+Testing dungeon ability: Arcane Eye
+✗ Dungeon ability failed: Unknown dungeon ability effect
+
+Dungeon Abilities Summary:
+Total dungeon abilities: 2
+Successful: 0
+Failed: 2
+Errors: 0
+
+TIER3 JOBS
+=========
+
+Testing Monk Abilities
+--------------------
+
+Testing: Chakra
+✓ Ability executed successfully
+  Healing done: 15
+
+Testing: Pummel
+✓ Ability executed successfully
+
+Testing: Earth Slash
+✓ Ability executed successfully
+
+Testing: Internal Release
+✓ Ability executed successfully
+  Effects applied: [object Object]
+
+Testing: Meditation
+✓ Ability executed successfully
+  Effects applied: hp_regen, mp_regen
+
+Testing: Pressure Point
+✓ Ability executed successfully
+  Effects applied: paralyze
+
+Testing: Spirit Blade
+✓ Ability executed successfully
+  Damage dealt: 36
+
+Testing: Chakra Blast
+✓ Ability executed successfully
+  Damage dealt: 22
+
+Testing: Mantra
+✓ Ability executed successfully
+
+Testing: Hundred Fists
+✓ Ability executed successfully
+  Damage dealt: 1
+
+Job Summary:
+Total abilities: 10
+Successful: 10
+Failed: 0
+Errors: 0
+
+Testing Monk Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+Testing Thief Abilities
+--------------------
+
+Testing: Steal Gil
+✗ Ability failed: Failed to steal gil
+
+Testing: Steal Item
+✗ Ability failed: Target has no items to steal
+
+Testing: Steal Weapon
+✗ Ability failed: Target has no equipment in mainHand
+
+Testing: Steal Heart
+✓ Ability executed successfully
+  Effects applied: charm
+
+Testing: Steal EXP
+✓ Ability executed successfully
+
+Testing: Mug
+✓ Ability executed successfully
+  Damage dealt: 19
+
+Testing: Trapsmith
+✗ Ability failed: Unknown dungeon ability effect
+
+Testing: Lockpick
+✗ Ability failed: No door to unlock
+
+Testing: Pilfer
+✗ Ability failed: Failed to steal status effects
+
+Job Summary:
+Total abilities: 9
+Successful: 3
+Failed: 6
+Errors: 0
+
+Testing Thief Dungeon Abilities
+-------------------------
+
+Testing dungeon ability: Trapsmith
+✗ Dungeon ability failed: Unknown dungeon ability effect
+
+Testing dungeon ability: Lockpick
+✗ Dungeon ability failed: No door to unlock
+
+Dungeon Abilities Summary:
+Total dungeon abilities: 2
+Successful: 0
+Failed: 2
+Errors: 0
+
+Testing Oracle Abilities
+--------------------
+
+Testing: Divine Sight
+✓ Ability executed successfully
+
+Testing: Premonition
+✓ Ability executed successfully
+  Effects applied: premonition
+
+Testing: Enemy Insight
+✓ Ability executed successfully
+
+Testing: Fate Map
+✗ Ability failed: Unknown dungeon ability effect
+
+Testing: Condemn
+✓ Ability executed successfully
+
+Testing: Star Sight
+✓ Ability executed successfully
+
+Testing: Calamity
+✓ Ability executed successfully
+  Effects applied: poison
+
+Testing: Fortune Guard
+✓ Ability executed successfully
+
+Testing: Prophecy Shield
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 9
+Successful: 8
+Failed: 1
+Errors: 0
+
+Testing Oracle Dungeon Abilities
+-------------------------
+
+Testing dungeon ability: Divine Sight
+✓ Dungeon ability executed successfully
+  Result: Predicted 0 potential encounters
+
+Testing dungeon ability: Fate Map
+✗ Dungeon ability failed: Unknown dungeon ability effect
+
+Dungeon Abilities Summary:
+Total dungeon abilities: 2
+Successful: 1
+Failed: 1
+Errors: 0
+
+Testing TimeMage Abilities
+--------------------
+
+Testing: Haste
+✓ Ability executed successfully
+  Effects applied: haste
+
+Testing: Slow
+✓ Ability executed successfully
+  Effects applied: slow
+
+Testing: Stop
+✓ Ability executed successfully
+
+Testing: Float
+✓ Ability executed successfully
+  Effects applied: levitate
+
+Testing: Gravity
+✓ Ability executed successfully
+
+Testing: Time Slip
+✗ Error executing ability: room.reset is not a function
+
+Testing: Temporal Anchor
+✓ Ability executed successfully
+  Effects applied: 
+
+Testing: Quick
+✓ Ability executed successfully
+  Effects applied: 
+
+Testing: Meteor
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 9
+Successful: 8
+Failed: 0
+Errors: 1
+
+Testing TimeMage Dungeon Abilities
+-------------------------
+
+Testing dungeon ability: Time Slip
+✗ Error executing dungeon ability: room.reset is not a function
+
+Testing dungeon ability: Temporal Anchor
+✓ Dungeon ability executed successfully
+  Result: Checkpoint created
+
+Dungeon Abilities Summary:
+Total dungeon abilities: 2
+Successful: 1
+Failed: 0
+Errors: 1
+
+TIER4 JOBS
+=========
+
+Testing Geomancer Abilities
+--------------------
+
+Testing: Terrain Power
+✓ Ability executed successfully
+  Damage dealt: 21
+
+Testing: Earth Render
+✓ Ability executed successfully
+  Damage dealt: 32
+
+Testing: Terra Pulse
+✓ Ability executed successfully
+
+Testing: Terrain Sight
+✗ Error executing ability: floor.revealArea is not a function
+
+Testing: Earth Sense
+✗ Ability failed: Unknown dungeon ability effect
+
+Testing: Rock Path
+✗ Ability failed: Unknown dungeon ability effect
+
+Testing: Terrain Shift
+✗ Error executing ability: this._isValidTerrainModification is not a function
+
+Testing: Sandstorm
+✓ Ability executed successfully
+
+Testing: Nature Communion
+✗ Ability failed: Unknown dungeon ability effect
+
+Testing: Gaia Force
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 10
+Successful: 5
+Failed: 3
+Errors: 2
+
+Testing Geomancer Dungeon Abilities
+-------------------------
+
+Testing dungeon ability: Terrain Sight
+✗ Error executing dungeon ability: floor.revealArea is not a function
+
+Testing dungeon ability: Earth Sense
+✗ Dungeon ability failed: Unknown dungeon ability effect
+
+Testing dungeon ability: Rock Path
+✗ Dungeon ability failed: Unknown dungeon ability effect
+
+Testing dungeon ability: Terrain Shift
+✗ Error executing dungeon ability: this._isValidTerrainModification is not a function
+
+Testing dungeon ability: Nature Communion
+✗ Dungeon ability failed: Unknown dungeon ability effect
+
+Dungeon Abilities Summary:
+Total dungeon abilities: 5
+Successful: 0
+Failed: 3
+Errors: 2
+
+Testing Dragoon Abilities
+--------------------
+
+Testing: Jump
+✓ Ability executed successfully
+
+Testing: Lancet
+✓ Ability executed successfully
+  Damage dealt: 16
+
+Testing: High Jump
+✓ Ability executed successfully
+  Damage dealt: 44
+
+Testing: Sweep Dive
+✓ Ability executed successfully
+
+Testing: Dragon Breath
+✓ Ability executed successfully
+
+Testing: Piercing Strike
+✓ Ability executed successfully
+  Damage dealt: 30
+
+Testing: Geirskogul
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 7
+Successful: 7
+Failed: 0
+Errors: 0
+
+Testing Dragoon Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+Testing Summoner Abilities
+--------------------
+
+Testing: Ifrit
+✓ Ability executed successfully
+
+Testing: Shiva
+✓ Ability executed successfully
+
+Testing: Ramuh
+✓ Ability executed successfully
+
+Testing: Bahamut
+✓ Ability executed successfully
+
+Testing: Carbuncle
+✓ Ability executed successfully
+
+Testing: Titan
+✓ Ability executed successfully
+
+Testing: Leviathan
+✓ Ability executed successfully
+
+Testing: Phoenix
+✓ Ability executed successfully
+
+Testing: Odin
+✓ Ability executed successfully
+
+Testing: Moogle
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 10
+Successful: 10
+Failed: 0
+Errors: 0
+
+Testing Summoner Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+Testing Orator Abilities
+--------------------
+
+Testing: Persuade
+✓ Ability executed successfully
+  Effects applied: charm
+
+Testing: Negotiate
+✗ Ability failed: Negotiation failed
+
+Testing: Enthrall
+✓ Ability executed successfully
+
+Testing: Praise
+✓ Ability executed successfully
+  Effects applied: increase_stats
+
+Testing: Condemn
+✓ Ability executed successfully
+  Effects applied: decrease_stats
+
+Testing: Peace Talk
+✗ Ability failed: Peace talk failed
+
+Testing: Intimidate
+✓ Ability executed successfully
+  Effects applied: retreat
+
+Testing: Rallying Cry
+✓ Ability executed successfully
+
+Testing: Final Argument
+✓ Ability executed successfully
+  Damage dealt: 35
+  Effects applied: , 
+
+Job Summary:
+Total abilities: 9
+Successful: 7
+Failed: 2
+Errors: 0
+
+Testing Orator Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+ADVANCED JOBS
+=========
+
+Testing Samurai Abilities
+--------------------
+
+Testing: Iaido
+✓ Ability executed successfully
+  Damage dealt: 60
+
+Testing: Blade Spirit
+✓ Ability executed successfully
+
+Testing: Storm Edge
+✓ Ability executed successfully
+  Damage dealt: 33
+
+Testing: Demon Slice
+✓ Ability executed successfully
+  Damage dealt: 40
+
+Testing: Zen Slash
+✓ Ability executed successfully
+  Damage dealt: 46
+
+Testing: Soul Blade
+✓ Ability executed successfully
+
+Testing: Meditation
+✓ Ability executed successfully
+  Effects applied: attack_up, accuracy_up
+
+Testing: Binding Blade
+✓ Ability executed successfully
+  Damage dealt: 31
+
+Testing: Masamune
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 9
+Successful: 9
+Failed: 0
+Errors: 0
+
+Testing Samurai Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+Testing Ninja Abilities
+--------------------
+
+Testing: Throw
+✗ Ability failed: No item specified to throw
+
+Testing: Shadow Walk
+✓ Ability executed successfully
+  Effects applied: 
+
+Testing: Wall Walk
+✓ Ability executed successfully
+  Effects applied: 
+
+Testing: Smoke Bomb
+✓ Ability executed successfully
+
+Testing: Infiltrate
+✓ Ability executed successfully
+  Effects applied: 
+
+Testing: Flame Veil
+✓ Ability executed successfully
+  Damage dealt: 22
+
+Testing: Water Veil
+✓ Ability executed successfully
+
+Testing: Shadow Stitch
+✓ Ability executed successfully
+
+Testing: Mirror Image
+✓ Ability executed successfully
+  Effects applied: create_decoy
+
+Testing: Assassinate
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 10
+Successful: 9
+Failed: 1
+Errors: 0
+
+Testing Ninja Dungeon Abilities
+-------------------------
+
+Testing dungeon ability: Shadow Walk
+✓ Dungeon ability executed successfully
+
+Testing dungeon ability: Wall Walk
+✓ Dungeon ability executed successfully
+
+Testing dungeon ability: Infiltrate
+✓ Dungeon ability executed successfully
+
+Dungeon Abilities Summary:
+Total dungeon abilities: 3
+Successful: 3
+Failed: 0
+Errors: 0
+
+Testing Calculator Abilities
+--------------------
+
+Testing: CT Prime
+✓ Ability executed successfully
+  Damage dealt: 37
+
+Testing: Level Divide
+✓ Ability executed successfully
+  Damage dealt: 30
+
+Testing: Height Factor
+✗ Ability failed: No height difference to exploit
+
+Testing: Multiply
+✓ Ability executed successfully
+  Damage dealt: 44
+  Effects applied: magic_vulnerability
+
+Testing: Prime Strike
+✓ Ability executed successfully
+
+Testing: Numerical Force
+✓ Ability executed successfully
+  Damage dealt: 15
+
+Testing: Factor Barrier
+✓ Ability executed successfully
+  Effects applied: numeric_shield
+
+Testing: Divide MP
+✓ Ability executed successfully
+  Effects applied: mp_reduced
+
+Testing: Perfect Number
+✓ Ability executed successfully
+  Effects applied: perfect_stats
+
+Testing: Modulo Mastery
+✓ Ability executed successfully
+  Damage dealt: 33
+
+Job Summary:
+Total abilities: 10
+Successful: 9
+Failed: 1
+Errors: 0
+
+Testing Calculator Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+Testing Dancer Abilities
+--------------------
+
+Testing: Slow Dance
+✓ Ability executed successfully
+
+Testing: Tempting Waltz
+✓ Ability executed successfully
+  Effects applied: charm
+
+Testing: War Dance
+✓ Ability executed successfully
+
+Testing: Exhausting Polka
+✓ Ability executed successfully
+
+Testing: Siren Dance
+✓ Ability executed successfully
+
+Testing: Bewitching Dance
+✓ Ability executed successfully
+
+Testing: Healing Waltz
+✓ Ability executed successfully
+
+Testing: Forbidden Dance
+✓ Ability executed successfully
+
+Testing: Trance Dance
+✓ Ability executed successfully
+  Effects applied: attack_up, magic_up, haste
+
+Testing: Last Waltz
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 10
+Successful: 10
+Failed: 0
+Errors: 0
+
+Testing Dancer Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+Testing Bard Abilities
+--------------------
+
+Testing: Battle Chant
+✓ Ability executed successfully
+
+Testing: Life Song
+✓ Ability executed successfully
+
+Testing: Mana Paean
+✓ Ability executed successfully
+
+Testing: Hero Ballad
+✓ Ability executed successfully
+
+Testing: Silence Song
+✓ Ability executed successfully
+
+Testing: Confusion Carol
+✓ Ability executed successfully
+
+Testing: Peaceful Nocturne
+✓ Ability executed successfully
+
+Testing: Nameless Song
+✓ Ability executed successfully
+
+Testing: Dissonant Wave
+✓ Ability executed successfully
+
+Testing: Grand Finale
+✓ Ability executed successfully
+
+Job Summary:
+Total abilities: 10
+Successful: 10
+Failed: 0
+Errors: 0
+
+Testing Bard Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+SPECIAL JOBS
+=========
+
+Testing Mime Abilities
+--------------------
+
+Testing: Replicate
+✗ Ability failed: No action to replicate
+
+Testing: Battle Memory
+✗ Ability failed: No abilities to learn from target
+
+Job Summary:
+Total abilities: 2
+Successful: 0
+Failed: 2
+Errors: 0
+
+Testing Mime Dungeon Abilities
+-------------------------
+No dungeon abilities found for this job.
+
+==================
+CUMULATIVE TOTALS
+==================
+Total abilities tested: 190
+Total successful: 163 (86%)
+Total failed: 24 (13%)
+Total errors: 3 (2%)
+==================
+
+Ability testing complete!

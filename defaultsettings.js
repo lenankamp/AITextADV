@@ -1,5 +1,5 @@
 let settings;
-
+function overrideSettings() {}
 function loadDefaultSettings() {
   const defaultSettings = {
     //ui settings
@@ -7,21 +7,24 @@ function loadDefaultSettings() {
     topright_height: "40vh",
     column_width: "40vw",
     // game settings
+    writing_style: "Terry Pratchett",
+    sentient_string: "People",
+    creature_string: "Creatures",
+    sentient_generation_limit: "3",
+    creature_generation_limit: "10%",
     affinity_threshold: 3,
     positive_affinities: ["passing acquaintance", "familiar face", "acquaintance", "casual friend", "good friend", "close friend", "best friend", "ally", "confidant", "best friend", "BFF", "super awesome bestest friend forever and ever"],
     negative_affinities: ["suspicious", "distrustful", "unfriendly", "confrontational", "adversarial", "hostile", "mortal enemy", "arch enemy"],
     positive_creature_affinities: ["curious", "friendly", "trusting", "companionable", "loyal", "bonded", "best friend"],
     negative_creature_affinities: ["suspicious", "unfriendly", "adversarial", "hostile"],
-    sentient_string: "People",
-    creature_string: "Pokémon",
-    sentient_generation_limit: "3",
-    creature_generation_limit: "10%",
     // world generation settings
     world_description: "The Kanto region is a region of the Pokémon world. Everyone aspires to be a Pokémon trainer. Pokémon trainers train their Pokémon to duel and seek to become champions.",
     starting_area: "Professor Oak's Lab",
     starting_area_description: "A small, cluttered laboratory filled with books, equipment, and various Pokémon specimens. The air is filled with the scent of chemicals and the sound of bubbling beakers. A large desk is covered in papers and a computer, while shelves are lined with jars containing strange creatures.",
     current_time: "2025-06-12 08:00:00",
     climate: "temperate",
+    world_map_visual: "",
+    world_map_seed: 12345,
     // player details and character sheet
     player_name: "Young Trainer",
     player_description: "A young and eager Pokémon trainer, ready to embark on an adventure. They have a determined look in their eyes and a backpack slung over their shoulder. Their clothes are practical and comfortable, suitable for traveling through the wilderness.",
@@ -44,36 +47,17 @@ function loadDefaultSettings() {
         "Adventurous Spirit",
         "Eager Learner",
         "Loyal Friend"
-      ],
-      stunts: {
-        'Pokémon Bond': "You get a +2 to create advantages when working with your Pokémon.",
-        'Quick Reflexes': "You get a +2 to overcome obstacles when dodging attacks.",
-        'Strategic Thinker': "You get a +2 to create advantages when planning your next move."
-      },
-      stress: {
-        1: false,
-        2: false,
-        3: false
-      },
-      consequences: {
-        mild: [],
-        moderate: [],
-        severe: []
-      },
-      consequenceTime: {
-        moderate: [],
-        severe: []
-      }
+      ]
     },
     // rules
     rule_set: "Fate Accelerated",
     ruleprompt_fae_action1: "\n\nPlayer is attempting the action: '$action'. Given the context, answer the following question, only giving the simple answer without preface or explanation. What level of training in the appropriate field would one need to complete this task? Answer among one of the following: basic, intermediate, advanced, expert, or master.",
-    ruleprompt_fae_action2: "Approach defintions:\nCareful: A Careful action is when you pay close attention to detail and take your time to do the job right. Lining up a long-range arrow shot. Attentively standing watch. Disarming a bank’s alarm system.\nClever: A Clever action requires that you think fast, solve problems, or account for complex variables. Finding the weakness in an enemy swordsman’s style. Finding the weak point in a fortress wall. Fixing a computer.\nFlashy: A Flashy action draws attention to you; it’s full of style and panache. Delivering an inspiring speech to your army. Embarrassing your opponent in a duel. Producing a magical fireworks display.\nForceful: A Forceful action isn’t subtle—it’s brute strength. Wrestling a bear. Staring down a thug. Casting a big, powerful magic spell. \nQuick: A Quick action requires that you move quickly and with dexterity. Dodging an arrow. Getting in the first punch. Disarming a bomb as it ticks 3… 2… 1… \nSneaky: A Sneaky action is done with an emphasis on misdirection, stealth, or deceit. Talking your way out of getting arrested. Picking a pocket. Feinting in a sword fight.\n\nPlayer is attempting the action: '$action'. Given the context and the player character sheet, answer the following questions in a numbered list format, only giving the simple answer without preface or explanation. 1. Yes or no, is the action impossible in the current situation? Be sure to consider if it's physiologically plausible, an anachronism, or required items are not present when considering the possibility. 2. What is the player's approach? Answer the one that best fits among: careful, clever, flashy, forceful, quick, or sneaky 3. Give a comma separated list of obviously relevant aspects, stunts, or situational advantages that make this action more likely to succeed. If none are clearly relevant to the action answer n/a. 4. Give a comma separated list of obviously relevant aspects or situational disadvantages that make this action more likely to fail. If none are clearly relevant to the action answer n/a. Be strict and harsh in determining relevance. The answer if a stunt, aspect, or situation is relevant is probably n/a.",
+    ruleprompt_fae_action2: "Approach defintions:\nCareful: A Careful action is when you pay close attention to detail and take your time to do the job right. Lining up a long-range arrow shot. Attentively standing watch. Disarming a bank’s alarm system.\nClever: A Clever action requires that you think fast, solve problems, or account for complex variables. Finding the weakness in an enemy swordsman’s style. Finding the weak point in a fortress wall. Fixing a computer.\nFlashy: A Flashy action draws attention to you; it’s full of style and panache. Delivering an inspiring speech to your army. Embarrassing your opponent in a duel. Producing a magical fireworks display.\nForceful: A Forceful action isn’t subtle—it’s brute strength. Wrestling a bear. Staring down a thug. Casting a big, powerful magic spell. \nQuick: A Quick action requires that you move quickly and with dexterity. Dodging an arrow. Getting in the first punch. Disarming a bomb as it ticks 3… 2… 1… \nSneaky: A Sneaky action is done with an emphasis on misdirection, stealth, or deceit. Talking your way out of getting arrested. Picking a pocket. Feinting in a sword fight.\n\nPlayer is attempting the action: '$action'. Given the context and the player character sheet, answer the following questions in a numbered list format, only giving the simple answer without preface or explanation. 1. Yes or no, is the action impossible in the current situation? Be sure to consider if it's physiologically plausible, an anachronism, or required items are not present when considering the possibility. 2. What is the player's approach? Answer the one that best fits among: careful, clever, flashy, forceful, quick, or sneaky 3. Give a comma separated list of obviously relevant aspects, or situational advantages that make this action more likely to succeed. If none are clearly relevant to the action answer n/a. 4. Give a comma separated list of obviously relevant aspects or situational disadvantages that make this action more likely to fail. If none are clearly relevant to the action answer n/a. Be strict and harsh in determining relevance. The answer if a stunt, aspect, or situation is relevant is probably n/a.",
     // tts settings
     tts_enable: false,
     tts_type: "Kobold",
-    tts_api: "http://localhost:5000/api/extra/tts/",
-    tts_api_key: "b8f3c5b0d5f1e4c8a6e9b1c2d4f3e2f1",
+    tts_api: "http://localhost:5001/api/extra/tts/",
+    tts_api_key: "INSERT_API_KEY_HERE",
     tts_default_male: "kobo",
     tts_default_female: "cheery",
     tts_narrator: "chatty",
@@ -82,13 +66,13 @@ function loadDefaultSettings() {
     // image generation settings
     autogenerate_prompts: false,
     concurrent_art: false,
-    sdAPI: "https://b6de60edc66c97d6c9.gradio.live/sdapi/v1/txt2img",
+    sdAPI: "http://localhost:7860/sdapi/v1/txt2img",
     sdAPItype: "a1111",
-    default_prompt: "__default__,Pokémon style,",
-    default_negative_prompt: "__defaultneg__,",
+    default_prompt: ",",
+    default_negative_prompt: ",",
     person_prompt: "",
     person_negprompt: "",
-    creature_prompt: "(nopeople),((Pokémon)),",
+    creature_prompt: "(nopeople),",
     creature_negprompt: "((person, human)),",
     thing_prompt: "(nopeople),",
     thing_negprompt: "((people, human, person)),",
@@ -98,18 +82,18 @@ function loadDefaultSettings() {
     cfg_scale: 7,
     save_images: false,
     sampler_name: "Euler_a",
-    seed_variation: 3,
+    seed_variation: 0,
     // text generation API settings
     story_param: {
-      textAPI: "https://openrouter.ai/api/v1/",
+      textAPI: "http://localhost:5001/v1/",
       textAPItype: "openai",
-      apiKey: "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",
-      model: "mistralai/mistral-small-24b-instruct-2501:free",
+      apiKey: "INSERT_API_KEY_HERE",
+      model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 400,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
       stop_sequence: ["###", "<s>", " <s>", " <s> ", "### INPUT"],
-      system_prompt: "Continue the story according to the bracketed instructions. Create a lifelike atmosphere with vivid, immersive details that draw the reader into the story. Use 2nd-person perspective, present tense, referring to the player as \"you\". Avoid vague statements, flowery metaphors, summaries, or send-off messages (do not end the scene). Focus on the moment, including visual and sensory detail, with quoted dialogue if appropriate. Be creative and don't always make events predictable. Characters should behave realistically and not always pander to the player. Write in the style of: Terry Pratchett.",
+      system_prompt: "Continue the story according to the bracketed instructions. Create a lifelike atmosphere with vivid, immersive details that draw the reader into the story. Use 2nd-person perspective, present tense, referring to the player as \"you\". Avoid vague statements, flowery metaphors, summaries, or send-off messages (do not end the scene). Focus on the moment, including visual and sensory detail, with quoted dialogue if appropriate. Be creative and don't always make events predictable. Characters should behave realistically and not always pander to the player. Write in the style of: $settings.writing_style$.",
       quiet: false,
       rep_pen: 1.1,
       rep_pen_range: 256,
@@ -122,10 +106,10 @@ function loadDefaultSettings() {
       typical: 1
     },
     question_param: {
-      textAPI: "https://openrouter.ai/api/v1/",
+      textAPI: "http://localhost:5001/v1/",
       textAPItype: "openai",
-      apiKey: "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",
-      model: "mistralai/mistral-small-24b-instruct-2501:free",
+      apiKey: "INSERT_API_KEY_HERE",
+      model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 600,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -143,10 +127,10 @@ function loadDefaultSettings() {
       typical: 1
     },
     creative_question_param: {
-      textAPI: "https://openrouter.ai/api/v1/",
+      textAPI: "http://localhost:5001/v1/",
       textAPItype: "openai",
-      apiKey: "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",
-      model: "mistralai/mistral-small-24b-instruct-2501:free",
+      apiKey: "INSERT_API_KEY_HERE",
+      model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 600,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -164,10 +148,10 @@ function loadDefaultSettings() {
       typical: 1
     },
     summary_param: {
-      textAPI: "https://openrouter.ai/api/v1/",
+      textAPI: "http://localhost:5001/v1/",
       textAPItype: "openai",
-      apiKey: "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",
-      model: "mistralai/mistral-small-24b-instruct-2501:free",
+      apiKey: "INSERT_API_KEY_HERE",
+      model: "huihui-ai/Mistral-Small-24B-Instruct-2501-abliterated",
       max_context_length: 4096,
       max_length: 600,
       text_prompt: " <s> [INST] $system_prompt\n\n### INPUT\n$input_string [/INST]\n$response_string",
@@ -208,7 +192,7 @@ function loadDefaultSettings() {
     areaPathsContext: "Paths or Exits may lead to:\n$paths",
     areaTimeContext: "Time: $timeOfDay of $dayOfWeek in $season\n",
     subLocationFormat: "$name: $description\n",
-    entityFormat: "$name: $description\n$affinity\n",
+    entityFormat: "$name: $description$affinity$memory\n",
     action_string: "Describe the player taking the action and then the resulting story.",
     affinityGainCheck:"[Answer the following questions in a numbered list format in regard to the passage and $name. If the question can not be answered just respond with 'n/a'. 1. Yes or no, did $player do something so amazing for $name that there's no possible way they wouldn't consider them a $newaffinity? 2. Yes or no, did $player do something for $name that only someone considered at least a $newaffinty might do? 3. Yes or no, did $name do something for $player that only someone considered at least a $newaffinty might do? 4. Yes or no, did $player do something so kind and wonderful for $name, that they will remember it as long as they live? 5. In 6 words only giving the completion of the sentence, complete the senstence '$name remembers that ___']",
     affinityLossCheck:"[Answer the following questions in a numbered list format in regard to the passage and $name. If the question can not be answered just respond with 'n/a'. 1. Yes or no, did $player do something so horrible to $name that there's no possible way they wouldn't consider them $newaffinity? 2. Yes or no, did $player do something to $name that someone considered $newaffinty might do? 3. Yes or no, did $name do something to $player that someone considered $newaffinty might do? 4. Yes or no, did $player do something that $name will never be able to forgive so long as they live? 5. In 6 words only giving the completion of the sentence, complete the senstence '$name remembers that ___']",
@@ -221,10 +205,10 @@ function loadDefaultSettings() {
     addCreatureDescriptionPrompt: "World Info: $world\nLocated in $areaName: $areaDescription\n\n[Write a description of '$name'. Write a 1-2 sentence physical description, and a 1-2 sentence description of attidue dispositon or apparent motivation. If there is not enough information in the context, be creative.]",
     outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If there are any $settings.setient_string$ in the scene besides %settings.player_name% and those listed in area, what is their name, or a simple two word description if name is not revealed? 2. If there are any $settings.creature_string$ in the scene besides $settings.player_name$ and those listed in area, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. Have any $settings.creature_string$ become $settings.sentient_string$, what is their name? 7. Have any $settings.sentient_string$ become $settings.creature_string$, what is their name? 8. If a new thing is in the scene, what is its name? 9. If a path to a location besides those lasted in context has been revealed, what is the location's name?]",
     outputAutoCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. If a question has multiple answers, answer the question multiple times preceeded by the question number on each line separated by new lines. 1. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest. 2. If a person, creature, or thing had a signficant change to their physical or emotional state, what is their name? 3. Name any person or creature that grew in appreciation for the player, %settings.player_name%. 4. Name any person or creature that grew in fear, enmity, or distrust of the player, %settings.player_name%.]",
-    consequencePrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. 1. If I, the player $player, suffered emotional or physical harm in the passage, how long would you estimate it would take to recover? Answer in terms of rest time choosing one of the following: hours, days, years, or longer. 2. If $player suffered emotional or physical harm, creatively describe the immediate and lingering effects in 6 words.]",
+    consequencePrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. 1. If I, the player $player, suffered emotional or physical harm in the passage, how long would you estimate it would take to recover? Answer in terms of rest time choosing one of the following: minutes, hours, days, years, or longer. 2. If $player suffered emotional or physical harm, creatively describe the immediate and lingering effects in 6 words.]",
     moveToAreaProximityPrompt: '[Depending on the distance traveled in the passage, would "$newArea" be best described as proximate to one of the previously listed locations? Specify the location and only the location name from the list if such is the case, otherwise answer n/a.]',
     moveToAreaPeoplePrompt: '[Answer the following question in a list format separate by \'\n\' in regard to the passage. If the question can not be answered just respond with \'n/a\' and no explanation. Among $peopleNames, who moved with the player?]',
-    entityLeavesAreaPrompt: '[In the passage, to which of the adjacent areas in the context did $name move to? If ambiguous be creative and give the most fitting among the options.]',
+    entityLeavesAreaPrompt: '[In the passage, to which of the adjacent areas in the context did $name move to? If ambiguous be creative and give the most fitting among the options. Only give the area name without any other text.]',
     generateNewDescription: '\nPrevious Description: $description\n\n[Generate a new description for $name reflecting any significant changes in the context. The previous description should remain relatively unchanged unless something from recent events contradicts or is significantly important. Only $name should be mentioned in the description output. Description should be 3-4 sentences, starting with a physical description and followed by notable mental or emotional quirks.]',
     // sample prompts
     sampleSublocations: [
@@ -276,7 +260,7 @@ function loadDefaultSettings() {
     sampleFAEAction: [
       {
         "role": "user",
-        "content": "\"First, we need to find some batteries. There might be some in that storage closet.\" Your eyes drift towards the cluttered closet, its door slightly ajar. \"And I'll need something to straighten out this antenna.\" You glance around the room, spotting a few potential tools amidst the debris—a broken chair leg, a rusty fork. You hand the radio back to the girl and gesture for her to stay with it, \"Can you take care of this? I’ll be right back.\" She nods eagerly, cradling the radio as if it were a fragile treasure.\nAspects: The Man with the Plan,Big Brain,Good with Computers,Lone Wolf,Always on the Run\nPlayer is attempting the action: 'Enact the plan to fix the radio.'. Given the context and the player character sheet, answer the following questions in a numbered list format, only giving the simple answer without preface or explanation. 1. Yes or no, is the action impossible in the current situation? Be sure to consider if it's physiologically plausible, an anachronism, or required items are not present when considering the possibility. 2. What is the player's approach? Answer the one that best fits among: careful, clever, flashy, forceful, quick, or sneaky 3. Give a comma separated list of obviously relevant aspects, stunts, or situational advantages that make this action more likely to succeed. If none are clearly relevant to the action answer n/a. 4. Give a comma separated list of obviously relevant aspects or situational disadvantages that make this action more likely to fail. If none are clearly relevant to the action answer n/a. Be strict and harsh in determining relevance. The answer if a stunt, aspect, or situation is relevant is probably n/a.",
+        "content": "\"First, we need to find some batteries. There might be some in that storage closet.\" Your eyes drift towards the cluttered closet, its door slightly ajar. \"And I'll need something to straighten out this antenna.\" You glance around the room, spotting a few potential tools amidst the debris—a broken chair leg, a rusty fork. You hand the radio back to the girl and gesture for her to stay with it, \"Can you take care of this? I’ll be right back.\" She nods eagerly, cradling the radio as if it were a fragile treasure.\nAspects: The Man with the Plan,Big Brain,Good with Computers,Lone Wolf,Always on the Run\nPlayer is attempting the action: 'Enact the plan to fix the radio.'. Given the context and the player character sheet, answer the following questions in a numbered list format, only giving the simple answer without preface or explanation. 1. Yes or no, is the action impossible in the current situation? Be sure to consider if it's physiologically plausible, an anachronism, or required items are not present when considering the possibility. 2. What is the player's approach? Answer the one that best fits among: careful, clever, flashy, forceful, quick, or sneaky 3. Give a comma separated list of obviously relevant aspects, or situational advantages that make this action more likely to succeed. If none are clearly relevant to the action answer n/a. 4. Give a comma separated list of obviously relevant aspects or situational disadvantages that make this action more likely to fail. If none are clearly relevant to the action answer n/a. Be strict and harsh in determining relevance. The answer if a stunt, aspect, or situation is relevant is probably n/a.",
       },
       {
       "role": "assistant",

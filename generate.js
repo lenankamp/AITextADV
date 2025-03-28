@@ -4,11 +4,40 @@ let textRequestQueue = [];
 let isProcessingArt = false;
 let isProcessingText = false;
 
+function updateQueueStatus() {
+    const queueStatusEl = document.querySelector('.queue-status');
+    const loaderEl = document.querySelector('.loader');
+    const container = document.querySelector('.loader-container');
+    
+    const artCount = artRequestQueue.length;
+    const textCount = textRequestQueue.length;
+    
+    if (artCount === 0 && textCount === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'flex';
+    loaderEl.style.display = 'block';
+    
+    let status = 'Generating ';
+    if ((artCount > 0 || isProcessingArt) && (textCount > 0 || isProcessingText)) {
+        status += `${artCount} Image${artCount > 1 ? 's' : ''} and Text`;
+    } else if (artCount > 0 || isProcessingArt) {
+        status += `${artCount} Image${artCount > 1 ? 's' : ''}`;
+    } else if (textCount > 0 || isProcessingText) {
+        status += `Text`;
+    }
+    
+    queueStatusEl.textContent = status;
+}
+
 async function processTextQueue() {
     if (isProcessingText || textRequestQueue.length === 0) return;
     if (isProcessingArt && !settings.concurrent_art) return;
 
     isProcessingText = true;
+    updateQueueStatus();
     const request = textRequestQueue.shift();
 
     try {
@@ -24,6 +53,7 @@ async function processTextQueue() {
         request.reject(error);
     } finally {
         isProcessingText = false;
+        updateQueueStatus();
         processTextQueue();
         if(!isProcessingText && !isArtQueueEmpty())
             processArtQueue();
@@ -35,12 +65,10 @@ function isArtQueueEmpty() {
 }
 
 async function processArtQueue() {
-    // Don't process art if text is being processed and concurrent_art is false
     if (isProcessingText && !settings.concurrent_art) return;
 
     if (isProcessingArt || artRequestQueue.length === 0) {
         if (!isProcessingArt && !isProcessingText) {
-            // Queue is empty, trigger sublocation image generation
             const event = new CustomEvent('artQueueEmpty');
             document.dispatchEvent(event);
         }
@@ -48,6 +76,7 @@ async function processArtQueue() {
     }
 
     isProcessingArt = true;
+    updateQueueStatus();
     const request = artRequestQueue.shift();
 
     try {
@@ -57,7 +86,7 @@ async function processArtQueue() {
         request.reject(error);
     } finally {
         isProcessingArt = false;
-        // Process next request if any
+        updateQueueStatus();
         if (textRequestQueue.length > 0)
             processTextQueue();
         else
@@ -75,8 +104,6 @@ async function generateText(params, input, post = '', variables = {}, sample_mes
 
 // Implementation of text generation
 async function generateTextImpl(params, input, post = '', variables = {}, sample_messages = []) {
-    // Show loader
-    document.getElementById('loader').style.display = 'block';
 
     // Process input string for variable replacements if it contains $variables
     input = replaceVariables(input, variables);
@@ -194,7 +221,6 @@ async function generateTextImpl(params, input, post = '', variables = {}, sample
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             const taskData = await response.json();
-            console.log("Task submitted:", taskData);
 
             // Poll for the result
             const taskId = taskData.id;
@@ -206,9 +232,6 @@ async function generateTextImpl(params, input, post = '', variables = {}, sample
     }
 
     const data = await response.json();
-
-    // Hide loader
-    document.getElementById('loader').style.display = 'none';
 
     if (params.textAPItype == 'openai') {
         if (data.choices)
@@ -238,7 +261,6 @@ async function pollTextStatus(taskId, apiKey) {
         const statusData = await response.json();
 
         if (statusData.done) {
-            console.log("Generated text:", statusData.generations[0].text);
             completed = true;
         } else if (statusData.faulted) {
             throw new Error("Text generation failed");
@@ -420,7 +442,6 @@ async function base64ToWebP(imageBase64) {
         );
     });
 
-    // Hide loader
     return webpBlob;
 }
 

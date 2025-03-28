@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dungeon Generator Demo</title>
+    <style>
+        /* CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
+            isolation: isolate;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            position: relative;
+            isolation: isolate;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 300px;
+            height: fit-content;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ddd;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            background-color: #333;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4a9eff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        #dungeon-display {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            overflow: auto;
+            flex: 1;
+            position: relative;
+            min-height: 500px;
+        }
+
+        .dungeon-grid {
+            display: grid;
+            gap: 1px;
+            background-color: transparent;
+        }
+
+        .tile {
+            width: 30px;
+            height: 30px;
+            position: relative;
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        /* Base tile types */
+        .wall { background-color: #444 !important; }
+        .floor { 
+            background-color: #666;
+            position: relative;
+        }
+
+        /* Simple height-based background brightness */
+        .floor[data-elevation="3"] { background-color: #888; }  /* PEAK - brightest */
+        .floor[data-elevation="2"] { background-color: #808080; }  /* HIGH */
+        .floor[data-elevation="1"] { background-color: #777; }  /* RAISED */
+        .floor[data-elevation="0"] { background-color: #666; }  /* GROUND - baseline */
+        .floor[data-elevation="-1"] { background-color: #555; }  /* BASEMENT */
+        .floor[data-elevation="-2"] { background-color: #444; }  /* DEPTHS - darkest */
+
+        /* Optional: Show elevation number */
+        .floor::after {
+            content: attr(data-elevation);
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 8px;
+            color: white;
+            text-shadow: 1px 1px 1px black;
+            z-index: 3;
+        }
+
+        .entrance { background-color: #4a9eff !important; }
+        .exit { background-color: #ff4a4a !important; }
+        .door { background-color: #8b4513 !important; }
+        .secret-door { background-color: #473322 !important; }
+        .chest { background-color: #ffd700 !important; }
+        .trap { background-color: #ff69b4 !important; }
+
+        /* Terrain overlays */
+        .plains { background-image: linear-gradient(#90ee9070, #90ee9070); }
+        .forest { background-image: linear-gradient(#22823270, #22823270); }
+        .mountain { background-image: linear-gradient(#a5927270, #a5927270); }
+        .water { background-image: linear-gradient(#4a9eff70, #4a9eff70); }
+        .desert { background-image: linear-gradient(#f4a46070, #f4a46070); }
+        .swamp { background-image: linear-gradient(#6b8e2370, #6b8e2370); }
+        .volcano { background-image: linear-gradient(#ff450070, #ff450070); }
+        .snow { background-image: linear-gradient(#ffffff70, #ffffff70); }
+        .cave { background-image: linear-gradient(#48454570, #48454570); }
+        .ruins { background-image: linear-gradient(#c5c5c570, #c5c5c570); }
+
+        /* Environmental effects */
+        .effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
+            mix-blend-mode: overlay;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.4; }
+        }
+
+        @keyframes glow {
+            0% { filter: brightness(0.8); }
+            50% { filter: brightness(1.2); }
+            100% { filter: brightness(0.8); }
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.4; }
+            25% { opacity: 0.6; }
+            50% { opacity: 0.4; }
+            75% { opacity: 0.7; }
+            100% { opacity: 0.4; }
+        }
+
+        @keyframes wave {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(2px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Customize animations for each effect type */
+        .tile .effect.darkness, .legend-color .effect.darkness { 
+            background-color: rgba(0, 0, 0, 0.7) !important; 
+            mix-blend-mode: multiply;
+            animation: pulse 3s infinite;
+        }
+
+        .tile .effect.holy, .legend-color .effect.holy { 
+            background-color: rgba(255, 255, 150, 0.5) !important;
+            animation: glow 2s infinite;
+        }
+
+        .tile .effect.poisoned, .legend-color .effect.poisoned { 
+            background-color: rgba(50, 255, 50, 0.4) !important;
+            animation: pulse 1.5s infinite;
+        }
+
+        .tile .effect.electrified, .legend-color .effect.electrified { 
+            background-color: rgba(255, 255, 50, 0.4) !important;
+            animation: flicker 0.5s infinite;
+        }
+
+        .tile .effect.burning, .legend-color .effect.burning { 
+            background-color: rgba(255, 50, 50, 0.4) !important;
+            animation: flicker 1s infinite;
+        }
+
+        .tile .effect.frozen, .legend-color .effect.frozen { 
+            background-color: rgba(50, 200, 255, 0.4) !important;
+            animation: wave 2s infinite;
+        }
+
+        /* Ensure terrain overlays don't interfere with effects */
+        .terrain-overlay {
+            z-index: 1;
+        }
+        
+        /* Make the effects more visible in the legend */
+        .legend-color {
+            background-color: #666;
+        }
+
+        /* Elevation indicators */
+        .elevation::after {
+            content: attr(data-elevation);
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 8px;
+            color: white;
+            text-shadow: 1px 1px 1px black;
+        }
+
+        .legend {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #444;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .legend-color .effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Ensure legend colors show properly */
+        .legend-item .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #444;
+            position: relative;
+            overflow: hidden;
+            background-color: transparent; /* Reset default background */
+        }
+
+        /* Environmental effects base styles and animations */
+        @keyframes flow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 0.4; }
+            25% { opacity: 0.6; }
+            50% { opacity: 0.4; }
+            75% { opacity: 0.7; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes crystallize {
+            0% { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+            50% { clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
+            100% { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+        }
+
+        @keyframes drift {
+            0% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(2px) translateY(1px); }
+            50% { transform: translateX(0) translateY(2px); }
+            75% { transform: translateX(-1px) translateY(1px); }
+            100% { transform: translateX(0) translateY(0); }
+        }
+
+        .effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Fluid pattern effects */
+        .effect.watery, .effect.molten, .effect.muddy {
+            background-image: linear-gradient(90deg, 
+                rgba(0,0,0,0) 0%, 
+                currentColor 50%, 
+                rgba(0,0,0,0) 100%);
+            background-size: 200% 100%;
+            animation: flow 3s linear infinite;
+        }
+
+        .effect.watery {
+            color: rgba(0, 100, 255, 0.3);
+        }
+
+        .effect.molten {
+            color: rgba(255, 50, 0, 0.3);
+            animation-duration: 4s;
+        }
+
+        .effect.muddy {
+            color: rgba(139, 69, 19, 0.3);
+            animation-duration: 5s;
+        }
+
+        /* Branching pattern effects */
+        .effect.poisoned {
+            background: radial-gradient(circle at center,
+                rgba(0, 255, 0, 0.4) 0%,
+                transparent 70%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .effect.electrified {
+            background: radial-gradient(circle at center,
+                rgba(255, 255, 0, 0.4) 0%,
+                transparent 70%);
+            animation: flicker 0.5s linear infinite;
+        }
+
+        /* Scattered cluster effects */
+        .effect.burning {
+            background: radial-gradient(circle at center,
+                rgba(255, 0, 0, 0.4) 0%,
+                transparent 60%);
+            animation: flicker 1s ease-out infinite;
+        }
+
+        .effect.crystalline {
+            background: radial-gradient(circle at center,
+                rgba(200, 200, 255, 0.5) 0%,
+                transparent 70%);
+            animation: crystallize 4s ease-in-out infinite;
+        }
+
+        /* Wall pattern effects */
+        .effect.frozen {
+            background: linear-gradient(45deg,
+                rgba(200, 220, 255, 0.4) 0%,
+                transparent 50%);
+            animation: drift 3s ease-in-out infinite;
+        }
+
+        /* Full room coverage effects */
+        .effect.darkness {
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .effect.holy {
+            background: radial-gradient(circle at center,
+                rgba(255, 255, 150, 0.4) 0%,
+                transparent 80%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .effect.sandy {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(244, 164, 96, 0.3),
+                rgba(244, 164, 96, 0.3) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            animation: drift 4s linear infinite;
+        }
+
+        .effect.rocky {
+            background: radial-gradient(circle at center,
+                rgba(169, 169, 169, 0.4) 0%,
+                transparent 70%);
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+        }
+
+        /* Update legend to show patterns properly */
+        .legend-color .effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: none !important;
+        }
+
+        /* Base effect styles */
+        .effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Pattern-specific animations */
+        @keyframes flicker {
+            0%, 100% { opacity: 0.4; }
+            25% { opacity: 0.6; }
+            50% { opacity: 0.3; }
+            75% { opacity: 0.7; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes flow {
+            0% { transform: translateX(-100%) translateY(0); }
+            100% { transform: translateX(100%) translateY(0); }
+        }
+
+        @keyframes branch {
+            0% { clip-path: polygon(0% 50%, 100% 0%, 100% 100%); }
+            50% { clip-path: polygon(0% 0%, 100% 50%, 0% 100%); }
+            100% { clip-path: polygon(0% 50%, 100% 0%, 100% 100%); }
+        }
+
+        /* Fluid patterns (water, molten, muddy) */
+        .effect.watery {
+            background: repeating-linear-gradient(45deg,
+                rgba(0, 100, 255, 0.3) 0%,
+                rgba(0, 100, 255, 0.1) 25%,
+                rgba(0, 100, 255, 0.3) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 3s linear infinite;
+        }
+
+        .effect.molten {
+            background: repeating-linear-gradient(45deg,
+                rgba(255, 50, 0, 0.4) 0%,
+                rgba(255, 50, 0, 0.2) 25%,
+                rgba(255, 50, 0, 0.4) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 4s linear infinite;
+        }
+
+        .effect.muddy {
+            background: repeating-linear-gradient(45deg,
+                rgba(139, 69, 19, 0.3) 0%,
+                rgba(139, 69, 19, 0.1) 25%,
+                rgba(139, 69, 19, 0.3) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 5s linear infinite;
+        }
+
+        /* Branching patterns (poison, electricity) */
+        .effect.poisoned {
+            background: radial-gradient(
+                circle at 50% 50%,
+                rgba(0, 255, 0, 0.4) 0%,
+                rgba(0, 255, 0, 0.2) 30%,
+                transparent 70%
+            );
+            clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+            animation: branch 2s ease-in-out infinite;
+        }
+
+        .effect.electrified {
+            background: radial-gradient(
+                circle at 50% 50%,
+                rgba(255, 255, 0, 0.5) 0%,
+                rgba(255, 255, 0, 0.2) 30%,
+                transparent 70%
+            );
+            clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+            animation: branch 0.5s ease-in-out infinite;
+        }
+
+        /* Scattered cluster effects */
+        .effect.burning {
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 50, 0, 0.5) 0%,
+                transparent 60%
+            );
+            animation: flicker 1s ease-out infinite;
+        }
+
+        .effect.crystalline {
+            background: radial-gradient(
+                circle at center,
+                rgba(200, 200, 255, 0.5) 0%,
+                transparent 70%
+            );
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Full room coverage */
+        .effect.darkness {
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .effect.holy {
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 255, 150, 0.4) 0%,
+                rgba(255, 255, 150, 0.2) 50%,
+                transparent 80%
+            );
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Natural effects */
+        .effect.sandy {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(244, 164, 96, 0.3),
+                rgba(244, 164, 96, 0.3) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+        }
+
+        .effect.rocky {
+            background: radial-gradient(
+                circle at center,
+                rgba(169, 169, 169, 0.4) 0%,
+                transparent 70%
+            );
+        }
+
+        /* Legend styles */
+        .legend {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #444;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Update legend items */
+        .legend-section {
+            margin-bottom: 20px;
+        }
+
+        .legend-section h4 {
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        /* Update terrain section */
+        .legend-terrain .legend-color {
+            opacity: 0.7;
+        }
+
+        /* Environmental effects in legend */
+        .legend-effects .legend-item .effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Remove any duplicate or conflicting effect styles */
+        /* Base effects */
+        .effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Pattern-specific animations */
+        @keyframes lightning {
+            0%, 100% { 
+                clip-path: polygon(0% 50%, 33% 25%, 66% 75%, 100% 50%);
+                opacity: 0.4;
+            }
+            50% { 
+                clip-path: polygon(0% 50%, 33% 75%, 66% 25%, 100% 50%);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes poison-branch {
+            0%, 100% { 
+                clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+                opacity: 0.4;
+            }
+            50% { 
+                clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes flow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        /* Effect patterns */
+        .effect.electrified {
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255, 255, 0, 0.1) 20%,
+                rgba(255, 255, 0, 0.4) 40%,
+                rgba(255, 255, 0, 0.7) 50%,
+                rgba(255, 255, 0, 0.4) 60%,
+                rgba(255, 255, 0, 0.1) 80%,
+                transparent 100%
+            );
+            animation: lightning 0.5s steps(3) infinite;
+        }
+
+        .effect.poisoned {
+            background: radial-gradient(
+                circle at 50% 50%,
+                rgba(0, 255, 0, 0.5) 0%,
+                rgba(0, 255, 0, 0.2) 50%,
+                transparent 70%
+            );
+            animation: poison-branch 2s ease-in-out infinite;
+        }
+
+        .effect.watery {
+            background: repeating-linear-gradient(45deg,
+                rgba(0, 100, 255, 0.3) 0%,
+                rgba(0, 100, 255, 0.1) 25%,
+                rgba(0, 100, 255, 0.3) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 3s linear infinite;
+        }
+
+        .effect.molten {
+            background: repeating-linear-gradient(45deg,
+                rgba(255, 50, 0, 0.4) 0%,
+                rgba(255, 50, 0, 0.2) 25%,
+                rgba(255, 50, 0, 0.4) 50%
+            );
+            background-size: 200% 100%;
+            animation: flow 4s linear infinite;
+        }
+
+        .effect.darkness {
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .effect.holy {
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 255, 150, 0.5) 0%,
+                rgba(255, 255, 150, 0.2) 50%,
+                transparent 80%
+            );
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .effect.burning {
+            background: repeating-radial-gradient(
+                circle at center,
+                rgba(255, 50, 0, 0.5) 0%,
+                rgba(255, 50, 0, 0.2) 15%,
+                transparent 30%
+            );
+            animation: flicker 1s ease-out infinite;
+        }
+
+        .effect.frozen {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(200, 220, 255, 0.4) 0%,
+                rgba(200, 220, 255, 0.1) 10%,
+                transparent 20%
+            );
+        }
+
+        /* Make effects in legend static */
+        .legend .effect {
+            animation: none !important;
+        }
+
+        /* Base floor style with height variations */
+        .floor { 
+            background-color: #666;
+            position: relative;
+        }
+
+        /* Height variations using only brightness */
+        .floor[data-elevation="3"] { filter: brightness(1.4); }  /* PEAK */
+        .floor[data-elevation="2"] { filter: brightness(1.25); } /* HIGH */
+        .floor[data-elevation="1"] { filter: brightness(1.1); }  /* RAISED */
+        .floor[data-elevation="0"] { filter: brightness(1.0); }  /* GROUND */
+        .floor[data-elevation="-1"] { filter: brightness(0.9); } /* BASEMENT */
+        .floor[data-elevation="-2"] { filter: brightness(0.8); } /* DEPTHS */
+
+        /* Remove elevation number display */
+        .floor::after {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <div class="control-group">
+                <label for="width">Dungeon Width:</label>
+                <input type="number" id="width" value="50" min="20" max="100">
+                
+                <label for="height">Dungeon Height:</label>
+                <input type="number" id="height" value="50" min="20" max="100">
+                
+                <label for="floors">Number of Floors:</label>
+                <input type="number" id="floors" value="5" min="1" max="10">
+                
+                <label for="minRoomSize">Minimum Room Size:</label>
+                <input type="number" id="minRoomSize" value="3" min="3" max="8">
+                
+                <label for="maxRoomSize">Maximum Room Size:</label>
+                <input type="number" id="maxRoomSize" value="8" min="5" max="15">
+                
+                <label for="roomAttempts">Room Generation Attempts:</label>
+                <input type="number" id="roomAttempts" value="80" min="20" max="200">
+            </div>
+            
+            <button id="generate">Generate Dungeon</button>
+            <div style="margin-top: 10px;">
+                <label for="floorSelect">Current Floor:</label>
+                <select id="floorSelect" style="width: 100%; padding: 8px; background-color: #333; color: #fff; border: 1px solid #444; border-radius: 4px;"></select>
+            </div>
+        </div>
+
+        <div id="dungeon-display"></div>
+    </div>
+
+    <div class="legend">
+        <h3>Legend</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+            <div>
+                <h4>Tile Types</h4>
+                <div class="legend-item"><div class="legend-color wall"></div>Wall</div>
+                <div class="legend-item"><div class="legend-color floor"></div>Floor</div>
+                <div class="legend-item"><div class="legend-color entrance"></div>Entrance</div>
+                <div class="legend-item"><div class="legend-color exit"></div>Exit</div>
+                <div class="legend-item"><div class="legend-color door"></div>Door</div>
+                <div class="legend-item"><div class="legend-color secret-door"></div>Secret Door</div>
+                <div class="legend-item"><div class="legend-color chest"></div>Chest</div>
+                <div class="legend-item"><div class="legend-color trap"></div>Trap</div>
+            </div>
+            
+            <div>
+                <h4>Terrain Types</h4>
+                <div class="legend-item"><div class="legend-color floor plains"></div>Plains</div>
+                <div class="legend-item"><div class="legend-color floor forest"></div>Forest</div>
+                <div class="legend-item"><div class="legend-color floor mountain"></div>Mountain</div>
+                <div class="legend-item"><div class="legend-color floor water"></div>Water</div>
+                <div class="legend-item"><div class="legend-color floor desert"></div>Desert</div>
+                <div class="legend-item"><div class="legend-color floor swamp"></div>Swamp</div>
+                <div class="legend-item"><div class="legend-color floor volcano"></div>Volcano</div>
+                <div class="legend-item"><div class="legend-color floor snow"></div>Snow</div>
+            </div>
+
+            <div>
+                <h4>Environmental Effects</h4>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect darkness"></div>
+                    </div>
+                    Darkness
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect holy"></div>
+                    </div>
+                    Holy
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect poisoned"></div>
+                    </div>
+                    Poisoned
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect electrified"></div>
+                    </div>
+                    Electrified
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect burning"></div>
+                    </div>
+                    Burning
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect frozen"></div>
+                    </div>
+                    Frozen
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect watery"></div>
+                    </div>
+                    Watery
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect molten"></div>
+                    </div>
+                    Molten
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect sandy"></div>
+                    </div>
+                    Sandy
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect muddy"></div>
+                    </div>
+                    Muddy
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect crystalline"></div>
+                    </div>
+                    Crystalline
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color floor">
+                        <div class="effect rocky"></div>
+                    </div>
+                    Rocky
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { Dungeon, TILE_TYPES, TERRAIN_TYPES, ENVIRONMENTAL_EFFECTS, ELEVATION_LEVELS } from './dungeon.js';
+
+        const dungeonDisplay = document.getElementById('dungeon-display');
+        const generateButton = document.getElementById('generate');
+        const floorSelect = document.getElementById('floorSelect');
+        let currentDungeon = null;
+
+        // Clear any existing content and ensure clean initial state
+        dungeonDisplay.innerHTML = '<div style="padding: 20px; color: #666;">Click "Generate Dungeon" to create a new dungeon</div>';
+        floorSelect.innerHTML = '';
+
+        function getTileClass(tileType) {
+            switch(tileType) {
+                case TILE_TYPES.WALL: return 'wall';
+                case TILE_TYPES.FLOOR: return 'floor';
+                case TILE_TYPES.ENTRANCE: return 'entrance';
+                case TILE_TYPES.EXIT: return 'exit';
+                case TILE_TYPES.DOOR: return 'door';
+                case TILE_TYPES.SECRET_DOOR: return 'secret-door';
+                case TILE_TYPES.CHEST: return 'chest';
+                case TILE_TYPES.TRAP: return 'trap';
+                default: return '';
+            }
+        }
+
+        function generateDungeon() {
+            const config = {
+                width: parseInt(document.getElementById('width').value),
+                height: parseInt(document.getElementById('height').value),
+                floors: parseInt(document.getElementById('floors').value),
+                minRoomSize: parseInt(document.getElementById('minRoomSize').value),
+                maxRoomSize: parseInt(document.getElementById('maxRoomSize').value),
+                roomAttempts: parseInt(document.getElementById('roomAttempts').value)
+            };
+
+            currentDungeon = new Dungeon(config);
+            currentDungeon.generate();
+
+            // Update floor selector
+            floorSelect.innerHTML = '';
+            for (let i = 0; i < config.floors; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Floor ${i + 1}`;
+                floorSelect.appendChild(option);
+            }
+
+            displayFloor(0);
+        }
+
+        function displayFloor(floorIndex) {
+            if (!currentDungeon) return;
+
+            const floor = currentDungeon.floors[floorIndex];
+            const grid = document.createElement('div');
+            grid.className = 'dungeon-grid';
+            grid.style.gridTemplateColumns = `repeat(${floor.width}, 30px)`;
+
+            for (let y = 0; y < floor.height; y++) {
+                for (let x = 0; x < floor.width; x++) {
+                    const tile = document.createElement('div');
+                    const tileType = floor.getTile(x, y);
+                    tile.className = `tile ${getTileClass(tileType)}`;
+
+                    // Always set elevation data for floor tiles
+                    if (tileType === TILE_TYPES.FLOOR) {
+                        const elevation = floor.getElevation(x, y);
+                        tile.setAttribute('data-elevation', elevation);
+
+                        // Add terrain overlay if present
+                        const terrain = floor.getTerrain(x, y);
+                        if (terrain) {
+                            tile.classList.add(terrain);
+                        }
+                    }
+
+                    // Add environmental effects
+                    const effects = floor.getEnvironmentalEffects(x, y);
+                    if (effects.length > 0) {
+                        effects.forEach(effect => {
+                            const effectDiv = document.createElement('div');
+                            effectDiv.className = `effect ${effect.type.toLowerCase()}`;
+                            tile.appendChild(effectDiv);
+                        });
+                    }
+
+                    grid.appendChild(tile);
+                }
+            }
+
+            dungeonDisplay.innerHTML = '';
+            dungeonDisplay.appendChild(grid);
+        }
+
+        generateButton.addEventListener('click', generateDungeon);
+        floorSelect.addEventListener('change', (e) => displayFloor(parseInt(e.target.value)));
+    </script>
+</body>
+</html>

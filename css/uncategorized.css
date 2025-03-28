@@ -1,108 +1,179 @@
-/* Auto-generated CSS module - Uncategorized styles */
-#left {
-    min-width: 300px;
-    max-width: calc(100vw - 100px);
-    flex: 1;
+progress {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 80%;
+    height: 20px;
+    margin: 5px;
  }
-
-#right {
-    min-width: 300px;
-    flex: 1;
+progress::-webkit-progress-value {
+    border-radius: 4px;
  }
-
-#q1 {
-    height: 65vh;
+progress::-moz-progress-bar {
+    border-radius: 4px;
  }
-
-#q2 {
-    height: 40vh;
+.output-editor-actions button {
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+ }
+.setting-checkbox {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+ }
+.settings-actions {
+    position: relative;
+    margin-top: auto;
+    padding: 10px 0 0 0;
+    border-top: 1px solid #404040;
+    z-index: 3;
     display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+ }
+.image-container {
+    position: relative;
+    width: 33%;
+    transition: transform 0.2s;
+ }
+.image-container:hover {
+    transform: scale(1.05);
+    z-index: 2;
+ }
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: 1px solid #404040;
+    cursor: pointer;
+ }
+#followers-container {
+    display: flex;
+    width: 0;
+    height: 100%;
     overflow: hidden;
+    transition: width 0.3s ease-in-out;
+    justify-content: flex-start;
+    position: relative;
+    margin-left: auto; /* Push container to right side */
  }
- 
- #q3 {
-    height: 34vh;
+.sceneart-container {
+    position: relative;
+    overflow: hidden;
+    width: 60%;
+    height: 100%;
  }
-
- #q4 {
-    height: 59vh;
-    overflow: auto;
+.output-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid #404040;
+    margin-bottom: 8px;
  }
-
-.setting-item {
-    margin-bottom: 20px;
+.output-editor-content {
+    flex: 1;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
+    gap: 2px;
+    padding: 0;
+    margin: 4px 0;
+    min-height: 0;
+ }
+.output-editor-actions {
+    display: flex;
+    justify-content: flex-end;
     gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #404040;
+    margin-top: 8px;
  }
-
-.setting-item:last-child {
-    margin-bottom: 0;
+#outputCheckConfirm input {
+    min-width: 100px;
+    max-width: 200px;
+    flex-shrink: 0;
+}
+#outputCheckConfirm button {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.output {
+    position: relative;  /* Add this to make absolute positioning work relative to output */
+}
+@keyframes ellipsis {
+    0% { content: '.'; }
+    33% { content: '..'; }
+    66% { content: '...'; }
+    100% { content: '.'; }
+}
+.queue-status::after {
+    content: '.';
+    display: inline-block;
+    width: 12px;  /* Fixed width for the ellipsis */
+    text-align: left;
+    animation: ellipsis 1.5s infinite;
+    margin-left: 2px;  /* Small gap between text and ellipsis */
+}
+#entitySubmenu {
+    min-width: 150px;
  }
-
-.setting-item textarea {
-    min-height: 120px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    line-height: 1.4;
-    tab-size: 2;
-    -moz-tab-size: 2;
-    white-space: pre;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    overflow-x: hidden;
+#fileInput {
+    display: none;
  }
-
-.btn-primary:active {
-    transform: translateY(0);
- }
-
-.btn-secondary:active {
-    transform: translateY(0);
- }
-
+.array-container {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #363636;
+    border-radius: 6px;
+    border: 1px solid #404040;
+}
+.array-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #404040;
+    font-weight: bold;
+}
+.array-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.array-item {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.remove-item:hover {
+    background: #993333;
+}
 .image-grid {
     height: 90%;
  }
-
 .image-row {
     display: flex;
     flex-flow: row;
     height: 35%;
     padding: 5px;
  }
-
-.follower-image.show {
-    opacity: 1;
-    transform: translateX(0);
- }
-
 .time-display .date-season {
     text-align: left;
  }
-
 .time-display .time {
     text-align: right;
  }
-
 #sceneart {
     height: 100%;
     width: 100%;
     object-fit: cover;
  }
-
-.setting-item textarea {
-    font-family: 'Consolas', 'Monaco', monospace;
-    line-height: 1.4;
-    tab-size: 2;
-    -moz-tab-size: 2;
-    white-space: pre;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    overflow-x: hidden;
- }
-
 .section-toggle {
     margin-left: auto;
     transition: transform 0.3s ease;
@@ -110,18 +181,15 @@
     display: inline-block;
     opacity: 0.7;
  }
-
 #settingsForm {
     display: flex;
     flex-direction: column;
     height: 100%;
     overflow: hidden;
  }
-
 .output-entry textarea:focus {
     outline: none;
  }
-
 .entry-controls {
     position: absolute;
     top: 4px;
@@ -129,48 +197,375 @@
     opacity: 0;
     transition: opacity 0.2s ease;
  }
-
 .output-entry:hover .entry-controls {
     opacity: 1;
  }
-
 .save-changes-btn:active {
     transform: translateY(0);
  }
-
 .cancel-edit-btn:active {
     transform: translateY(0);
  }
-
 to { opacity: 1; transform: translateY(0);  }
-
-/* Dynamic state classes */
 .hidden {
     display: none !important;
  }
-
 .visible {
     display: block;
  }
-
-.flex-visible {
-    display: flex;
- }
-
-/* Dynamic sizing classes */
 .full-width {
     width: 100% !important;
  }
-
 .full-height {
     height: 100% !important;
  }
-
 .auto-height {
     height: auto !important;
  }
 
-.follower-visible {
-    width: auto !important;
- }
+ .dungeon-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 100;
+    display: none;
+}
 
+.dungeon-overlay.active {
+    display: block;
+}
+
+.dungeon-content {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.dungeon-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.dungeon-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.dungeon-view {
+    flex: 2;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    min-height: 300px;
+}
+
+.tile-display {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 2px;
+    width: 100%;
+    height: 100%;
+    perspective: 800px;
+    transform-style: preserve-3d;
+    padding: 20px;
+}
+
+.dungeon-tile {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #444;
+    transition: transform 0.3s;
+}
+
+.dungeon-tile.wall {
+    background: #333;
+    transform: translateZ(20px);
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.dungeon-tile.floor {
+    background: #666;
+    transform: translateZ(0);
+}
+
+.dungeon-tile.door {
+    background: #963;
+    transform: translateZ(10px);
+}
+
+.dungeon-tile.chest {
+    background: #fc0;
+    transform: translateZ(15px);
+    animation: pulse 2s infinite;
+}
+
+.dungeon-tile.exit {
+    background: #3c3;
+    transform: translateZ(5px);
+    animation: glow 1.5s infinite alternate;
+}
+
+.dungeon-tile.trap {
+    background: #c33;
+    transform: translateZ(5px);
+}
+
+.party-container {
+    flex: 1;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    min-height: 120px;
+}
+
+.party-portraits {
+    display: flex;
+    gap: 10px;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+}
+
+.main-character-portrait {
+    width: 25%;
+    height: 100%;
+    border: 2px solid gold;
+    border-radius: 5px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.main-character-portrait:hover {
+    transform: scale(1.05);
+}
+
+.follower-portrait {
+    width: 25%;
+    height: 100%;
+    border: 2px solid silver;
+    border-radius: 5px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.follower-portrait:hover {
+    transform: scale(1.05);
+}
+
+.party-stats {
+    flex: 1;
+    padding: 10px;
+    color: #fff;
+}
+
+.dungeon-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 10px;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.action-btn {
+    padding: 10px;
+    background: #333;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.action-btn:hover {
+    background: #444;
+}
+
+.dungeon-map-container {
+    flex: 1;
+    position: relative;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#dungeonMap {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+
+#dungeonMap:active {
+    cursor: grabbing;
+}
+
+.map-controls {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+}
+
+.map-btn {
+    width: 30px;
+    height: 30px;
+    background: rgba(51, 51, 51, 0.8);
+    border: 1px solid #444;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.map-btn:hover {
+    background: rgba(68, 68, 68, 0.8);
+}
+
+.character-submenu {
+    position: fixed;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 15px;
+    min-width: 250px;
+    z-index: 1000;
+    color: #fff;
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.character-submenu.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.stats-section {
+    margin-bottom: 15px;
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    width: 30px;
+}
+
+.health-bar, .mana-bar {
+    flex: 1;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.health-bar > div {
+    height: 100%;
+    background: #f44;
+}
+
+.mana-bar > div {
+    height: 100%;
+    background: #44f;
+}
+
+.stat-value {
+    width: 70px;
+    text-align: right;
+}
+
+.job-section {
+    margin: 15px 0;
+}
+
+.job-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.job-option {
+    padding: 8px;
+    background: #333;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.2s;
+}
+
+.job-option:hover {
+    background: #444;
+}
+
+.job-option.current {
+    background: #464;
+}
+
+.abilities-section {
+    margin-top: 15px;
+}
+
+.ability-item {
+    padding: 8px;
+    margin-bottom: 6px;
+    background: #333;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.ability-item:hover {
+    background: #444;
+}
+
+.ability-name {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.ability-cost {
+    font-size: 0.9em;
+    color: #88f;
+}
+
+.ability-desc {
+    font-size: 0.9em;
+    color: #aaa;
+    margin-top: 4px;
+}
+
+@keyframes pulse {
+    0% { transform: translateZ(15px); }
+    50% { transform: translateZ(25px); }
+    100% { transform: translateZ(15px); }
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 5px #3c3, 0 0 10px #3c3, 0 0 15px #3c3; }
+    to { box-shadow: 0 0 10px #3c3, 0 0 20px #3c3, 0 0 30px #3c3; }
+}
