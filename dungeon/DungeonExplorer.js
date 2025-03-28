@@ -1,6 +1,7 @@
 import { Party, CombatManager, COMBAT_RESULTS } from './combat.js';
 import { Dungeon, TILE_TYPES, ENVIRONMENTAL_EFFECTS } from './dungeon.js';
 import { MonsterFactory } from './monsters/MonsterFactory.js';
+import { JOBS } from './jobs/index.js';
 
 const EXPLORER_STATES = {
     EXPLORING: 'exploring',
@@ -31,6 +32,8 @@ class DungeonExplorer {
             wallWalk: false,
             timeAnchors: []
         };
+        this.revealedTiles = new Set(); // Track revealed tiles
+        this.revealedRooms = new Set(); // Track revealed rooms
     }
 
     enterDungeon(dungeon) {
@@ -42,6 +45,9 @@ class DungeonExplorer {
             y: startRoom.y + Math.floor(startRoom.height / 2)
         };
         this.state = EXPLORER_STATES.EXPLORING;
+        this.revealedTiles.clear();
+        this.revealedRooms.clear();
+        this._updateVisibility();
         return true;
     }
 
@@ -89,6 +95,8 @@ class DungeonExplorer {
         // Check for events at new position
         const events = this.checkPositionEvents();
         
+        this._updateVisibility();
+        
         return {
             success: true,
             message: 'Moved successfully',
@@ -103,6 +111,7 @@ class DungeonExplorer {
         }
 
         this.party.rotate(direction);
+        this._updateVisibility();
         return {
             success: true,
             message: 'Rotated ' + direction,
@@ -513,10 +522,243 @@ class DungeonExplorer {
     }
 
     _checkForEncounters() {
-        const floor = this.currentDungeon.floors[this.currentFloor];
-        const encounter = floor.checkForEncounter(this.party.position);
-        if (encounter) {
-            this.party.startCombat(encounter);
+        //should be checking for encounter here
+//        if (encounter) {
+//            this.party.startCombat(encounter);
+//        }
+    }
+
+    addPartyMember(character) {
+        if (!this.party) {
+            this.party = new Party();
+        }
+        this.party.addMember(character);
+    }
+
+    changeJob(character, newJob) {
+        // Convert job name string to JOBS enum value
+        const jobId = Object.entries(JOBS).find(([key]) => key === newJob)?.[1];
+        if (!jobId) {
+            return { success: false, message: 'Invalid job' };
+        }
+    
+        const success = character.setJob(jobId);
+        if (success) {
+            return {
+                success: true,
+                message: `Changed job to ${newJob}`            };
+        }
+        return { success: false, message: 'Failed to change job' };
+    }
+
+    getRevealedMap() {
+        const floor = this.getCurrentFloor();
+        if (!floor) return null;
+
+        return {
+            tiles: this.getRevealedTiles(),
+            width: floor.width,
+            height: floor.height,
+            playerPosition: this.party.position,
+            playerFacing: this.party.facing,
+            revealedRooms: this.getRevealedRooms()
+        };
+    }
+
+    getVisibleTiles() {
+        const floor = this.getCurrentFloor();
+        if (!floor) return [];
+
+        const { x, y } = this.party.position;
+        const facing = this.party.facing;
+        const visibleTiles = [];
+
+        // Get tiles based on facing direction and field of view
+        switch(facing) {
+            case 'north':
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = -3; j <= 0; j++) {
+                        const tile = floor.getTile(x + i, y + j);
+                        if (tile) {
+                            visibleTiles.push({ x: x + i, y: y + j, type: tile });
+                        }
+                    }
+                }
+                break;
+            case 'south':
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = 0; j <= 3; j++) {
+                        const tile = floor.getTile(x + i, y + j);
+                        if (tile) {
+                            visibleTiles.push({ x: x + i, y: y + j, type: tile });
+                        }
+                    }
+                }
+                break;
+            case 'east':
+                for (let i = 0; i <= 3; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        const tile = floor.getTile(x + i, y + j);
+                        if (tile) {
+                            visibleTiles.push({ x: x + i, y: y + j, type: tile });
+                        }
+                    }
+                }
+                break;
+            case 'west':
+                for (let i = -3; i <= 0; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        const tile = floor.getTile(x + i, y + j);
+                        if (tile) {
+                            visibleTiles.push({ x: x + i, y: y + j, type: tile });
+                        }
+                    }
+                }
+                break;
+        }
+
+        return visibleTiles;
+    }
+
+    revealRoom(x, y) {
+        const floor = this.getCurrentFloor();
+        if (!floor) return null;
+
+        const room = this.getRoom(x, y);
+        if (room) {
+            floor.revealRoom(room);
+            return true;
+        }
+        return false;
+    }
+
+    getPartyStatus() {
+        if (!this.party) return null;
+
+        return {
+            members: this.party.members.map(member => ({
+                name: member.name,
+                job: member.currentJob,
+                level: member.level,
+                hp: member.status.hp,
+                maxHp: member.status.maxHp,
+                mp: member.status.mp,
+                maxMp: member.status.maxMp,
+                status: member.getStatusEffects()
+            }))
+        };
+    }
+
+    openTreasure() {
+        const floor = this.getCurrentFloor();
+        if (!floor) return null;
+
+        const { x, y } = this.party.position;
+        if (floor.getTile(x, y) === TILE_TYPES.CHEST) {
+            const treasure = this.handleTreasure();
+            floor.setTile(x, y, TILE_TYPES.FLOOR);
+            return treasure;
+        }
+        return null;
+    }
+
+    toggleDoor() {
+        const floor = this.getCurrentFloor();
+        if (!floor) return false;
+
+        const surroundings = this.getSurroundingTiles();
+        const frontTile = surroundings.front;
+
+        if (frontTile === TILE_TYPES.DOOR) {
+            // Get coordinates of the door based on facing direction
+            let doorX = this.party.position.x;
+            let doorY = this.party.position.y;
+            switch (this.party.facing) {
+                case 'north': doorY--; break;
+                case 'south': doorY++; break;
+                case 'east': doorX++; break;
+                case 'west': doorX--; break;
+            }
+
+            const isDoorLocked = floor.isDoorLocked(doorX, doorY);
+            if (isDoorLocked) {
+                // Check if party has key or lockpicking ability
+                const canUnlock = this.party.members.some(member => 
+                    member.hasItem('key') || member.hasAbility('lockpicking')
+                );
+                if (!canUnlock) {
+                    return { success: false, message: 'Door is locked' };
+                }
+            }
+
+            floor.toggleDoor(doorX, doorY);
+            return { success: true, message: 'Door toggled' };
+        }
+        return { success: false, message: 'No door to toggle' };
+    }
+
+    getRevealedTiles() {
+        return Array.from(this.revealedTiles).map(coordStr => {
+            const [x, y, type] = coordStr.split(',');
+            return {
+                x: parseInt(x),
+                y: parseInt(y),
+                type: parseInt(type)
+            };
+        });
+    }
+
+    getRevealedRooms() {
+        return Array.from(this.revealedRooms).map(roomId => {
+            const room = this.currentDungeon.floors[this.currentFloor].rooms[roomId];
+            return {
+                x: room.x,
+                y: room.y,
+                width: room.width,
+                height: room.height
+            };
+        });
+    }
+
+    _updateVisibility() {
+        // This should be called whenever the player moves or turns
+        const floor = this.getCurrentFloor();
+        if (!floor) return;
+
+        // Add current room to revealed rooms
+        const currentRoom = this.getCurrentRoom();
+        if (currentRoom) {
+            const roomIndex = floor.rooms.indexOf(currentRoom);
+            this.revealedRooms.add(roomIndex);
+        }
+
+        // Get visible tiles based on position and facing
+        const { x, y } = this.party.position;
+        const visibilityRange = {
+            front: 3,
+            sides: 1,
+            back: 1
+        };
+
+        // Reveal tiles based on facing direction
+        switch(this.party.facing) {
+            case 'north':
+                for (let i = -visibilityRange.sides; i <= visibilityRange.sides; i++) {
+                    for (let j = -visibilityRange.front; j <= 0; j++) {
+                        const tile = floor.getTile(x + i, y + j);
+                        if (tile !== null) {
+                            this.revealedTiles.add(`${x + i},${y + j},${tile}`);
+                        }
+                    }
+                    for (let j = 1; j <= visibilityRange.back; j++) {
+                        const tile = floor.getTile(x + i, y + j);
+                        if (tile !== null) {
+                            this.revealedTiles.add(`${x + i},${y + j},${tile}`);
+                        }
+                    }
+                }
+                break;
+            // ...similar cases for other directions...
         }
     }
 }

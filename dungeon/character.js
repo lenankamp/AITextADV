@@ -127,6 +127,8 @@ class Character {
         return true;
     }
 
+    
+
     gainJP(amount) {
         if (!this.currentJob || amount <= 0) return false;
         

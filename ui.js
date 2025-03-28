@@ -11,6 +11,8 @@ const sidebar = document.getElementById('sidebar');
 const left = document.getElementById('left');
 const right = document.getElementById('right');
 
+let dungeonManager = null;
+
 // Function to check if we're in mobile view
 function isMobileView() {
     return window.matchMedia('(max-width: 768px)').matches;
@@ -129,7 +131,10 @@ document.addEventListener('click', (e) => {
         case 'sendMessage':
             sendMessage();
             break;
-    }
+        case 'enterDungeon':
+            initDungeonManager();
+            break;
+        }
 });
 
 // Add input handler for file input
@@ -720,4 +725,3 @@ function initMobileLayout() {
 
 // Initialize mobile layout
 initMobileLayout();
-

@@ -16,6 +16,8 @@ class Party {
     constructor() {
         this.members = [];
         this.maxSize = 4;
+        this.position = { x: 0, y: 0 };
+        this.facing = 'north';
     }
 
     addMember(member) {
@@ -26,6 +28,31 @@ class Party {
         member.party = this.members; // Set party reference
         this.members.push(member);
         return true;
+    }
+
+    rotate(direction) {
+        const directions = ['north', 'east', 'south', 'west'];
+        const current = directions.indexOf(this.facing);
+        switch (direction) {
+            case 'left':
+                this.facing = directions[(current + 3) % 4];
+                break;
+            case 'right':
+                this.facing = directions[(current + 1) % 4];
+                break;
+            case 'north':
+                this.facing = 'north';
+                break;
+            case 'east':
+                this.facing = 'east';
+                break;
+            case 'south':
+                this.facing = 'south';
+                break;
+            case 'west':
+                this.facing = 'west';
+                break;
+        }
     }
 
     removeMember(member) {
@@ -41,9 +68,6 @@ class Party {
         return this.members.every(member => member.status.hp <= 0);
     }
 
-    getRow(row) {
-        return row === 'front' ? this.frontRow : this.backRow;
-    }
 }
 
 class CombatManager {
