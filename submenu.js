@@ -174,10 +174,7 @@ function openUnifiedEditor(item, type, path = null) {
     previewImage.style.height = '100%';
     
     // Special handling for player image
-    if (type === 'player') {
-        const currentPlayerArt = document.getElementById('playerart');
-        previewImage.src = currentPlayerArt.src;
-    } else if (item.image instanceof Blob) {
+    if (item.image instanceof Blob) {
         previewImage.src = URL.createObjectURL(item.image);
     } else {
         previewImage.src = 'placeholder.png';
@@ -335,14 +332,14 @@ function openUnifiedEditor(item, type, path = null) {
         const newName = nameInput.value.trim();
         if (type === 'player') {
             // Update player settings
-            settings.player_name = newName;
-            settings.player_description = descInput.value;
+            item.name = newName;
+            item.description = descInput.value;
             if (item.visual !== undefined) {
                 const visualInput = editor.querySelector('textarea[style*="calc(100% - 35px)"]');
                 const seedInput = editor.querySelector('input[type="number"].seed-input');
                 if (visualInput && seedInput) {
-                    settings.player_visual = visualInput.value;
-                    settings.player_seed = parseInt(seedInput.value);
+                    item.visual = visualInput.value;
+                    item.seed = parseInt(seedInput.value);
                     // Only update player art if it was regenerated in the editor
                     if (item.image instanceof Blob) {
                         const currentPlayerArt = document.getElementById('playerart');
@@ -740,7 +737,7 @@ function openCharacterEditor(isNewGame = false) {
     nameLabel.textContent = 'Character Name:';
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
-    nameInput.value = settings.player_name || '';
+    nameInput.value = (isNewGame ? settings.player_name : activePlayer.name) || '';
     nameInput.style.width = '100%';
 
     nameGroup.appendChild(nameLabel);
@@ -768,7 +765,7 @@ function openCharacterEditor(isNewGame = false) {
     conceptLabel.textContent = 'High Concept:';
     const conceptInput = document.createElement('input');
     conceptInput.type = 'text';
-    conceptInput.value = settings.charsheet_fae?.high_concept || '';
+    conceptInput.value = (isNewGame ? settings.charsheet_fae?.high_concept : activePlayer.high_concept) || '';
     conceptInput.style.width = '100%';
     conceptInput.placeholder = 'A defining trait or role that describes your character';
 
@@ -796,7 +793,7 @@ function openCharacterEditor(isNewGame = false) {
     const descLabel = document.createElement('label');
     descLabel.textContent = 'Description:';
     const descInput = document.createElement('textarea');
-    descInput.value = settings.player_description || '';
+    descInput.value = (isNewGame ? settings.player_description : activePlayer.description) || '';
     descInput.style.height = '100px';
 
     const refreshDescBtn = document.createElement('button');
@@ -819,7 +816,7 @@ function openCharacterEditor(isNewGame = false) {
     const visualLabel = document.createElement('label');
     visualLabel.textContent = 'Visual Prompt:';
     visualInput = document.createElement('textarea');
-    visualInput.value = settings.player_visual || '';
+    visualInput.value = (isNewGame ? settings.visual : activePlayer.visual) || '';
     visualInput.style.height = '100px';
     visualInput.style.width = '100%';
 
@@ -909,12 +906,12 @@ function openCharacterEditor(isNewGame = false) {
     approachesGrid.className = 'approaches-grid';
 
     const approaches = {
-        careful: { value: settings.charsheet_fae?.approaches?.careful || 1, label: 'Careful' },
-        clever: { value: settings.charsheet_fae?.approaches?.clever || 2, label: 'Clever' },
-        flashy: { value: settings.charsheet_fae?.approaches?.flashy || 3, label: 'Flashy' },
-        forceful: { value: settings.charsheet_fae?.approaches?.forceful || 1, label: 'Forceful' },
-        quick: { value: settings.charsheet_fae?.approaches?.quick || 2, label: 'Quick' },
-        sneaky: { value: settings.charsheet_fae?.approaches?.sneaky || 0, label: 'Sneaky' }
+        careful: { value: activePlayer.approaches?.careful || 1, label: 'Careful' },
+        clever: { value: activePlayer.approaches?.clever || 2, label: 'Clever' },
+        flashy: { value: activePlayer.approaches?.flashy || 3, label: 'Flashy' },
+        forceful: { value: activePlayer.approaches?.forceful || 1, label: 'Forceful' },
+        quick: { value: activePlayer.approaches?.quick || 2, label: 'Quick' },
+        sneaky: { value: activePlayer.approaches?.sneaky || 0, label: 'Sneaky' }
     };
 
     Object.entries(approaches).forEach(([key, data]) => {
@@ -1070,15 +1067,23 @@ function openCharacterEditor(isNewGame = false) {
 
     function saveCharacterSettings() {
         settings.player_name = nameInput.value;
+        activePlayer.name = nameInput.value;
         settings.player_description = descInput.value;
+        activePlayer.description = descInput.value;
         settings.player_visual = visualInput.value;
+        activePlayer.visual = visualInput.value;
         settings.player_local_movement = localInput.value;
+        activePlayer.local_movement = localInput.value;
         settings.player_distant_movement = distantInput.value;
-        
+        activePlayer.distant_movement = distantInput.value;
+
         if (!settings.charsheet_fae) settings.charsheet_fae = {};
         settings.charsheet_fae.high_concept = conceptInput.value;
+        activePlayer.high_concept = conceptInput.value;
         settings.charsheet_fae.aspects = aspectInputs.map(input => input.value);
+        activePlayer.aspects = settings.charsheet_fae.aspects || [];
         settings.charsheet_fae.trouble = troubleInput.value;
+        activePlayer.trouble = troubleInput.value;
 
         // Save approaches
         settings.charsheet_fae.approaches = {};
@@ -1086,6 +1091,9 @@ function openCharacterEditor(isNewGame = false) {
             const input = approachesGrid.querySelector(`input[data-approach="${key}"]`);
             settings.charsheet_fae.approaches[key] = parseInt(input.value);
         });
+        activePlayer.approaches = settings.charsheet_fae.approaches || {
+            careful: 1, clever: 2, flashy: 3, forceful: 1, quick: 2, sneaky: 0
+        };
 
         updateCharacterInfo();
         

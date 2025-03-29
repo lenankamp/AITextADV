@@ -613,10 +613,10 @@ playerArt.addEventListener('click', (e) => {
     e.stopPropagation();
     // Create player object with current state
     const player = {
-        name: settings.player_name,
-        description: settings.player_description,
-        visual: settings.player_visual,
-        seed: settings.player_seed,
+        name: activePlayer.name,
+        description: activePlayer.description,
+        visual: activePlayer.visual,
+        seed: activePlayer.seed,
         // Just pass through the current image blob if it exists
         image: playerArt.src.startsWith('blob:') ? 'current' : 'placeholder'
     };
@@ -625,20 +625,20 @@ playerArt.addEventListener('click', (e) => {
 
 function updateConsequences() {
     const consequencesDiv = document.getElementById('consequences');
-    if (settings.charsheet_fae && settings.charsheet_fae.consequences) {
+    if (activePlayer && activePlayer.consequences) {
         let html = [];
-        if (settings.charsheet_fae.consequences.mild) {
-            html.push(...settings.charsheet_fae.consequences.mild.map(c => 
+        if (activePlayer.consequences.mild) {
+            html.push(...activePlayer.consequences.mild.map(c => 
                 `<div class="Mild">${c}</div>`
             ));
         }
-        if (settings.charsheet_fae.consequences.moderate) {
-            html.push(...settings.charsheet_fae.consequences.moderate.map(c => 
+        if (activePlayer.consequences.moderate) {
+            html.push(...activePlayer.consequences.moderate.map(c => 
                 `<div class="Moderate">${c}</div>`
             ));
         }
-        if (settings.charsheet_fae.consequences.severe) {
-            html.push(...settings.charsheet_fae.consequences.severe.map(c => 
+        if (activePlayer.consequences.severe) {
+            html.push(...activePlayer.consequences.severe.map(c => 
                 `<div class="Severe">${c}</div>`
             ));
         }

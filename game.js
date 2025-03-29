@@ -513,14 +513,14 @@ async function outputCheck(text, context="") {
         if (line.startsWith('1.') && !line.includes('n/a') && line.trim() !== '1.') {
             const names = line.replace("1. ", '').trim().split(',').map(name => name.stripNonAlpha().trim());
             for (const name of names) {
-                if (!areas[currentArea]['people'].some(person => person.name.toLowerCase() === name.toLowerCase()) && !followers.some(follower => follower.name.toLowerCase() === name.toLowerCase()) && name.toLowerCase() != settings.player_name.toLowerCase()) {
+                if (!areas[currentArea]['people'].some(person => person.name.toLowerCase() === name.toLowerCase()) && !followers.some(follower => follower.name.toLowerCase() === name.toLowerCase()) && !players.some(player => player.name.toLowerCase() === name.toLowerCase())) {
                     addConfirmButton('New Person', name, (inputValue) => addPerson(inputValue || name, currentArea, text, context));
                 }
             }
         } else if (line.startsWith('2.') && !line.includes('n/a') && line.trim() !== '2.') {
             const names = line.replace("2. ", '').trim().split(',').map(name => name.stripNonAlpha().trim());
             for (const name of names) {
-                if (!areas[currentArea]['creatures'].some(creature => creature.name.toLowerCase() === name.toLowerCase())  && !followers.some(follower => follower.name.toLowerCase() === name.toLowerCase()) && name.toLowerCase() != settings.player_name.toLowerCase()) {
+                if (!areas[currentArea]['creatures'].some(creature => creature.name.toLowerCase() === name.toLowerCase())  && !followers.some(follower => follower.name.toLowerCase() === name.toLowerCase()) && !players.some(player => player.name.toLowerCase() === name.toLowerCase())) {
                     addConfirmButton('New Creature', name, (inputValue) => addCreature(inputValue || name, currentArea, text, context));
                 }
             }
@@ -532,8 +532,14 @@ async function outputCheck(text, context="") {
         } else if (line.startsWith('4.') && !line.includes('n/a') && line.trim() !== '4.') {
             const newName = line.replace("4. ", '').stripNonAlpha().trim();
             // check for false positive of name of someone already here
-            if (!areas[currentArea].people.some(person => person.name.toLowerCase() === newName.toLowerCase()) && newName.toLowerCase() != settings.player_name.toLowerCase() && !followers.some(follower => follower.name.toLowerCase() === newName.toLowerCase())) {
-                const peopleNames = areas[currentArea].people.map(person => person.name).join(', ') + (followers.length > 0 ? ', ' + followers.map(follower => follower.name).join(', ') : '');
+            if (!areas[currentArea].people.some(person => person.name.toLowerCase() === newName.toLowerCase()) && !players.some(player => player.name.toLowerCase() === newName.toLowerCase()) && !followers.some(follower => follower.name.toLowerCase() === newName.toLowerCase())) {
+                const peopleNames = areas[currentArea].people
+                .filter(person => person && person.name) // Filter out undefined or invalid people
+                .map(person => person.name)
+                .join(', ') + (followers.length > 0 ? ', ' + followers
+                    .filter(follower => follower && follower.name) // Filter out undefined or invalid followers
+                    .map(follower => follower.name)
+                    .join(', ') : '');
                 const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'n/a' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]", '', {
                     peopleNames: peopleNames,
                     newName: newName,
@@ -587,7 +593,7 @@ async function outputAutoCheck(text, context="") {
         currentArea: currentArea,
         context: context,
         text: text,
-        player: settings.player_name
+        player: activePlayer ? activePlayer.name : players[0],
     }, settings.sampleQuestions);
     const lines = response.split('\n');
     console.log("Output Auto Check Response: ", response);
@@ -612,19 +618,19 @@ async function outputAutoCheck(text, context="") {
                     timeToAdvance = (31 - hours) * 3600 + (60 - minutes) * 60 - seconds;
                 }
                 // if player has mild consequence, remove the first in the array, else if moderate, check the first time in consquenceTimee.moderate, if it's been more than 7 days, remove it and the first moderate consequnce, if no moderate consequences, but a severe, check the first time in consquenceTimee.severe, if it's been more than 30 days, remove it and the first severe consequnce
-                if (settings.charsheet_fae.consequences?.mild.length > 0) {
-                    settings.charsheet_fae.consequences.mild.shift();
-                } else if (settings.charsheet_fae.consequences?.moderate.length > 0) {
-                    const firstModerateTime = settings.charsheet_fae.consequenceTime.moderate[0];
+                if (activePlayer.consequences?.mild.length > 0) {
+                    activePlayer.consequences.mild.shift();
+                } else if (activePlayer.consequences?.moderate.length > 0) {
+                    const firstModerateTime = activePlayer.consequenceTime.moderate[0];
                     if (timeDiff(firstModerateTime, settings.current_time) > 7*60*60*24) {
-                        settings.charsheet_fae.consequences.moderate.shift();
-                        settings.charsheet_fae.consequenceTime.moderate.shift();
+                        activePlayer.moderate.shift();
+                        activePlayer.consequenceTime.moderate.shift();
                     }
-                } else if (settings.charsheet_fae.consequences?.severe.length > 0) {
-                    const firstSevereTime = settings.charsheet_fae.consequenceTime.severe[0];
+                } else if (activePlayer.consequences?.severe.length > 0) {
+                    const firstSevereTime = activePlayer.consequenceTime.severe[0];
                     if (timeDiff(firstSevereTime, settings.current_time) > 30*60*60*24) {
-                        settings.charsheet_fae.consequences.severe.shift();
-                        settings.charsheet_fae.consequenceTime.severe.shift();
+                        activePlayer.consequences.severe.shift();
+                        activePlayer.consequenceTime.severe.shift();
                     }
                 }
                 updateConsequences();
@@ -635,10 +641,10 @@ async function outputAutoCheck(text, context="") {
             const name = line.replace("2. ", '').stripNonAlpha().trim();
             let section = null;
             let target = null;
-            if (name.toLowerCase() === settings.player_name.toLowerCase() || name.toLowerCase() === "you") {
+            if (name.toLowerCase() === activePlayer.name.toLowerCase() || name.toLowerCase() === "you") {
                 const response = await generateText(settings.creative_question_param, minContext(3) + settings.consequencePrompt, '', {
-                    player: settings.player_name,
-                    description: settings.player_description
+                    player: activePlayer.name || players[0],
+                    description: activePlayer.description || players[0].description
                 },settings.sampleQuestions);
                 let severity = 0;
                 for(const consequenceTest of response.split('\n')) {
@@ -654,20 +660,20 @@ async function outputAutoCheck(text, context="") {
                         }
                     } else if (severity > 0 && consequenceTest.startsWith('2.') && !consequenceTest.includes('n/a') && consequenceTest.trim() !== '2.') {
                         const consequence = consequenceTest.replace("2. ", '').stripNonAlpha().trim();
-                        if(!settings.charsheet_fae.consequences) {
-                            settings.charsheet_fae.consequences = { mild: [], moderate: [], severe: [] };
+                        if(!activePlayer.consequences) {
+                            activePlayer.consequences = { mild: [], moderate: [], severe: [] };
                         }
-                        if (!settings.charsheet_fae.consequenceTime) {
-                            settings.charsheet_fae.consequenceTime = { moderate: [], severe: [] };
+                        if (!activePlayer.consequenceTime) {
+                            activePlayer.consequenceTime = { moderate: [], severe: [] };
                         }
                         if (severity === 1) {
-                            settings.charsheet_fae.consequences.mild.push(consequence);
+                            activePlayer.consequences.mild.push(consequence);
                         } else if (severity === 2) {
-                            settings.charsheet_fae.consequences.moderate.push(consequence);
-                            settings.charsheet_fae.consequenceTime.moderate.push(settings.current_time);
+                            activePlayer.consequences.moderate.push(consequence);
+                            activePlayer.consequenceTime.moderate.push(settings.current_time);
                         } else if (severity === 3) {
-                            settings.charsheet_fae.consequences.severe.push(consequence);
-                            settings.charsheet_fae.consequenceTime.severe.push(settings.current_time);
+                            activePlayer.consequences.severe.push(consequence);
+                            activePlayer.consequenceTime.severe.push(settings.current_time);
                         }
 
                     }
@@ -702,7 +708,7 @@ async function outputAutoCheck(text, context="") {
             const name = line.replace("3. ", '').stripNonAlpha().trim();
             let section = null;
             let target = null;
-            if (name.toLowerCase() === settings.player_name.toLowerCase() || name.toLowerCase() === "you") {
+            if (players.some(player => player.name.toLowerCase() === name.toLowerCase()) || name.toLowerCase() === "you") {
                 continue;
             } else if (areas[currentArea]?.people?.some(person => person?.name === name)) {
                 section = 'people';
@@ -726,7 +732,7 @@ async function outputAutoCheck(text, context="") {
                         description: target.description,
                         affinity: getAffinity(target.affinity),
                         newaffinity: getAffinity(target.affinity - settings.affinity_threshold),
-                        player: settings.player_name,
+                        player: activePlayer.name || players[0], // Use active player or first player if none is active
                     });
                     const changes = changeResponse.split('\n');
 
@@ -773,7 +779,7 @@ async function outputAutoCheck(text, context="") {
             const name = line.replace("3. ", '').stripNonAlpha().trim();
             let section = null;
             let target = null;
-            if (name.toLowerCase() === settings.player_name.toLowerCase() || name.toLowerCase() === "you") {
+            if (players.some(player => player.name.toLowerCase() === name.toLowerCase()) || name.toLowerCase() === "you") {
                 continue;
             } else if (areas[currentArea]?.people?.some(person => person?.name === name)) {
                 section = 'people';
@@ -797,7 +803,7 @@ async function outputAutoCheck(text, context="") {
                         description: target.description,
                         affinity: getAffinity(target.affinity),
                         newaffinity: getAffinity(target.affinity - settings.affinity_threshold),
-                        player: settings.player_name,
+                        player: activePlayer.name || players[0], // Use active player or first player if none is active
                     });
                     const changes = changeResponse.split('\n');
 
@@ -910,7 +916,7 @@ function areaContext(areaPath) {
                 replaceVariables(settings.entityFormat, { 
                     name: person.name, 
                     description: person.description,
-                    affinity: "Disposition towards " + settings.player_name + ": " + getAffinity(person.affinity) + "\n",
+                    affinity: "Disposition towards " + activePlayer.name + ": " + getAffinity(person.affinity) + "\n",
                     memory: person.memory ? getMemoryForContext(person) : ''
                 })
             ).join('');
@@ -943,7 +949,7 @@ function areaContext(areaPath) {
                 replaceVariables(settings.entityFormat, { 
                     name: creature.name, 
                     description: creature.description,
-                    affinity: "Disposition towards " + settings.player_name + ": " + getCreatureAffinity(creature.affinity) + "\n",
+                    affinity: "Disposition towards " + activePlayer.name + ": " + getCreatureAffinity(creature.affinity) + "\n",
                 })
             ).join('');
         context += replaceVariables(settings.areaCreaturesContext, {
@@ -958,7 +964,7 @@ function areaContext(areaPath) {
                 replaceVariables(settings.entityFormat, {
                     name: follower.name,
                     description: follower.description || '',
-                    affinity: "Disposition towards " + settings.player_name + ": " + (follower.type === 'creature' ? getCreatureAffinity(follower.affinity) : getAffinity(follower.affinity)) + "\n",
+                    affinity: "Disposition towards " + activePlayer.name + ": " + (follower.type === 'creature' ? getCreatureAffinity(follower.affinity) : getAffinity(follower.affinity)) + "\n",
                 })
             ).join('');
         context += replaceVariables(settings.areaFollowersContext, {
@@ -1040,8 +1046,8 @@ function fullContext(limit = null, summaryLength = 0, maxContext, extraContext =
 
     return settings.full_context
         .replace('$world', "World Description: " + settings.world_description + "\n")
-        .replace('$player', "Player Name: " + settings.player_name + "\n")
-        .replace('$player_desc', "Player Description: " + settings.player_description + "\n")
+        .replace('$player', "Player Name: " + activePlayer.name + "\n")
+        .replace('$player_desc', "Player Description: " + activePlayer.description + "\n")
         .replace('$summary', summary ? "\nSummary of Previous Events: " + summary.trim() +"\n" : '')
         .replace('$locale', "\nCurrent Situation:\n" + areaContext(currentArea))
         .replace('$extra_context', extraContext + '\n' ? extraContext : '')
@@ -1097,7 +1103,7 @@ async function playerAction(action) {
                 action: action,
                 currentArea: currentArea
             }, settings.sampleFAEAction);
-            const response2 = await generateText(settings.question_param, fullContext(turnsAtCurrentArea > 2 ? 2 : turnsAtCurrentArea, 0, settings.question_param.max_context_length) + "\n\n" + faeCharSheet(settings.charsheet_fae) + settings.ruleprompt_fae_action2, '', {
+            const response2 = await generateText(settings.question_param, fullContext(turnsAtCurrentArea > 2 ? 2 : turnsAtCurrentArea, 0, settings.question_param.max_context_length) + "\n\n" + faeCharSheet(activePlayer) + settings.ruleprompt_fae_action2, '', {
                 action: action,
                 currentArea: currentArea
             }, settings.sampleFAEAction);
@@ -1128,17 +1134,17 @@ async function playerAction(action) {
                 } else if (line.startsWith('2.') && !line.includes('n/a') && line.trim() !== '2.') {
                     //conditions if line contains careful, clever, flashy, forceful, quick, or sneaky.
                     if (line.includes('careful')) {
-                        advantage += settings.charsheet_fae.approaches['careful'];
+                        advantage += activePlayer.approaches['careful'];
                     } else if (line.includes('clever')) {
-                        advantage += settings.charsheet_fae.approaches['clever'];
+                        advantage += activePlayer.approaches['clever'];
                     } else if (line.includes('flashy')) {
-                        advantage += settings.charsheet_fae.approaches['flashy'];
+                        advantage += activePlayer.approaches['flashy'];
                     } else if (line.includes('forceful')) {
-                        advantage += settings.charsheet_fae.approaches['forceful'];
+                        advantage += activePlayer.approaches['forceful'];
                     } else if (line.includes('quick')) {
-                        advantage += settings.charsheet_fae.approaches['quick'];
+                        advantage += activePlayer.approaches['quick'];
                     } else if (line.includes('sneaky')) {
-                        advantage += settings.charsheet_fae.approaches['sneaky'];
+                        advantage += activePlayer.approaches['sneaky'];
                     }
                 } else if (line.startsWith('3.') && !line.includes('n/a') && line.trim() !== '3.') {
                     // simply count the number of commas returned and add to the advantage
@@ -1280,7 +1286,7 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(turnsAtCurrentArea > settings.max_passage_entries ? settings.max_passage_entries : turnsAtCurrentArea, settings.max_summary_entries, settings.story_param.max_context_length, extraContext) + inputElement.innerHTML, postPrompt, {
         message: message,
         currentArea: currentArea,
-        playerName: settings.player_name
+        playerName: activePlayer.name
     }));
 
     turnsAtCurrentArea++;
@@ -1321,23 +1327,23 @@ function undoLastAction() {
 }
 
 function updateCharacterInfo() {
-    if (settings.player_name) {
-        document.getElementById('playerName').textContent = settings.player_name;
+    if (activePlayer.name) {
+        document.getElementById('playerName').textContent = activePlayer.name;
     }
-    if (settings.charsheet_fae) {
+    if (activePlayer) {
         // Display High Concept
-        if (settings.charsheet_fae.high_concept) {
-            document.getElementById('highConcept').textContent = settings.charsheet_fae.high_concept;
+        if (activePlayer.high_concept) {
+            document.getElementById('highConcept').textContent = activePlayer.high_concept;
         }
 
         // Display remaining aspects
         const aspectsDiv = document.getElementById('aspects');
         aspectsDiv.innerHTML = ''; // Clear existing aspects
         
-        if (settings.charsheet_fae.aspects) {
-            let aspectsList = Array.isArray(settings.charsheet_fae.aspects) 
-                ? settings.charsheet_fae.aspects 
-                : settings.charsheet_fae.aspects.split(',');
+        if (activePlayer.aspects) {
+            let aspectsList = Array.isArray(activePlayer.aspects) 
+                ? activePlayer.aspects 
+                : activePlayer.aspects.split(',');
             
             aspectsDiv.innerHTML = aspectsList.map(aspect => 
                 `<div class="aspect">${aspect.trim()}</div>`
@@ -1345,16 +1351,19 @@ function updateCharacterInfo() {
         }
         
         // Display trouble
-        if (settings.charsheet_fae.trouble) {
+        if (activePlayer.trouble) {
             const troubleDiv = document.createElement('div');
             troubleDiv.className = 'aspect trouble';
-            troubleDiv.textContent = settings.charsheet_fae.trouble;
+            troubleDiv.textContent = activePlayer.trouble;
             aspectsDiv.appendChild(troubleDiv);
         }
     }
 }
 
 async function setupStart() {
+    players.push({ name: settings.player_name, description: settings.player_description, type: 'player', visual: settings.player_visual, seed: settings.player_seed, image: 'placeholder', high_concept: settings.charsheet_fae ? settings.charsheet_fae.high_concept : '', aspects: settings.charsheet_fae ? settings.charsheet_fae.aspects : [], trouble: settings.charsheet_fae ? settings.charsheet_fae.trouble : '', local_movement: settings.player_local_movement, distant_movement: settings.player_distant_movement, approaches: settings.charsheet_fae && settings.charsheet_fae.approaches ? settings.charsheet_fae.approaches : { careful: 0, clever: 0, flashy: 0, forceful: 0, quick: 0, sneaky: 0 } });
+    activePlayer = players[0]; // Set the active player to the first player in the list
+
     document.getElementById('sceneart').src = 'placeholder.png';
     updateApproachDisplay();
     updateCharacterInfo();
@@ -1369,7 +1378,7 @@ async function setupStart() {
     responseElement.classList.add('new-message');
     
     const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(0,0,settings.story_param.max_context_length, '') + "\n" + "[Generate the beginning of the story. Response should be less than 300 words.]", '', {
-        playerName: settings.player_name,
+        playerName: activePlayer.name,
         areaName: settings.starting_area,
         areaDescription: areas[settings.starting_area].description,
         worldDescription: settings.world_description
@@ -1387,7 +1396,7 @@ async function setupStart() {
     // check if playerart has an image url and if not, create it
     if (!document.getElementById('playerart').src) {
         document.getElementById('playerart').src = 'placeholder.png';
-        generateArt(settings.player_visual, "", settings.player_seed).then(blob => {
+        generateArt(activePlayer.visual, "", activePlayer.seed).then(blob => {
             if (blob instanceof Blob)
                 document.getElementById('playerart').src = URL.createObjectURL(blob);
         });
@@ -1400,9 +1409,47 @@ function restartGame() {
     if (sceneArt.src.startsWith('blob:')) {
         URL.revokeObjectURL(sceneArt.src);
     }
+    // Clear the current state of the game, revoke any blob URLs to free memory
+    for (const key in areas) {
+        for (const subKey in areas[key].sublocations) {
+            if (areas[key].sublocations[subKey].image && areas[key].sublocations[subKey].image.startsWith('blob:')) {
+                URL.revokeObjectURL(areas[key].sublocations[subKey].image);
+            }
+        }
+        for (const creature of areas[key].creatures) {
+            if (creature.image && creature.image.startsWith('blob:')) {
+                URL.revokeObjectURL(creature.image);
+            }
+        }
+        for (const person of areas[key].people) {
+            if (person.image && person.image.startsWith('blob:')) {
+                URL.revokeObjectURL(person.image);
+            }
+        }
+        for (const thing of areas[key].things) {
+            if (areas[key].things && areas[key].things.length > 0 && thing.image && thing.image.startsWith('blob:')) {
+                // Revoke the blob URL for the thing's image if it exists
+                URL.revokeObjectURL(thing.image);
+            }
+        }
+        if (areas[key].image && areas[key].image.startsWith('blob:')) {
+            URL.revokeObjectURL(areas[key].image);
+        }
+    }
+    for (const key in followers) {
+        if (followers[key].image && followers[key].image.startsWith('blob:')) {
+            URL.revokeObjectURL(followers[key].image);
+        }
+    }
+    for (const key in players) {
+        if (players[key].image && players[key].image.startsWith('blob:')) {
+            URL.revokeObjectURL(players[key].image);
+        }
+    }
     
     areas = {};
     followers = [];
+    players = [];
     document.querySelectorAll('.location').forEach(location => {
         location.remove();
     });
@@ -1414,13 +1461,13 @@ function restartGame() {
 }
 
 function updateApproachDisplay() {
-    if (settings.charsheet_fae && settings.charsheet_fae.approaches) {
-        document.getElementById('careful').textContent = settings.charsheet_fae.approaches.careful || '0';
-        document.getElementById('clever').textContent = settings.charsheet_fae.approaches.clever || '0';
-        document.getElementById('flashy').textContent = settings.charsheet_fae.approaches.flashy || '0';
-        document.getElementById('forceful').textContent = settings.charsheet_fae.approaches.forceful || '0';
-        document.getElementById('quick').textContent = settings.charsheet_fae.approaches.quick || '0';
-        document.getElementById('sneaky').textContent = settings.charsheet_fae.approaches.sneaky || '0';
+    if (activePlayer && activePlayer.approaches) {
+        document.getElementById('careful').textContent = activePlayer.approaches.careful || '0';
+        document.getElementById('clever').textContent = activePlayer.approaches.clever || '0';
+        document.getElementById('flashy').textContent = activePlayer.approaches.flashy || '0';
+        document.getElementById('forceful').textContent = activePlayer.approaches.forceful || '0';
+        document.getElementById('quick').textContent = activePlayer.approaches.quick || '0';
+        document.getElementById('sneaky').textContent = activePlayer.approaches.sneaky || '0';
     }
 }
 
@@ -1572,31 +1619,31 @@ async function moveToArea(area, describe=0, text="") {
         }
 
         if (areas[targetArea].lastVisted === '') {
-            leftbehind += " This is the first time " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+            leftbehind += " This is the first time " + activePlayer.name + " has visited " + areas[targetArea].name + ".";
         } else {
             const timeSinceLastVisit = timeDiff(areas[targetArea].lastVisted, settings.current_time);
             if (timeSinceLastVisit < 60) {
-                leftbehind += " It has been less than a minute since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+                leftbehind += " It has been less than a minute since " + activePlayer.name + " has visited " + areas[targetArea].name + ".";
             } else if (timeSinceLastVisit < 3600) {
-                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 60) + " minutes since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 60) + " minutes since " + activePlayer.name + " has visited " + areas[targetArea].name + ".";
             } else if (timeSinceLastVisit < 86400) {
-                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 3600) + " hours since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 3600) + " hours since " + activePlayer.name + " has visited " + areas[targetArea].name + ".";
             } else if (timeSinceLastVisit < 604800) {
-                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 86400) + " days since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 86400) + " days since " + activePlayer.name + " has visited " + areas[targetArea].name + ".";
             } else if (timeSinceLastVisit < 2592000) {
-                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 604800) + " weeks since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 604800) + " weeks since " + activePlayer.name + " has visited " + areas[targetArea].name + ".";
             } else if (timeSinceLastVisit < 31536000) {
-                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 2592000) + " months since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 2592000) + " months since " + activePlayer.name + " has visited " + areas[targetArea].name + ".";
             } else {
-                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 31536000) + " years since " + settings.player_name + " has visited " + areas[targetArea].name + ".";
+                leftbehind += " It has been " + Math.floor(timeSinceLastVisit / 31536000) + " years since " + activePlayer.name + " has visited " + areas[targetArea].name + ".";
             }
         }
 
         // check if current area is the parent of targetarea, if so, add a message to the prompt that the player is moving to a sublocation of the current area
         if (targetArea.split('/').slice(0, -1).join('/') === currentArea) {
-            prompt = settings.player_name + " " + (describe>1 ? settings.player_distant_movement : settings.player_local_movement) + " further through " + areas[currentArea].name;
+            prompt = activePlayer.name + " " + (describe>1 ? activePlayer.distant_movement : activePlayer.local_movement) + " further through " + areas[currentArea].name;
         } else {
-            prompt = settings.player_name + " leaves " + areas[currentArea].name + " and " + (describe>1 ? settings.player_distant_movement : settings.player_local_movement);
+            prompt = activePlayer.name + " leaves " + areas[currentArea].name + " and " + (describe>1 ? activePlayer.distant_movement : activePlayer.local_movement);
         }
         if (describe > 1) // 1 is local movement, otherwise it's the distance between map locations, should handle better
             prompt += " many miles";
@@ -1638,6 +1685,9 @@ async function moveToArea(area, describe=0, text="") {
 // At the end of the file, where the initial game setup is done
 let areas = {};
 let followers = [];
+let players = [];
+let activePlayer = null;
+
 let currentArea;
 let turnsAtCurrentArea = 1;
 
