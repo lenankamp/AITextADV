@@ -18,8 +18,60 @@ function findLikelyCharacter(gender, peopleInArea) {
     return null;
 }
 
+function getKokoroVoice(speaker) {
+    // Define available voices by gender
+    const femaleVoices = [
+        'af_heart', 'af_alloy', 'af_aoede', 'af_bella', 'af_jessica', 'af_kore',
+        'af_nicole', 'af_nova', 'af_river', 'af_sarah', 'af_sky',
+        'bf_alice', 'bf_emma', 'bf_isabella', 'bf_lily',
+        'jf_alpha', 'jf_gongitsune', 'jf_nezumi', 'jf_tebukuro',
+        'zf_xiaobei', 'zf_xiaoni', 'zf_xiaoxiao', 'zf_xiaoyi',
+        'ef_dora', 'ff_siwis', 'hf_alpha', 'hf_beta', 'if_sara', 'pf_dora'
+    ];
+
+    const maleVoices = [
+        'am_adam', 'am_echo', 'am_eric', 'am_fenrir', 'am_liam',
+        'am_michael', 'am_onyx', 'am_puck', 'am_santa',
+        'bm_daniel', 'bm_fable', 'bm_george', 'bm_lewis',
+        'jm_kumo', 'zm_yunjian', 'zm_yunxi', 'zm_yunxia', 'zm_yunyang',
+        'em_alex', 'em_santa', 'hm_omega', 'hm_psi', 'im_nicola', 'pm_alex', 'pm_santa'
+    ];
+
+    // Generate a consistent number from the speaker's name
+    const nameSeed = Array.from(speaker.name).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    
+    // Determine gender and select appropriate voice set
+    const gender = getGenderFromText(speaker.description);
+    const voices = gender === 'female' ? femaleVoices : maleVoices;
+    
+    // Use the name seed to select 4-6 voices
+    const numVoices = 4 + (nameSeed % 3); // Results in 4, 5, or 6 voices
+    const selectedVoices = new Set();
+    
+    // Pseudo-random but deterministic voice selection
+    let currentSeed = nameSeed;
+    while (selectedVoices.size < numVoices) {
+        currentSeed = (currentSeed * 1103515245 + 12345) >>> 0; // Linear congruential generator
+        const index = currentSeed % voices.length;
+        selectedVoices.add(voices[index]);
+    }
+
+    // Generate weights for each voice (1-10)
+    const voiceWeights = Array.from(selectedVoices).map(voice => {
+        currentSeed = (currentSeed * 1103515245 + 12345) >>> 0;
+        const weight = 1 + (currentSeed % 10); // 1-10
+        return `${voice}(${weight})`;
+    });
+
+    // Return the voice blend string
+    return voiceWeights.join('+');
+}
+
 function getVoiceForSpeaker(speaker) {
     if (!speaker) return settings.tts_default_male;
+    if (settings.tts_type.toLowerCase() === 'kokoro') {
+        return getKokoroVoice(speaker);
+    }
     const desc = speaker.description ? speaker.description : settings.tts_default_male;
     return desc;
 }
@@ -330,17 +382,16 @@ async function readTextAloud(text, area) {
         }
     }
 
-    // Generate all audio segments in parallel but queue them for sequential playback
-    const generationPromises = processedSegments.map(async (segment) => {
+    // Generate all audio segments sequentially to maintain order
+    for (const segment of processedSegments) {
         try {
-            const audio = await generateKoboldTTS(segment.text, segment.voice);
+            const audio = await generateKokoroTTS(segment.text, segment.voice);
             audioQueue.push(audio);
-            playNextInQueue(); // Try to start playback if not already playing
+            if (!isPlaying) {
+                playNextInQueue(); // Only start playback if not already playing
+            }
         } catch (error) {
-            console.error('Error generating TTS:', error);
+            console.error('Error generating TTS:', segment.voice, error);
         }
-    });
-
-    // Wait for all audio to be generated
-    await Promise.all(generationPromises);
+    }
 }

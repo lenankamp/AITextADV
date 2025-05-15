@@ -536,3 +536,33 @@ async function generateKoboldTTS(text, voice) {
         return audio;
     }
 }
+
+
+async function generateKokoroTTS(text, voice) {
+    const apiUrl    = settings.tts_api;
+    const voiceName = voice ? voice : 'af_heart';
+
+    const requestBody = {
+        voice: voiceName,
+        input: text,
+        model: 'kokoro',
+        lang_code: 'a'
+    };
+
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+    } else {
+        const audioBlob = await response.blob();
+        const audioUrl  = URL.createObjectURL(audioBlob);
+        const audio     = new Audio(audioUrl);
+        return audio;
+    }
+}
