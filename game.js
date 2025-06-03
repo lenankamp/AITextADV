@@ -1435,57 +1435,67 @@ async function setupStart() {
 
 function restartGame() {
     const sceneArt = document.getElementById('sceneart');
-    if (sceneArt.src.startsWith('blob:')) {
+    if (sceneArt && sceneArt.src && sceneArt.src.startsWith('blob:')) {
         URL.revokeObjectURL(sceneArt.src);
     }
-    
-    // Clear the current state of the game, revoke any blob URLs to free memory
-    for (const key in areas) {
-        for (const subKey in areas[key].sublocations) {
-            const sublocation = areas[key].sublocations[subKey];
-            if (sublocation.image && typeof sublocation.image === 'string' && sublocation.image.startsWith('blob:')) {
-                URL.revokeObjectURL(sublocation.image);
+
+    // Only clear if areas is a non-empty object
+    if (areas && typeof areas === 'object' && Object.keys(areas).length > 0) {
+        for (const key in areas) {
+            if (!areas[key]) continue;
+            if (areas[key].sublocations) {
+                for (const subKey in areas[key].sublocations) {
+                    const sublocation = areas[key].sublocations[subKey];
+                    if (sublocation && sublocation.image && typeof sublocation.image === 'string' && sublocation.image.startsWith('blob:')) {
+                        URL.revokeObjectURL(sublocation.image);
+                    }
+                }
             }
-        }
-        
-        for (const creature of areas[key].creatures) {
-            if (creature.image && typeof creature.image === 'string' && creature.image.startsWith('blob:')) {
-                URL.revokeObjectURL(creature.image);
+            if (Array.isArray(areas[key].creatures)) {
+                for (const creature of areas[key].creatures) {
+                    if (creature && creature.image && typeof creature.image === 'string' && creature.image.startsWith('blob:')) {
+                        URL.revokeObjectURL(creature.image);
+                    }
+                }
             }
-        }
-        
-        for (const person of areas[key].people) {
-            if (person.image && typeof person.image === 'string' && person.image.startsWith('blob:')) {
-                URL.revokeObjectURL(person.image);
+            if (Array.isArray(areas[key].people)) {
+                for (const person of areas[key].people) {
+                    if (person && person.image && typeof person.image === 'string' && person.image.startsWith('blob:')) {
+                        URL.revokeObjectURL(person.image);
+                    }
+                }
             }
-        }
-        
-        for (const thing of areas[key].things || []) {
-            if (thing.image && typeof thing.image === 'string' && thing.image.startsWith('blob:')) {
-                URL.revokeObjectURL(thing.image);
+            if (Array.isArray(areas[key].things)) {
+                for (const thing of areas[key].things) {
+                    if (thing && thing.image && typeof thing.image === 'string' && thing.image.startsWith('blob:')) {
+                        URL.revokeObjectURL(thing.image);
+                    }
+                }
             }
-        }
-        
-        // Check area image
-        if (areas[key].image && typeof areas[key].image === 'string' && areas[key].image.startsWith('blob:')) {
-            URL.revokeObjectURL(areas[key].image);
+            if (areas[key].image && typeof areas[key].image === 'string' && areas[key].image.startsWith('blob:')) {
+                URL.revokeObjectURL(areas[key].image);
+            }
         }
     }
-    
-    // Clean up followers' images
-    for (const follower of followers) {
-        if (follower.image && typeof follower.image === 'string' && follower.image.startsWith('blob:')) {
-            URL.revokeObjectURL(follower.image);
+
+    // Clean up followers' images if any
+    if (Array.isArray(followers) && followers.length > 0) {
+        for (const follower of followers) {
+            if (follower && follower.image && typeof follower.image === 'string' && follower.image.startsWith('blob:')) {
+                URL.revokeObjectURL(follower.image);
+            }
         }
     }
-    
-    // Clean up players' images
-    for (const player of players) {
-        if (player.image && typeof player.image === 'string' && player.image.startsWith('blob:')) {
-            URL.revokeObjectURL(player.image);
+
+    // Clean up players' images if any
+    if (Array.isArray(players) && players.length > 0) {
+        for (const player of players) {
+            if (player && player.image && typeof player.image === 'string' && player.image.startsWith('blob:')) {
+                URL.revokeObjectURL(player.image);
+            }
         }
     }
-    
+
     // Reset game state
     areas = {};
     followers = [];
@@ -1499,7 +1509,6 @@ function restartGame() {
     document.getElementById('image-grid').innerHTML = '';
     setupStart();
 }
-
 function updateApproachDisplay() {
     if (activePlayer && activePlayer.approaches) {
         document.getElementById('careful').textContent = activePlayer.approaches.careful || '0';
