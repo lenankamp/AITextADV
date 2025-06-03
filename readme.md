@@ -8,7 +8,7 @@ This is a personal playground where I've been learning to code with LLM. It's a 
 
 ## Build / Use
 
-The Text Adventure client requires no imports and can be run directly from a local browser, CORS be damned. The dungeon explorer relies on ES modules and will need be hosted for that to work, but it should be setup properly to be completely ignorable.
+The Text Adventure client requires no imports and can be run directly from a local browser, CORS be damned. The simplest setup for playing is with KoboldCPP, the default settings presume using Kobold for text, image, and speech generation. Personally using LM Studio, ComfyUI, and Kokoro, but it just connects via configurable API paths
 
 ## Contributions
 
