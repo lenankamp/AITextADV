@@ -722,7 +722,8 @@ function openCharacterEditor(isNewGame = false) {
     refreshImageBtn.title = 'Regenerate Character Image';
     refreshImageBtn.onclick = async () => {
         if (visualInput && visualInput.value) {
-            const artBlob = await generateArt(visualInput.value, "", Math.floor(Math.random() - 0.5));
+            const seed = parseInt(seedInput.value) || Math.floor(Math.random() * 4294967295) + 1;
+            const artBlob = await generateArt(visualInput.value, "", seed);
             if (artBlob instanceof Blob) {
                 previewImage.src = URL.createObjectURL(artBlob);
                 item.image = artBlob;
@@ -833,6 +834,38 @@ function openCharacterEditor(isNewGame = false) {
     visualInput.style.height = '100px';
     visualInput.style.width = '100%';
 
+    // --- Seed input for player art ---
+    const seedInput = document.createElement('input');
+    seedInput.type = 'number';
+    seedInput.value = (isNewGame ? (Math.floor(Math.random() * 4294967295) + 1) : (activePlayer.seed || Math.floor(Math.random() * 4294967295) + 1));
+    seedInput.title = 'Seed';
+    seedInput.className = 'seed-input';
+    seedInput.style.width = '120px';
+    seedInput.style.marginLeft = '10px';
+
+    // Add seed input to the visual label area
+    const visualLabelRow = document.createElement('div');
+    visualLabelRow.style.display = 'flex';
+    visualLabelRow.style.alignItems = 'center';
+    visualLabelRow.appendChild(visualLabel);
+    visualLabelRow.appendChild(seedInput);
+
+    // --- Add a refresh button for the seed ---
+    const refreshSeedBtn = document.createElement('button');
+    refreshSeedBtn.className = 'refresh-button';
+    refreshSeedBtn.innerHTML = '🔄';
+    refreshSeedBtn.title = 'Randomize Seed';
+    refreshSeedBtn.style.marginLeft = '5px';
+    refreshSeedBtn.onclick = () => {
+        seedInput.value = Math.floor(Math.random() * 4294967295) + 1;
+    };
+    visualLabelRow.appendChild(refreshSeedBtn);
+
+    // --- Update the visual group to use the new label row ---
+    visualGroup.appendChild(visualLabelRow);
+    visualGroup.appendChild(visualInput);
+
+    // --- Update the image refresh button to use the seed ---
     const refreshVisualBtn = document.createElement('button');
     refreshVisualBtn.className = 'refresh-button top-right';
     refreshVisualBtn.innerHTML = '🔄';
@@ -847,13 +880,14 @@ function openCharacterEditor(isNewGame = false) {
             });
         visualInput.value = visual.trim();
         
-        // Generate new image
-        const artBlob = await generateArt(visualInput.value, "", Math.floor(Math.random() * 4294967295) + 1);
+        // Generate new image using the seed
+        const artBlob = await generateArt(visualInput.value, "", parseInt(seedInput.value));
         if (artBlob instanceof Blob) {
             previewImage.src = URL.createObjectURL(artBlob);
+            item.image = artBlob;
         }
     };
-
+    visualGroup.appendChild(refreshVisualBtn);
     visualGroup.appendChild(visualLabel);
     visualGroup.appendChild(visualInput);
     visualGroup.appendChild(refreshVisualBtn);
@@ -1086,6 +1120,7 @@ function openCharacterEditor(isNewGame = false) {
         activePlayer.visual = visualInput.value;
         activePlayer.local_movement = localInput.value;
         activePlayer.distant_movement = distantInput.value;
+        activePlayer.seed = parseInt(seedInput.value);
 
         if (!settings.charsheet_fae) settings.charsheet_fae = {};
         activePlayer.high_concept = conceptInput.value;

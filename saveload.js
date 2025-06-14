@@ -26,24 +26,14 @@ request.onerror = function(event) {
 
 async function saveGame(saveFile = false) {
     // First convert any blob URLs to data URLs
-    // Handle world map image
-    const mapImage = document.getElementById('mapImage');
-    let mapImageDataUrl = mapImage.src;
-    if (mapImage.src.startsWith('blob:')) {
-        try {
-            const response = await fetch(mapImage.src);
-            const blob = await response.blob();
-            mapImageDataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-        } catch (error) {
-            console.error('Error converting map image:', error);
-            mapImageDataUrl = 'map.webp';
+    if (Array.isArray(players)) {
+        for (const player of players) {
+            player.image = await ensureDataUrl(player.image);
         }
     }
+    // Handle world map image
+    const mapImage = document.getElementById('mapImage');
+    const mapImageDataUrl = await ensureDataUrl(mapImage.src);
 
     const transaction = db.transaction(['data'], 'readwrite');
     const objectStore = transaction.objectStore('data');
@@ -434,4 +424,32 @@ async function restoreGameState(data, images = null) {
     updateSublocationRow(currentArea);
     zoomMap(minScale);
     centerMapOnLocation(currentArea);
+}
+
+async function ensureDataUrl(image) {
+    if (!image) return null;
+    if (typeof image === 'string' && image.startsWith('data:')) return image;
+    if (typeof image === 'string' && image.startsWith('blob:')) {
+        try {
+            const response = await fetch(image);
+            const blob = await response.blob();
+            return await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        } catch {
+            return null;
+        }
+    }
+    if (image instanceof Blob) {
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(image);
+        });
+    }
+    return null;
 }
