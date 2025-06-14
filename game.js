@@ -40,7 +40,7 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
     area['people'] = [];
     area['things'] = [];
     area['creatures'] = [];
-    area['sublocations'] = [];
+    area['sublocations'] = {};
     if(sublocation !== '') {
             area.sublocations[sublocation.split('/').pop()] = {
                 path: sublocation,
@@ -1268,7 +1268,7 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
             return;
             
         } else if(message.startsWith('"')){
-            inputElement.innerHTML = '\n[Have the player say ' + message + ' Inlcude every letter and punctuation verbatim, and then continue the story for another $settings.output_length$.]';
+            inputElement.innerHTML = '\n[Have the player say ' + message + ' Include every letter and punctuation verbatim, and then continue the story for another $settings.output_length$.]';
         } else if (bypassCheck) {
             inputElement.innerHTML = '\n[Continue the story for another $settings.output_length$ as ' + message + ' ' + settings.action_string +']';
         } else {
@@ -1331,20 +1331,21 @@ function updateCharacterInfo() {
         if (players.length > 0) {
             activePlayer = players[0];
         } else {
-            // Create default player from settings
+            // Create blank player from settings
+            const randomSeed = Math.floor(Math.random() * 1000000);
             const defaultPlayer = {
-                name: settings.player_name,
-                description: settings.player_description,
+                name: '',
+                description: '',
                 type: 'player',
-                visual: settings.player_visual,
-                seed: settings.player_seed,
+                visual: '',
+                seed: randomSeed,
                 image: 'placeholder',
                 high_concept: settings.charsheet_fae ? settings.charsheet_fae.high_concept : '',
                 aspects: settings.charsheet_fae ? settings.charsheet_fae.aspects : [],
                 trouble: settings.charsheet_fae ? settings.charsheet_fae.trouble : '',
-                local_movement: settings.player_local_movement,
-                distant_movement: settings.player_distant_movement,
-                approaches: settings.charsheet_fae?.approaches || {
+                local_movement: 'walks',
+                distant_movement: 'walks',
+                approaches: {
                     careful: 0,
                     clever: 0,
                     flashy: 0,
@@ -1391,7 +1392,7 @@ function updateCharacterInfo() {
 }
 
 async function setupStart() {
-    players.push({ name: settings.player_name, description: settings.player_description, type: 'player', visual: settings.player_visual, seed: settings.player_seed, image: 'placeholder', high_concept: settings.charsheet_fae ? settings.charsheet_fae.high_concept : '', aspects: settings.charsheet_fae ? settings.charsheet_fae.aspects : [], trouble: settings.charsheet_fae ? settings.charsheet_fae.trouble : '', local_movement: settings.player_local_movement, distant_movement: settings.player_distant_movement, approaches: settings.charsheet_fae && settings.charsheet_fae.approaches ? settings.charsheet_fae.approaches : { careful: 0, clever: 0, flashy: 0, forceful: 0, quick: 0, sneaky: 0 } });
+    players.push({ name: '', description: '', type: 'player', visual: '', seed: 42, image: 'placeholder', high_concept: '', aspects: [], trouble: '', local_movement: 'walks', distant_movement: 'walks', approaches: { careful: 0, clever: 0, flashy: 0, forceful: 0, quick: 0, sneaky: 0 } });
     activePlayer = players[0]; // Set the active player to the first player in the list
 
     document.getElementById('sceneart').src = 'placeholder.png';
@@ -1404,6 +1405,15 @@ async function setupStart() {
     await generateArea(settings.starting_area, settings.starting_area_description, 3500, 3500);
     document.getElementById('sceneart').alt = areas[settings.starting_area].description;
     centerMapOnLocation(settings.starting_area);
+    zoomMap(maxScale);
+
+
+    // Update all locations' positions
+    document.querySelectorAll('.location').forEach(location => {
+        const name = location.id.replace('location-', '');
+        location.style.left = `${(areas[name].x * scale) - 25}px`;
+        location.style.top = `${(areas[name].y * scale) - 25}px`;
+    });
     const responseElement = document.createElement('div');
     responseElement.classList.add('new-message');
     

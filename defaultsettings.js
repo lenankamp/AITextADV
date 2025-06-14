@@ -18,37 +18,13 @@ function loadDefaultSettings() {
     positive_creature_affinities: ["curious", "friendly", "trusting", "companionable", "loyal", "bonded", "best friend"],
     negative_creature_affinities: ["suspicious", "unfriendly", "adversarial", "hostile"],
     // world generation settings
-    world_description: "The Kanto region is a region of the Pokémon world. Everyone aspires to be a Pokémon trainer. Pokémon trainers train their Pokémon to duel and seek to become champions.",
-    starting_area: "Professor Oak's Lab",
-    starting_area_description: "A small, cluttered laboratory filled with books, equipment, and various Pokémon specimens. The air is filled with the scent of chemicals and the sound of bubbling beakers. A large desk is covered in papers and a computer, while shelves are lined with jars containing strange creatures.",
+    world_description: "",
+    starting_area: "",
+    starting_area_description: "",
     current_time: "2025-06-12 08:00:00",
     climate: "temperate",
-    world_map_visual: "",
+    world_map_visual: "fantasy rpg battlemap, watercolor art style",
     world_map_seed: 12345,
-    // player details and character sheet
-    player_name: "Young Trainer",
-    player_description: "A young and eager Pokémon trainer, ready to embark on an adventure. They have a determined look in their eyes and a backpack slung over their shoulder. Their clothes are practical and comfortable, suitable for traveling through the wilderness.",
-    player_visual: "Pokémon Trainer, young, determined, wearing a cap and backpack, with a Pokéball in hand, standing in front of a lab filled with books and equipment.",
-    player_seed: 11111,
-    player_local_movement: "walks",
-    player_distant_movement: "walks",
-    charsheet_fae: {
-      high_concept: "Young Pokémon Trainer",
-      trouble: "Curious to a Fault",
-      approaches: {
-        careful: 1,
-        clever: 2,
-        flashy: 3,
-        forceful: 1,
-        quick: 2,
-        sneaky: 0
-      },
-      aspects: [
-        "Adventurous Spirit",
-        "Eager Learner",
-        "Loyal Friend"
-      ]
-    },
     // rules
     rule_set: "Fate Accelerated",
     ruleprompt_fae_action1: "\n\nPlayer is attempting the action: '$action'. Given the context, answer the following question, only giving the simple answer without preface or explanation. What level of training in the appropriate field would one need to complete this task? Answer among one of the following: basic, intermediate, advanced, expert, or master.",
@@ -169,7 +145,7 @@ function loadDefaultSettings() {
       typical: 1
     },
     // summary settings
-    summary_prompt: "Could you please provide a summary of the given text, including all key points and supporting details? The summary should be comprehensive and accurately reflect the main message and arguments presented in the original text, while also being concise and easy to understand. It is important to maintain the tone of the original text, if it is violent or explicit in language, the summary should be just as much so. Additionally, the summary should avoid any personal biases or interpretations and remain objective and factual throughout. Keep the summary in second person, bearing in mind that 'You' refers to $settings.player_name$.",
+    summary_prompt: "Could you please provide a summary of the given text, including all key points and supporting details? The summary should be comprehensive and accurately reflect the main message and arguments presented in the original text, while also being concise and easy to understand. It is important to maintain the tone of the original text, if it is violent or explicit in language, the summary should be just as much so. Additionally, the summary should avoid any personal biases or interpretations and remain objective and factual throughout. Keep the summary in second person, bearing in mind that 'You' refers to $activePlayer.player_name$.",
     summary_first_layer_max: 5,
     summary_first_layer_chunk: 3,
     summary_second_layer_max: 4,
@@ -203,8 +179,8 @@ function loadDefaultSettings() {
     addPersonDescriptionPrompt: "World Info: $world\nLocated in $areaName: $areaDescription\n\n[Write a description of '$name'. Write a 1-2 sentence physical description including style of dress and hair color and style, and a 1-2 sentence personality description. If there is not enough information in the context, be creative.]",
     addThingDescriptionPrompt: "World Info: $world\nLocated in $areaName: $areaDescription\n\n[Write a description of '$name'. Write a 2-3 sentence physical description. If there is not enough information in the context, be creative.]",
     addCreatureDescriptionPrompt: "World Info: $world\nLocated in $areaName: $areaDescription\n\n[Write a description of '$name'. Write a 1-2 sentence physical description, and a 1-2 sentence description of attidue dispositon or apparent motivation. If there is not enough information in the context, be creative.]",
-    outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If there are any $settings.setient_string$ in the scene besides %settings.player_name% and those listed in area, what is their name, or a simple two word description if name is not revealed? 2. If there are any $settings.creature_string$ in the scene besides $settings.player_name$ and those listed in area, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. Have any $settings.creature_string$ become $settings.sentient_string$, what is their name? 7. Have any $settings.sentient_string$ become $settings.creature_string$, what is their name? 8. If a new thing is in the scene, what is its name? 9. If a path to a location besides those lasted in context has been revealed, what is the location's name?]",
-    outputAutoCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. If a question has multiple answers, answer the question multiple times preceeded by the question number on each line separated by new lines. 1. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest. 2. If a person, creature, or thing had a signficant change to their physical or emotional state, what is their name? 3. Name any person or creature that grew in appreciation for the player, %settings.player_name%. 4. Name any person or creature that grew in fear, enmity, or distrust of the player, %settings.player_name%.]",
+    outputCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. If a question has multiple answers, answer the question multiple times preceeded by the question number and separated by new lines. 1. If there are any $settings.setient_string$ in the scene besides %activePlayer.name% and those listed in area, what is their name, or a simple two word description if name is not revealed? 2. If there are any $settings.creature_string$ in the scene besides $activePlayer.name$ and those listed in area, what is their name, or a simple two word description if name is not revealed? 3. If the scene changed location, where is the scene now? 4. If an unknown person's name is revealed, what is their name? 5. If a person has left the scene, what is their name? 6. Have any $settings.creature_string$ become $settings.sentient_string$, what is their name? 7. Have any $settings.sentient_string$ become $settings.creature_string$, what is their name? 8. If a new thing is in the scene, what is its name? 9. If a path to a location besides those lasted in context has been revealed, what is the location's name?]",
+    outputAutoCheckPrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. If a question has multiple answers, answer the question multiple times preceeded by the question number on each line separated by new lines. 1. Within the passage, approximate the time passed responding with one of the following: none, moments, minutes, hours, or full rest. 2. If a person, creature, or thing had a signficant change to their physical or emotional state, what is their name? 3. Name any person or creature that grew in appreciation for the player, %activePlayer.name%. 4. Name any person or creature that grew in fear, enmity, or distrust of the player, %activePlayer.name%.]",
     consequencePrompt: "[Answer the following questions in a numbered list format in regard to the passage. If the question can not be answered just respond with 'n/a'. 1. If I, the player $player, suffered emotional or physical harm in the passage, how long would you estimate it would take to recover? Answer in terms of rest time choosing one of the following: minutes, hours, days, years, or longer. 2. If $player suffered emotional or physical harm, creatively describe the immediate and lingering effects in 6 words.]",
     moveToAreaProximityPrompt: '[Depending on the distance traveled in the passage, would "$newArea" be best described as proximate to one of the previously listed locations? Specify the location and only the location name from the list if such is the case, otherwise answer n/a.]',
     moveToAreaPeoplePrompt: '[Answer the following question in a list format separate by \'\n\' in regard to the passage. If the question can not be answered just respond with \'n/a\' and no explanation. Among $peopleNames, who moved with the player?]',

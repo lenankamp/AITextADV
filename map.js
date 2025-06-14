@@ -8,6 +8,11 @@ let longPressTimer = null;
 let longPressX, longPressY;
 const LONG_PRESS_DURATION = 500; // milliseconds
 let lastTouchDistance = 0;
+let isLocationDragging = false;
+let draggedLocation = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
 
 const map = document.getElementById('map');
 const submenu = document.createElement('div');
@@ -53,14 +58,24 @@ map.addEventListener('touchstart', (e) => {
     const touch = e.touches[0];
     dragStartX = touch.clientX;
     dragStartY = touch.clientY;
-    
+
+    const touchedLocation = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.location');
     if (e.touches.length === 1) {
         // Start long press timer for single touch
         longPressX = touch.clientX - map.getBoundingClientRect().left;
         longPressY = touch.clientY - map.getBoundingClientRect().top;
         longPressTimer = setTimeout(() => {
             if (!isDragging) {
-                openNewLocationPrompt(longPressX / scale, longPressY / scale);
+                if (touchedLocation) {
+                    // Start dragging the location
+                    isLocationDragging = true;
+                    draggedLocation = touchedLocation;
+                    const name = draggedLocation.id.replace('location-', '');
+                    dragOffsetX = longPressX - parseFloat(draggedLocation.style.left);
+                    dragOffsetY = longPressY - parseFloat(draggedLocation.style.top);
+                } else {
+                    openNewLocationPrompt(longPressX / scale, longPressY / scale);
+                }
             }
         }, LONG_PRESS_DURATION);
     } else if (e.touches.length === 2) {
@@ -77,7 +92,18 @@ map.addEventListener('touchstart', (e) => {
 // Touch move handler
 map.addEventListener('touchmove', (e) => {
     if (e.target.closest('.sublocation-row')) return;
-    
+
+    const touch = e.touches[0];
+    if (isLocationDragging && draggedLocation) {
+        // Move the location
+        const newLeft = touch.clientX - map.getBoundingClientRect().left - dragOffsetX;
+        const newTop = touch.clientY - map.getBoundingClientRect().top - dragOffsetY;
+        draggedLocation.style.left = `${newLeft}px`;
+        draggedLocation.style.top = `${newTop}px`;
+        // Optionally, update tooltip position if visible
+        return;
+    }
+
     if (e.touches.length === 1) {
         const touch = e.touches[0];
         if (dragStartX !== undefined && dragStartY !== undefined) {
@@ -139,6 +165,16 @@ map.addEventListener('touchmove', (e) => {
 
 // Touch end handler
 map.addEventListener('touchend', (e) => {
+    if (isLocationDragging && draggedLocation) {
+        // Update the area's coordinates
+        const name = draggedLocation.id.replace('location-', '');
+        const left = parseFloat(draggedLocation.style.left);
+        const top = parseFloat(draggedLocation.style.top);
+        areas[name].x = (left + 25) / scale;
+        areas[name].y = (top + 25) / scale;
+        isLocationDragging = false;
+        draggedLocation = null;
+    }
     if (!isDragging && e.changedTouches.length === 1) {
         const touch = e.changedTouches[0];
         handleLocationInteraction(e, touch.clientX, touch.clientY);
@@ -168,16 +204,34 @@ map.addEventListener('mousedown', (e) => {
     map.style.cursor = 'grabbing';
     
     // Start long press timer
+    const clickedLocation = e.target.closest('.location');
     longPressX = e.clientX - map.getBoundingClientRect().left;
     longPressY = e.clientY - map.getBoundingClientRect().top;
     longPressTimer = setTimeout(() => {
         if (!isDragging) {
-            openNewLocationPrompt(longPressX / scale, longPressY / scale);
+            if (clickedLocation) {
+                // Start dragging the location
+                isLocationDragging = true;
+                draggedLocation = clickedLocation;
+                const name = draggedLocation.id.replace('location-', '');
+                dragOffsetX = longPressX - parseFloat(draggedLocation.style.left);
+                dragOffsetY = longPressY - parseFloat(draggedLocation.style.top);
+            } else {
+                openNewLocationPrompt(longPressX / scale, longPressY / scale);
+            }
         }
     }, LONG_PRESS_DURATION);
 });
 
 map.addEventListener('mousemove', (e) => {
+    if (isLocationDragging && draggedLocation) {
+        // Move the location
+        const newLeft = e.clientX - map.getBoundingClientRect().left - dragOffsetX;
+        const newTop = e.clientY - map.getBoundingClientRect().top - dragOffsetY;
+        draggedLocation.style.left = `${newLeft}px`;
+        draggedLocation.style.top = `${newTop}px`;
+        return;
+    }
     // Only check for drag if mouse button is down (which sets dragStartX/Y)
     if (dragStartX !== undefined && dragStartY !== undefined) {
         if (Math.abs(e.clientX - dragStartX) > 5 || Math.abs(e.clientY - dragStartY) > 5) {
@@ -196,6 +250,16 @@ map.addEventListener('mousemove', (e) => {
 });
 
 map.addEventListener('mouseup', () => {
+    if (isLocationDragging && draggedLocation) {
+        // Update the area's coordinates
+        const name = draggedLocation.id.replace('location-', '');
+        const left = parseFloat(draggedLocation.style.left);
+        const top = parseFloat(draggedLocation.style.top);
+        areas[name].x = (left + 25) / scale;
+        areas[name].y = (top + 25) / scale;
+        isLocationDragging = false;
+        draggedLocation = null;
+    }
     clearTimeout(longPressTimer);
     isDragging = false;
     dragStartX = undefined;
@@ -204,6 +268,16 @@ map.addEventListener('mouseup', () => {
 });
 
 map.addEventListener('mouseleave', () => {
+    if (isLocationDragging && draggedLocation) {
+        // Update the area's coordinates
+        const name = draggedLocation.id.replace('location-', '');
+        const left = parseFloat(draggedLocation.style.left);
+        const top = parseFloat(draggedLocation.style.top);
+        areas[name].x = (left + 25) / scale;
+        areas[name].y = (top + 25) / scale;
+        isLocationDragging = false;
+        draggedLocation = null;
+    }
     clearTimeout(longPressTimer);
     isDragging = false;
     dragStartX = undefined;
@@ -392,7 +466,6 @@ function goToLocation(name, distant = 0) {
 }
 
 function updateSublocationRow(currentAreaPath) {
-    // Remove existing row if it exists
     const existingRow = document.querySelector('.sublocation-row');
     if (existingRow) {
         existingRow.remove();
@@ -436,7 +509,7 @@ async function generateSublocationImages(areaPath) {
         if (areas[subloc.path]?.image) continue;
         
         // Skip if sublocation already has a temporary image
-        if (subloc.tempImage) continue;
+        if (subloc.tempImage && subloc.tempImage instanceof Blob) continue;
 
         // Generate a visual prompt from the sublocation description
         const visual = settings.autogenerate_prompts ? await generateVisualPrompt(subName, subloc.description) : subloc.description;
@@ -567,6 +640,29 @@ function centerMapOnLocation(locationPath) {
     setTimeout(() => {
         map.style.transition = '';
     }, 500);
+}
+function zoomMap(zoomLevel) {
+    // Zoom out to max after centering
+    const zoom = zoomLevel / scale;
+    scale = zoomLevel;
+    map.style.width = `${map.offsetWidth * zoom}px`;
+    map.style.height = `${map.offsetHeight * zoom}px`;
+
+    // Optionally, keep the map centered (optional, but matches wheel logic)
+    const mapRect = map.getBoundingClientRect();
+    const mapContainer = document.querySelector('.map-container');
+    const centerX = mapContainer.clientWidth / 2;
+    const centerY = mapContainer.clientHeight / 2;
+    const dx = (centerX - map.offsetLeft) * (zoom - 1);
+    const dy = (centerY - map.offsetTop) * (zoom - 1);
+    map.style.left = `${map.offsetLeft - dx}px`;
+    map.style.top = `${map.offsetTop - dy}px`;
+    // Update all locations' positions
+    document.querySelectorAll('.location').forEach(location => {
+        const name = location.id.replace('location-', '');
+        location.style.left = `${(areas[name].x * scale) - 25}px`;
+        location.style.top = `${(areas[name].y * scale) - 25}px`;
+    });
 }
 
 // Call centerMapOnLocation when moving to a new area

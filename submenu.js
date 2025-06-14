@@ -18,7 +18,10 @@ function openEntitySubmenu(entity, category, x, y) {
     editBtn.textContent = 'Edit';
     editBtn.onclick = (e) => {
         e.stopPropagation();
-        openUnifiedEditor(entity, category);
+        if (category == 'player')
+            openCharacterEditor(false);
+        else
+            openUnifiedEditor(entity, category);
         submenu.remove();
         if (submenu.closeHandler) {
             document.removeEventListener('click', submenu.closeHandler);
@@ -476,7 +479,7 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
         if (mapVisualInput.value) {
             if(mapVisualInput.value === settings.world_map_visual && parseInt(mapSeedInput.value) === settings.world_map_seed)
                 mapSeedInput.value = Math.floor(Math.random() * 4294967295) + 1;
-            const artBlob = await generateArt(mapVisualInput.value, settings.thing_negprompt, parseInt(mapSeedInput.value));
+            const artBlob = await generateArt(mapVisualInput.value, settings.thing_negprompt + " isometric,", parseInt(mapSeedInput.value));
             if (artBlob instanceof Blob) {
                 mapPreview.src = URL.createObjectURL(artBlob);
                 settings.world_map_visual = mapVisualInput.value;
@@ -555,13 +558,23 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
     refreshAreaBtn.innerHTML = '🔄';
     refreshAreaBtn.title = 'Generate Starting Area';
     refreshAreaBtn.onclick = async () => {
-        const response = await generateText(settings.creative_question_param, 
-            `Based on this world: ${worldDescInput.value}\nGenerate a name for an interesting starting location, if it would be within another larger place answer from largest to smallest with each location separated by a '/', eg. City/College/Dormitory/Bedroom.`);
-            const desc = response.trim().replaceAll(' / ', '/');
+        // Request a list of three names
+        const response = await generateText(
+            settings.creative_question_param,
+            `Based on this world: ${worldDescInput.value}
+    Generate a list of 3 interesting starting location names. If a location would be within another larger place, answer from largest to smallest with each location separated by a '/', e.g., City/College/Dormitory/Bedroom.
+    Format as 3 distinct locations, one per line, with no explanations or extra text.`
+        );
+        // Split, trim, and randomly select one
+        const names = response.trim().replaceAll(' / ', '/').split('\n').map(n => n.trim()).filter(Boolean);
+        const desc = names[Math.floor(Math.random() * names.length)] || '';
         areaInput.value = desc;
+
         // Also generate its description
-        const areaDesc = await generateText(settings.creative_question_param, 
-            `Generate a detailed description in 2-3 sentences of this location: ${desc.includes('/') ? desc.split('/').pop() : desc} that exists in this world: ${worldDescInput.value}`);
+        const areaDesc = await generateText(
+            settings.creative_question_param,
+            `Generate a detailed description in 2-3 sentences of this location: ${desc.includes('/') ? desc.split('/').pop() : desc} that exists in this world: ${worldDescInput.value}`
+        );
         areaDescInput.value = areaDesc;
     };
 
@@ -737,7 +750,7 @@ function openCharacterEditor(isNewGame = false) {
     nameLabel.textContent = 'Character Name:';
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
-    nameInput.value = (isNewGame ? settings.player_name : activePlayer.name) || '';
+    nameInput.value = (isNewGame ? "" : activePlayer.name) || '';
     nameInput.style.width = '100%';
 
     nameGroup.appendChild(nameLabel);
@@ -765,7 +778,7 @@ function openCharacterEditor(isNewGame = false) {
     conceptLabel.textContent = 'High Concept:';
     const conceptInput = document.createElement('input');
     conceptInput.type = 'text';
-    conceptInput.value = (isNewGame ? settings.charsheet_fae?.high_concept : activePlayer.high_concept) || '';
+    conceptInput.value = (isNewGame ? "" : activePlayer.high_concept) || '';
     conceptInput.style.width = '100%';
     conceptInput.placeholder = 'A defining trait or role that describes your character';
 
@@ -793,7 +806,7 @@ function openCharacterEditor(isNewGame = false) {
     const descLabel = document.createElement('label');
     descLabel.textContent = 'Description:';
     const descInput = document.createElement('textarea');
-    descInput.value = (isNewGame ? settings.player_description : activePlayer.description) || '';
+    descInput.value = (isNewGame ? "" : activePlayer.description) || '';
     descInput.style.height = '100px';
 
     const refreshDescBtn = document.createElement('button');
@@ -816,7 +829,7 @@ function openCharacterEditor(isNewGame = false) {
     const visualLabel = document.createElement('label');
     visualLabel.textContent = 'Visual Prompt:';
     visualInput = document.createElement('textarea');
-    visualInput.value = (isNewGame ? settings.visual : activePlayer.visual) || '';
+    visualInput.value = (isNewGame ? "" : activePlayer.visual) || '';
     visualInput.style.height = '100px';
     visualInput.style.width = '100%';
 
@@ -854,7 +867,7 @@ function openCharacterEditor(isNewGame = false) {
     localLabel.textContent = 'Local Movement:';
     const localInput = document.createElement('input');
     localInput.type = 'text';
-    localInput.value = settings.player_local_movement || 'walks';
+    localInput.value = activePlayer.local_movement || 'walks';
     localGroup.appendChild(localLabel);
     localGroup.appendChild(localInput);
 
@@ -863,7 +876,7 @@ function openCharacterEditor(isNewGame = false) {
     distantLabel.textContent = 'Distant Movement:';
     const distantInput = document.createElement('input');
     distantInput.type = 'text';
-    distantInput.value = settings.player_distant_movement || 'walks';
+    distantInput.value = activePlayer.distant_movement || 'walks';
     distantGroup.appendChild(distantLabel);
     distantGroup.appendChild(distantInput);
 
@@ -952,7 +965,8 @@ function openCharacterEditor(isNewGame = false) {
         
         const input = document.createElement('input');
         input.type = 'text';
-        input.value = settings.charsheet_fae?.aspects?.[i] || '';
+        input.placeholder = `Aspect ${i + 1} (e.g., "Won the Big Bang Burger Challenge, Best Swordman in the Vale")`;
+        input.value = isNewGame ? "" : (activePlayer.aspects && activePlayer.aspects[i]) || '';
         input.style.flex = '1';
         
         const refreshBtn = document.createElement('button');
@@ -997,7 +1011,8 @@ function openCharacterEditor(isNewGame = false) {
 
     const troubleInput = document.createElement('input');
     troubleInput.type = 'text';
-    troubleInput.value = settings.charsheet_fae?.trouble || '';
+    troubleInput.value = isNewGame ? "" : (activePlayer.trouble || '');
+    troubleInput.placeholder = 'Trouble Aspect (Flaw/Weakness)';
     troubleInput.style.flex = '1';
 
     const refreshTroubleBtn = document.createElement('button');
@@ -1066,38 +1081,27 @@ function openCharacterEditor(isNewGame = false) {
     };
 
     function saveCharacterSettings() {
-        settings.player_name = nameInput.value;
         activePlayer.name = nameInput.value;
-        settings.player_description = descInput.value;
         activePlayer.description = descInput.value;
-        settings.player_visual = visualInput.value;
         activePlayer.visual = visualInput.value;
-        settings.player_local_movement = localInput.value;
         activePlayer.local_movement = localInput.value;
-        settings.player_distant_movement = distantInput.value;
         activePlayer.distant_movement = distantInput.value;
 
         if (!settings.charsheet_fae) settings.charsheet_fae = {};
-        settings.charsheet_fae.high_concept = conceptInput.value;
         activePlayer.high_concept = conceptInput.value;
-        settings.charsheet_fae.aspects = aspectInputs.map(input => input.value);
-        activePlayer.aspects = settings.charsheet_fae.aspects || [];
-        settings.charsheet_fae.trouble = troubleInput.value;
+        activePlayer.aspects = aspectInputs.map(input => input.value);
         activePlayer.trouble = troubleInput.value;
 
         // Save approaches
-        settings.charsheet_fae.approaches = {};
         Object.entries(approaches).forEach(([key, data]) => {
             const input = approachesGrid.querySelector(`input[data-approach="${key}"]`);
-            settings.charsheet_fae.approaches[key] = parseInt(input.value);
+            activePlayer.approaches[key] = parseInt(input.value);
         });
-        activePlayer.approaches = settings.charsheet_fae.approaches || {
-            careful: 1, clever: 2, flashy: 3, forceful: 1, quick: 2, sneaky: 0
-        };
 
         updateCharacterInfo();
         
         if (previewImage.src !== currentPlayerArt.src) {
+            activePlayer.image = previewImage.src;
             currentPlayerArt.src = previewImage.src;
         }
     }

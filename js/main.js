@@ -45,16 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Handle file input changes
-    document.getElementById('fileInput').addEventListener('change', (event) => {
-        loadFromFile(event);
-    });
-
-    // Handle input field
-    document.getElementById('input').addEventListener('input', (event) => {
-        // Add any input handling logic here
-    });
-
     // Setup resizers
     setupResizers();
 });

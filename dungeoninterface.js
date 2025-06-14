@@ -16,11 +16,11 @@ async function initDungeonManager() {
     const party = new Party();
     
     // Create main character from player data
-    const mainChar = new Character(settings.player_name);
+    const mainChar = new Character(activePlayer.name);
     mainChar.currentJob = 'Squire'; // Set starting job
     party.addMember(mainChar);
-    mainChar.description = settings.player_description;
-    mainChar.seed = settings.player_seed;
+    mainChar.description = activePlayer.description;
+    mainChar.seed = activePlayer.seed;
 
     // Add followers as party members
     for (const follower of followers) {

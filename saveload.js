@@ -26,24 +26,6 @@ request.onerror = function(event) {
 
 async function saveGame(saveFile = false) {
     // First convert any blob URLs to data URLs
-    const playerArt = document.getElementById('playerart');
-    let playerImageDataUrl = playerArt.src;
-    if (playerArt.src.startsWith('blob:')) {
-        try {
-            const response = await fetch(playerArt.src);
-            const blob = await response.blob();
-            playerImageDataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-        } catch (error) {
-            console.error('Error converting player image:', error);
-            playerImageDataUrl = null;
-        }
-    }
-
     // Handle world map image
     const mapImage = document.getElementById('mapImage');
     let mapImageDataUrl = mapImage.src;
@@ -74,8 +56,8 @@ async function saveGame(saveFile = false) {
             followers: followers,
             outputLog: document.getElementById('output').innerHTML,
             settings: settings,
-            playerImage: playerImageDataUrl,
-            mapImage: mapImageDataUrl
+            mapImage: mapImageDataUrl,
+            players: players
         }
     };
     objectStore.put(data);
@@ -86,26 +68,37 @@ async function saveGame(saveFile = false) {
 
 async function saveToFile(data) {
     const images = {};
-
-    // Save player image if it exists and isn't a placeholder
-    const playerArt = document.getElementById('playerart');
-    if (playerArt.src && !playerArt.src.includes('placeholder.png')) {
-        // Check if it's already a data URL
-        if (playerArt.src.startsWith('data:')) {
-            images['player'] = playerArt.src;
-        } else {
-            try {
-                const playerImageBlob = await fetch(playerArt.src).then(res => res.blob());
-                const playerImageReader = new FileReader();
-                await new Promise(resolve => {
-                    playerImageReader.onloadend = () => {
-                        images['player'] = playerImageReader.result;
+    // --- NEW: Save all player images in the images object ---
+    if (Array.isArray(data.state.players)) {
+        for (const player of data.state.players) {
+            if (player.image && typeof player.image === 'string' && player.image.startsWith('data:')) {
+                images[`player_${player.name}`] = player.image;
+            } else if (player.image && typeof player.image === 'string' && player.image.startsWith('blob:')) {
+                try {
+                    const response = await fetch(player.image);
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    await new Promise((resolve, reject) => {
+                        reader.onloadend = () => {
+                            images[`player_${player.name}`] = reader.result;
+                            resolve();
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (error) {
+                    // ignore
+                }
+            } else if (player.image instanceof Blob) {
+                const reader = new FileReader();
+                await new Promise((resolve, reject) => {
+                    reader.onloadend = () => {
+                        images[`player_${player.name}`] = reader.result;
                         resolve();
                     };
-                    playerImageReader.readAsDataURL(playerImageBlob);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(player.image);
                 });
-            } catch (error) {
-                console.error('Error processing player image:', error);
             }
         }
     }
@@ -138,7 +131,7 @@ async function saveToFile(data) {
         });
     }
 
-    // Process all areas and their sublocations
+    // Process all areas
     for (const [areaName, area] of Object.entries(areas)) {
         processAreaImages(area, areaName);
     }
@@ -198,7 +191,7 @@ async function saveToFile(data) {
     a.download = 'gameState.json';
     a.click();
 
-    // Function to restore images in an area or sublocation
+    // Function to restore images in an area
     const restoreAreaImages = async (area, path) => {
         if (images[path]) {
             area.image = await fetchImage(images[path]);
@@ -217,7 +210,7 @@ async function saveToFile(data) {
 
     };
 
-    // Restore all areas and their sublocations
+    // Restore all areas
     const areaPromises = Object.keys(areas).map(async area => {
         await restoreAreaImages(areas[area], area);
     });
@@ -249,8 +242,6 @@ async function fetchImage(imageData) {
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {
-    document.getElementById('fileInput').addEventListener('change', loadFromFile);
-    
     // Load last saved game state if it exists
     if (db) {
         const transaction = db.transaction(['data'], 'readonly');
@@ -280,6 +271,24 @@ async function restoreGameState(data, images = null) {
     followers = data.state.followers;
     output.innerHTML = data.state.outputLog;
     settings = Object.assign({}, settings, data.state.settings);
+
+    // --- NEW: Restore players array and their images ---
+    if (Array.isArray(data.state.players)) {
+        players = data.state.players.map(player => ({ ...player }));
+        // Restore player images from images object if present
+        if (images) {
+            for (const player of players) {
+                const key = `player_${player.name}`;
+                if (images[key]) {
+                    player.image = images[key];
+                }
+            }
+        }
+        activePlayer = players[0];
+    } else {
+        players = [];
+    }
+
     const confirmElement = document.getElementById('outputCheckConfirm');
     if (confirmElement) {
         confirmElement.remove();
@@ -312,11 +321,6 @@ async function restoreGameState(data, images = null) {
         location.remove();
     });
     
-    // Add top-level areas to the map
-    for (const area in areas) {
-        addLocation(area);
-    }
-
     // Handle player image
     if (data.state.playerImage) {
         if (data.state.playerImage.startsWith('data:')) {
@@ -327,6 +331,20 @@ async function restoreGameState(data, images = null) {
                 document.getElementById('playerart').src = URL.createObjectURL(blob);
             } catch (error) {
                 console.error('Error loading player image:', error);
+            }
+        }
+    }
+
+    // --- NEW: Set the playerart image to the first player's image if available ---
+    if (players.length > 0 && players[0].image) {
+        if (typeof players[0].image === 'string' && players[0].image.startsWith('data:')) {
+            document.getElementById('playerart').src = players[0].image;
+        } else if (typeof players[0].image === 'string' && players[0].image.startsWith('blob:')) {
+            try {
+                const blob = await fetchImage(players[0].image);
+                document.getElementById('playerart').src = URL.createObjectURL(blob);
+            } catch (error) {
+                // fallback to previous logic
             }
         }
     }
@@ -399,10 +417,21 @@ async function restoreGameState(data, images = null) {
             sceneArt.src = URL.createObjectURL(currentAreaObj.image);
         }
     }
+    
+    // Add top-level areas to the map
+    for (const area in areas) {
+        if (!area.includes('/')) {
+            addLocation(area);
+        }
+    }
 
     // Refresh UI
-    centerMapOnLocation(currentArea);
+    const map = document.getElementById('map');
+    map.style.left = '0px';
+    map.style.top = '0px';
     updateImageGrid(currentArea);
     updateFollowerArt();
     updateSublocationRow(currentArea);
+    zoomMap(minScale);
+    centerMapOnLocation(currentArea);
 }

@@ -15,10 +15,6 @@ function openSettings() {
           'world_description', 'starting_area', 'starting_area_description', 
           'current_time', 'climate', 'world_map_visual', 'world_map_seed'
       ],
-      'Player Details': [
-          'player_name', 'player_description', 'player_visual', 'player_seed',
-          'player_local_movement', 'player_distant_movement'
-      ],
       'Rule System': ['rule_set', 'charsheet_fae', 'ruleprompt_fae_action1', 
         'ruleprompt_fae_action2', 'sampleFAEAction'],
       'Summary': [
@@ -102,15 +98,6 @@ function openSettings() {
       'starting_area_description': 'Detailed description of the starting area',
       'current_time': 'Year can be arbitary number, but must be Y-MM-DD HH:MM:SS format',
       'climate': '"temperate" is default and will change by month, blank entry will disable, anything else will override if you want a nuclear winter or eternal summer',
-      
-      // Player Details
-      'player_name': 'Name of the player character',
-      'player_description': 'General description of the player character',
-      'player_visual': 'Detailed visual description of the player character',
-      'player_seed': 'Seed value for consistent player character visuals',
-      'player_local_movement': 'Verb used for local movement (e.g., "walks, slithers, lazily lumbers")',
-      'player_distant_movement': 'Verb used for distant movement: rides horse, teleports, walks, etc.',
-      'charsheet_fae': 'Character sheet data for Fate Accelerated system',
       
       // Rule System
       'rule_set': 'Active game rule system (e.g., "Fate Accelerated")',
