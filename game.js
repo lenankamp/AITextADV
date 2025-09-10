@@ -1500,7 +1500,7 @@ function restartGame() {
     // Clean up players' images if any
     if (Array.isArray(players) && players.length > 0) {
         for (const player of players) {
-            if (player && player.image && typeof player.image === 'string' && player.image.startsWith('blob:')) {
+            if (player && player !== activePlayer && player.image && typeof player.image === 'string' && player.image.startsWith('blob:')) {
                 URL.revokeObjectURL(player.image);
             }
         }
