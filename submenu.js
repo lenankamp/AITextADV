@@ -827,42 +827,42 @@ function openCharacterEditor(isNewGame = false) {
     // Visual prompt moved here (after description) and made visible
     const visualGroup = document.createElement('div');
     visualGroup.style.position = 'relative';
+
+    // --- Inline label, seed input, and refresh button ---
+    const visualLabelRow = document.createElement('div');
+    visualLabelRow.style.display = 'flex';
+    visualLabelRow.style.alignItems = 'center';
+    visualLabelRow.style.gap = '8px';
+
     const visualLabel = document.createElement('label');
     visualLabel.textContent = 'Visual Prompt:';
-    visualInput = document.createElement('textarea');
-    visualInput.value = (isNewGame ? "" : activePlayer.visual) || '';
-    visualInput.style.height = '100px';
-    visualInput.style.width = '100%';
 
-    // --- Seed input for player art ---
     const seedInput = document.createElement('input');
     seedInput.type = 'number';
     seedInput.value = (isNewGame ? (Math.floor(Math.random() * 4294967295) + 1) : (activePlayer.seed || Math.floor(Math.random() * 4294967295) + 1));
     seedInput.title = 'Seed';
     seedInput.className = 'seed-input';
     seedInput.style.width = '120px';
-    seedInput.style.marginLeft = '10px';
 
-    // Add seed input to the visual label area
-    const visualLabelRow = document.createElement('div');
-    visualLabelRow.style.display = 'flex';
-    visualLabelRow.style.alignItems = 'center';
-    visualLabelRow.appendChild(visualLabel);
-    visualLabelRow.appendChild(seedInput);
-
-    // --- Add a refresh button for the seed ---
     const refreshSeedBtn = document.createElement('button');
     refreshSeedBtn.className = 'refresh-button';
     refreshSeedBtn.innerHTML = '🔄';
     refreshSeedBtn.title = 'Randomize Seed';
-    refreshSeedBtn.style.marginLeft = '5px';
     refreshSeedBtn.onclick = () => {
         seedInput.value = Math.floor(Math.random() * 4294967295) + 1;
     };
-    visualLabelRow.appendChild(refreshSeedBtn);
 
-    // --- Update the visual group to use the new label row ---
+    visualLabelRow.appendChild(seedInput);
+    visualLabelRow.appendChild(refreshSeedBtn);
+    visualLabelRow.appendChild(visualLabel);
+
     visualGroup.appendChild(visualLabelRow);
+
+    // Visual prompt textarea
+    visualInput = document.createElement('textarea');
+    visualInput.value = (isNewGame ? "" : activePlayer.visual) || '';
+    visualInput.style.height = '100px';
+    visualInput.style.width = '100%';
     visualGroup.appendChild(visualInput);
 
     // --- Update the image refresh button to use the seed ---
@@ -887,9 +887,6 @@ function openCharacterEditor(isNewGame = false) {
             item.image = artBlob;
         }
     };
-    visualGroup.appendChild(refreshVisualBtn);
-    visualGroup.appendChild(visualLabel);
-    visualGroup.appendChild(visualInput);
     visualGroup.appendChild(refreshVisualBtn);
 
     // Movement strings section

@@ -1506,10 +1506,16 @@ function restartGame() {
         }
     }
 
+    // Preserve active player if starting a new game
+    let preservedPlayer = null;
+    if (activePlayer) {
+        preservedPlayer = activePlayer;
+    }
+
     // Reset game state
     areas = {};
     followers = [];
-    players = [];
+    players = preservedPlayer ? [preservedPlayer] : [];
     document.querySelectorAll('.location').forEach(location => {
         location.remove();
     });
