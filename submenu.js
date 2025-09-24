@@ -520,7 +520,7 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
     refreshThemeBtn.onclick = async () => {
         const theme = themeInput.value.trim();
         if (theme) {
-            const desc = await generateText(settings.creative_question_param, 
+            const desc = await generateText(settings.creative_question_param, null, 
                 `Generate a rich, detailed world description for a ${theme} setting in 3-4 sentences.`);
             worldDescInput.value = desc;
         }
@@ -560,7 +560,7 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
     refreshAreaBtn.onclick = async () => {
         // Request a list of three names
         const response = await generateText(
-            settings.creative_question_param,
+            settings.creative_question_param, null,
             `Based on this world: ${worldDescInput.value}
     Generate a list of 3 interesting starting location names. If a location would be within another larger place, answer from largest to smallest with each location separated by a '/', e.g., City/College/Dormitory/Bedroom.
     Format as 3 distinct locations, one per line, with no explanations or extra text.`
@@ -572,7 +572,7 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
 
         // Also generate its description
         const areaDesc = await generateText(
-            settings.creative_question_param,
+            settings.creative_question_param, null,
             `Generate a detailed description in 2-3 sentences of this location: ${desc.includes('/') ? desc.split('/').pop() : desc} that exists in this world: ${worldDescInput.value}`
         );
         areaDescInput.value = areaDesc;
@@ -597,7 +597,7 @@ function openWorldGeneration(isNewGame = false, onNext = null) {
     refreshAreaDescBtn.innerHTML = '🔄';
     refreshAreaDescBtn.title = 'Regenerate Area Description';
     refreshAreaDescBtn.onclick = async () => {
-        const areaDesc = await generateText(settings.creative_question_param, 
+        const areaDesc = await generateText(settings.creative_question_param, null,
             `Generate a detailed description in 2-3 sentences of this location: ${areaInput.value.includes('/') ? areaInput.value.split('/').pop() : areaInput.value} that exists in this world: ${worldDescInput.value}`);
         areaDescInput.value = areaDesc;
     };
@@ -765,7 +765,7 @@ function openCharacterEditor(isNewGame = false) {
         const characterContext =  descInput?.value || conceptInput?.value;
         const prompt = `World Description: ${settings.world_description}\n\n [Generate 5 player names. ${characterContext ? `\nFor a character who is described as ${characterContext}` : ''}.
             Format as 5 names, one per line, without explanations, descriptions, or anything but the name on the line. Each name should either be a first and last name or singular name as appropriate for the world and character.]`;
-        const names = await generateText(settings.creative_question_param, prompt);
+        const names = await generateText(settings.creative_question_param, null, prompt);
         const nameList = names.trim().replaceAll('\n\n', '\n').split('\n').map(n => n.trim());
         const selectedName = nameList[Math.floor(Math.random() * nameList.length)];
         nameInput.value = selectedName;
@@ -788,7 +788,7 @@ function openCharacterEditor(isNewGame = false) {
     refreshConceptBtn.innerHTML = '🔄';
     refreshConceptBtn.title = 'Generate High Concept';
     refreshConceptBtn.onclick = async () => {
-        const concepts = await generateText(settings.creative_question_param, 
+        const concepts = await generateText(settings.creative_question_param, null,
             `Generate 5 creative and unique high concepts for a character that would exist in this world: ${settings.world_description}. 
             Each high concept should be a short phrase three to six word phrase that captures their primary role or defining characteristic.
             Format as 5 distinct phrases, one per line, without explanations or numbers.`);
@@ -815,7 +815,7 @@ function openCharacterEditor(isNewGame = false) {
     refreshDescBtn.innerHTML = '🔄';
     refreshDescBtn.title = 'Generate Description';
     refreshDescBtn.onclick = async () => {
-        const desc = await generateText(settings.creative_question_param, 
+        const desc = await generateText(settings.creative_question_param, null,
             `World Description: ${settings.world_description}\n\n[Write a visual description of "${nameInput.value}, a ${conceptInput.value}" without making direct references to the quoted text or using name. You absolutely must use gendered pronouns. Be creative in adding details and write a single paragraph description. Begin with 2 sentences describing notable physical features and follow with 2 sentences describing attitude, dispositon, or apparrent motivation.]`);
         descInput.value = desc.trim();
     };
@@ -871,7 +871,7 @@ function openCharacterEditor(isNewGame = false) {
     refreshVisualBtn.innerHTML = '🔄';
     refreshVisualBtn.title = 'Generate Visual Description & Image';
     refreshVisualBtn.onclick = async () => {
-        const visual = await generateText(settings.creative_question_param, 
+        const visual = await generateText(settings.creative_question_param, null,
             settings.generateVisualPrompt, '', {
                 name: nameInput.value,
                 description: descInput.value,
@@ -1017,7 +1017,7 @@ function openCharacterEditor(isNewGame = false) {
                 existingAspects.push(troubleInput.value);
             }
             
-            const aspects = await generateText(settings.creative_question_param, 
+            const aspects = await generateText(settings.creative_question_param, null, 
                 `Generate 5 unique and creative character aspects for a character who is described as ${descInput.value}. 
                 These aspects should be completely different from their existing aspects: ${existingAspects.join(', ')}.
                 Each should represent their talents, abilities, personality, background, or beliefs that hasn't been covered by other aspects.
@@ -1060,7 +1060,7 @@ function openCharacterEditor(isNewGame = false) {
             }
         });
         
-        const troubles = await generateText(settings.creative_question_param, 
+        const troubles = await generateText(settings.creative_question_param, null, 
             `Generate 5 trouble aspects for a character who is described as ${descInput.value}.
             Their existing aspects are: ${existingAspects.join(', ')}.
             Each trouble should be a compelling flaw, weakness, or recurring problem that causes complications in their life.

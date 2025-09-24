@@ -277,7 +277,7 @@ function openOutputEditor() {
 }
 
 async function generateSummary(text) {
-    return await generateText(settings.summary_param, "Text: " + text + "/n/n" + settings.summary_prompt);
+    return await generateText(settings.summary_param, null, "Text: " + text + "/n/n" + settings.summary_prompt);
 }
 
 async function processRecursiveSummary(config = {

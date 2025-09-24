@@ -43,6 +43,7 @@ async function processTextQueue() {
     try {
         const result = await generateTextImpl(
             request.params,
+            request.structure,
             request.input,
             request.post,
             request.variables,
@@ -95,15 +96,15 @@ async function processArtQueue() {
 }
 
 // Main generateText function that adds to queue
-async function generateText(params, input, post = '', variables = {}, sample_messages = []) {
+async function generateText(params, structure, input, post = '', variables = {}, sample_messages = []) {
     return new Promise((resolve, reject) => {
-        textRequestQueue.push({ params, input, post, variables, sample_messages, resolve, reject });
+        textRequestQueue.push({ params, structure, input, post, variables, sample_messages, resolve, reject });
         processTextQueue();
     });
 }
 
 // Implementation of text generation
-async function generateTextImpl(params, input, post = '', variables = {}, sample_messages = []) {
+async function generateTextImpl(params, structure, input, post = '', variables = {}, sample_messages = []) {
 
     // Process input string for variable replacements if it contains $variables
     input = replaceVariables(input, variables);
@@ -114,122 +115,51 @@ async function generateTextImpl(params, input, post = '', variables = {}, sample
     let response;
 
     // Send message to API
-    if (params.textAPItype == 'openai') {
-        const messages = [
-            {
-                "role": "system",
-                "content": system_prompt
-            }
-        ];
-
-        // Include sample_messages if provided
-        if (sample_messages.length > 0) {
-            sample_messages.forEach(message => {
-                messages.push(message);
-            });
+    const messages = [
+        {
+            "role": "system",
+            "content": system_prompt
         }
+    ];
 
-        messages.push({
-            "role": "user",
-            "content": input
+    // Include sample_messages if provided
+    if (sample_messages.length > 0) {
+        sample_messages.forEach(message => {
+            messages.push(message);
         });
-        if (post) {
-            messages.push({
-                "role": "assistant",
-                "content": post
-            });
-        }
-        response = await fetch(params.textAPI + 'chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + params.apiKey,
-            },
-            body: JSON.stringify({
-                model: params.model,
-                messages: messages,
-                max_completion_tokens: params.max_length,
-                temperature: params.temperature,
-                top_p: params.top_p,
-                n: 1,
-                stream: false,
-                stop: params.stop_sequence
-            })
-        });
-    } else if (params.textAPItype == 'completion') { // default to koboldcpp
-        // Process the text_prompt template with variables
-        const processedPrompt = replaceVariables(params.text_prompt, {
-            ...variables,
-            system_prompt: system_prompt,
-            input_string: input,
-            response_string: post
-        });
-
-        response = await fetch(params.textAPI + 'generate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                max_context_length: params.max_context_length,
-                max_length: params.max_length,
-                prompt: processedPrompt,
-                quiet: params.quiet,
-                rep_pen: params.rep_pen,
-                rep_pen_range: params.rep_pen_range,
-                rep_pen_slope: params.rep_pen_slope,
-                temperature: params.temperature,
-                tfs: params.tfs,
-                top_a: params.top_a,
-                top_k: params.top_k,
-                top_p: params.top_p,
-                typical: params.typical,
-                stop_sequence: params.stop_sequence
-            })
-        });
-    } else {
-        const processedPrompt = replaceVariables(params.text_prompt, {
-            ...variables,
-            system_prompt: system_prompt,
-            input_string: input,
-            response_string: post
-        });
-        const url = "https://aihorde.net/api/v2/generate/text/async";
-        const apiKey = "aqaGvzHTwL2WsfkaGh8UPg"; // Replace with your actual API key
-        const options = {
-            method: "POST",
-            headers: {
-                "apikey": apiKey, // Your API key
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                prompt: processedPrompt, // The text prompt
-                params: {
-                    max_length: 300, // Max tokens to generate
-                    temperature: params.temperature,
-                    top_p: params.top_p,
-                    n: 1,
-                    },
-                models: ["koboldcpp/Meta-Llama-3-8B-Instruct"] // Optional: specify a model
-            })
-        };
-
-        try {
-            // Submit the generation request
-            const response = await fetch(url, options);
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const taskData = await response.json();
-
-            // Poll for the result
-            const taskId = taskData.id;
-            await pollTextStatus(taskId, apiKey);
-        } catch (error) {
-            console.error("Error:", error);
-        }
-
     }
+
+    messages.push({
+        "role": "user",
+        "content": input
+    });
+    if (post) {
+        messages.push({
+            "role": "assistant",
+            "content": post
+        });
+    }
+    const bodyObj = {
+        model: params.model,
+        messages: messages,
+        max_completion_tokens: params.max_length,
+        temperature: params.temperature,
+        top_p: params.top_p,
+        n: 1,
+        stream: false,
+        stop: params.stop_sequence
+    };
+    if (structure != null) {
+        bodyObj.response_format = structure;
+    }
+    response = await fetch(params.textAPI + 'chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + params.apiKey,
+        },
+        body: JSON.stringify(bodyObj)
+    });
 
     const data = await response.json();
 

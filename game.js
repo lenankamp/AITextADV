@@ -7,7 +7,7 @@ async function generateVisualPrompt(name, description) {
 
     });
 
-    return await generateText(settings.creative_question_param, settings.world_description + "\n" + visualPrompt, '', {
+    return await generateText(settings.creative_question_param, null, settings.world_description + "\n" + visualPrompt, '', {
         name: name,
         description: description
     });
@@ -59,7 +59,7 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
             mainLocation: areaName.includes('/') ? "Within the " + areas[areaName.split('/')[0]].name + " described as " + areas[areaName.split('/')[0]].description + "\n" : '',
             parentArea: (areaName.match(/\//g) || []).length > 1 ? "More Locally within: " + areaName.split('/').slice(0, -1).join('/') : '',
             });
-        response = await generateText(settings.creative_question_param, minContext(contextDepth) + "\n" + prompt, '', {
+        response = await generateText(settings.creative_question_param, null, minContext(contextDepth) + "\n" + prompt, '', {
             areaName: area.name
         });
         area.description = response;
@@ -75,7 +75,7 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
         .join(', ')
         + ',' + areaName.split('/')[0];
     
-    response = await generateText(settings.creative_question_param, settings.generateSublocationsPrompt, '', {
+    response = await generateText(settings.creative_question_param, null, settings.generateSublocationsPrompt, '', {
         areaName: area.name,
         description: area.description,
         locations: existingLocations ? "Existing Nearby Locations: " + existingLocations : '',
@@ -123,7 +123,7 @@ async function generateArea(areaName, description='', x=0, y=0, contextDepth=0, 
         .filter(name => name) // Remove any undefined/empty names
         .join(', ');
     
-    response = await generateText(settings.creative_question_param, settings.generateEntitiesPrompt, '', {
+    response = await generateText(settings.creative_question_param, null, settings.generateEntitiesPrompt, '', {
         people: allPeople,
         areaName: area.name,
         description: area.description,
@@ -285,7 +285,7 @@ function dismissFollower(entity) {
 }
 
 async function addPerson(name, area=currentArea, context="", text="") {
-    const description = await generateText(settings.creative_question_param, "\n\nContext:\n" + context +"\n" + text + "\n\n" + settings.addPersonDescriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, null, "\n\nContext:\n" + context +"\n" + text + "\n\n" + settings.addPersonDescriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
@@ -303,7 +303,7 @@ async function addPerson(name, area=currentArea, context="", text="") {
 }
 
 async function addThing(name, area=currentArea, context="", text="") {
-    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + settings.addThingDescriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, null, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + settings.addThingDescriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
@@ -325,7 +325,7 @@ async function addThing(name, area=currentArea, context="", text="") {
 }
 
 async function addCreature(name, area=currentArea, context="", text="") {
-    const description = await generateText(settings.creative_question_param, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + settings.addCreatureDescriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, null, settings.world_description + "\n" + areaContext(area) + "\n\nContext:\n" + context +"\n" + text + "\n\n" + settings.addCreatureDescriptionPrompt, '', {
         name: name,
         area: area,
         context: context,
@@ -340,7 +340,7 @@ async function addCreature(name, area=currentArea, context="", text="") {
 }
 
 async function addSublocation(name, area=currentArea, text="", context="") {
-    const description = await generateText(settings.creative_question_param, "Context:\n" + context +"\n" + text + "\n\n" + settings.generateAreaDescriptionPrompt, '', {
+    const description = await generateText(settings.creative_question_param, null, "Context:\n" + context +"\n" + text + "\n\n" + settings.generateAreaDescriptionPrompt, '', {
         name: name,
         time: getTimeofDay(),
         season: settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '',
@@ -357,7 +357,7 @@ async function addSublocation(name, area=currentArea, text="", context="") {
 }
 
 async function entityLeavesArea(name, text) {
-    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + settings.entityLeavesAreaPrompt, '', {
+    const response = await generateText(settings.question_param, null, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + settings.entityLeavesAreaPrompt, '', {
         currentArea: currentArea,
         name: name,
         text: text
@@ -392,7 +392,7 @@ async function entityLeavesArea(name, text) {
 
 async function generateNewDescription(name, type) {
     if (type === 'people' || type === 'player') {
-        return await generateText(settings.creative_question_param, settings.addPersonDescriptionPrompt, '', {
+        return await generateText(settings.creative_question_param, null, settings.addPersonDescriptionPrompt, '', {
             name: name,
             world: settings.world_description,
             areaName: currentArea.name,
@@ -400,21 +400,21 @@ async function generateNewDescription(name, type) {
         });
     
     } else if (type === 'creatures') {
-        return await generateText(settings.creative_question_param, settings.addCreatureDescriptionPrompt, '', {
+        return await generateText(settings.creative_question_param, null, settings.addCreatureDescriptionPrompt, '', {
             name: name,
             world: settings.world_description,
             areaName: currentArea.name,
             areaDescription: currentArea.description
         });
     } else if (type === 'things') {
-        return await generateText(settings.creative_question_param, settings.addThingDescriptionPrompt, '', {
+        return await generateText(settings.creative_question_param, null, settings.addThingDescriptionPrompt, '', {
             name: name,
             world: settings.world_description,
             areaName: currentArea.name,
             areaDescription: currentArea.description
         });
     } else {
-        return await generateText(settings.creative_question_param, settings.generateAreaDescriptionPrompt, '', {
+        return await generateText(settings.creative_question_param, null, settings.generateAreaDescriptionPrompt, '', {
             areaName: name,
             time: getTimeofDay(),
             season: settings.climate !='' ? (settings.climate != 'temperate' ? "Current Season: " + settings.climate : "Current Season: " + getSeason()) : '',
@@ -502,7 +502,7 @@ function provokeAlly(name) {
 
 async function outputCheck(text, context="") {
     const prompt = settings.outputCheckPrompt;
-    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
+    const response = await generateText(settings.question_param, null, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
         currentArea: currentArea,
         context: context,
         text: text
@@ -540,7 +540,7 @@ async function outputCheck(text, context="") {
                     .filter(follower => follower && follower.name) // Filter out undefined or invalid followers
                     .map(follower => follower.name)
                     .join(', ') : '');
-                const prevName = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'n/a' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]", '', {
+                const prevName = await generateText(settings.question_param, null, settings.world_description + "\n" + areaContext(currentArea) + "\n\nContext:\n" + context + "\n\nPassage:\n" + text + "\n\n[Answer the following question in regard to the passage. If the question can not be answered just respond with 'n/a' and no explanation. Among " + peopleNames + ", who is " + newName + "?" + "]", '', {
                     peopleNames: peopleNames,
                     newName: newName,
                     currentArea: currentArea,
@@ -589,7 +589,7 @@ async function outputCheck(text, context="") {
 
 async function outputAutoCheck(text, context="") {
     const prompt = settings.outputAutoCheckPrompt;
-    const response = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
+    const response = await generateText(settings.question_param, null, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + prompt, '', {
         currentArea: currentArea,
         context: context,
         text: text,
@@ -642,7 +642,7 @@ async function outputAutoCheck(text, context="") {
             let section = null;
             let target = null;
             if (name.toLowerCase() === activePlayer.name.toLowerCase() || name.toLowerCase() === "you") {
-                const response = await generateText(settings.creative_question_param, minContext(3) + settings.consequencePrompt, '', {
+                const response = await generateText(settings.creative_question_param, null, minContext(3) + settings.consequencePrompt, '', {
                     player: activePlayer.name || players[0],
                     description: activePlayer.description || players[0].description
                 },settings.sampleQuestions);
@@ -694,7 +694,7 @@ async function outputAutoCheck(text, context="") {
                 target = followers.find(follower => follower?.name === name);
             }
             if (section && target) {
-                const description = await generateText(settings.creative_question_param, minContext(3) + settings.generateNewDescription, '', {
+                const description = await generateText(settings.creative_question_param, null, minContext(3) + settings.generateNewDescription, '', {
                     name: target.name,
                     description: target.description
                 });
@@ -727,7 +727,7 @@ async function outputAutoCheck(text, context="") {
                 if (target.affinity === 0 || target.affinity === undefined) {
                     target.affinity = 1;
                 } else {
-                    const changeResponse = await generateText(settings.creative_question_param, minContext(2) + settings.affinityLossCheck, '', {
+                    const changeResponse = await generateText(settings.creative_question_param, null, minContext(2) + settings.affinityLossCheck, '', {
                         name: target.name,
                         description: target.description,
                         affinity: getAffinity(target.affinity),
@@ -798,7 +798,7 @@ async function outputAutoCheck(text, context="") {
                 if (target.affinity === 0 || target.affinity === undefined) {
                     target.affinity = -1;
                 } else {
-                    const changeResponse = await generateText(settings.creative_question_param, minContext(2) + settings.affinityLossCheck, '', {
+                    const changeResponse = await generateText(settings.creative_question_param, null, minContext(2) + settings.affinityLossCheck, '', {
                         name: target.name,
                         description: target.description,
                         affinity: getAffinity(target.affinity),
@@ -1099,11 +1099,11 @@ function faeCharSheet(charsheet) {
 async function playerAction(action) {
     switch (settings.rule_set) {
         case 'Fate Accelerated':
-            const response1 = await generateText(settings.question_param, fullContext(turnsAtCurrentArea > 2 ? 2 : turnsAtCurrentArea, 0, settings.question_param.max_context_length) + "\n" + settings.ruleprompt_fae_action1, '', {
+            const response1 = await generateText(settings.question_param, null, fullContext(turnsAtCurrentArea > 2 ? 2 : turnsAtCurrentArea, 0, settings.question_param.max_context_length) + "\n" + settings.ruleprompt_fae_action1, '', {
                 action: action,
                 currentArea: currentArea
             }, settings.sampleFAEAction);
-            const response2 = await generateText(settings.question_param, fullContext(turnsAtCurrentArea > 2 ? 2 : turnsAtCurrentArea, 0, settings.question_param.max_context_length) + "\n\n" + faeCharSheet(activePlayer) + settings.ruleprompt_fae_action2, '', {
+            const response2 = await generateText(settings.question_param, null, fullContext(turnsAtCurrentArea > 2 ? 2 : turnsAtCurrentArea, 0, settings.question_param.max_context_length) + "\n\n" + faeCharSheet(activePlayer) + settings.ruleprompt_fae_action2, '', {
                 action: action,
                 currentArea: currentArea
             }, settings.sampleFAEAction);
@@ -1283,7 +1283,7 @@ async function sendMessage(message = input.value, bypassCheck = false, extraCont
     output.appendChild(inputElement);
     output.scrollTop = output.scrollHeight;
 
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(turnsAtCurrentArea > settings.max_passage_entries ? settings.max_passage_entries : turnsAtCurrentArea, settings.max_summary_entries, settings.story_param.max_context_length, extraContext) + inputElement.innerHTML, postPrompt, {
+    const text = trimIncompleteSentences(await generateText(settings.story_param, null, fullContext(turnsAtCurrentArea > settings.max_passage_entries ? settings.max_passage_entries : turnsAtCurrentArea, settings.max_summary_entries, settings.story_param.max_context_length, extraContext) + inputElement.innerHTML, postPrompt, {
         message: message,
         currentArea: currentArea,
         playerName: activePlayer.name
@@ -1416,8 +1416,8 @@ async function setupStart() {
     });
     const responseElement = document.createElement('div');
     responseElement.classList.add('new-message');
-    
-    const text = trimIncompleteSentences(await generateText(settings.story_param, fullContext(0,0,settings.story_param.max_context_length, '') + "\n" + "[Generate the beginning of the story. Response should be less than 300 words.]", '', {
+
+    const text = trimIncompleteSentences(await generateText(settings.story_param, null, fullContext(0,0,settings.story_param.max_context_length, '') + "\n" + "[Generate the beginning of the story. Response should be less than 300 words.]", '', {
         playerName: activePlayer.name,
         areaName: settings.starting_area,
         areaDescription: areas[settings.starting_area].description,
@@ -1584,7 +1584,7 @@ async function moveToArea(area, describe=0, text="") {
     } else if (!areas[area]) {
         // arealist should be a comma seperateed list including the names of the current area, all its sublocations, and the name's in its path
         const areaList = currentArea.split('/').slice(0, -1).concat(Object.keys(areas[currentArea].sublocations)).join(', ');
-        const response = await generateText(settings.question_param, settings.world_description + "\n\n\nPassage:\n" + text + "\nLocations: "+ areaList + "\n\n" + settings.moveToAreaProximityPrompt, '', {
+        const response = await generateText(settings.question_param, null, settings.world_description + "\n\n\nPassage:\n" + text + "\nLocations: "+ areaList + "\n\n" + settings.moveToAreaProximityPrompt, '', {
             areaList: areaList,
             currentArea: currentArea,
             newArea: area,
@@ -1639,7 +1639,7 @@ async function moveToArea(area, describe=0, text="") {
                 peopleNames: peopleNames
             });
             
-            const movingPeople = await generateText(settings.question_param, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + peoplePrompt, '', {
+            const movingPeople = await generateText(settings.question_param, null, settings.world_description + "\n" + areaContext(currentArea) + "\n\nPassage:\n" + text + "\n\n" + peoplePrompt, '', {
                 currentArea: currentArea,
                 newArea: area,
                 text: text,
